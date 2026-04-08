@@ -1,0 +1,44 @@
+:root {
+  --background: #F9FAFB;
+  --foreground: #141D29;
+  --card: #FFFFFF;
+  --primary: #10294C;
+  --secondary: #29AEA0;
+  --accent: #F6A823;
+  --muted:#EDF0F3; 
+  --muted-foreground: #68778D;
+  --destructive: #EF4343;
+  --border: #E0E5EB;
+  
+  **/* --- GRADIENTS --- **/
+  --gradient-primary: rgba(16, 41, 76, 0.05);
+  --gradient-secondary: rgba(41, 174, 160, 0.05);
+  --icon-ebackground: rgba(41, 174, 160, 0.20);
+  --accent-border: rgba(246, 168, 35, 0.5);
+  --gradient-muted: rgba(244, 243, 236, 0.5);
+  --shadow: rgba(20, 29, 41, 0.1);
+
+  --sans: "Space Grotesk", sans-serif;
+  --heading: var(--sans);
+
+
+  color: var(--foreground);
+  background: var(--background);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+    --display-2xl-font-size: 48px;
+    --display-2xl-line-height: 56px;
+    --display-2xl-letter-spacing: -0.96px;
+
+    --display-md-font-size: 28px;
+    --display-md-line-height: 36px;
+    --display-md-letter-spacing: -0.56px;
+    
+
+  
+  
+}
+

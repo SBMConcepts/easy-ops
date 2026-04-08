@@ -1,0 +1,444 @@
+/* ── Overlay ─────────────────────────────────────
+   BASE / MOBILE-FIRST  (< 768 px)
+   ─────────────────────────────────────────────── */
+
+.demo-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end; /* sheet slides up from bottom on mobile */
+  justify-content: center;
+  padding: 0;
+  background: rgba(5, 15, 30, 0.75);
+  font-family: "Space Grotesk", Arial, sans-serif;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.demo-modal__overlay--open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Panel ── */
+.demo-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  max-height: 92dvh; /* leave a sliver at top so user sees the overlay */
+  overflow-y: auto;
+  background: #0f2340;
+  border: 1px solid #1e3a5f;
+  border-radius: 20px 20px 0 0; /* bottom sheet feel */
+  padding: 32px 20px 40px;
+  box-sizing: border-box;
+  box-shadow:
+    0 -16px 48px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(46, 196, 182, 0.08);
+
+  transform: translateY(40px);
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1),
+    opacity 0.25s ease;
+  opacity: 0;
+}
+
+.demo-modal__panel--open {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Drag handle hint on mobile */
+.demo-modal__panel::before {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 4px;
+  background: #1e3a5f;
+  border-radius: 2px;
+  margin: 0 auto 24px;
+}
+
+/* Scrollbar styling */
+.demo-modal__panel::-webkit-scrollbar {
+  width: 6px;
+}
+.demo-modal__panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.demo-modal__panel::-webkit-scrollbar-thumb {
+  background: #1e3a5f;
+  border-radius: 3px;
+}
+
+/* ── Close button ── */
+.demo-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a3350;
+  border: none;
+  border-radius: 50%;
+  color: #8fa8bf;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.demo-modal__close:hover {
+  background: #243f5e;
+  color: #ffffff;
+}
+
+/* ── Header ── */
+.demo-modal__header {
+  margin-bottom: 24px;
+}
+
+.demo-modal__eyebrow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.demo-modal__eyebrow-Easy {
+  color: #fff;
+}
+
+.demo-modal__eyebrow-Ops {
+  color: #2ec4b6;
+}
+
+.demo-modal__title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 10px;
+  line-height: 1.25;
+  letter-spacing: -0.52px;
+}
+
+.demo-modal__subtitle {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #8fa8bf;
+  margin: 0;
+}
+
+/* ── Form layout ── */
+.demo-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Single column on mobile */
+.demo-modal__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.demo-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.demo-modal__field--full {
+  grid-column: 1 / -1;
+}
+
+/* ── Labels ── */
+.demo-modal__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #c8d8e8;
+  letter-spacing: 0.03em;
+}
+
+.demo-modal__required {
+  color: #2ec4b6;
+}
+
+/* ── Inputs ── */
+.demo-modal__input {
+  background: #091929;
+  border: 1px solid #1e3a5f;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.925rem;
+  color: #e8f0f8;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  font-family: inherit;
+}
+
+.demo-modal__input::placeholder {
+  color: #3d5a78;
+}
+
+.demo-modal__input:focus {
+  border-color: #2ec4b6;
+  box-shadow: 0 0 0 3px rgba(46, 196, 182, 0.12);
+}
+
+.demo-modal__select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238fa8bf' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.demo-modal__select option {
+  background: #0f2340;
+  color: #e8f0f8;
+}
+
+.demo-modal__textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
+/* ── Submit button ── */
+.demo-modal__submit {
+  width: 100%;
+  padding: 15px 24px;
+  background: #2ec4b6;
+  color: #0a1f35;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.975rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  margin-top: 4px;
+}
+
+.demo-modal__submit:hover:not(:disabled) {
+  background: #25b0a3;
+  box-shadow: 0 4px 20px rgba(46, 196, 182, 0.3);
+  transform: translateY(-1px);
+}
+
+.demo-modal__submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Spinner ── */
+.demo-modal__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(10, 31, 53, 0.3);
+  border-top-color: #0a1f35;
+  border-radius: 50%;
+  animation: demo-spin 0.7s linear infinite;
+}
+
+@keyframes demo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Disclaimer ── */
+.demo-modal__disclaimer {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #3d5a78;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Success state ── */
+.demo-modal__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 0 8px;
+  gap: 16px;
+}
+
+.demo-modal__success-icon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(46, 196, 182, 0.08);
+  border-radius: 50%;
+  border: 1px solid rgba(46, 196, 182, 0.2);
+}
+
+.demo-modal__success-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.demo-modal__success-body {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #8fa8bf;
+  margin: 0;
+  max-width: 320px;
+}
+
+.demo-modal__success-body strong {
+  color: #c8d8e8;
+}
+
+.demo-modal__success .demo-modal__submit {
+  max-width: 200px;
+  margin-top: 8px;
+}
+
+
+/* ─────────────────────────────────────────────
+   TABLET  (768 px – 1023 px)
+   Centred dialog, two-column form rows
+   ───────────────────────────────────────────── */
+@media (min-width: 600px) {
+  .demo-modal__overlay {
+    align-items: center; /* switch from bottom-sheet to centred dialog */
+    padding: 24px;
+  }
+
+  .demo-modal__panel {
+    max-width: 580px;
+    max-height: 90vh;
+    border-radius: 16px; /* full rounded corners */
+    padding: 40px 36px;
+    transform: translateY(20px) scale(0.97);
+    box-shadow:
+      0 32px 80px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(46, 196, 182, 0.08);
+  }
+
+  /* Hide drag handle on non-mobile */
+  .demo-modal__panel::before {
+    display: none;
+  }
+
+  .demo-modal__panel--open {
+    transform: translateY(0) scale(1);
+  }
+
+  .demo-modal__close {
+    top: 20px;
+    right: 20px;
+  }
+
+  .demo-modal__header {
+    margin-bottom: 28px;
+  }
+
+  .demo-modal__title {
+    font-size: 30px;
+    letter-spacing: -0.6px;
+  }
+
+  .demo-modal__subtitle {
+    font-size: 15px;
+  }
+
+  /* Two-column rows on tablet+ */
+  .demo-modal__row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .demo-modal__form {
+    gap: 18px;
+  }
+
+  .demo-modal__success-title {
+    font-size: 1.5rem;
+  }
+
+  .demo-modal__success-body {
+    font-size: 0.925rem;
+    max-width: 380px;
+  }
+}
+
+
+/* ─────────────────────────────────────────────
+   LAPTOP / DESKTOP  (≥ 1024 px)
+   Restores the original dialog layout exactly
+   ───────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  .demo-modal__overlay {
+    padding: 24px;
+  }
+
+  .demo-modal__panel {
+    max-width: 640px;
+    padding: 48px;
+  }
+
+  .demo-modal__header {
+    margin-bottom: 32px;
+  }
+
+  .demo-modal__eyebrow {
+    font-size: 20px;
+  }
+
+  .demo-modal__title {
+    font-size: 36px;
+    line-height: 44px;
+    letter-spacing: -0.72px;
+    margin-bottom: 12px;
+  }
+
+  .demo-modal__subtitle {
+    font-size: 16px;
+  }
+
+  .demo-modal__form {
+    gap: 20px;
+  }
+
+  .demo-modal__row {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .demo-modal__textarea {
+    min-height: 88px;
+  }
+}

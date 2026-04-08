@@ -1,0 +1,257 @@
+/* ─────────────────────────────────────────────
+   BASE / MOBILE-FIRST  (< 768 px)
+   ───────────────────────────────────────────── */
+
+.cta-section {
+  display: flex;
+  width: 100%;
+  min-height: unset;
+  padding: 40px 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  background: rgba(41, 174, 160, 0.05);
+  box-sizing: border-box;
+}
+
+.cta-container {
+  display: flex;
+  padding: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  align-self: stretch;
+}
+
+.cta-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  align-self: stretch;
+}
+
+.cta-heading-and-supporting-text {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.cta-heading {
+  align-self: stretch;
+  color: var(--Gray-900, #101828);
+  text-align: center;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 26px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.52px;
+  margin: 0;
+}
+
+.cta-supporting-text {
+  align-self: stretch;
+  color: var(--Gray-600, #475467);
+  text-align: center;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 26px;
+  margin: 0;
+}
+
+/* Buttons stack vertically and go full-width on mobile */
+.cta-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+
+.cta-gst-button {
+  display: flex;
+  padding: 12px 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 18px;
+  border: 1px solid var(--Border, #e0e5eb);
+  background: var(--Secondary, #29aea0);
+  box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cta-gst-button-text {
+  color: var(--Border, #e0e5eb);
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.cta-arrow-right {
+  width: 22px;
+  height: 22px;
+  color: var(--Border, #e0e5eb);
+  flex-shrink: 0;
+}
+
+.cta-request-demo-button {
+  display: flex;
+  padding: 12px 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 18px;
+  border: 1px solid var(--Border, #e0e5eb);
+  background: var(--Background, #f9fafb);
+  cursor: pointer;
+  box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cta-request-demo-text {
+  color: var(--Primary, #10294c);
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.cta-request-demo-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--Primary, #10294c);
+  flex-shrink: 0;
+}
+
+
+/* ─────────────────────────────────────────────
+   TABLET  (768 px – 1023 px)
+   ───────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .cta-section {
+    padding: 48px 32px;
+    min-height: 280px;
+  }
+
+  .cta-container {
+    padding: 0 16px;
+    gap: 28px;
+  }
+
+  .cta-content {
+    gap: 32px;
+  }
+
+  .cta-heading-and-supporting-text {
+    width: 100%;
+    max-width: 600px;
+    align-self: center;
+    gap: 16px;
+  }
+
+  .cta-heading {
+    font-size: 30px;
+    letter-spacing: -0.6px;
+  }
+
+  .cta-supporting-text {
+    font-size: 17px;
+    line-height: 28px;
+  }
+
+  /* Buttons side-by-side, auto width on tablet */
+  .cta-actions {
+    flex-direction: row;
+    align-items: flex-start;
+    width: auto;
+  }
+
+  .cta-gst-button,
+  .cta-request-demo-button {
+    width: auto;
+  }
+
+  .cta-gst-button-text,
+  .cta-request-demo-text {
+    font-size: 17px;
+  }
+
+  .cta-arrow-right,
+  .cta-request-demo-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+
+/* ─────────────────────────────────────────────
+   LAPTOP / DESKTOP  (≥ 1024 px)
+   Restores the original layout exactly
+   ───────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  .cta-section {
+    min-height: 360px;
+    padding: 48px 36px;
+    gap: 24px;
+  }
+
+  .cta-container {
+    padding: 0 32px;
+    gap: 32px;
+  }
+
+  .cta-content {
+    gap: 40px;
+  }
+
+  .cta-heading-and-supporting-text {
+    width: 768px;
+    gap: 20px;
+  }
+
+  .cta-heading {
+    font-size: 36px;
+    line-height: 44px;
+    letter-spacing: -0.72px;
+  }
+
+  .cta-supporting-text {
+    font-size: 20px;
+    line-height: 30px;
+  }
+
+  .cta-actions {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+    width: auto;
+  }
+
+  .cta-gst-button,
+  .cta-request-demo-button {
+    width: auto;
+  }
+
+  .cta-gst-button-text,
+  .cta-request-demo-text {
+    font-size: 18px;
+  }
+
+  .cta-arrow-right,
+  .cta-request-demo-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
