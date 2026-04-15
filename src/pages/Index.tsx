@@ -9,10 +9,8 @@ import "./App.css";
 
 const Index = () => {
   return (
-    <>
+    <div>
       <TopNavBar />
-
-      <main>
         <section id="home">
           <Hero />
         </section>
@@ -28,10 +26,8 @@ const Index = () => {
         <section id="cta">
           <CTASection />
         </section>
-      </main>
-
       <Footer />
-    </>
+    </div>
   );
 };
 

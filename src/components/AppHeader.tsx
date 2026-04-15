@@ -1,8 +1,8 @@
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/contexts/AuthContext";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "./ui/sidebar";
+import { Separator } from "./ui/separator";
+import { useAuth } from "../contexts/AuthContext";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { LogOut, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 

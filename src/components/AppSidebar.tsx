@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -11,7 +11,7 @@ import {
   SidebarMenuButton,
   SidebarHeader,
   SidebarFooter,
-} from "@/components/ui/sidebar";
+} from "./ui/sidebar";
 import {
   LayoutDashboard,
   QrCode,
