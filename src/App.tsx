@@ -2,17 +2,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
-// import NotFound from "./pages/NotFound";
+import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardRouter from "./pages/dashboard/DashboardRouter";
-//import CheckIn from "./pages/CheckIn";
-//import LiveAttendance from "./pages/LiveAttendance";
-//import Reports from "./pages/Reports";
-//import EmployeeManagement from "./pages/EmployeeManagement";
-//import Compliance from "./pages/Compliance";
-//import ComingSoon from "./pages/ComingSoon";
+import CheckIn from "./pages/CheckIn";
+import LiveAttendance from "./pages/LiveAttendance";
+import Reports from "./pages/Reports";
+import EmployeeManagement from "./pages/EmployeeManagement";
+import Compliance from "./pages/Compliance";
+import ComingSoon from "./pages/ComingSoon";
 
 const queryClient = new QueryClient();
 
