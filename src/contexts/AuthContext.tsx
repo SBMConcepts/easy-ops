@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
   useContext,
@@ -6,7 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { supabase } from "../integrations/client";
-import type { User as SupaUser, Session } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 
 export type UserRole = "admin" | "manager" | "supervisor" | "employee";
 
