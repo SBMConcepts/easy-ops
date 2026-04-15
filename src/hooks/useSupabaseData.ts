@@ -13,11 +13,22 @@ export function useAttendanceRecords(dateFrom?: string, dateTo?: string) {
         date_to: dateTo || today,
       };
       const qs = new URLSearchParams(params).toString();
-      const { data, error } = await supabase.functions.invoke(`attendance-report?${qs}`, { method: "GET" });
+      const { data, error } = await supabase.functions.invoke(
+        `attendance-report?${qs}`,
+        { method: "GET" },
+      );
       if (error) throw error;
       return data as {
         records: any[];
-        stats: { present: number; late: number; absent: number; on_leave: number; total_hours: number; total_overtime: number; total: number };
+        stats: {
+          present: number;
+          late: number;
+          absent: number;
+          on_leave: number;
+          total_hours: number;
+          total_overtime: number;
+          total: number;
+        };
       };
     },
     enabled: !!session,
@@ -82,7 +93,10 @@ export function useSites() {
   return useQuery({
     queryKey: ["sites"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("sites").select("*").order("name");
+      const { data, error } = await supabase
+        .from("sites")
+        .select("*")
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -95,20 +109,33 @@ export function useComplianceCheck() {
   return useQuery({
     queryKey: ["compliance-check"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("compliance-check", { method: "GET" });
+      const { data, error } = await supabase.functions.invoke(
+        "compliance-check",
+        { method: "GET" },
+      );
       if (error) throw error;
       return data as {
         compliance_score: number;
         total_checks: number;
         pass_count: number;
-        violations: Array<{ employee_id: string; name: string; rule: string; detail: string }>;
+        violations: Array<{
+          employee_id: string;
+          name: string;
+          rule: string;
+          detail: string;
+        }>;
       };
     },
     enabled: !!session,
   });
 }
 
-export async function checkIn(method: string, siteId?: string, latitude?: number, longitude?: number) {
+export async function checkIn(
+  method: string,
+  siteId?: string,
+  latitude?: number,
+  longitude?: number,
+) {
   const { data, error } = await supabase.functions.invoke("check-in", {
     body: { method, site_id: siteId, latitude, longitude },
   });

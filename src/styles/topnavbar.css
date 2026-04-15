@@ -188,19 +188,25 @@
   height: 2px;
   background-color: var(--foreground);
   border-radius: 2px;
-  transition: transform 0.25s ease, opacity 0.25s ease, width 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease,
+    width 0.25s ease;
   transform-origin: center;
 }
 
 /* Animate bars into an X when open */
-.top-navbar-hamburger[aria-expanded="true"] .top-navbar-hamburger-bar:nth-child(1) {
+.top-navbar-hamburger[aria-expanded="true"]
+  .top-navbar-hamburger-bar:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
-.top-navbar-hamburger[aria-expanded="true"] .top-navbar-hamburger-bar:nth-child(2) {
+.top-navbar-hamburger[aria-expanded="true"]
+  .top-navbar-hamburger-bar:nth-child(2) {
   opacity: 0;
   width: 0;
 }
-.top-navbar-hamburger[aria-expanded="true"] .top-navbar-hamburger-bar:nth-child(3) {
+.top-navbar-hamburger[aria-expanded="true"]
+  .top-navbar-hamburger-bar:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
 }
 
@@ -223,7 +229,9 @@
   transform: translateY(-8px);
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.25s ease, opacity 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
 }
 
 .top-navbar-drawer--open {
@@ -253,7 +261,9 @@
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .top-navbar-drawer-text:hover {
@@ -295,7 +305,6 @@
   font-weight: 600;
   white-space: nowrap;
 }
-
 
 /* ─────────────────────────────────────────────
    TABLET  (768 px – 1023 px)
@@ -346,7 +355,6 @@
     display: none !important;
   }
 }
-
 
 /* ─────────────────────────────────────────────
    LAPTOP / DESKTOP  (≥ 1024 px)

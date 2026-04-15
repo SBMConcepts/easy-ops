@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { supabase } from "../integrations/client";
 import type { User as SupaUser, Session } from "@supabase/supabase-js";
 
@@ -20,7 +26,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (email: string, password: string, fullName: string) => Promise<boolean>;
+  signup: (
+    email: string,
+    password: string,
+    fullName: string,
+  ) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -45,14 +55,18 @@ async function fetchUserProfile(uid: string): Promise<User | null> {
   };
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Set up auth listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session?.user) {
         // Defer profile fetch to avoid Supabase deadlock
@@ -83,19 +97,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return !error;
-  }, []);
+  const login = useCallback(
+    async (email: string, password: string): Promise<boolean> => {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return !error;
+    },
+    [],
+  );
 
-  const signup = useCallback(async (email: string, password: string, fullName: string): Promise<boolean> => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
-    });
-    return !error;
-  }, []);
+  const signup = useCallback(
+    async (
+      email: string,
+      password: string,
+      fullName: string,
+    ): Promise<boolean> => {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      return !error;
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
@@ -104,7 +134,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, isAuthenticated: !!session, isLoading, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        isAuthenticated: !!session,
+        isLoading,
+        login,
+        signup,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

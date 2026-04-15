@@ -32,13 +32,13 @@ Key product highlights communicated on the site:
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js (App Router, `"use client"`) |
-| Language | TypeScript |
-| Styling | Plain CSS (component-scoped stylesheets) |
-| Icons | [Lucide React](https://lucide.dev) |
-| Font | [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk) |
+| Layer     | Technology                                                       |
+| --------- | ---------------------------------------------------------------- |
+| Framework | Next.js (App Router, `"use client"`)                             |
+| Language  | TypeScript                                                       |
+| Styling   | Plain CSS (component-scoped stylesheets)                         |
+| Icons     | [Lucide React](https://lucide.dev)                               |
+| Font      | [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk) |
 
 ---
 
@@ -73,45 +73,59 @@ src/
 ## Components
 
 ### `TopNavBar`
+
 Sticky top navigation bar with:
+
 - **Scroll-spy** via `IntersectionObserver` — automatically highlights the active section as the user scrolls.
 - **Smooth scroll** on nav link click, with offset compensation for the navbar height.
 - **Hamburger menu** on mobile — animates into an ✕ and opens a slide-down drawer containing all nav links and the CTA button.
 - "Get Started" button that opens the `DemoModal`.
 
 ### `Hero`
+
 Full-width hero section containing:
+
 - Headline and subheading copy
 - Hero image with teal drop shadow
 - "Start Free Trial" CTA button
 - Three stat badges (99.9% uptime, 10K+ users, BCEA compliant)
 
 ### `HowItWorksSection`
+
 Explains the four check-in methods with icon, title, and supporting text:
+
 1. QR Code Scan
 2. Biometric Verification
 3. WhatsApp Check-In
 4. Manager Dashboard
 
 ### `BenefitsSections`
+
 Two-panel layout:
+
 - **Left panel** — eight benefit checkboxes split across two columns
 - **Right panel** — Investment Summary table (Total Project Cost, Payment Structure, Project Duration, Support)
 
 ### `CTASection`
+
 Centred call-to-action band with:
+
 - "Get Started Today" primary button
 - "Request A Demo" secondary button (opens `DemoModal`)
 
 ### `Footer`
+
 Dark-themed footer (`#0f2340`) with:
+
 - EazyOps logo
 - Tagline
 - Two navigation columns: Product and Company
 - Copyright bar with South African flag emoji
 
 ### `DemoModal`
+
 Animated modal form with:
+
 - Overlay with blur backdrop
 - **Bottom-sheet** behaviour on mobile, **centred dialog** on tablet/desktop
 - Fields: Full Name, Work Email, Company Name, Company Size (select), optional message
@@ -125,19 +139,23 @@ Animated modal form with:
 
 All components are built **mobile-first** using plain CSS with three breakpoints:
 
-| Breakpoint | Range | Behaviour |
-|---|---|---|
-| Mobile | `< 768px` | Single-column stacked layouts, full-width buttons, hamburger nav, bottom-sheet modal |
-| Tablet | `768px – 1023px` | Two-column grids, inline nav links, centred modal dialog |
-| Desktop | `≥ 1024px` | Original multi-column layouts fully restored |
+| Breakpoint | Range            | Behaviour                                                                            |
+| ---------- | ---------------- | ------------------------------------------------------------------------------------ |
+| Mobile     | `< 768px`        | Single-column stacked layouts, full-width buttons, hamburger nav, bottom-sheet modal |
+| Tablet     | `768px – 1023px` | Two-column grids, inline nav links, centred modal dialog                             |
+| Desktop    | `≥ 1024px`       | Original multi-column layouts fully restored                                         |
 
 CSS breakpoints follow a `min-width` mobile-first pattern:
 
 ```css
 /* Mobile — base styles (no media query) */
 
-@media (min-width: 768px) { /* Tablet */ }
-@media (min-width: 1024px) { /* Desktop */ }
+@media (min-width: 768px) {
+  /* Tablet */
+}
+@media (min-width: 1024px) {
+  /* Desktop */
+}
 ```
 
 ---
@@ -219,4 +237,4 @@ Define the following tokens in your global CSS (e.g. `globals.css`) for the comp
 
 ---
 
-*Built for South Africa 🇿🇦*
+_Built for South Africa 🇿🇦_

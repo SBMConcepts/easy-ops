@@ -36,7 +36,12 @@ const AppHeader = () => {
             <User className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium text-foreground">{user.name}</span>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            title="Logout"
+          >
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

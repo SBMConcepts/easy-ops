@@ -32,8 +32,7 @@
   gap: 12px;
 }
 
-.features-heading
-{
+.features-heading {
   color: var(--Secondary, #29aea0);
   /* Text md Semibold */
   font-family: "Space Grotesk";
@@ -89,9 +88,9 @@
   align-items: center;
 }
 
-.feature-card:hover , .featured-icon:hover {
+.feature-card:hover,
+.featured-icon:hover {
   background: var(--gradient-secondary, rgba(41, 174, 160, 0.1));
-  
 }
 
 .feature-icon-svg {

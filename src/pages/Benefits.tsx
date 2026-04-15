@@ -10,15 +10,11 @@ export default function BenefitsSections() {
         <div className="benefits-title">
           The Leading Platform for Workforce Operations in South Africa.
         </div>
-
-        
       </div>
 
       <div className="benefits-content-wrapper">
         <div className="benefits-content">
           <div className="benefits-text-and-supporting">
-            
-
             <p className="benefits-text-supporting">
               Our vision is to help businesses operate efficiently while
               protecting employee rights through full compliance with BCEA and
@@ -114,19 +110,25 @@ export default function BenefitsSections() {
             <div className="investment-summary-check-items">
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-1">Total Project Cost</div>
+                  <div className="investment-summary-feature-1">
+                    Total Project Cost
+                  </div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-1">Payment Structure</div>
+                  <div className="investment-summary-feature-1">
+                    Payment Structure
+                  </div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-1">Project Duration</div>
+                  <div className="investment-summary-feature-1">
+                    Project Duration
+                  </div>
                 </div>
               </div>
 
@@ -140,25 +142,33 @@ export default function BenefitsSections() {
             <div className="investment-summary-check-items">
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-2">Custom Quote</div>
+                  <div className="investment-summary-feature-2">
+                    Custom Quote
+                  </div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-2">Milestone-Based</div>
+                  <div className="investment-summary-feature-2">
+                    Milestone-Based
+                  </div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-2">Tailored Timeline</div>
+                  <div className="investment-summary-feature-2">
+                    Tailored Timeline
+                  </div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-2">Dedicated Account Manager</div>
+                  <div className="investment-summary-feature-2">
+                    Dedicated Account Manager
+                  </div>
                 </div>
               </div>
             </div>
