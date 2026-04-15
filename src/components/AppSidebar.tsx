@@ -24,7 +24,7 @@ import {
   BarChart3,
   UserCheck,
 } from "lucide-react";
-import logo from "@/assets/logo.png";
+//import logo from "@/assets/logo.png";
 
 interface NavItem {
   title: string;
@@ -107,7 +107,7 @@ const AppSidebar = () => {
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => navigate("/app")}
         >
-          <img src={logo} alt="EazyOps" className="h-8 w-8 rounded" />
+          {/* <img src={logo} alt="EazyOps" className="h-8 w-8 rounded" /> */}
           <span className="font-display text-lg font-bold text-foreground">
             EazyOps
           </span>

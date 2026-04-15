@@ -7,7 +7,6 @@ import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { toast } from "sonner";
 import { LogIn, UserPlus } from "lucide-react";
-import logo from "@/assets/logo.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -46,7 +45,7 @@ const Login = () => {
     <div className="min-h-screen bg-hero-gradient flex items-center justify-center p-4 geometric-pattern">
       <div className="w-full max-w-md space-y-6">
         <div className="flex flex-col items-center gap-3">
-          <img src={logo} alt="EazyOps" className="h-14 w-14 rounded-lg shadow-hero" />
+          {/* <img src={logo} alt="EazyOps" className="h-14 w-14 rounded-lg shadow-hero" /> */}
           <h1 className="font-display text-3xl font-bold text-primary-foreground">EazyOps</h1>
           <p className="text-primary-foreground/70 text-sm">Workforce Management Platform</p>
         </div>

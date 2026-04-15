@@ -5,7 +5,7 @@ import HowItWorks from "./HowItWorks";
 import Benefits from "./Benefits";
 import CTASection from "./CTASection";
 import Footer from "../components/Footer";
-import "./App.css";
+import "../App.css";
 
 const Index = () => {
   return (
