@@ -23,7 +23,7 @@ const AppHeader = () => {
   };
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b border-border px-4">
+    <header className="flex items-center px-0 py-2 bg-background border-b w-full">
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-6" />
       <div className="flex-1" />

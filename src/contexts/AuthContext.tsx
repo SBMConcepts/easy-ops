@@ -9,7 +9,8 @@ import React, {
 import { supabase } from "../integrations/client";
 import type { Session } from "@supabase/supabase-js";
 
-export type UserRole = "admin" | "manager" | "supervisor" | "employee";
+
+export type UserRole = "admin" | "manager" | "supervisor" | "employee" | string; // Extendable for future roles
 
 export interface User {
   id: string;
@@ -44,6 +45,7 @@ async function fetchUserProfile(uid: string): Promise<User | null> {
   ]);
   if (profileRes.error || !profileRes.data) return null;
   const p = profileRes.data;
+  //Role assignments needs to be adjusted to match your actual schema - this assumes a separate user_roles table with a single role per user
   const role = (roleRes.data?.role as UserRole) ?? "employee";
   return {
     id: p.id,
