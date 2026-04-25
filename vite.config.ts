@@ -4,6 +4,6 @@ import react from "@vitejs/plugin-react"
 export default defineConfig({
 	plugins: [react()],
 	build: {
-		cssMinify: true, // or 'esbuild' | 'lightningcss'
+		cssMinify: false, // or 'esbuild' | 'lightningcss'
 	},
 })
