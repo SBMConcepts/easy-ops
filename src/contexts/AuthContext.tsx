@@ -87,7 +87,15 @@ export function AuthProvider({
 
 	return React.createElement(
 		AuthContext.Provider,
-		{ value: { user, isAuthenticated: !!user, login, logout, switchRole } },
+		{
+			value: {
+				user,
+				isAuthenticated: !!user,
+				login,
+				logout,
+				switchRole,
+			},
+		},
 		children,
 	)
 }

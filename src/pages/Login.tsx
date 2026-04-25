@@ -12,6 +12,7 @@ import {
 } from "../components/ui/card"
 import { toast } from "sonner"
 import { LogIn, UserPlus } from "lucide-react"
+import { useAuth } from "../contexts/AuthContext"
 
 const Login = () => {
 	const [email, setEmail] = useState("")
@@ -19,32 +20,19 @@ const Login = () => {
 	const [fullName, setFullName] = useState("")
 	const [loading, setLoading] = useState(false)
 	const [isSignup, setIsSignup] = useState(false)
-	const { login, signup } = useAuth()
+	const { login } = useAuth()
 	const navigate = useNavigate()
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		setLoading(true)
-		if (isSignup) {
-			const success = await signup(email, password, fullName)
-			setLoading(false)
-			if (success) {
-				toast.success(
-					"Account created! Check your email to confirm, then sign in.",
-				)
-				setIsSignup(false)
-			} else {
-				toast.error("Sign up failed. Please try again.")
-			}
+		const success = await login(email, password)
+		setLoading(false)
+		if (success) {
+			toast.success("Welcome to EazyOps!")
+			navigate("/app")
 		} else {
-			const success = await login(email, password)
-			setLoading(false)
-			if (success) {
-				toast.success("Welcome to EazyOps!")
-				navigate("/app")
-			} else {
-				toast.error("Invalid credentials.")
-			}
+			toast.error("Invalid credentials.")
 		}
 	}
 
