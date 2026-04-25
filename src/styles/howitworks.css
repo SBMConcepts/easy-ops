@@ -1,296 +1,366 @@
-/* ─────────────────────────────────────────────
-   BASE / MOBILE-FIRST  (< 768 px)
-   ───────────────────────────────────────────── */
+/* =============================================================================
+   HOW IT WORKS SECTION
+   Breakpoints:
+     Mobile          → < 768px   (base / mobile-first)
+     Tablet          → 768px – 1023px
+     Standard Laptop → 1024px – 1439px
+     Large Desktop   → ≥ 1440px
+   ============================================================================= */
+
+/* ── BASE / MOBILE  (< 768px) ─────────────────────────────────────────────── */
 
 .hiw-section {
-  align-items: center;
-  background-color: #29aea00d;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 40px 16px 40px;
-  position: relative;
-  width: 100%;
-  box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	background-color: rgba(41, 174, 160, 0.05);
+	padding: 40px 16px 48px;
+	box-sizing: border-box;
 }
 
 .hiw-container {
-  align-items: flex-start;
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  position: relative;
-  width: 100%;
+	width: 100%;
+	max-width: 1440px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 32px;
 }
 
 .hiw-content {
-  align-items: center;
-  align-self: stretch;
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  gap: 24px;
-  position: relative;
-  width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 24px;
+	width: 100%;
 }
 
 .hiw-heading-wrapper {
-  align-items: center;
-  align-self: stretch;
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  gap: 20px;
-  position: relative;
-  width: 100%;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 24px;
 }
 
 .hiw-heading-and-subheading {
-  align-items: center;
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  gap: 12px;
-  position: relative;
-  width: 100%;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
 }
 
 .hiw-subheading {
-  align-self: stretch;
-  color: var(--Secondary, #29aea0);
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: 24px;
-  margin-top: -1px;
-  position: relative;
-  text-align: center;
+	margin: 0;
+	color: var(--secondary, #29aea0);
+	text-align: center;
+	font-family: "Space Grotesk";
+	font-size: 14px;
+	font-style: normal;
+	font-weight: 600;
+	line-height: 24px;
 }
 
 .hiw-heading {
-  align-self: stretch;
-  color: var(--Gray-900, #101828);
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 28px;
-  font-style: normal;
-  font-weight: 700;
-  letter-spacing: -0.56px;
-  line-height: 1.25;
-  position: relative;
-  text-align: center;
-  margin: 0;
+	color: var(--Secondary, #29aea0);
+	font-family: "Space Grotesk";
+	font-size: 14px;
+	font-style: normal;
+	font-weight: 700;
+	line-height: 24px;
+	margin: 0;
+	text-align: center;
 }
 
 .hiw-supporting-text {
-  align-self: stretch;
-  color: var(--Gray-600, #475467);
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 16px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 26px;
-  margin-top: -1px;
-  position: relative;
-  text-align: center;
-}
-
-/* Supporting text used inside .hiw-heading-wrapper */
-.hiw-text-supporting {
-  align-self: stretch;
-  color: var(--Gray-600, #475467);
-  text-align: center;
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 15px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 24px;
-  margin: 0;
+	margin: 0;
+	color: var(--muted-foreground, #68778d);
+	text-align: center;
+	font-family: "Space Grotesk";
+	font-size: 15px;
+	font-style: normal;
+	font-weight: 500;
+	line-height: 28px;
 }
 
 /* ── Feature grid container ── */
 .hiw-container-2 {
-  display: flex;
-  padding: 0;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 32px;
-  width: 100%;
-  box-sizing: border-box;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
 
 /* Single column on mobile */
 .hiw-content-2 {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 32px;
-  align-self: stretch;
-  width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 24px;
+	width: 100%;
 }
 
 .hiw-feature-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  flex: 1 0 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
 }
 
 .hiw-icon-instance-node {
-  width: 44px;
-  height: 44px;
-  padding: 6px;
-  justify-content: center;
-  align-items: center;
-  border-radius: 28px;
-  border: 6px solid var(--Secondary, #29aea0);
-  background: rgba(41, 174, 160, 0.3);
-  flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 50%;
+	border: 4px solid var(--secondary);
+	background: rgba(41, 174, 160, 0.3);
+	flex-shrink: 0;
 }
 
 .hiw-text {
-  align-self: stretch;
-  margin: 0;
-  color: var(--foreground, #141d29);
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 18px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: 28px;
-  position: relative;
-  text-align: center;
+	color: var(--foreground);
+	text-align: center;
+	font-family: "Space Grotesk";
+	font-size: 16px;
+	font-style: normal;
+	font-weight: 600;
+	line-height: 24px;
+	margin: 0;
+}
+
+.hiw-text-supporting {
+	color: var(--muted-foreground, #68778d);
+	text-align: center;
+	font-family: "Space Grotesk";
+	font-size: 14px;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 24px;
+	margin: 0;
 }
 
 .hiw-text-and-supporting {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	align-items: center;
 }
 
-/* ─────────────────────────────────────────────
-   TABLET  (768 px – 1023 px)
-   2-column grid for the feature cards
-   ───────────────────────────────────────────── */
-@media (min-width: 768px) {
-  .hiw-section {
-    gap: 32px;
-    padding: 56px 32px 48px;
-  }
+/* ── TABLET  (768px – 1023px) ─────────────────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+	.hiw-section {
+		padding: 48px 32px 56px;
+	}
 
-  .hiw-heading-wrapper {
-    gap: 32px;
-  }
+	.hiw-container {
+		gap: 32px;
+	}
 
-  .hiw-heading {
-    font-size: 32px;
-    letter-spacing: -0.64px;
-    line-height: 40px;
-  }
+	.hiw-content {
+		gap: 24px;
+	}
 
-  .hiw-subheading {
-    font-size: 15px;
-  }
+	.hiw-heading {
+		font-size: 22px;
+		line-height: 32px;
+	}
 
-  .hiw-text-supporting {
-    font-size: 16px;
-  }
+	.hiw-subheading {
+		font-size: 15px;
+		line-height: 24px;
+	}
 
-  .hiw-container-2 {
-    padding: 0 16px;
-  }
+	.hiw-supporting-text {
+		font-size: 15px;
+		line-height: 26px;
+	}
 
-  /* 2-column grid on tablet */
-  .hiw-content-2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 32px;
-  }
+	.hiw-container-2 {
+		padding: 0;
+	}
 
-  .hiw-icon-instance-node {
-    width: 46px;
-    height: 46px;
-  }
+	/* 2-column grid on tablet */
+	.hiw-content-2 {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 24px;
+		align-self: stretch;
+	}
 
-  .hiw-text {
-    font-size: 19px;
-  }
+	.hiw-icon-instance-node {
+		width: 40px;
+		height: 40px;
+		padding: 0;
+	}
+
+	.hiw-text {
+		font-size: 17px;
+		line-height: 26px;
+	}
+
+	.hiw-text-supporting {
+		font-size: 15px;
+		line-height: 24px;
+	}
+
+	.hiw-text-and-supporting {
+		gap: 4px;
+	}
 }
 
-/* ─────────────────────────────────────────────
-   LAPTOP / DESKTOP  (≥ 1024 px)
-   Restores the original 4-column flex row
-   ───────────────────────────────────────────── */
-@media (min-width: 1024px) {
-  .hiw-section {
-    gap: 32px;
-    padding: 64px 48px 56px;
-  }
+/* ── STANDARD LAPTOP / DESKTOP  (1024px – 1439px) ─────────────────────────── */
+@media (min-width: 1024px) and (max-width: 1439px) {
+	.hiw-section {
+		padding: 64px 48px 56px;
+	}
 
-  .hiw-content {
-    gap: 48px;
-  }
+	.hiw-container {
+		padding: 0 32px;
+		gap: 40px;
+	}
 
-  .hiw-heading-wrapper {
-    gap: 48px;
-  }
+	.hiw-content {
+		gap: 32px;
+	}
 
-  .hiw-heading-and-subheading {
-    gap: 20px;
-  }
+	.hiw-heading-wrapper {
+		gap: 12px;
+	}
 
-  .hiw-subheading {
-    font-size: 16px;
-    line-height: 24px;
-  }
+	.hiw-heading-and-subheading {
+		gap: 12px;
+	}
 
-  .hiw-heading {
-    font-size: 36px;
-    letter-spacing: -0.72px;
-    line-height: 44px;
-  }
+	.hiw-heading {
+		font-size: 28px;
+		letter-spacing: -0.56px;
+		line-height: 36px;
+	}
 
-  .hiw-supporting-text {
-    font-size: 20px;
-    line-height: 30px;
-  }
+	.hiw-subheading {
+		font-size: 16px;
+		line-height: 24px;
+	}
 
-  .hiw-text-supporting {
-    font-size: 16px;
-    line-height: 24px;
-  }
+	.hiw-supporting-text {
+		font-size: 17px;
+		line-height: 28px;
+	}
 
-  .hiw-container-2 {
-    padding: 0 32px;
-    gap: 64px;
-  }
+	.hiw-container-2 {
+		padding: 0 16px;
+		gap: 48px;
+	}
 
-  /* Back to original 4-column flex row */
-  .hiw-content-2 {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 32px;
-    align-self: stretch;
-  }
+	/* 4-column flex row on desktop */
+	.hiw-content-2 {
+		display: flex;
+		flex-direction: row;
+		align-items: flex-start;
+		gap: 24px;
+		align-self: stretch;
+	}
 
-  .hiw-feature-text {
-    gap: 20px;
-  }
+	.hiw-feature-text {
+		gap: 16px;
+	}
 
-  .hiw-icon-instance-node {
-    width: 48px;
-    height: 48px;
-  }
+	.hiw-icon-instance-node {
+		width: 40px;
+		height: 40px;
+	}
 
-  .hiw-text {
-    font-size: 20px;
-    line-height: 30px;
-  }
+	.hiw-text {
+		font-size: 18px;
+		line-height: 28px;
+	}
 
-  .hiw-text-and-supporting {
-    gap: 8px;
-  }
+	.hiw-text-supporting {
+		font-size: 15px;
+		line-height: 24px;
+	}
+
+	.hiw-text-and-supporting {
+		gap: 6px;
+	}
+}
+
+/* ── LARGE DESKTOP  (≥ 1440px) ───────────────────────────────────────────── */
+@media (min-width: 1440px) {
+	.hiw-section {
+		padding: 80px 64px 72px;
+	}
+
+	.hiw-container {
+		padding: 0 48px;
+		gap: 48px;
+	}
+
+	.hiw-content {
+		gap: 32px;
+	}
+
+	.hiw-heading-wrapper {
+		gap: 12px;
+	}
+
+	.hiw-heading-and-subheading {
+		gap: 12px;
+	}
+
+	.hiw-heading {
+		font-size: 36px;
+		letter-spacing: -0.72px;
+		line-height: 44px;
+	}
+
+	.hiw-subheading {
+		font-size: 16px;
+		line-height: 24px;
+	}
+
+	.hiw-supporting-text {
+		font-size: 20px;
+		line-height: 30px;
+	}
+
+	.hiw-container-2 {
+		padding: 0 32px;
+		gap: 64px;
+	}
+
+	.hiw-content-2 {
+		display: flex;
+		flex-direction: row;
+		align-items: flex-start;
+		gap: 32px;
+		align-self: stretch;
+	}
+
+	.hiw-feature-text {
+		gap: 20px;
+	}
+
+	.hiw-icon-instance-node {
+		width: 48px;
+		height: 48px;
+	}
+
+	.hiw-text {
+		font-size: 20px;
+		line-height: 30px;
+	}
+
+	.hiw-text-supporting {
+		font-size: 16px;
+		line-height: 24px;
+	}
+
+	.hiw-text-and-supporting {
+		gap: 8px;
+	}
 }

@@ -1,311 +1,44 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap");
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
-
-@custom-variant dark (&:is(.dark *));
-
-:root {
-  /* Colours */
-  --accent: oklch(0.97 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --primary: oklch(0.205 0 0);
-  --secondary: oklch(0.97 0 0);
-  --accent: #f6a823;
-  --muted: oklch(0.97 0 0);
-  --muted-background: #68778d;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-
-  /* Shadows */
-  --shadow-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  --shadow-sm:
-    0px 1px 3px 0px rgba(16, 24, 40, 0.1),
-    0px 1px 2px -1px rgba(16, 24, 40, 0.1);
-  --shadow-md:
-    0px 4px 6px -1px rgba(16, 24, 40, 0.1),
-    0px 2px 4px -2px rgba(16, 24, 40, 0.1);
-  --shadow-lg:
-    0px 10px 15px -3px rgba(16, 24, 40, 0.1),
-    0px 4px 6px -4px rgba(16, 24, 40, 0.1);
-  --shadow-xl:
-    0px 20px 25px -5px rgba(16, 24, 40, 0.1),
-    0px 10px 10px -5px rgba(16, 24, 40, 0.1);
-  --shadow-2xl: 0px 25px 50px -12px rgba(16, 24, 40, 0.25);
-
-  @layer base {
-    :root {
-      /* -------------------------------------------------------------------------
-       Font Family
-       ------------------------------------------------------------------------- */
-      --font-primary: "Space Grotesk", Arial, sans-serif;
-
-      /* =========================================================================
-       DISPLAY SIZES
-       ========================================================================= */
-
-      --display-2xl-font-size: 72px;
-      --display-2xl-line-height: 90px;
-      --display-2xl-letter-spacing: -1.44px;
-
-      --display-2xl-regular-font-weight: 400;
-      --display-2xl-medium-font-weight: 500;
-      --display-2xl-semibold-font-weight: 700;
-      --display-2xl-bold-font-weight: 700;
-
-      /* -------------------------------------------------------------------------
-       Display MD
-       ------------------------------------------------------------------------- */
-      --display-md-font-size: 36px;
-      --display-md-line-height: 44px;
-      --display-md-letter-spacing: -0.72px;
-
-      --display-md-regular-font-weight: 400;
-      --display-md-medium-font-weight: 500;
-      --display-md-semibold-font-weight: 700;
-      --display-md-bold-font-weight: 700;
-
-      /* =========================================================================
-       TEXT SIZES
-       ========================================================================= */
-
-      /* -------------------------------------------------------------------------
-       Text XL
-       ------------------------------------------------------------------------- */
-      --text-xl-font-size: 20px;
-      --text-xl-line-height: 30px;
-      --text-xl-letter-spacing: 0px;
-
-      --text-xl-regular-font-weight: 400;
-      --text-xl-medium-font-weight: 500;
-      --text-xl-semibold-font-weight: 700;
-      --text-xl-bold-font-weight: 700;
-
-      /* -------------------------------------------------------------------------
-       Text MD
-       ------------------------------------------------------------------------- */
-      --text-md-font-size: 16px;
-      --text-md-line-height: 24px;
-      --text-md-letter-spacing: 0px;
-
-      --text-md-regular-font-weight: 400;
-      --text-md-medium-font-weight: 500;
-      --text-md-semibold-font-weight: 600;
-      --text-md-bold-font-weight: 700;
-    }
-  }
-
-  /* =============================================================================
-   TYPOGRAPHY UTILITY CLASSES
-   ============================================================================= */
-
-  @layer components {
-    /* ---------------------------------------------------------------------------
-     Display 2XL
-     --------------------------------------------------------------------------- */
-    .display-2xl {
-      font-family: var(--font-primary);
-      font-size: var(--display-2xl-font-size);
-      line-height: var(--display-2xl-line-height);
-      letter-spacing: var(--display-2xl-letter-spacing);
-      font-style: normal;
-    }
-
-    /* ---------------------------------------------------------------------------
-     Display MD
-     --------------------------------------------------------------------------- */
-    .display-md {
-      font-family: var(--font-primary);
-      font-size: var(--display-md-font-size);
-      line-height: var(--display-md-line-height);
-      letter-spacing: var(--display-md-letter-spacing);
-      font-style: normal;
-    }
-
-    /* ---------------------------------------------------------------------------
-     Text XL
-     --------------------------------------------------------------------------- */
-    .text-xl-type {
-      font-family: var(--font-primary);
-      font-size: var(--text-xl-font-size);
-      line-height: var(--text-xl-line-height);
-      letter-spacing: var(--text-xl-letter-spacing);
-      font-style: normal;
-    }
-
-    /* ---------------------------------------------------------------------------
-     Text MD
-     --------------------------------------------------------------------------- */
-    .text-md-type {
-      font-family: var(--font-primary);
-      font-size: var(--text-md-font-size);
-      line-height: var(--text-md-line-height);
-      letter-spacing: var(--text-md-letter-spacing);
-      font-style: normal;
-    }
-
-    /* ---------------------------------------------------------------------------
-     Weight modifiers — combine with a size class above
-     --------------------------------------------------------------------------- */
-    .weight-regular {
-      font-weight: 400;
-    }
-    .weight-medium {
-      font-weight: 500;
-    }
-    .weight-semibold {
-      font-weight: 600;
-    }
-    .weight-bold {
-      font-weight: 700;
-    }
-  }
-
-  /* Shadows */
-  --shadow-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  --shadow-sm:
-    0px 1px 3px 0px rgba(16, 24, 40, 0.1),
-    0px 1px 2px -1px rgba(16, 24, 40, 0.1);
-  --shadow-md:
-    0px 4px 6px -1px rgba(16, 24, 40, 0.1),
-    0px 2px 4px -2px rgba(16, 24, 40, 0.1);
-  --shadow-lg:
-    0px 10px 15px -3px rgba(16, 24, 40, 0.1),
-    0px 4px 6px -4px rgba(16, 24, 40, 0.1);
-  --shadow-xl:
-    0px 20px 25px -5px rgba(16, 24, 40, 0.1),
-    0px 10px 10px -5px rgba(16, 24, 40, 0.1);
-  --shadow-2xl: 0px 25px 50px -12px rgba(16, 24, 40, 0.25);
-
-  /* Layout */
-  max-width: 1440px;
-  min-width: 320px;
-  width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+#root {
+	max-width: 1440px;
+	margin: 0 auto;
+	padding: 0 16px;
+	text-align: center;
 }
 
-html {
-  scroll-behavior: smooth;
+.logo {
+	height: 6em;
+	padding: 1.5em;
+	will-change: filter;
+	transition: filter 300ms;
+}
+.logo:hover {
+	filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+	filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  margin: 0;
-  padding: 0;
+@keyframes logo-spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 
-h1,
-h2,
-h3 {
-  margin: 0;
-  padding: 0;
+@media (prefers-reduced-motion: no-preference) {
+	a:nth-of-type(2) .logo {
+		animation: logo-spin infinite 20s linear;
+	}
 }
 
-a {
-  color: var(--primary);
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
+.card {
+	padding: 2em;
 }
 
-.section {
-  align-items: center;
-  display: inline-flex;
-  flex: 0 0 auto;
-  gap: 8px;
-  justify-content: center;
-  position: relative;
+.read-the-docs {
+	color: #888;
 }
 
-.container {
-  align-items: center;
-  display: inline-flex;
-  flex: 0 0 auto;
-  gap: 8px;
-  justify-content: center;
-  position: relative;
-}
-
-@theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: "Geist Variable", sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
-}
+/*-TYPOGRAPHY */

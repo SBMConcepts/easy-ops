@@ -1,28 +1,22 @@
-import { Navigate } from "react-router-dom";
-import { useAuth, type UserRole } from "../contexts/AuthContext";
+import React from "react"
+import { Navigate } from "react-router-dom"
+import { useAuth, type UserRole } from "../contexts/AuthContext"
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  allowedRoles?: UserRole[];
+	children: React.ReactNode
+	allowedRoles?: UserRole[]
 }
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+	const { isAuthenticated, user } = useAuth()
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
+	if (!isAuthenticated)
+		return React.createElement(Navigate, { to: "/login", replace: true })
+	if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+		return React.createElement(Navigate, { to: "/app", replace: true })
+	}
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/app" replace />;
-  }
+	return React.createElement(React.Fragment, null, children)
+}
 
-  return <>{children}</>;
-};
-
-export default ProtectedRoute;
+export default ProtectedRoute
