@@ -1,23 +1,21 @@
 {
 	"compilerOptions": {
-		"allowJs": true,
-		"noImplicitAny": false,
-		"noUnusedLocals": false,
-		"noUnusedParameters": false,
-		"jsx": "react-jsx",
-		"paths": {
-			"@/*": ["./src/*"]
-		},
+		"target": "ES2020",
+		"useDefineForClassFields": true,
+		"lib": ["ES2020", "DOM", "DOM.Iterable"],
+		"module": "ESNext",
 		"skipLibCheck": true,
-		"strictNullChecks": false
+		"moduleResolution": "bundler",
+		"allowImportingTsExtensions": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noEmit": true,
+		"jsx": "react-jsx",
+		"strict": true,
+		"rootDir": ".",
+		"types": ["vite/client", "node"]
 	},
-	"files": [],
-	"references": [
-		{
-			"path": "./tsconfig.app.json"
-		},
-		{
-			"path": "./tsconfig.node.json"
-		}
-	]
+	"include": ["src", "vite.config.ts"], //
+	"exclude": ["supabase", "node_modules", "dist"],
+    "extends": "@tsconfig/node24/tsconfig.json"
 }

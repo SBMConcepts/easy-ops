@@ -1,0 +1,55 @@
+@import "./onboarding.css";
+/* company-step.css*/
+
+/* page section */
+
+.company-step {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.company-step__desc {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+}
+
+/*company card*/
+
+.company-card {
+	border: 1px solid var(--form-border);
+	border-radius: var(--form-radius-lg);
+	box-shadow: var(--form-shadow-card);
+	transition:
+		box-shadow var(--form-speed) var(--form-ease),
+		border-color var(--form-speed) var(--form-ease);
+}
+
+.company-card:focus-within {
+	border-color: var(--form-border-hover);
+	box-shadow: var(--form-shadow-card-hover);
+}
+
+.company-card__content {
+	padding: 1.125rem !important; /* override CardContent default */
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.company-card__row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.company-card__label {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--form-text-label);
+	letter-spacing: 0.01em;
+}

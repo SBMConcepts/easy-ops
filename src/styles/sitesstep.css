@@ -1,0 +1,149 @@
+@import "./onboarding.css";
+/* sites-step.css */
+
+/* ── Page section ───────────────────────────────────────── */
+
+.sites-step {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.sites-step__desc {
+	font-size: 0.875rem;
+	color: var(--onboarding-text-secondary);
+	margin: 0;
+}
+
+.sites-step__list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+}
+
+/* ── Site card ──────────────────────────────────────────── */
+
+.site-card {
+	border: 1px solid var(--onboarding-border);
+	border-radius: var(--onboarding-radius-lg);
+	box-shadow: var(--onboarding-surface-raised);
+	transition:
+		box-shadow var(--onboarding-transition) var(--onboarding-transition),
+		border-color var(--onboarding-transition) var(--onboarding-transition);
+}
+
+.site-card:focus-within {
+	border-color: var(--onboarding-border-focus);
+	box-shadow:
+		var(--onboarding-surface-raised),
+		0 0 0 3px hsl(var(--onboarding-accent) / 0.06);
+}
+
+.site-card__content {
+	padding: 1.125rem !important; /* override CardContent default */
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+/* ── Card header ────────────────────────────────────────── */
+
+.site-card__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.site-card__label {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--onboarding-text-primary);
+	letter-spacing: 0.01em;
+}
+
+.site-card__pin-icon {
+	width: 0.875rem;
+	height: 0.875rem;
+	color: var(--onboarding-accent);
+	flex-shrink: 0;
+}
+
+.site-card__name-preview {
+	font-weight: 400;
+	color: var(--onboarding-text-secondary);
+	font-size: 0.8rem;
+	max-width: 160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ── Remove button ──────────────────────────────────────── */
+
+.site-card__remove {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border: none;
+	border-radius: var(--onboarding-radius-md);
+	background: transparent;
+	cursor: pointer;
+	color: var(--onboarding-text-secondary);
+	transition:
+		background var(--onboarding-transition) var(--onboarding-transition),
+		color var(--onboarding-transition) var(--onboarding-transition);
+}
+
+.site-card__remove:hover {
+	background: hsl(0 72% 51% / 0.08);
+	color: hsl(0 72% 51%);
+}
+
+.site-card__remove-icon {
+	width: 0.875rem;
+	height: 0.875rem;
+}
+
+/* ── Field grid ─────────────────────────────────────────── */
+
+.site-card__grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75rem;
+}
+
+.site-card__field--full {
+	grid-column: 1 / -1;
+}
+
+@media (max-width: 540px) {
+	.site-card__grid {
+		grid-template-columns: 1fr;
+	}
+	.site-card__field--full {
+		grid-column: 1;
+	}
+}
+
+/* ── Add site button ────────────────────────────────────── */
+
+.site-step__add-btn {
+	width: 100%;
+	border-style: dashed !important;
+	color: var(--onboarding-text-secondary);
+	transition:
+		color var(--onboarding-transition) var(--onboarding-transition),
+		border-color var(--onboarding-transition) var(--onboarding-transition),
+		background var(--onboarding-transition) var(--onboarding-transition);
+}
+
+.site-step__add-btn:hover {
+	color: var(--onboarding-text-primary);
+	border-color: var(--onboarding-border-focus) !important;
+	background: var(--onboarding-surface-raised);
+}

@@ -1,0 +1,523 @@
+@import "./onboarding.css";
+
+/* ── Tokens ─── */
+
+:root {
+	--form-font-sans: "Space Grotesk";
+	--form-font-mono: "Space Grotesk Mono";
+
+	--form-radius: var(--onboarding-radius-sm);
+	--form-radius-lg: var(--onboarding-radius-lg);
+
+	--form-speed-fast: var(--onboarding-transition-fast);
+	--form-speed: var(--onboarding-transition);
+	--form-speed-slow: var(--onboarding-transition-slow);
+	--form-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+	/* Surface */
+	--form-bg: hsl(0 0% 100%);
+	--form-bg-subtle: hsl(220 14% 97%);
+	--form-bg-input: hsl(220 20% 98%);
+
+	/* Border */
+	--form-border: var(--onboarding-form-border);
+	--form-border-hover: var(--onboarding-form-border-hover);
+	--form-border-focus: var(--onboarding-form-border-focus);
+	--form-border-error: var(--onboarding-form-border-error);
+
+	/* Text */
+	--form-text: var(--onboarding-text-primary);
+	--form-text-muted: var(--onboarding-text-muted);
+	--form-text-placeholder: var(--onboarding-text-placeholder);
+	--form-text-error: var(--onboarding-text-error);
+	--form-text-label: var(--onboarding-text-label);
+
+	/* Shadow */
+	--form-shadow-input: 0 1px 2px hsl(220 20% 10% / 0.04);
+	--form-shadow-focus: 0 0 0 3px hsl(var(--onboarding-accent) / 0.12);
+	--form-shadow-error: 0 0 0 3px hsl(var(--onboarding-border-error) / 0.12);
+	--form-shadow-card:
+		0 1px 3px hsl(220 20% 10% / 0.06), 0 4px 16px hsl(220 20% 10% / 0.04);
+}
+
+/* ── Base reset for form elements ───────────────────────── */
+
+.form-root *,
+.form-root *::before,
+.form-root *::after {
+	box-sizing: border-box;
+}
+
+.form-root {
+	font-size: 0.9375rem;
+	line-height: 1.5;
+	color: var(--form-text);
+}
+
+/* ── Field wrapper ──────────────────────────────────────── */
+
+.form-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
+.form-field + .form-field {
+	margin-top: 1.25rem;
+}
+
+/* ── Label ──────────────────────────────────────────────── */
+
+.form-label {
+	font-size: 0.8125rem;
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	color: var(--form-text-label);
+	user-select: none;
+	transition: color var(--form-speed-fast) var(--form-ease);
+}
+
+.form-field:focus-within .form-label {
+	color: var(--form-text);
+}
+
+.form-label--required::after {
+	content: " *";
+	color: var(--form-text-error);
+	font-size: 0.75rem;
+}
+
+/* ── Input & Textarea ───────────────────────────────────── */
+
+.form-input,
+.form-textarea {
+	width: 100%;
+	padding: 0.5625rem 0.75rem;
+	font-family: var(--form-font-sans);
+	font-size: 0.9375rem;
+	font-weight: 400;
+	line-height: 1.5;
+	color: var(--form-text);
+	background: var(--form-bg-input);
+	border: 1px solid var(--form-border);
+	border-radius: var(--form-radius);
+	box-shadow: var(--form-shadow-input);
+	outline: none;
+	appearance: none;
+	transition:
+		border-color var(--form-speed-fast) var(--form-ease),
+		box-shadow var(--form-speed-fast) var(--form-ease),
+		background var(--form-speed-fast) var(--form-ease);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+	color: var(--form-text-placeholder);
+	font-weight: 300;
+}
+
+.form-input:hover:not(:disabled),
+.form-textarea:hover:not(:disabled) {
+	border-color: var(--form-border-hover);
+}
+
+.form-input:focus,
+.form-textarea:focus {
+	border-color: var(--form-border-focus);
+	box-shadow: var(--form-shadow-focus);
+	background: var(--form-bg);
+}
+
+.form-input:disabled,
+.form-textarea:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: var(--form-bg-subtle);
+}
+
+.form-input--error,
+.form-textarea--error {
+	border-color: var(--form-border-error);
+}
+
+.form-input--error:focus,
+.form-textarea--error:focus {
+	box-shadow: var(--form-shadow-error);
+}
+
+/* Monospace variant — e.g. API keys, codes */
+.form-input--mono {
+	font-family: var(--form-font-mono);
+	font-size: 0.875rem;
+	letter-spacing: 0.04em;
+}
+
+.form-textarea {
+	resize: vertical;
+	min-height: 6rem;
+}
+
+/* ── Input with icon ────────────────────────────────────── */
+
+.form-input-wrap {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.form-input-wrap .form-input {
+	padding-left: 2.25rem;
+}
+
+.form-input-wrap .form-input--icon-right {
+	padding-left: 0.75rem;
+	padding-right: 2.25rem;
+}
+
+.form-input-icon {
+	position: absolute;
+	left: 0.75rem;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 1rem;
+	height: 1rem;
+	color: var(--form-text-muted);
+	pointer-events: none;
+	transition: color var(--form-speed-fast) var(--form-ease);
+}
+
+.form-input-icon--right {
+	left: auto;
+	right: 0.75rem;
+}
+
+.form-input-wrap:focus-within .form-input-icon {
+	color: var(--form-text);
+}
+
+/* ── Select trigger (shadcn override) ───────────────────── */
+
+[data-radix-select-trigger],
+.form-select-trigger {
+	width: 100%;
+	padding: 0.5625rem 0.75rem;
+	font-family: var(--form-font-sans);
+	font-size: 0.9375rem;
+	font-weight: 400;
+	color: var(--form-text);
+	background: var(--form-bg-input);
+	border: 1px solid var(--form-border);
+	border-radius: var(--form-radius);
+	box-shadow: var(--form-shadow-input);
+	outline: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	transition:
+		border-color var(--form-speed-fast) var(--form-ease),
+		box-shadow var(--form-speed-fast) var(--form-ease),
+		background var(--form-speed-fast) var(--form-ease);
+}
+
+[data-radix-select-trigger]:hover,
+.form-select-trigger:hover {
+	border-color: var(--form-border-hover);
+}
+
+[data-radix-select-trigger][data-state="open"],
+.form-select-trigger[data-state="open"] {
+	border-color: var(--form-border-focus);
+	box-shadow: var(--form-shadow-focus);
+	background: var(--form-bg);
+}
+
+[data-radix-select-trigger][data-placeholder] span,
+.form-select-trigger [data-placeholder] {
+	color: var(--form-text-placeholder);
+	font-weight: 300;
+}
+
+/* ── Select content/dropdown ────────────────────────────── */
+
+[data-radix-select-content],
+.form-select-content {
+	background: var(--form-bg);
+	border: 1px solid var(--form-border);
+	border-radius: var(--form-radius-lg);
+	box-shadow:
+		0 4px 6px hsl(220 20% 10% / 0.06),
+		0 12px 32px hsl(220 20% 10% / 0.1);
+	padding: 0.25rem;
+	overflow: hidden;
+	animation: form-dropdown-in var(--form-speed) var(--form-ease);
+}
+
+@keyframes form-dropdown-in {
+	from {
+		opacity: 0;
+		transform: translateY(-4px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+[data-radix-select-item],
+.form-select-item {
+	padding: 0.4375rem 0.625rem;
+	font-size: 0.9rem;
+	border-radius: var(--form-radius);
+	cursor: pointer;
+	outline: none;
+	transition:
+		background var(--form-speed-fast) var(--form-ease),
+		color var(--form-speed-fast) var(--form-ease);
+}
+
+[data-radix-select-item][data-highlighted],
+.form-select-item:hover,
+.form-select-item:focus {
+	background: var(--form-bg-subtle);
+	color: var(--form-text);
+}
+
+[data-radix-select-item][data-state="checked"],
+.form-select-item--selected {
+	font-weight: 500;
+	color: hsl(var(--primary));
+}
+
+/* ── Checkbox & Radio ───────────────────────────────────── */
+
+.form-check {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.625rem;
+	cursor: pointer;
+}
+
+.form-check__input {
+	appearance: none;
+	width: 1rem;
+	height: 1rem;
+	border: 1.5px solid var(--form-border);
+	border-radius: 3px;
+	background: var(--form-bg-input);
+	box-shadow: var(--form-shadow-input);
+	cursor: pointer;
+	flex-shrink: 0;
+	margin-top: 0.175rem;
+	position: relative;
+	transition:
+		border-color var(--form-speed-fast) var(--form-ease),
+		background var(--form-speed-fast) var(--form-ease),
+		box-shadow var(--form-speed-fast) var(--form-ease);
+}
+
+.form-check__input[type="radio"] {
+	border-radius: 50%;
+}
+
+.form-check__input:hover {
+	border-color: var(--form-border-hover);
+}
+
+.form-check__input:checked {
+	background: hsl(var(--primary));
+	border-color: hsl(var(--primary));
+}
+
+.form-check__input:focus-visible {
+	box-shadow: var(--form-shadow-focus);
+}
+
+/* Checkmark via SVG mask */
+.form-check__input[type="checkbox"]:checked::after {
+	content: "";
+	display: block;
+	position: absolute;
+	inset: 0;
+	background: white;
+	mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 6l3 3 5-5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+	mask-repeat: no-repeat;
+	mask-position: center;
+	mask-size: 10px;
+}
+
+.form-check__input[type="radio"]:checked::after {
+	content: "";
+	display: block;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: white;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.form-check__label {
+	font-size: 0.9rem;
+	color: var(--form-text);
+	line-height: 1.4;
+}
+
+.form-check__label small {
+	display: block;
+	font-size: 0.8rem;
+	color: var(--form-text-muted);
+	margin-top: 0.125rem;
+}
+
+/* ── Switch ─────────────────────────────────────────────── */
+
+.form-switch {
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	cursor: pointer;
+}
+
+.form-switch__track {
+	position: relative;
+	width: 2.25rem;
+	height: 1.25rem;
+	background: var(--form-border);
+	border-radius: 999px;
+	flex-shrink: 0;
+	transition: background var(--form-speed-fast) var(--form-ease);
+}
+
+.form-switch__input {
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.form-switch__input:checked + .form-switch__track {
+	background: hsl(var(--primary));
+}
+
+.form-switch__input:focus-visible + .form-switch__track {
+	box-shadow: var(--form-shadow-focus);
+}
+
+.form-switch__thumb {
+	position: absolute;
+	top: 0.1875rem;
+	left: 0.1875rem;
+	width: 0.875rem;
+	height: 0.875rem;
+	border-radius: 50%;
+	background: white;
+	box-shadow: 0 1px 3px hsl(0 0% 0% / 0.2);
+	transition: transform var(--form-speed) var(--form-ease);
+}
+
+.form-switch__input:checked ~ .form-switch__thumb,
+.form-switch__input:checked + .form-switch__track .form-switch__thumb {
+	transform: translateX(1rem);
+}
+
+/* ── Helper & error text ────────────────────────────────── */
+
+.form-hint {
+	font-size: 0.8rem;
+	color: var(--form-text-muted);
+	line-height: 1.4;
+}
+
+.form-error {
+	font-size: 0.8rem;
+	color: var(--form-text-error);
+	line-height: 1.4;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.form-error::before {
+	content: "";
+	display: inline-block;
+	width: 0.75rem;
+	height: 0.75rem;
+	flex-shrink: 0;
+	background: currentColor;
+	mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='6' cy='6' r='5' stroke='currentColor' stroke-width='1.5' fill='none'/%3E%3Cpath d='M6 4v2.5M6 8h.01' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+	mask-repeat: no-repeat;
+	mask-size: contain;
+}
+
+/* ── Form section / fieldset ────────────────────────────── */
+
+.form-section {
+	border: 1px solid var(--form-border);
+	border-radius: var(--form-radius-lg);
+	padding: 1.25rem;
+	background: var(--form-bg);
+	box-shadow: var(--form-shadow-card);
+}
+
+.form-section__title {
+	font-size: 0.875rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--form-text);
+	margin: 0 0 0.25rem;
+}
+
+.form-section__desc {
+	font-size: 0.8125rem;
+	color: var(--form-text-muted);
+	margin: 0 0 1.25rem;
+}
+
+.form-divider {
+	border: none;
+	border-top: 1px solid var(--form-border);
+	margin: 1.25rem 0;
+}
+
+/* ── Form row (horizontal layout) ──────────────────────── */
+
+.form-row {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 1rem;
+}
+
+/* ── Character counter ──────────────────────────────────── */
+
+.form-counter {
+	font-size: 0.75rem;
+	font-family: var(--form-font-mono);
+	color: var(--form-text-muted);
+	text-align: right;
+	transition: color var(--form-speed-fast) var(--form-ease);
+}
+
+.form-counter--warn {
+	color: hsl(38 92% 50%);
+}
+.form-counter--over {
+	color: var(--form-text-error);
+}
+
+/* ── Submit / action area ───────────────────────────────── */
+
+.form-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	padding-top: 0.5rem;
+}
+
+.form-actions--spread {
+	justify-content: space-between;
+}
