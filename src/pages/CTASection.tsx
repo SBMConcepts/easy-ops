@@ -1,10 +1,15 @@
-'use client'
-import { ArrowRight, Phone } from 'lucide-react'
-import '../styles/ctasection.css'
-import DemoModal from '../components/DemoModal'
-import { useState } from 'react'
+"use client"
+import { ArrowRight, Phone } from "lucide-react"
+import "../styles/ctasection.css"
+import DemoModal from "../components/DemoModal"
+import { useState } from "react"
+import { useNavigate } from "react-router"
 
-export default function CTASection() {
+export default function CTASection({
+    navigate,
+}: {
+    navigate: ReturnType<typeof useNavigate>
+}) {
     const [modalOpen, setModalOpen] = useState(false)
 
     return (
@@ -24,7 +29,10 @@ export default function CTASection() {
                     </div>
 
                     <div className="cta-actions">
-                        <button className="cta-gst-button">
+                        <button
+                            className="cta-gst-button"
+                            onClick={() => navigate("/login")}
+                        >
                             <div className="cta-gst-button-text">
                                 Get Started Today
                             </div>

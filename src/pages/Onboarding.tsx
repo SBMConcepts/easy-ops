@@ -1,17 +1,17 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router'
-import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../integrations/supabase/client'
-import { Button } from '../components/ui/button'
+import { useState } from "react"
+import { useNavigate } from "react-router"
+import { useAuth } from "../contexts/AuthContext"
+import { supabase } from "../integrations/supabase/client"
+import { Button } from "../components/ui/button"
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
     CardDescription,
-} from '../components/ui/card'
-import { Progress } from '../components/ui/progress'
-import { useToast } from '../hooks/use-toast'
+} from "../components/ui/card"
+import { Progress } from "../components/ui/progress"
+import { useToast } from "../hooks/use-toast"
 import {
     Building2,
     MapPin,
@@ -23,41 +23,41 @@ import {
     ArrowLeft,
     ArrowRight,
     Loader2,
-} from 'lucide-react'
+} from "lucide-react"
 import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuList,
-} from '../components/ui/navigation-menu'
+} from "../components/ui/navigation-menu"
 import CompanyStep, {
     type CompanyData,
-} from '../components/onboarding/CompanyStep'
-import SitesStep, { type SiteData } from '../components/onboarding/SitesStep'
+} from "../components/onboarding/CompanyStep"
+import SitesStep, { type SiteData } from "../components/onboarding/SitesStep"
 import DepartmentsStep, {
     type DepartmentData,
-} from '../components/onboarding/DepartmentsStep'
-import RolesStep, { type RoleData } from '../components/onboarding/RolesStep'
+} from "../components/onboarding/DepartmentsStep"
+import RolesStep, { type RoleData } from "../components/onboarding/RolesStep"
 import ShiftsStep, {
     type ShiftData,
     type WorkRules,
-} from '../components/onboarding/ShiftsStep'
+} from "../components/onboarding/ShiftsStep"
 import CheckInMethodsStep, {
     type CheckInSettings,
-} from '../components/onboarding/CheckInMethodsStep'
-import ReviewStep from '../components/onboarding/ReviewStep'
+} from "../components/onboarding/CheckInMethodsStep"
+import ReviewStep from "../components/onboarding/ReviewStep"
 
-import '../styles/onboarding.css'
+import "../styles/onboarding.css"
 
 // ── Step manifest ──
 
 const STEPS = [
-    { title: 'Company Details', icon: Building2 },
-    { title: 'Sites', icon: MapPin },
-    { title: 'Departments', icon: Users },
-    { title: 'Roles', icon: ShieldCheck },
-    { title: 'Shifts & Rules', icon: Clock },
-    { title: 'Check-In', icon: QrCode },
-    { title: 'Review', icon: CheckCircle2 },
+    { title: "Company Details", icon: Building2 },
+    { title: "Sites", icon: MapPin },
+    { title: "Departments", icon: Users },
+    { title: "Roles", icon: ShieldCheck },
+    { title: "Shifts & Rules", icon: Clock },
+    { title: "Check-In", icon: QrCode },
+    { title: "Review", icon: CheckCircle2 },
 ] as const
 
 const LAST_STEP = STEPS.length - 1
@@ -65,57 +65,58 @@ const LAST_STEP = STEPS.length - 1
 // ── Default state ──
 
 const DEFAULT_COMPANY: CompanyData = {
-    name: '',
-    industry: '',
-    country: 'South Africa',
+    name: "",
+    industry: "",
+    country: "South Africa",
 }
 
 const DEFAULT_SITES: SiteData[] = [
     {
-        name: '',
-        address: '',
-        latitude: '',
-        longitude: '',
-        geofence_radius_m: '200',
+        name: "",
+        address: "",
+        latitude: "",
+        longitude: "",
+        geofence_radius_m: "200",
     },
 ]
 
-const DEFAULT_DEPARTMENTS: DepartmentData[] = [{ name: '', site_index: 0 }]
+const DEFAULT_DEPARTMENTS: DepartmentData[] = [{ name: "", site_index: 0 }]
 
 const DEFAULT_ROLES: RoleData[] = [
-    { name: 'Admin', base_role: 'admin' },
-    { name: 'Manager', base_role: 'manager' },
-    { name: 'Supervisor', base_role: 'supervisor' },
-    { name: 'Employee', base_role: 'employee' },
+    { name: "Admin", base_role: "admin" },
+    { name: "Manager", base_role: "manager" },
+    { name: "Supervisor", base_role: "supervisor" },
+    { name: "Employee", base_role: "employee" },
 ]
 
 const DEFAULT_SHIFTS: ShiftData[] = [
     {
-        name: 'Day Shift',
-        start_time: '08:00',
-        end_time: '17:00',
-        grace_period_minutes: '15',
+        name: "Day Shift",
+        start_time: "08:00",
+        end_time: "17:00",
+        grace_period_minutes: "15",
         site_index: 0,
     },
 ]
 
 const DEFAULT_WORK_RULES: WorkRules = {
-    max_weekly_hours: '45',
-    overtime_multiplier: '1.5',
+    max_weekly_hours: "45",
+    overtime_multiplier: "1.5",
 }
 
 const DEFAULT_CHECKIN: CheckInSettings = {
     methods: { qr: true, biometric: false, whatsapp: false, manual: true },
     geofencing_enabled: false,
-    default_geofence_radius: '200',
+    default_geofence_radius: "200",
 }
 
 // ── Component ──────
 
 const Onboarding = () => {
+    const { user, organisation, refreshOrganisation } = useAuth()
+    const [saving, setSaving] = useState(false)
     const [step, setStep] = useState(0)
-    const [submitting, setSubmitting] = useState(false)
-
+    const [error, setError] = useState<string | null>(null)
     const [company, setCompany] = useState<CompanyData>(DEFAULT_COMPANY)
     const [sites, setSites] = useState<SiteData[]>(DEFAULT_SITES)
     const [departments, setDepartments] =
@@ -125,70 +126,114 @@ const Onboarding = () => {
     const [workRules, setWorkRules] = useState<WorkRules>(DEFAULT_WORK_RULES)
     const [checkIn, setCheckIn] = useState<CheckInSettings>(DEFAULT_CHECKIN)
 
-    const { refreshOrganisation } = useAuth()
     const navigate = useNavigate()
     const { toast } = useToast()
 
     // ── Validation ─────────────────────────────────────────────────────────
 
-    const canProceed = (): boolean => {
-        if (step === 0) return company.name.trim().length > 0
-        if (step === 1) return sites.some((s) => s.name.trim().length > 0)
-        return true
+    const validateStep = (): string | null => {
+        if (step === 0) {
+            if (!company.name.trim()) return "Organisation name is required"
+            if (!company.industry) return "Please select an industry"
+        }
+        if (step === 1) {
+            for (const [i, s] of sites.entries()) {
+                if (!s.name.trim()) return `Site ${i + 1}: name is required`
+            }
+        }
+        if (step === 2) {
+            for (const [i, s] of shifts.entries()) {
+                if (!s.name.trim()) return `Shift ${i + 1}: name is required`
+                if (s.start_time >= s.end_time)
+                    return `Shift ${i + 1}: end time must be after start time`
+            }
+        }
+        return null
     }
 
+    const next = () => {
+        const err = validateStep()
+        if (err) {
+            setError(err)
+            return
+        }
+        setError(null)
+        setStep((s) => s + 1)
+    }
+
+    const back = () => {
+        setError(null)
+        setStep((s) => s - 1)
+    }
     // ── Submit ───
 
     const handleSubmit = async () => {
-        setSubmitting(true)
+        setSaving(true)
+        setError(null)
         try {
-            const payload = {
-                company,
-                sites: sites.filter((s) => s.name.trim()),
-                departments: departments.filter((d) => d.name.trim()),
-                roles: roles.filter((r) => r.name.trim()),
-                shifts: shifts
-                    .filter((s) => s.name.trim())
-                    .map((s) => ({
-                        ...s,
-                        grace_period_minutes:
-                            Number(s.grace_period_minutes) || 15,
-                    })),
-                settings: {
-                    check_in_methods: Object.entries(checkIn.methods)
-                        .filter(([, v]) => v)
-                        .map(([k]) => k),
-                    geofencing_enabled: checkIn.geofencing_enabled,
-                    default_geofence_radius:
-                        Number(checkIn.default_geofence_radius) || 200,
-                    max_weekly_hours: Number(workRules.max_weekly_hours) || 45,
-                    overtime_multiplier:
-                        Number(workRules.overtime_multiplier) || 1.5,
-                },
+            const orgId = user?.organisation_id
+            if (!orgId)
+                throw new Error("No organisation ID found on your profile.")
+            // 1. Update the organisations row
+            const { error: orgErr } = await supabase
+                .from("organisations")
+                .update({
+                    name: company.name.trim(),
+                    industry: company.industry,
+                    country: company.country,
+                    onboarding_completed: true,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", orgId)
+            if (orgErr) throw orgErr
+
+            // 2. Insert sites
+            if (sites.length > 0) {
+                const siteRows = sites.map((s) => ({
+                    organisation_id: orgId,
+                    name: s.name.trim(),
+                    address: s.address.trim() || null,
+                    latitude: s.latitude ? parseFloat(s.latitude) : null,
+                    longitude: s.longitude ? parseFloat(s.longitude) : null,
+                    geofence_radius_m: s.geofence_radius_m
+                        ? parseInt(s.geofence_radius_m)
+                        : null,
+                }))
+                const { error: siteErr } = await supabase
+                    .from("sites")
+                    .insert(siteRows)
+                if (siteErr) throw siteErr
             }
 
-            const { data, error } = await supabase.functions.invoke(
-                'organisation-setup',
-                { body: payload }
-            )
-            if (error) throw error
-            if (data?.error) throw new Error(data.error)
+            // 3. Insert shifts
+            if (shifts.length > 0) {
+                const shiftRows = shifts.map((s) => ({
+                    organisation_id: orgId,
+                    name: s.name.trim(),
+                    start_time: s.start_time,
+                    end_time: s.end_time,
+                    grace_period_minutes:
+                        parseInt(s.grace_period_minutes) || 10,
+                }))
+                const { error: shiftErr } = await supabase
+                    .from("shifts")
+                    .insert(shiftRows)
+                if (shiftErr) throw shiftErr
+            }
 
-            toast({
-                title: 'Organisation created!',
-                description: `${company.name} has been set up successfully.`,
-            })
-            await refreshOrganisation?.()
-            navigate('/app')
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (err: any) {
-            toast({
-                title: 'Setup failed',
-                description: err.message || 'Something went wrong.',
-                variant: 'destructive',
-            })
+            // 4. Refresh the in-memory organisation so ProtectedRoute lifts the
+            //    onboarding guard immediately without a page reload.
+            await refreshOrganisation()
+
+            navigate("/app", { replace: true })
+        } catch (err: unknown) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Something went wrong. Please try again."
+            )
         } finally {
-            setSubmitting(false)
+            setSaving(false)
         }
     }
 
@@ -222,10 +267,10 @@ const Onboarding = () => {
                                     disabled={i > step}
                                     className={`onboarding-step-btn ${
                                         i === step
-                                            ? 'onboarding-step-btn--active'
+                                            ? "onboarding-step-btn--active"
                                             : i < step
-                                              ? 'onboarding-step-btn--completed'
-                                              : 'onboarding-step-btn--upcoming'
+                                              ? "onboarding-step-btn--completed"
+                                              : "onboarding-step-btn--upcoming"
                                     }`}
                                 >
                                     <s.icon className="onboarding-step-btn__icon" />
@@ -247,8 +292,8 @@ const Onboarding = () => {
                         </CardTitle>
                         <CardDescription className="onboarding-card__desc">
                             {step === LAST_STEP
-                                ? 'Confirm everything looks correct before submitting.'
-                                : 'Fill in the details below.'}
+                                ? "Confirm everything looks correct before submitting."
+                                : "Fill in the details below."}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="onboarding-card__content">
@@ -301,29 +346,26 @@ const Onboarding = () => {
                 <footer className="onboarding-footer">
                     <Button
                         variant="outline"
-                        onClick={() => setStep((s) => s - 1)}
+                        onClick={back}
                         disabled={step === 0}
                     >
                         <ArrowLeft className="onboarding-btn-icon--left" /> Back
                     </Button>
 
                     {step < LAST_STEP ? (
-                        <Button
-                            onClick={() => setStep((s) => s + 1)}
-                            disabled={!canProceed()}
-                        >
-                            Next{' '}
+                        <Button onClick={next}>
+                            Next{" "}
                             <ArrowRight className="onboarding-btn-icon--right" />
                         </Button>
                     ) : (
-                        <Button onClick={handleSubmit} disabled={submitting}>
-                            {submitting ? (
+                        <Button onClick={handleSubmit} disabled={saving}>
+                            {saving ? (
                                 <>
-                                    <Loader2 className="onboarding-btn-icon--spin" />{' '}
-                                    Saving...
+                                    <Loader2 className="onboarding-btn-icon--spin" />{" "}
+                                    "Saving..."
                                 </>
                             ) : (
-                                'Confirm & Complete Setup'
+                                " Complete Setup"
                             )}
                         </Button>
                     )}

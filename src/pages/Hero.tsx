@@ -1,9 +1,15 @@
-'use client'
-import { CheckIcon, UserIcon, PlayCircle, Clock } from 'lucide-react'
-import heroImage from '../../src/assets/hero-imageI-EO.jpg'
-import '../styles/hero.css'
+"use client"
+import { CheckIcon, UserIcon, PlayCircle, Clock } from "lucide-react"
+import heroImage from "../../src/assets/hero-imageI-EO.jpg"
+import "../styles/hero.css"
+import { useState } from "react"
+import { useNavigate } from "react-router"
 
-export default function Hero() {
+export default function Hero({
+    navigate,
+}: {
+    navigate: ReturnType<typeof useNavigate>
+}) {
     return (
         <section className="hero-section" id="home">
             {/* Background */}
@@ -22,7 +28,7 @@ export default function Hero() {
                         </div>
 
                         <h1 className="hero-heading">
-                            Simplify Your{' '}
+                            Simplify Your{" "}
                             <span className="hero-heading__underline">
                                 Workforce
                                 <svg
@@ -37,7 +43,7 @@ export default function Hero() {
                                         strokeLinecap="round"
                                     />
                                 </svg>
-                            </span>{' '}
+                            </span>{" "}
                             Operations
                         </h1>
 
@@ -48,8 +54,13 @@ export default function Hero() {
                         </p>
 
                         <div className="hero-cta-actions">
-                            <button className="hero-cta-button hero-cta-button--primary">
-                                <div className="hero-cta-button-text">Demo</div>
+                            <button
+                                className="hero-cta-button hero-cta-button--primary"
+                                onClick={() => navigate("/login")}
+                            >
+                                <div className="hero-cta-button-text">
+                                    Start Now
+                                </div>
                                 <div className="hero-icon-container">
                                     <PlayCircle className="hero-cta-icon" />
                                 </div>

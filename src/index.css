@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 :root {
     --background: #f8f9fb;
     --foreground: #141e2e;
@@ -47,16 +47,19 @@
     --gradient-muted: rgba(244, 243, 236, 0.5);
     --shadow: rgba(20, 29, 41, 0.1);
 
-    --font-family: 'Space Grotesk';
+    --font-family: "Space Grotesk";
 }
 
 @layer base {
     * {
-        @apply border-border;
+        box-sizing: border-box;
     }
 
     body {
-        @apply bg-background text-foreground antialiased;
+        margin: 0;
+        font-family: var(--font-family);
+        background: var(--background);
+        color: var(--foreground);
     }
 
     h1,
@@ -65,7 +68,7 @@
     h4,
     h5,
     h6 {
-        font-family: 'Space Grotesk';
+        font-family: "Space Grotesk";
     }
 }
 
