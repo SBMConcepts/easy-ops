@@ -1,0 +1,252 @@
+/* ─── Shared Dashboard Styles ─────────────────────────────────────────────── */
+
+/* ── Page wrapper ──────────────────────────────────────────────────────────── */
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Page heading ──────────────────────────────────────────────────────────── */
+
+.dashboard-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-heading-text {
+}
+
+.dashboard-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0 0 0.2rem;
+  font-family: var(--font-family);
+  letter-spacing: -0.02em;
+}
+
+/* Admin title gets primary colour */
+.dashboard-title--admin {
+  color: var(--primary);
+}
+
+.dashboard-subtitle {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* ── Stat grid ─────────────────────────────────────────────────────────────── */
+
+.dashboard-stat-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-stat-grid--6 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.dashboard-stat-grid--4 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.dashboard-stat-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (min-width: 768px) {
+  .dashboard-stat-grid--6 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dashboard-stat-grid--4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-stat-grid--6 {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* ── Stat card (centred — admin) ───────────────────────────────────────────── */
+
+.stat-card-body--centered {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+/* ── Stat card (row — manager / supervisor / employee) ─────────────────────── */
+
+.stat-card-body--row {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ── Stat card shared text ─────────────────────────────────────────────────── */
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+  font-family: var(--font-family);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* ── Icon colours ──────────────────────────────────────────────────────────── */
+
+.icon-primary {
+  color: var(--primary);
+}
+.icon-secondary {
+  color: var(--secondary);
+}
+.icon-accent {
+  color: var(--accent);
+}
+.icon-destructive {
+  color: var(--destructive);
+}
+
+/* ── Card header with icon ─────────────────────────────────────────────────── */
+
+.card-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+}
+
+/* ── Attendance list ───────────────────────────────────────────────────────── */
+
+.attendance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.attendance-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.attendance-row:last-child {
+  border-bottom: none;
+}
+
+.attendance-row-left {
+}
+
+.attendance-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  margin: 0 0 0.1rem;
+}
+
+.attendance-meta {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.attendance-row-right {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.attendance-time {
+  font-size: 0.75rem;
+  color: var(--foreground);
+  font-family: ui-monospace, monospace;
+}
+
+.attendance-method {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.attendance-hours {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.attendance-empty {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* ── Status badge colour helpers ───────────────────────────────────────────── */
+/* Applied via className on <Badge> — kept here for documentation */
+/*
+  present  → bg-secondary/10 text-secondary border-secondary/20
+  late     → bg-accent/10 text-accent-foreground border-accent/20
+  absent   → bg-destructive/10 text-destructive border-destructive/20
+  on_leave → bg-muted text-muted-foreground border-muted
+*/
+
+/* ── Content grid (two columns on md+) ────────────────────────────────────── */
+
+.dashboard-two-col {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .dashboard-two-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Loading spinner ───────────────────────────────────────────────────────── */
+
+.dashboard-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.dashboard-spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  border-bottom-color: var(--primary);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
