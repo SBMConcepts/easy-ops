@@ -1,0 +1,334 @@
+/* ─── Shared Page Styles ──────────────────────────────────────────────────── */
+
+/* ── Page wrapper ──────────────────────────────────────────────────────────── */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Page heading row ──────────────────────────────────────────────────────── */
+
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-heading-text {
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0 0 0.2rem;
+  font-family: var(--font-family);
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* ── Loader ────────────────────────────────────────────────────────────────── */
+
+.page-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.page-spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  border-bottom-color: var(--primary);
+  animation: page-spin 0.7s linear infinite;
+}
+
+@keyframes page-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Card title with icon ──────────────────────────────────────────────────── */
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+}
+
+/* ── Icon helpers ──────────────────────────────────────────────────────────── */
+
+.icon-primary {
+  color: var(--primary);
+}
+.icon-secondary {
+  color: var(--secondary);
+}
+.icon-accent {
+  color: var(--accent);
+}
+.icon-destructive {
+  color: var(--destructive);
+}
+.icon-muted {
+  color: var(--muted-foreground);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   LIVE ATTENDANCE
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Site grid ─────────────────────────────────────────────────────────────── */
+
+.site-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .site-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.site-card-body {
+  padding: 1rem;
+}
+
+.site-card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.site-card-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.site-card-count-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-card-count {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* ── Attendance record list ────────────────────────────────────────────────── */
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.record-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: calc(var(--radius) - 2px);
+  transition: background 120ms ease;
+}
+
+.record-row:hover {
+  background: color-mix(in srgb, var(--muted) 50%, transparent);
+}
+
+.record-row-left {
+  flex: 1;
+}
+
+.record-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  margin: 0 0 0.1rem;
+}
+
+.record-meta {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.record-row-right {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.record-time {
+  font-size: 0.75rem;
+  font-family: ui-monospace, monospace;
+  color: var(--foreground);
+}
+
+.record-empty {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   REPORTS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Stat grid ─────────────────────────────────────────────────────────────── */
+
+.report-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .report-stat-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.report-stat-body {
+  padding: 1rem;
+  text-align: center;
+}
+
+.report-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0.25rem 0 0;
+  font-family: var(--font-family);
+  line-height: 1;
+}
+
+.report-stat-label {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0.25rem 0 0;
+}
+
+/* ── Report card grid ──────────────────────────────────────────────────────── */
+
+.report-card-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .report-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.report-card-body {
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.report-card-icon-wrap {
+  height: 3rem;
+  width: 3rem;
+  border-radius: calc(var(--radius) - 2px);
+  background: color-mix(in srgb, var(--secondary) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.report-card-text {
+  flex: 1;
+}
+
+.report-card-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  margin: 0 0 0.15rem;
+}
+
+.report-card-desc {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* ── Detailed records table ────────────────────────────────────────────────── */
+
+.records-table-wrap {
+  overflow-x: auto;
+}
+
+.records-table {
+  width: 100%;
+  font-size: 0.875rem;
+  border-collapse: collapse;
+}
+
+.records-table thead tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.records-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+
+.records-table tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.records-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.records-table td {
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+.records-table td.cell-muted {
+  color: var(--muted-foreground);
+}
+
+.records-table td.cell-mono {
+  font-family: ui-monospace, monospace;
+}
+
+.records-table td.cell-empty {
+  text-align: center;
+  color: var(--muted-foreground);
+  padding: 1rem 0;
+}
