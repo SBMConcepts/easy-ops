@@ -1,0 +1,87 @@
+/* ─── App Shell ───────────────────────────────────────────────────────────── */
+
+/* ── AppHeader ─────────────────────────────────────────────────────────────── */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+  min-height: 3rem;
+}
+
+.app-header-spacer {
+  flex: 1;
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-header-user {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .app-header-user {
+    display: flex;
+  }
+}
+
+.app-header-username {
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+/* ── Role badge colour helpers ─────────────────────────────────────────────── */
+/*
+  admin      → bg-destructive/10 text-destructive border-destructive/20
+  manager    → bg-secondary/10  text-secondary   border-secondary/20
+  supervisor → bg-accent/10     text-accent-foreground border-accent/20
+  employee   → bg-primary/10    text-primary     border-primary/20
+*/
+
+/* ── AppLayout ─────────────────────────────────────────────────────────────── */
+
+.app-main {
+  flex: 1;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .app-main {
+    padding: 1.5rem;
+  }
+}
+
+/* ── AppSidebar ────────────────────────────────────────────────────────────── */
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 1rem;
+}
+
+.sidebar-brand-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+  font-family: var(--font-family);
+  letter-spacing: -0.01em;
+}
+
+.sidebar-footer-text {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  padding: 1rem;
+}
