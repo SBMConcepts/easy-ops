@@ -4,6 +4,7 @@
         "strict": true
     },
     "imports": {
-        "https://deno.land/std@0.177.0/": "https://deno.land/std@0.177.0/"
+        "https://deno.land/std@0.177.0/": "https://deno.land/std@0.177.0/",
+        "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
     }
 }

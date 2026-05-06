@@ -44,7 +44,7 @@ Key product highlights communicated on the site:
 
 ## Project Structure
 
-```
+```bash
 src/
 ├── app/
 │   └── page.tsx                  # Root page — assembles all sections
@@ -151,10 +151,10 @@ CSS breakpoints follow a `min-width` mobile-first pattern:
 /* Mobile — base styles (no media query) */
 
 @media (min-width: 768px) {
-  /* Tablet */
+    /* Tablet */
 }
 @media (min-width: 1024px) {
-  /* Desktop */
+    /* Desktop */
 }
 ```
 
@@ -163,11 +163,7 @@ CSS breakpoints follow a `min-width` mobile-first pattern:
 ## Styling Conventions
 
 - **Component-scoped CSS files** — each component imports its own `.css` file; no CSS Modules or utility frameworks are used.
-- **CSS custom properties** — design tokens for colour, typography, and shadow are referenced via `var(--token-name)`. Key tokens include:
-  - `--secondary`: `#29aea0` (teal brand accent)
-  - `--foreground`, `--background`, `--border`
-  - `--gray-600`, `--gray-900`
-  - `--shadow-xs`
+- **CSS custom properties** — design tokens for colour, typography, and shadow are referenced via `var(--token-name)
 - **Font**: Space Grotesk is used throughout. Import it via Google Fonts in the root layout or `_document`.
 - **Icons**: All icons are sourced from `lucide-react` and sized/coloured via props or CSS classes.
 
@@ -211,30 +207,30 @@ Define the following tokens in your global CSS (e.g. `globals.css`) for the comp
 
 ```css
 :root {
-  --secondary: #29aea0;
-  --foreground: #141d29;
-  --background: #f9fafb;
-  --border: #e0e5eb;
-  --gray-600: #475467;
-  --gray-900: #101828;
-  --shadow-xs: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
+    --secondary: #29aea0;
+    --foreground: #141d29;
+    --background: #f9fafb;
+    --border: #e0e5eb;
+    --gray-600: #475467;
+    --gray-900: #101828;
+    --shadow-xs: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
 
-  --text-md-regular-font-family: "Space Grotesk", sans-serif;
-  --text-md-regular-font-size: 16px;
-  --text-md-regular-font-style: normal;
-  --text-md-regular-font-weight: 400;
-  --text-md-regular-letter-spacing: normal;
-  --text-md-regular-line-height: 24px;
+    --text-md-regular-font-family: "Space Grotesk", sans-serif;
+    --text-md-regular-font-size: 16px;
+    --text-md-regular-font-style: normal;
+    --text-md-regular-font-weight: 400;
+    --text-md-regular-letter-spacing: normal;
+    --text-md-regular-line-height: 24px;
 
-  --text-md-semibold-font-family: "Space Grotesk", sans-serif;
-  --text-md-semibold-font-size: 16px;
-  --text-md-semibold-font-style: normal;
-  --text-md-semibold-font-weight: 600;
-  --text-md-semibold-letter-spacing: normal;
-  --text-md-semibold-line-height: 24px;
+    --text-md-semibold-font-family: "Space Grotesk", sans-serif;
+    --text-md-semibold-font-size: 16px;
+    --text-md-semibold-font-style: normal;
+    --text-md-semibold-font-weight: 600;
+    --text-md-semibold-letter-spacing: normal;
+    --text-md-semibold-line-height: 24px;
 }
 ```
 
 ---
 
-_Built for South Africa 🇿🇦_
+Built for South Africa 🇿🇦

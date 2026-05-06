@@ -3,9 +3,9 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
-} from '../../components/ui/card'
-import { Badge } from '../../components/ui/badge'
-import { useAttendanceRecords, useEmployees } from '../../hooks/useSupabaseData'
+} from "../../components/ui/card"
+import { Badge } from "../../components/ui/badge"
+import { useAttendanceRecords, useEmployees } from "../../hooks/useSupabaseData"
 import {
     Users,
     UserCheck,
@@ -13,13 +13,14 @@ import {
     AlertTriangle,
     Shield,
     TrendingUp,
-} from 'lucide-react'
+} from "lucide-react"
+import "../../index.css"
 
 const statusColors: Record<string, string> = {
-    present: 'bg-secondary/10 text-secondary border-secondary/20',
-    late: 'bg-accent/10 text-accent-foreground border-accent/20',
-    absent: 'bg-destructive/10 text-destructive border-destructive/20',
-    on_leave: 'bg-muted text-muted-foreground border-muted',
+    present: "bg-secondary/10 text-secondary border-secondary/20",
+    late: "bg-accent/10 text-accent-foreground border-accent/20",
+    absent: "bg-destructive/10 text-destructive border-destructive/20",
+    on_leave: "bg-muted text-muted-foreground border-muted",
 }
 
 const AdminDashboard = () => {
@@ -32,42 +33,42 @@ const AdminDashboard = () => {
 
     const statCards = [
         {
-            label: 'Total Employees',
+            label: "Total Employees",
             value: employees?.length || 0,
             icon: Users,
-            color: 'text-primary',
+            color: "text-primary",
         },
         {
-            label: 'Present Today',
+            label: "Present Today",
             value: stats?.present || 0,
             icon: UserCheck,
-            color: 'text-secondary',
+            color: "text-secondary",
         },
         {
-            label: 'Late Today',
+            label: "Late Today",
             value: stats?.late || 0,
             icon: Clock,
-            color: 'text-accent',
+            color: "text-accent",
         },
         {
-            label: 'Absent',
+            label: "Absent",
             value: stats?.absent || 0,
             icon: AlertTriangle,
-            color: 'text-destructive',
+            color: "text-destructive",
         },
         {
-            label: 'Avg Hours',
+            label: "Avg Hours",
             value: stats?.total
                 ? (stats.total_hours / stats.total).toFixed(1)
-                : '0',
+                : "0",
             icon: TrendingUp,
-            color: 'text-primary',
+            color: "text-primary",
         },
         {
-            label: 'Overtime',
+            label: "Overtime",
             value: `${(stats?.total_overtime || 0).toFixed(1)}h`,
             icon: Shield,
-            color: 'text-secondary',
+            color: "text-secondary",
         },
     ]
 
@@ -82,10 +83,10 @@ const AdminDashboard = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="font-display text-2xl font-bold text-foreground">
+                <h1 className="font-display text-2xl font-bold text-primary">
                     Admin Dashboard
                 </h1>
-                <p className="text-muted-foreground text-sm mt-1">
+                <p className="text-muted text-sm mt-1">
                     System-wide workforce overview
                 </p>
             </div>
@@ -115,7 +116,7 @@ const AdminDashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
-                            {(employees || []).slice(0, 6).map((emp) => (
+                            {(employees || []).slice(0, 6).map((emp: any) => (
                                 <div
                                     key={emp.id}
                                     className="flex items-center justify-between py-2 border-b border-border last:border-0"
@@ -125,13 +126,13 @@ const AdminDashboard = () => {
                                             {emp.full_name}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
-                                            {emp.department || '—'} ·{' '}
-                                            {emp.site || '—'}
+                                            {emp.department || "—"} ·{" "}
+                                            {emp.site || "—"}
                                         </p>
                                     </div>
                                     <Badge variant="outline">
                                         {emp.user_roles?.[0]?.role ||
-                                            'employee'}
+                                            "employee"}
                                     </Badge>
                                 </div>
                             ))}
@@ -147,18 +148,18 @@ const AdminDashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
-                            {records.slice(0, 6).map((rec) => (
+                            {records.slice(0, 6).map((rec: any) => (
                                 <div
                                     key={rec.id}
                                     className="flex items-center justify-between py-2 border-b border-border last:border-0"
                                 >
                                     <div>
                                         <p className="text-sm font-medium text-foreground">
-                                            {rec.profiles?.full_name || '—'}
+                                            {rec.profiles?.full_name || "—"}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
-                                            {rec.method?.toUpperCase()} ·{' '}
-                                            {rec.sites?.name || '—'}
+                                            {rec.method?.toUpperCase()} ·{" "}
+                                            {rec.sites?.name || "—"}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -167,18 +168,18 @@ const AdminDashboard = () => {
                                                 ? new Date(
                                                       rec.clock_in
                                                   ).toLocaleTimeString(
-                                                      'en-ZA',
+                                                      "en-ZA",
                                                       {
-                                                          hour: '2-digit',
-                                                          minute: '2-digit',
+                                                          hour: "2-digit",
+                                                          minute: "2-digit",
                                                       }
                                                   )
-                                                : '—'}
+                                                : "—"}
                                         </span>
                                         <Badge
                                             variant="outline"
                                             className={
-                                                statusColors[rec.status] || ''
+                                                statusColors[rec.status] || ""
                                             }
                                         >
                                             {rec.status}

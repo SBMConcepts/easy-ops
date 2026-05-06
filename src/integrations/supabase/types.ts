@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions, @typescript-eslint/consistent-indexed-object-style */
 export type Json =
     | string
     | number
@@ -234,6 +233,15 @@ export type Database = {
                     organisation_id: string | null
                     site: string | null
                     updated_at: string
+                    phone: string | null
+                    address: string | null
+                    job_title: string | null
+                    id_number: string | null
+                    date_of_birth: string | null
+                    start_date: string | null
+                    emergency_contact_name: string | null
+                    emergency_contact_phone: string | null
+                    bio: string | null
                 }
                 Insert: {
                     avatar_url?: string | null
@@ -245,6 +253,15 @@ export type Database = {
                     organisation_id?: string | null
                     site?: string | null
                     updated_at?: string
+                    phone?: string | null
+                    address?: string | null
+                    job_title?: string | null
+                    id_number?: string | null
+                    date_of_birth?: string | null
+                    start_date?: string | null
+                    emergency_contact_name?: string | null
+                    emergency_contact_phone?: string | null
+                    bio?: string | null
                 }
                 Update: {
                     avatar_url?: string | null
@@ -256,6 +273,15 @@ export type Database = {
                     organisation_id?: string | null
                     site?: string | null
                     updated_at?: string
+                    phone?: string | null
+                    address?: string | null
+                    job_title?: string | null
+                    id_number?: string | null
+                    date_of_birth?: string | null
+                    start_date?: string | null
+                    emergency_contact_name?: string | null
+                    emergency_contact_phone?: string | null
+                    bio?: string | null
                 }
                 Relationships: [
                     {
@@ -397,23 +423,6 @@ export type Database = {
             app_role: "admin" | "manager" | "supervisor" | "employee"
             attendance_status: "present" | "late" | "absent" | "on_leave"
             check_in_method: "qr" | "biometric" | "whatsapp" | "manual"
-        }
-        CompositeTypes: {
-            [_ in never]: never
-        }
-    }
-    server: {
-        Tables: {
-            [_ in never]: never
-        }
-        Views: {
-            [_ in never]: never
-        }
-        Functions: {
-            [_ in never]: never
-        }
-        Enums: {
-            [_ in never]: never
         }
         CompositeTypes: {
             [_ in never]: never

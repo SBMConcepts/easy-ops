@@ -1,5 +1,4 @@
-import { createClient } from "@supabase/supabase-js"
-
+import { createClient } from "npm:@supabase/supabase-js@2"
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers":
@@ -94,14 +93,26 @@ Deno.serve(async (req) => {
             })
         }
 
-        // Verify admin role
-        const { data: roleData } = await supabaseAdmin
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", user.id)
-            .single()
+        // Allow if user is already admin OR has no organisation yet (first-time setup).
+        // New signups get 'employee' by default via trigger, so we can't require
+        // admin role before the org exists — that's a chicken-and-egg problem.
+        const [roleRes, profileRes] = await Promise.all([
+            supabaseAdmin
+                .from("user_roles")
+                .select("role")
+                .eq("user_id", user.id)
+                .single(),
+            supabaseAdmin
+                .from("profiles")
+                .select("organisation_id")
+                .eq("id", user.id)
+                .single(),
+        ])
 
-        if (roleData?.role !== "admin") {
+        const isAdmin = roleRes.data?.role === "admin"
+        const hasNoOrg = !profileRes.data?.organisation_id
+
+        if (!isAdmin && !hasNoOrg) {
             return new Response(
                 JSON.stringify({ error: "Admin access required" }),
                 {
@@ -256,7 +267,13 @@ Deno.serve(async (req) => {
             .update({ organisation_id: orgId })
             .eq("id", user.id)
 
-        // 7. Audit log
+        // 7. Elevate user to admin role (new signups default to 'employee')
+        await supabaseAdmin.from("user_roles").delete().eq("user_id", user.id)
+        await supabaseAdmin
+            .from("user_roles")
+            .insert({ user_id: user.id, role: "admin" })
+
+        // 8. Audit log
         await supabaseAdmin.from("audit_log").insert({
             user_id: user.id,
             action: "organisation_setup_completed",

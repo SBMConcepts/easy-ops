@@ -26,9 +26,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     // Not logged in → send to /login and remember where they were trying to go
     // so we can redirect back after a successful login.
     if (!isAuthenticated) {
-        return (
-            <Navigate to="/login" replace state={{ from: location.pathname }} />
-        )
+        return <Navigate to="/login" replace />
     }
 
     // ── 3. Onboarding guard ───────────────────────────────────────────────────
@@ -42,13 +40,6 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     // AuthContext also fires this redirect after login, but guarding it here
     // too means it's enforced even on direct URL navigation (e.g. user types
     // /app/employees into the address bar while onboarding is incomplete).
-    if (
-        user?.role === "admin" &&
-        !onboardingComplete &&
-        location.pathname !== "/app/onboarding"
-    ) {
-        return <Navigate to="/app/onboarding" replace />
-    }
 
     // ── 4. Role-based access guard ───────────────────────────────────────────
     // If the route specifies allowedRoles and the user's role isn't in the

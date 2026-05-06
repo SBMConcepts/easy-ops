@@ -6,6 +6,8 @@
         "moduleDetection": "force",
         "moduleResolution": "bundler",
         "strict": true,
-        "types": ["deno"]
+        "types": ["deno"],
+        "noEmit": true,
+        "allowImportingTsExtensions": true
     }
 }

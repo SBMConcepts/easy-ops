@@ -48,6 +48,10 @@
     --shadow: rgba(20, 29, 41, 0.1);
 
     --font-family: "Space Grotesk";
+
+    --text-primary: #141e2e;
+    --text-secondary: #3f3f47;
+    --text-muted: #6d7f96;
 }
 
 @layer base {

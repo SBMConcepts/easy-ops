@@ -1,147 +1,293 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0"
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors"
+import { createClient } from "npm:@supabase/supabase-js@2"
+import { corsHeaders } from "../_shared/cors.ts"
 
-serve(async (req) => {
-	if (req.method === "OPTIONS") {
-		return new Response("ok", { headers: corsHeaders })
-	}
+const VALID_ROLES = ["admin", "manager", "supervisor", "employee"]
 
-	try {
-		const authHeader = req.headers.get("Authorization")
-		if (!authHeader?.startsWith("Bearer ")) {
-			return new Response(JSON.stringify({ error: "Unauthorized" }), {
-				status: 401,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			})
-		}
+function jsonResponse(body: unknown, status = 200) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    })
+}
 
-		const supabase = createClient(
-			Deno.env.get("SUPABASE_URL")!,
-			Deno.env.get("SUPABASE_ANON_KEY")!,
-			{ global: { headers: { Authorization: authHeader } } },
-		)
+function isValidUUID(v: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        v
+    )
+}
 
-		const token = authHeader.replace("Bearer ", "")
-		const { data: claimsData, error: claimsError } =
-			await supabase.auth.getClaims(token)
-		if (claimsError || !claimsData?.claims) {
-			return new Response(JSON.stringify({ error: "Unauthorized" }), {
-				status: 401,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			})
-		}
-		const userId = claimsData.claims.sub
+Deno.serve(async (req: Request) => {
+    if (req.method === "OPTIONS")
+        return new Response("ok", { headers: corsHeaders })
+    if (!["GET", "PUT"].includes(req.method)) {
+        return jsonResponse({ error: "Method not allowed" }, 405)
+    }
 
-		// Check role — only admin/manager
-		const { data: roleData } = await supabase
-			.from("user_roles")
-			.select("role")
-			.eq("user_id", userId)
-			.single()
+    try {
+        const authHeader = req.headers.get("Authorization")
+        if (!authHeader?.startsWith("Bearer ")) {
+            return jsonResponse(
+                { error: "Missing or invalid authorization header" },
+                401
+            )
+        }
 
-		const role = roleData?.role
+        const supabaseAdmin = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        )
+        const supabaseUser = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_ANON_KEY")!,
+            { global: { headers: { Authorization: authHeader } } }
+        )
 
-		if (req.method === "GET") {
-			// List employees (profiles + roles)
-			const { data: profiles, error } = await supabase
-				.from("profiles")
-				.select("*, user_roles(role)")
-				.order("full_name")
+        const {
+            data: { user },
+            error: authError,
+        } = await supabaseUser.auth.getUser()
+        if (authError || !user)
+            return jsonResponse({ error: "Unauthorized" }, 401)
 
-			if (error) {
-				return new Response(JSON.stringify({ error: error.message }), {
-					status: 500,
-					headers: { ...corsHeaders, "Content-Type": "application/json" },
-				})
-			}
+        // ── Resolve caller role + organisation in parallel ───────────────────
+        const [roleRes, profileRes] = await Promise.all([
+            supabaseAdmin
+                .from("user_roles")
+                .select("role")
+                .eq("user_id", user.id)
+                .single(),
+            supabaseAdmin
+                .from("profiles")
+                .select("organisation_id")
+                .eq("id", user.id)
+                .single(),
+        ])
 
-			return new Response(JSON.stringify({ employees: profiles }), {
-				status: 200,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			})
-		}
+        const callerRole = roleRes.data?.role
+        const organisationId = profileRes.data?.organisation_id
 
-		// POST/PUT/DELETE require admin
-		if (role !== "admin") {
-			return new Response(JSON.stringify({ error: "Forbidden — admin only" }), {
-				status: 403,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			})
-		}
+        if (!organisationId) {
+            return jsonResponse(
+                {
+                    error: "User has no organisation. Complete onboarding first.",
+                },
+                403
+            )
+        }
+        if (!callerRole || !["admin", "manager"].includes(callerRole)) {
+            return jsonResponse(
+                { error: "Forbidden: admin or manager role required" },
+                403
+            )
+        }
 
-		if (req.method === "PUT") {
-			const body = await req.json()
-			const { user_id, full_name, department, site, role: newRole } = body
+        // ── GET: list employees scoped to this organisation ──────────────────
+        if (req.method === "GET") {
+            const { data: profiles, error: profilesError } = await supabaseAdmin
+                .from("profiles")
+                .select("id, full_name, email, department, site, created_at")
+                .eq("organisation_id", organisationId)
+                .order("full_name")
 
-			if (!user_id) {
-				return new Response(JSON.stringify({ error: "user_id is required" }), {
-					status: 400,
-					headers: { ...corsHeaders, "Content-Type": "application/json" },
-				})
-			}
+            if (profilesError) {
+                console.error("employee-management GET error:", profilesError)
+                return jsonResponse(
+                    {
+                        error: "Failed to fetch employees",
+                        details: profilesError.message,
+                    },
+                    500
+                )
+            }
 
-			// Update profile
-			const updates: Record<string, string> = {}
-			if (full_name) updates.full_name = full_name
-			if (department) updates.department = department
-			if (site) updates.site = site
+            // Fetch roles separately — avoids cross-schema FK join
+            const userIds = (profiles ?? []).map((p: any) => p.id)
+            const roleMap: Record<string, string> = {}
 
-			if (Object.keys(updates).length > 0) {
-				const { error: profileError } = await supabase
-					.from("profiles")
-					.update(updates)
-					.eq("id", user_id)
-				if (profileError) {
-					return new Response(JSON.stringify({ error: profileError.message }), {
-						status: 500,
-						headers: { ...corsHeaders, "Content-Type": "application/json" },
-					})
-				}
-			}
+            if (userIds.length) {
+                const { data: roles } = await supabaseAdmin
+                    .from("user_roles")
+                    .select("user_id, role")
+                    .in("user_id", userIds)
 
-			// Update role if provided
-			if (
-				newRole &&
-				["admin", "manager", "supervisor", "employee"].includes(newRole)
-			) {
-				// Delete old role then insert new
-				await supabase.from("user_roles").delete().eq("user_id", user_id)
-				const { error: roleError } = await supabase
-					.from("user_roles")
-					.insert({ user_id, role: newRole })
-				if (roleError) {
-					return new Response(JSON.stringify({ error: roleError.message }), {
-						status: 500,
-						headers: { ...corsHeaders, "Content-Type": "application/json" },
-					})
-				}
-			}
+                for (const r of roles ?? []) roleMap[r.user_id] = r.role
+            }
 
-			// Audit
-			await supabase.from("audit_log").insert({
-				user_id: userId,
-				action: "update_employee",
-				target_table: "profiles",
-				target_id: user_id,
-				details: { updates, newRole },
-			})
+            const employees = (profiles ?? []).map((p: any) => ({
+                ...p,
+                role: roleMap[p.id] ?? "employee",
+            }))
 
-			return new Response(JSON.stringify({ success: true }), {
-				status: 200,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			})
-		}
+            return jsonResponse({ employees })
+        }
 
-		return new Response(JSON.stringify({ error: "Method not allowed" }), {
-			status: 405,
-			headers: { ...corsHeaders, "Content-Type": "application/json" },
-		})
-	} catch (err) {
-		const message = err instanceof Error ? err.message : "Unknown error"
-		return new Response(JSON.stringify({ error: message }), {
-			status: 500,
-			headers: { ...corsHeaders, "Content-Type": "application/json" },
-		})
-	}
+        // ── PUT: update an employee (admin only) ─────────────────────────────
+        if (callerRole !== "admin") {
+            return jsonResponse(
+                { error: "Forbidden: admin role required to update employees" },
+                403
+            )
+        }
+
+        let body: Record<string, unknown>
+        try {
+            body = await req.json()
+        } catch {
+            return jsonResponse({ error: "Invalid JSON body" }, 400)
+        }
+
+        const {
+            user_id,
+            full_name,
+            department,
+            site,
+            role: newRole,
+        } = body as any
+
+        if (!user_id || typeof user_id !== "string" || !isValidUUID(user_id)) {
+            return jsonResponse({ error: "user_id must be a valid UUID" }, 400)
+        }
+
+        // Verify target belongs to the same organisation
+        const { data: targetProfile } = await supabaseAdmin
+            .from("profiles")
+            .select("id")
+            .eq("id", user_id)
+            .eq("organisation_id", organisationId)
+            .single()
+
+        if (!targetProfile) {
+            return jsonResponse(
+                { error: "Employee not found in your organisation" },
+                404
+            )
+        }
+
+        // Admins cannot demote themselves
+        if (user_id === user.id && newRole && newRole !== "admin") {
+            return jsonResponse(
+                { error: "Admins cannot change their own role" },
+                400
+            )
+        }
+
+        // ── Build validated profile updates ──────────────────────────────────
+        const updates: Record<string, unknown> = {}
+
+        if (full_name !== undefined) {
+            if (
+                typeof full_name !== "string" ||
+                full_name.trim().length === 0
+            ) {
+                return jsonResponse(
+                    { error: "full_name must be a non-empty string" },
+                    400
+                )
+            }
+            if (full_name.trim().length > 150) {
+                return jsonResponse(
+                    { error: "full_name must not exceed 150 characters" },
+                    400
+                )
+            }
+            updates.full_name = full_name.trim()
+        }
+
+        if (department !== undefined) {
+            if (
+                typeof department !== "string" ||
+                department.trim().length > 100
+            ) {
+                return jsonResponse(
+                    {
+                        error: "department must be a string of 100 characters or fewer",
+                    },
+                    400
+                )
+            }
+            updates.department = department.trim()
+        }
+
+        if (site !== undefined) {
+            if (typeof site !== "string" || site.trim().length > 100) {
+                return jsonResponse(
+                    {
+                        error: "site must be a string of 100 characters or fewer",
+                    },
+                    400
+                )
+            }
+            updates.site = site.trim()
+        }
+
+        if (Object.keys(updates).length > 0) {
+            const { error: profileError } = await supabaseAdmin
+                .from("profiles")
+                .update(updates)
+                .eq("id", user_id)
+
+            if (profileError) {
+                console.error(
+                    "employee-management profile update error:",
+                    profileError
+                )
+                return jsonResponse(
+                    {
+                        error: "Failed to update employee profile",
+                        details: profileError.message,
+                    },
+                    500
+                )
+            }
+        }
+
+        // ── Update role if provided ──────────────────────────────────────────
+        if (newRole !== undefined) {
+            if (!VALID_ROLES.includes(newRole)) {
+                return jsonResponse(
+                    {
+                        error: `Invalid role. Must be one of: ${VALID_ROLES.join(", ")}`,
+                    },
+                    400
+                )
+            }
+            await supabaseAdmin
+                .from("user_roles")
+                .delete()
+                .eq("user_id", user_id)
+            const { error: roleError } = await supabaseAdmin
+                .from("user_roles")
+                .insert({ user_id, role: newRole })
+
+            if (roleError) {
+                console.error(
+                    "employee-management role update error:",
+                    roleError
+                )
+                return jsonResponse(
+                    {
+                        error: "Failed to update employee role",
+                        details: roleError.message,
+                    },
+                    500
+                )
+            }
+        }
+
+        await supabaseAdmin.from("audit_log").insert({
+            user_id: user.id,
+            action: "update_employee",
+            target_table: "profiles",
+            target_id: user_id,
+            details: { updates, new_role: newRole ?? null },
+        })
+
+        return jsonResponse({ success: true })
+    } catch (err) {
+        console.error("employee-management unhandled error:", err)
+        return jsonResponse(
+            { error: "Internal server error", details: String(err) },
+            500
+        )
+    }
 })

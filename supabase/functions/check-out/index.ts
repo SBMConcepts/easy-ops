@@ -1,83 +1,171 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { createClient } from "npm:@supabase/supabase-js@2"
+import { corsHeaders } from "../_shared/cors.ts"
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+function jsonResponse(body: unknown, status = 200) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    })
+}
 
-  try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+Deno.serve(async (req: Request) => {
+    if (req.method === "OPTIONS")
+        return new Response("ok", { headers: corsHeaders })
+    if (req.method !== "POST")
+        return jsonResponse({ error: "Method not allowed" }, 405)
+
+    try {
+        const authHeader = req.headers.get("Authorization")
+        if (!authHeader?.startsWith("Bearer ")) {
+            return jsonResponse(
+                { error: "Missing or invalid authorization header" },
+                401
+            )
+        }
+
+        const supabaseAdmin = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        )
+        const supabaseUser = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_ANON_KEY")!,
+            { global: { headers: { Authorization: authHeader } } }
+        )
+
+        const {
+            data: { user },
+            error: authError,
+        } = await supabaseUser.auth.getUser()
+        if (authError || !user)
+            return jsonResponse({ error: "Unauthorized" }, 401)
+
+        // Confirm employee belongs to an organisation
+        const { data: profile } = await supabaseAdmin
+            .from("profiles")
+            .select("organisation_id")
+            .eq("id", user.id)
+            .single()
+
+        if (!profile?.organisation_id) {
+            return jsonResponse(
+                {
+                    error: "Profile or organisation not found. Complete onboarding first.",
+                },
+                403
+            )
+        }
+
+        // ── Find today's open check-in record ────────────────────────────────
+        const today = new Date().toISOString().split("T")[0]
+
+        const { data: record, error: fetchError } = await supabaseAdmin
+            .from("attendance_records")
+            .select("id, clock_in, site_id, status")
+            .eq("employee_id", user.id)
+            .eq("date", today)
+            .is("clock_out", null)
+            .maybeSingle()
+
+        if (fetchError) {
+            console.error("check-out fetch error:", fetchError)
+            return jsonResponse(
+                {
+                    error: "Failed to fetch attendance record",
+                    details: fetchError.message,
+                },
+                500
+            )
+        }
+
+        if (!record) {
+            return jsonResponse(
+                { error: "No open check-in found for today." },
+                404
+            )
+        }
+
+        const now = new Date()
+        const clockIn = new Date(record.clock_in)
+
+        // Guard against future clock_in (clock skew / data corruption)
+        if (clockIn >= now) {
+            return jsonResponse(
+                {
+                    error: "Clock-in time is in the future. Contact your administrator.",
+                },
+                409
+            )
+        }
+
+        const hoursWorked =
+            Math.round(
+                ((now.getTime() - clockIn.getTime()) / 3_600_000) * 100
+            ) / 100
+
+        // ── Determine standard hours from actual shift (default 8) ───────────
+        let standardHours = 8
+
+        if (record.site_id) {
+            const { data: shifts } = await supabaseAdmin
+                .from("shifts")
+                .select("start_time, end_time")
+                .eq("site_id", record.site_id)
+                .eq("organisation_id", profile.organisation_id)
+                .order("created_at", { ascending: true })
+                .limit(1)
+
+            if (shifts?.length) {
+                const [sh, sm] = shifts[0].start_time.split(":").map(Number)
+                const [eh, em] = shifts[0].end_time.split(":").map(Number)
+                standardHours = (eh * 60 + em - (sh * 60 + sm)) / 60
+            }
+        }
+
+        const overtime = Math.max(
+            0,
+            Math.round((hoursWorked - standardHours) * 100) / 100
+        )
+
+        // ── Update record ────────────────────────────────────────────────────
+        const { data: updated, error: updateError } = await supabaseAdmin
+            .from("attendance_records")
+            .update({
+                clock_out: now.toISOString(),
+                hours_worked: hoursWorked,
+                overtime,
+            })
+            .eq("id", record.id)
+            .select(
+                "id, date, clock_in, clock_out, hours_worked, overtime, status"
+            )
+            .single()
+
+        if (updateError) {
+            console.error("check-out update error:", updateError)
+            return jsonResponse(
+                {
+                    error: "Failed to record check-out",
+                    details: updateError.message,
+                },
+                500
+            )
+        }
+
+        await supabaseAdmin.from("audit_log").insert({
+            user_id: user.id,
+            action: "check_out",
+            target_table: "attendance_records",
+            target_id: record.id,
+            details: { hours_worked: hoursWorked, overtime },
+        })
+
+        return jsonResponse({ success: true, record: updated })
+    } catch (err) {
+        console.error("check-out unhandled error:", err)
+        return jsonResponse(
+            { error: "Internal server error", details: String(err) },
+            500
+        )
     }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    const userId = claimsData.claims.sub;
-
-    const today = new Date().toISOString().split("T")[0];
-
-    // Find today's open record
-    const { data: record, error: fetchError } = await supabase
-      .from("attendance_records")
-      .select("*")
-      .eq("employee_id", userId)
-      .eq("date", today)
-      .is("clock_out", null)
-      .maybeSingle();
-
-    if (fetchError) {
-      return new Response(JSON.stringify({ error: fetchError.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    if (!record) {
-      return new Response(JSON.stringify({ error: "No open check-in found for today." }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    const now = new Date();
-    const clockIn = new Date(record.clock_in);
-    const diffMs = now.getTime() - clockIn.getTime();
-    const hoursWorked = Math.round((diffMs / 3600000) * 100) / 100;
-    const overtime = Math.max(0, Math.round((hoursWorked - 8) * 100) / 100);
-
-    const { data: updated, error: updateError } = await supabase
-      .from("attendance_records")
-      .update({
-        clock_out: now.toISOString(),
-        hours_worked: hoursWorked,
-        overtime,
-      })
-      .eq("id", record.id)
-      .select()
-      .single();
-
-    if (updateError) {
-      return new Response(JSON.stringify({ error: updateError.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // Audit log
-    await supabase.from("audit_log").insert({
-      user_id: userId,
-      action: "check_out",
-      target_table: "attendance_records",
-      target_id: record.id,
-      details: { hours_worked: hoursWorked, overtime },
-    });
-
-    return new Response(JSON.stringify({ success: true, record: updated }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
-});
+})

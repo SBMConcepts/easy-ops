@@ -16,20 +16,25 @@ import EmployeeManagement from "./pages/EmployeeManagement"
 import Compliance from "./pages/Compliance"
 import ComingSoon from "./pages/ComingSoon"
 import Onboarding from "./pages/Onboarding"
+import ResetPassword from "./pages/ResetPassword"
+import Settings from "./pages/Settings"
 
 const queryClient = new QueryClient()
 
 const App = () => {
     return (
         <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-                <Sonner />
-                <BrowserRouter>
-                    {/* AuthProvider moved inside BrowserRouter so it can use router hooks */}
-                    <AuthProvider>
+            <AuthProvider>
+                <TooltipProvider>
+                    <Sonner />
+                    <BrowserRouter>
                         <Routes>
                             <Route path="/" element={<Index />} />
                             <Route path="/login" element={<Login />} />
+                            <Route
+                                path="/reset-password"
+                                element={<ResetPassword />}
+                            />
                             <Route
                                 path="/app/onboarding"
                                 element={
@@ -46,21 +51,7 @@ const App = () => {
                                     </ProtectedRoute>
                                 }
                             >
-                                <Route
-                                    index
-                                    element={
-                                        <ProtectedRoute
-                                            allowedRoles={[
-                                                "admin",
-                                                "manager",
-                                                "supervisor",
-                                                "employee",
-                                            ]}
-                                        >
-                                            <DashboardRouter />
-                                        </ProtectedRoute>
-                                    }
-                                />
+                                <Route index element={<DashboardRouter />} />
                                 <Route
                                     path="check-in"
                                     element={
@@ -148,22 +139,13 @@ const App = () => {
                                         </ProtectedRoute>
                                     }
                                 />
-                                <Route
-                                    path="settings"
-                                    element={
-                                        <ProtectedRoute
-                                            allowedRoles={["admin"]}
-                                        >
-                                            <ComingSoon title="System Settings" />
-                                        </ProtectedRoute>
-                                    }
-                                />
+                                <Route path="settings" element={<Settings />} />
                             </Route>
                             <Route path="*" element={<NotFound />} />
                         </Routes>
-                    </AuthProvider>
-                </BrowserRouter>
-            </TooltipProvider>
+                    </BrowserRouter>
+                </TooltipProvider>
+            </AuthProvider>
         </QueryClientProvider>
     )
 }

@@ -171,67 +171,80 @@ const Onboarding = () => {
         setSaving(true)
         setError(null)
         try {
-            const orgId = user?.organisation_id
-            if (!orgId)
-                throw new Error("No organisation ID found on your profile.")
-            // 1. Update the organisations row
-            const { error: orgErr } = await supabase
-                .from("organisations")
-                .update({
-                    name: company.name.trim(),
-                    industry: company.industry,
-                    country: company.country,
-                    onboarding_completed: true,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq("id", orgId)
-            if (orgErr) throw orgErr
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+            if (!session) throw new Error("You must be logged in to continue.")
 
-            // 2. Insert sites
-            if (sites.length > 0) {
-                const siteRows = sites.map((s) => ({
-                    organisation_id: orgId,
+            const payload = {
+                company: {
+                    name: company.name.trim(),
+                    industry: company.industry || undefined,
+                    country: company.country,
+                },
+                sites: sites.map((s) => ({
                     name: s.name.trim(),
-                    address: s.address.trim() || null,
-                    latitude: s.latitude ? parseFloat(s.latitude) : null,
-                    longitude: s.longitude ? parseFloat(s.longitude) : null,
+                    address: s.address?.trim() || undefined,
+                    latitude: s.latitude ? parseFloat(s.latitude) : undefined,
+                    longitude: s.longitude
+                        ? parseFloat(s.longitude)
+                        : undefined,
                     geofence_radius_m: s.geofence_radius_m
                         ? parseInt(s.geofence_radius_m)
-                        : null,
-                }))
-                const { error: siteErr } = await supabase
-                    .from("sites")
-                    .insert(siteRows)
-                if (siteErr) throw siteErr
-            }
-
-            // 3. Insert shifts
-            if (shifts.length > 0) {
-                const shiftRows = shifts.map((s) => ({
-                    organisation_id: orgId,
+                        : 200,
+                })),
+                departments: departments
+                    .filter((d) => d.name.trim())
+                    .map((d) => ({
+                        name: d.name.trim(),
+                        site_index: d.site_index,
+                    })),
+                roles: roles.map((r) => ({
+                    name: r.name,
+                    base_role: r.base_role,
+                })),
+                shifts: shifts.map((s) => ({
                     name: s.name.trim(),
                     start_time: s.start_time,
                     end_time: s.end_time,
                     grace_period_minutes:
-                        parseInt(s.grace_period_minutes) || 10,
-                }))
-                const { error: shiftErr } = await supabase
-                    .from("shifts")
-                    .insert(shiftRows)
-                if (shiftErr) throw shiftErr
+                        parseInt(s.grace_period_minutes) || 15,
+                    site_index: s.site_index,
+                })),
+                settings: {
+                    check_in_methods: Object.entries(checkIn.methods)
+                        .filter(([, enabled]) => enabled)
+                        .map(([method]) => method),
+                    geofencing_enabled: checkIn.geofencing_enabled,
+                    default_geofence_radius:
+                        parseInt(checkIn.default_geofence_radius) || 200,
+                    max_weekly_hours:
+                        parseFloat(workRules.max_weekly_hours) || 45,
+                    overtime_multiplier:
+                        parseFloat(workRules.overtime_multiplier) || 1.5,
+                },
             }
 
-            // 4. Refresh the in-memory organisation so ProtectedRoute lifts the
-            //    onboarding guard immediately without a page reload.
-            await refreshOrganisation()
-
-            navigate("/app", { replace: true })
-        } catch (err: unknown) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "Something went wrong. Please try again."
+            const { error: fnError } = await supabase.functions.invoke(
+                "organisation-setup",
+                {
+                    body: payload,
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                }
             )
+
+            if (fnError) throw new Error(fnError.message)
+
+            await refreshOrganisation()
+            navigate("/app", { replace: true })
+        } catch (err: any) {
+            toast({
+                title: "Setup failed",
+                description: err.message || "Something went wrong",
+                variant: "destructive",
+            })
         } finally {
             setSaving(false)
         }

@@ -1,164 +1,247 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0"
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors"
+import { createClient } from "npm:@supabase/supabase-js@2"
+import { corsHeaders } from "../_shared/cors.ts"
 
-serve(async (req) => {
-	if (req.method === "OPTIONS") {
-		return new Response("ok", { headers: corsHeaders })
-	}
+function jsonResponse(body: unknown, status = 200) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    })
+}
 
-	try {
-		const authHeader = req.headers.get("Authorization")
-		if (!authHeader?.startsWith("Bearer ")) {
-			return new Response(JSON.stringify({ error: "Unauthorized" }), {
-				status: 401,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			})
-		}
-
-		const supabase = createClient(
-			Deno.env.get("SUPABASE_URL")!,
-			Deno.env.get("SUPABASE_ANON_KEY")!,
-			{ global: { headers: { Authorization: authHeader } } },
-		)
-
-		const token = authHeader.replace("Bearer ", "")
-		const { data: claimsData, error: claimsError } =
-			await supabase.auth.getClaims(token)
-		if (claimsError || !claimsData?.claims) {
-			return new Response(JSON.stringify({ error: "Unauthorized" }), {
-				status: 401,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			})
-		}
-		const userId = claimsData.claims.sub
-
-		// Admin only
-		const { data: roleData } = await supabase
-			.from("user_roles")
-			.select("role")
-			.eq("user_id", userId)
-			.single()
-
-		if (roleData?.role !== "admin") {
-			return new Response(JSON.stringify({ error: "Forbidden — admin only" }), {
-				status: 403,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			})
-		}
-
-		// Get all attendance records and check BCEA rules
-		const url = new URL(req.url)
-		const weekStart = url.searchParams.get("week_start") || getWeekStart()
-
-		const weekEnd = new Date(weekStart)
-		weekEnd.setDate(weekEnd.getDate() + 6)
-
-		const { data: records, error } = await supabase
-			.from("attendance_records")
-			.select("*, profiles:employee_id(full_name)")
-			.gte("date", weekStart)
-			.lte("date", weekEnd.toISOString().split("T")[0])
-
-		if (error) {
-			return new Response(JSON.stringify({ error: error.message }), {
-				status: 500,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			})
-		}
-
-		// Group by employee
-		const byEmployee: Record<
-			string,
-			{ name: string; totalHours: number; totalOvertime: number; days: number }
-		> = {}
-		for (const r of records || []) {
-			const eid = r.employee_id
-			if (!byEmployee[eid]) {
-				const name = (r as any).profiles?.full_name || "Unknown"
-				byEmployee[eid] = { name, totalHours: 0, totalOvertime: 0, days: 0 }
-			}
-			byEmployee[eid].totalHours += r.hours_worked || 0
-			byEmployee[eid].totalOvertime += r.overtime || 0
-			byEmployee[eid].days += 1
-		}
-
-		const violations: Array<{
-			employee_id: string
-			name: string
-			rule: string
-			detail: string
-		}> = []
-		let passCount = 0
-		const totalChecks = Object.keys(byEmployee).length * 3 // 3 rules per employee
-
-		for (const [eid, data] of Object.entries(byEmployee)) {
-			// BCEA: max 45 hours/week
-			if (data.totalHours > 45) {
-				violations.push({
-					employee_id: eid,
-					name: data.name,
-					rule: "BCEA Max Weekly Hours",
-					detail: `${data.totalHours.toFixed(1)}h exceeds 45h limit`,
-				})
-			} else {
-				passCount++
-			}
-
-			// BCEA: max 10 hours overtime/week
-			if (data.totalOvertime > 10) {
-				violations.push({
-					employee_id: eid,
-					name: data.name,
-					rule: "BCEA Overtime Cap",
-					detail: `${data.totalOvertime.toFixed(1)}h overtime exceeds 10h limit`,
-				})
-			} else {
-				passCount++
-			}
-
-			// Max 6 consecutive days
-			if (data.days > 6) {
-				violations.push({
-					employee_id: eid,
-					name: data.name,
-					rule: "BCEA Rest Period",
-					detail: `${data.days} consecutive days worked without rest`,
-				})
-			} else {
-				passCount++
-			}
-		}
-
-		const complianceScore =
-			totalChecks > 0 ? Math.round((passCount / totalChecks) * 100) : 100
-
-		return new Response(
-			JSON.stringify({
-				compliance_score: complianceScore,
-				total_checks: totalChecks,
-				pass_count: passCount,
-				violations,
-				week_start: weekStart,
-			}),
-			{
-				status: 200,
-				headers: { ...corsHeaders, "Content-Type": "application/json" },
-			},
-		)
-	} catch (err) {
-		const message = err instanceof Error ? err.message : "Unknown error"
-		return new Response(JSON.stringify({ error: message }), {
-			status: 500,
-			headers: { ...corsHeaders, "Content-Type": "application/json" },
-		})
-	}
-})
+function isValidDate(v: string) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(new Date(v).getTime())
+}
 
 function getWeekStart(): string {
-	const now = new Date()
-	const day = now.getDay()
-	const diff = now.getDate() - day + (day === 0 ? -6 : 1)
-	const monday = new Date(now.setDate(diff))
-	return monday.toISOString().split("T")[0]
+    const now = new Date()
+    const day = now.getDay()
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1)
+    return new Date(now.setDate(diff)).toISOString().split("T")[0]
 }
+
+Deno.serve(async (req: Request) => {
+    if (req.method === "OPTIONS")
+        return new Response("ok", { headers: corsHeaders })
+    if (req.method !== "GET")
+        return jsonResponse({ error: "Method not allowed" }, 405)
+
+    try {
+        const authHeader = req.headers.get("Authorization")
+        if (!authHeader?.startsWith("Bearer ")) {
+            return jsonResponse(
+                { error: "Missing or invalid authorization header" },
+                401
+            )
+        }
+
+        const supabaseAdmin = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        )
+        const supabaseUser = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_ANON_KEY")!,
+            { global: { headers: { Authorization: authHeader } } }
+        )
+
+        const {
+            data: { user },
+            error: authError,
+        } = await supabaseUser.auth.getUser()
+        if (authError || !user)
+            return jsonResponse({ error: "Unauthorized" }, 401)
+
+        // ── Role + organisation resolution (parallel) ────────────────────────
+        const [roleRes, profileRes] = await Promise.all([
+            supabaseAdmin
+                .from("user_roles")
+                .select("role")
+                .eq("user_id", user.id)
+                .single(),
+            supabaseAdmin
+                .from("profiles")
+                .select("organisation_id")
+                .eq("id", user.id)
+                .single(),
+        ])
+
+        if (
+            !roleRes.data ||
+            !["admin", "manager"].includes(roleRes.data.role)
+        ) {
+            return jsonResponse(
+                { error: "Forbidden: admin or manager role required" },
+                403
+            )
+        }
+
+        const organisationId = profileRes.data?.organisation_id
+        if (!organisationId) {
+            return jsonResponse(
+                {
+                    error: "User has no organisation. Complete onboarding first.",
+                },
+                403
+            )
+        }
+
+        // ── Validate week_start param ────────────────────────────────────────
+        const url = new URL(req.url)
+        const weekStart = url.searchParams.get("week_start") || getWeekStart()
+
+        if (!isValidDate(weekStart)) {
+            return jsonResponse(
+                { error: "Invalid week_start. Expected format: YYYY-MM-DD" },
+                400
+            )
+        }
+
+        const weekEndDate = new Date(weekStart)
+        weekEndDate.setDate(weekEndDate.getDate() + 6)
+        const weekEnd = weekEndDate.toISOString().split("T")[0]
+
+        // ── Scope to organisation's sites ────────────────────────────────────
+        const { data: orgSites } = await supabaseAdmin
+            .from("sites")
+            .select("id")
+            .eq("organisation_id", organisationId)
+
+        const orgSiteIds = (orgSites ?? []).map((s: any) => s.id)
+
+        if (!orgSiteIds.length) {
+            return jsonResponse({
+                compliance_score: 100,
+                total_checks: 0,
+                pass_count: 0,
+                violations: [],
+                week_start: weekStart,
+                week_end: weekEnd,
+            })
+        }
+
+        // ── Fetch records (no cross-schema join) ─────────────────────────────
+        const { data: records, error: recordsError } = await supabaseAdmin
+            .from("attendance_records")
+            .select("id, employee_id, date, hours_worked, overtime, status")
+            .in("site_id", orgSiteIds)
+            .gte("date", weekStart)
+            .lte("date", weekEnd)
+
+        if (recordsError) {
+            console.error("compliance-check records error:", recordsError)
+            return jsonResponse(
+                {
+                    error: "Failed to fetch attendance records",
+                    details: recordsError.message,
+                },
+                500
+            )
+        }
+
+        // ── Enrich with profile names (separate query) ───────────────────────
+        const employeeIds = [
+            ...new Set(
+                (records ?? []).map((r: any) => r.employee_id as string)
+            ),
+        ]
+        const profileMap: Record<string, string> = {}
+
+        if (employeeIds.length) {
+            const { data: profiles } = await supabaseAdmin
+                .from("profiles")
+                .select("id, full_name")
+                .in("id", employeeIds)
+
+            for (const p of profiles ?? []) {
+                profileMap[p.id] = p.full_name
+            }
+        }
+
+        // ── Group by employee ────────────────────────────────────────────────
+        const byEmployee: Record<
+            string,
+            {
+                name: string
+                totalHours: number
+                totalOvertime: number
+                workDays: Set<string>
+            }
+        > = {}
+
+        for (const r of records ?? []) {
+            const eid = r.employee_id
+            if (!byEmployee[eid]) {
+                byEmployee[eid] = {
+                    name: profileMap[eid] || "Unknown",
+                    totalHours: 0,
+                    totalOvertime: 0,
+                    workDays: new Set(),
+                }
+            }
+            byEmployee[eid].totalHours += r.hours_worked || 0
+            byEmployee[eid].totalOvertime += r.overtime || 0
+            if (r.date) byEmployee[eid].workDays.add(r.date)
+        }
+
+        // ── BCEA compliance checks (3 rules per employee) ────────────────────
+        const violations: Array<{
+            employee_id: string
+            name: string
+            rule: string
+            detail: string
+        }> = []
+        let passCount = 0
+        const CHECKS_PER_EMPLOYEE = 3
+
+        for (const [eid, data] of Object.entries(byEmployee)) {
+            // Rule 1 — max 45 hours/week
+            if (data.totalHours > 45) {
+                violations.push({
+                    employee_id: eid,
+                    name: data.name,
+                    rule: "BCEA Max Weekly Hours",
+                    detail: `${data.totalHours.toFixed(1)}h exceeds 45h limit`,
+                })
+            } else passCount++
+
+            // Rule 2 — max 10 hours overtime/week
+            if (data.totalOvertime > 10) {
+                violations.push({
+                    employee_id: eid,
+                    name: data.name,
+                    rule: "BCEA Overtime Cap",
+                    detail: `${data.totalOvertime.toFixed(1)}h overtime exceeds 10h limit`,
+                })
+            } else passCount++
+
+            // Rule 3 — max 6 consecutive days without rest
+            if (data.workDays.size > 6) {
+                violations.push({
+                    employee_id: eid,
+                    name: data.name,
+                    rule: "BCEA Rest Period",
+                    detail: `${data.workDays.size} consecutive days worked without rest`,
+                })
+            } else passCount++
+        }
+
+        const totalChecks = Object.keys(byEmployee).length * CHECKS_PER_EMPLOYEE
+        const complianceScore =
+            totalChecks > 0 ? Math.round((passCount / totalChecks) * 100) : 100
+
+        return jsonResponse({
+            compliance_score: complianceScore,
+            total_checks: totalChecks,
+            pass_count: passCount,
+            violations,
+            week_start: weekStart,
+            week_end: weekEnd,
+        })
+    } catch (err) {
+        console.error("compliance-check unhandled error:", err)
+        return jsonResponse(
+            { error: "Internal server error", details: String(err) },
+            500
+        )
+    }
+})

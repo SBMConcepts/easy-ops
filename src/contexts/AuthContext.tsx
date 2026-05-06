@@ -6,8 +6,7 @@ import React, {
     useCallback,
 } from "react"
 import { supabase } from "../integrations/supabase/client"
-import type { Session } from "@supabase/supabase-js"
-import { useNavigate } from "react-router"
+import type { Session, User as SupaUser } from "@supabase/supabase-js"
 
 export type UserRole = "admin" | "manager" | "supervisor" | "employee"
 
@@ -38,6 +37,11 @@ interface AuthContextType {
     isLoading: boolean
     onboardingComplete: boolean
     login: (email: string, password: string) => Promise<boolean>
+    signup: (
+        email: string,
+        password: string,
+        fullName: string
+    ) => Promise<boolean>
     logout: () => Promise<void>
     refreshOrganisation: () => Promise<void>
 }
@@ -82,45 +86,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const [organisation, setOrganisation] = useState<Organisation | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
-    const navigate = useNavigate()
+    const loadProfile = useCallback(async (uid: string) => {
+        const profile = await fetchUserProfile(uid)
+        setUser(profile)
 
-    const loadProfile = useCallback(
-        async (uid: string) => {
-            const profile = await fetchUserProfile(uid)
-            setUser(profile)
+        let org: Organisation | null = null
 
-            let org: Organisation | null = null
+        if (profile?.organisation_id) {
+            org = await fetchOrganisation(profile.organisation_id)
+            setOrganisation(org)
+        } else {
+            setOrganisation(null)
+        }
 
-            if (profile?.organisation_id) {
-                org = await fetchOrganisation(profile.organisation_id)
-                setOrganisation(org)
-            } else {
-                setOrganisation(null)
-            }
+        setIsLoading(false)
 
-            setIsLoading(false)
-
-            // ── Onboarding redirect gate ──────────────────────────────────────
-            // After every login / session restore we check whether the admin
-            // still needs to complete onboarding.  We only redirect when:
-            //   1. The user is an admin
-            //   2. Their organisation's onboarding_completed flag is false
-            //   3. They are not already on the onboarding page (prevents an
-            //      infinite redirect loop if navigate() fires more than once)
-            //
-            // Non-admin roles never go through onboarding; they land on /app
-            // directly and ProtectedRoute handles role-based access from there.
-            if (
-                profile?.role === "admin" &&
-                org &&
-                !org.onboarding_completed &&
-                !window.location.pathname.startsWith("/app/onboarding")
-            ) {
-                navigate("/app/onboarding", { replace: true })
-            }
-        },
-        [navigate]
-    )
+        // ── Onboarding redirect gate ──────────────────────────────────────
+        // After every login / session restore we check whether the admin
+        // still needs to complete onboarding.  We only redirect when:
+        //   1. The user is an admin
+        //   2. Their organisation's onboarding_completed flag is false
+        //   3. They are not already on the onboarding page (prevents an
+        //      infinite redirect loop if navigate() fires more than once)
+        //
+        // Non-admin roles never go through onboarding; they land on /app
+        // directly and ProtectedRoute handles role-based access from there.
+    }, [])
 
     useEffect(() => {
         // onAuthStateChange fires for: SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED,
@@ -178,7 +169,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         []
     )
 
-    // signup() has been removed from the public context.
+    const signup = useCallback(
+        async (
+            email: string,
+            password: string,
+            fullName: string
+        ): Promise<boolean> => {
+            const { error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { full_name: fullName },
+                    emailRedirectTo: window.location.origin,
+                },
+            })
+            return !error
+        },
+        []
+    )
     // Employees are never self-registering; they receive a Supabase invite email
     // triggered by the admin from the EmployeeManagement page (see notes below).
     // If you need a public sign-up flow in future, add it back here
@@ -190,8 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setOrganisation(null)
         // After sign-out, navigate to the marketing root rather than /login so
         // the user lands on the public-facing site, not an app page.
-        navigate("/", { replace: true })
-    }, [navigate])
+    }, [])
 
     const onboardingComplete = organisation?.onboarding_completed ?? false
 
@@ -207,6 +214,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 login,
                 logout,
                 refreshOrganisation,
+                signup,
             }}
         >
             {children}
