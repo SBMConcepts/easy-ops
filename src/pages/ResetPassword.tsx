@@ -1,127 +1,114 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { supabase } from "../integrations/supabase/client"
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
-import { Label } from "../components/ui/label"
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "../components/ui/card"
-import { toast } from "sonner"
-import { KeyRound } from "lucide-react"
+import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { supabase } from '../integrations/supabase/client'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { toast } from 'sonner'
+import { KeyRound, LogIn } from 'lucide-react'
+import '../styles/resetpassword.css'
 
 const ResetPassword = () => {
-    const [password, setPassword] = useState("")
-    const [confirm, setConfirm] = useState("")
-    const [loading, setLoading] = useState(false)
-    const [ready, setReady] = useState(false)
-    const navigate = useNavigate()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const email = (location.state as { email?: string })?.email ?? ''
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [loading, setLoading] = useState(false)
 
-    useEffect(() => {
-        // Supabase auto-handles the recovery / invite token in the URL hash.
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((event) => {
-            if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
-                setReady(true)
-            }
-        })
-        // If already signed in (invite link landed user), allow setting password.
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) setReady(true)
-        })
-        return () => subscription.unsubscribe()
-    }, [])
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (password.length < 8) {
-            toast.error("Password must be at least 8 characters.")
-            return
-        }
-        if (password !== confirm) {
-            toast.error("Passwords do not match.")
-            return
-        }
-        setLoading(true)
-        const { error } = await supabase.auth.updateUser({ password })
-        setLoading(false)
-        if (error) {
-            toast.error(error.message || "Could not update password.")
-            return
-        }
-        toast.success("Password set! Redirecting…")
-        navigate("/app")
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters.')
+      return
     }
+    if (password !== confirm) {
+      toast.error('Passwords do not match.')
+      return
+    }
+    setLoading(true)
+    const { error } = await supabase.auth.updateUser({ password })
+    setLoading(false)
+    if (error) {
+      toast.error(error.message || 'Could not update password.')
+      return
+    }
+    toast.success('Password updated! Redirecting…')
+    navigate('/app')
+  }
 
-    return (
-        <div className="min-h-screen bg-hero-gradient flex items-center justify-center p-4 geometric-pattern">
-            <div className="w-full max-w-md space-y-6">
-                <div className="flex flex-col items-center gap-3">
-                    <h1 className="font-display text-3xl font-bold text-primary-foreground">
-                        EazyOps
-                    </h1>
-                </div>
-
-                <Card className="shadow-hero border-0">
-                    <CardHeader className="text-center">
-                        <CardTitle className="font-display text-xl">
-                            Set Your Password
-                        </CardTitle>
-                        <CardDescription>
-                            {ready
-                                ? "Choose a strong password to access the EazyOps app."
-                                : "Verifying your invitation link…"}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="password">New Password</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)
-                                    }
-                                    disabled={!ready}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="confirm">
-                                    Confirm Password
-                                </Label>
-                                <Input
-                                    id="confirm"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={confirm}
-                                    onChange={(e) => setConfirm(e.target.value)}
-                                    disabled={!ready}
-                                    required
-                                />
-                            </div>
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={loading || !ready}
-                            >
-                                <KeyRound className="h-4 w-4 mr-2" />
-                                {loading ? "Saving…" : "Set Password"}
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
-            </div>
+  return (
+    <div className="reset-page">
+      <div className="reset-content-column">
+        {/* Brand */}
+        <div className="reset-brand-block">
+          <h1 className="reset-brand-title">EasyOps</h1>
         </div>
-    )
+
+        {/* Card */}
+        <Card className="reset-card">
+          <CardHeader className="reset-card-header">
+            <CardTitle className="reset-card-title">Reset Password</CardTitle>
+            <CardDescription className="reset-card-description">
+              Choose a new password for your account.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="reset-card-content">
+            <form onSubmit={handleSubmit} className="reset-form">
+              {email && (
+                <div className="reset-field-group">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    readOnly
+                    className="bg-muted cursor-default"
+                  />
+                </div>
+              )}
+
+              <div className="reset-field-group">
+                <Label htmlFor="password">New Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="reset-field-group">
+                <Label htmlFor="confirm">Confirm Password</Label>
+                <Input
+                  id="confirm"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button type="submit" className="reset-button" disabled={loading}>
+                <KeyRound className="h-3 w-3 " />
+                {loading ? 'Saving…' : 'Reset Password'}
+              </Button>
+            </form>
+
+            <button type="button" className="reset-back-link" onClick={() => navigate('/login')}>
+              <LogIn className="h-3 w-3" />
+              Back to Sign In
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
 }
 
 export default ResetPassword
