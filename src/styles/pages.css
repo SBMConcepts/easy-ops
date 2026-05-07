@@ -95,48 +95,6 @@
 
 /* ── Site grid ─────────────────────────────────────────────────────────────── */
 
-.site-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-@media (min-width: 768px) {
-  .site-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.site-card-body {
-  padding: 1rem;
-}
-
-.site-card-name-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.site-card-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--foreground);
-  margin: 0;
-}
-
-.site-card-count-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.site-card-count {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-  margin: 0;
-}
-
 /* ── Attendance record list ────────────────────────────────────────────────── */
 
 .record-list {

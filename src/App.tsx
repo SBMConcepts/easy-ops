@@ -18,6 +18,7 @@ import ComingSoon from './pages/ComingSoon'
 import Onboarding from './pages/Onboarding'
 import ResetPassword from './pages/ResetPassword'
 import Settings from './pages/Settings'
+import SitesAndDepartments from './pages/SitesAndDepartments'
 
 const queryClient = new QueryClient()
 
@@ -100,8 +101,8 @@ const App = () => {
                 <Route
                   path="sites"
                   element={
-                    <ProtectedRoute allowedRoles={['admin']}>
-                      <ComingSoon title="Sites & Departments" />
+                    <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                      <SitesAndDepartments />
                     </ProtectedRoute>
                   }
                 />
