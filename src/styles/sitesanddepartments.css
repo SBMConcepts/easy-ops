@@ -656,3 +656,14 @@
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
 }
+
+.sad-dialog-save-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  background: var(--primary);
+  color: white;
+}

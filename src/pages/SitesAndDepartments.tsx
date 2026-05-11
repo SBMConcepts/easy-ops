@@ -754,11 +754,7 @@ export default function SitesAndDepartments() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              onClick={handleSaveSite}
-              disabled={savingSite}
-              className="ml-auto bg-green-500 text-white hover:bg-green-600 focus-visible:ring-green-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
+            <Button onClick={handleSaveSite} disabled={savingSite} className="sad-dialog-save-btn">
               {savingSite && <Loader2 className="h-4 w-4 mr-2 animate-spin " />}
               {editingSite ? 'Save Changes' : 'Add Site'}
             </Button>
@@ -801,11 +797,7 @@ export default function SitesAndDepartments() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              onClick={handleSaveDept}
-              disabled={savingDept}
-              className="ml-auto bg-green-500 text-white hover:bg-green-600 focus-visible:ring-green-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
+            <Button onClick={handleSaveDept} disabled={savingDept} className="sad-dialog-save-btn">
               {savingDept && <Loader2 className="h-4 w-4 mr-2 animate-spin " />}
               {editingDept ? 'Save Changes' : 'Add Department'}
             </Button>
