@@ -27,7 +27,6 @@
   display: none;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.875rem;
 }
 
 @media (min-width: 768px) {
@@ -37,8 +36,8 @@
 }
 
 .app-header-username {
-  font-weight: 500;
-  color: var(--foreground);
+  font-size: 0.875rem;
+  color: var(--secondary-foreground);
 }
 
 /* ── Role badge colour helpers ─────────────────────────────────────────────── */
@@ -64,6 +63,11 @@
 
 /* ── AppSidebar ────────────────────────────────────────────────────────────── */
 
+.sidebar-nav {
+  background: var(--sidebar-background);
+  border-right: 1px solid var(--border);
+}
+
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -80,8 +84,57 @@
   letter-spacing: -0.01em;
 }
 
-.sidebar-footer-text {
+.sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.sidebar-group-label {
   font-size: 0.75rem;
   color: var(--muted-foreground);
+  padding: 0.5rem 1rem;
+  text-transform: uppercase;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0;
+}
+
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.375rem;
+  color: var(--foreground);
+}
+.sidebar-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+}
+
+.sidebar-menu-button:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.sidebar-menu-button.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.sidebar-footer {
   padding: 1rem;
+  border-top: 1px solid var(--border);
+}
+.sidebar-footer-text {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
 }

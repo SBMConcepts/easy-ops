@@ -81,21 +81,22 @@ const AppSidebar = () => {
   const orgName = organisation?.name || 'EasyOps'
 
   return (
-    <Sidebar>
-      <SidebarHeader>
+    <Sidebar className="sidebar-nav">
+      <SidebarHeader className="sidebar-header">
         <div className="sidebar-brand" onClick={() => navigate('/app')}>
-          <span className="sidebar-brand-name">EasyOps</span>
+          <span className="sidebar-brand-name">{orgName}</span>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="sidebar-group-label">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="sidebar-menu">
               {filteredItems.map((item) => (
-                <SidebarMenuItem key={item.url}>
+                <SidebarMenuItem key={item.url} className="sidebar-menu-item">
                   <SidebarMenuButton
+                    className={`sidebar-menu-button${location.pathname === item.url ? ' active' : ''}`}
                     isActive={location.pathname === item.url}
                     onClick={() => navigate(item.url)}
                     tooltip={item.title}
@@ -110,7 +111,7 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="sidebar-footer">
         <p className="sidebar-footer-text">{orgName} · Powered by EasyOps</p>
       </SidebarFooter>
     </Sidebar>

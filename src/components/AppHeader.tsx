@@ -8,10 +8,10 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/appshell.css'
 
 const roleBadgeColors: Record<string, string> = {
-  admin: 'bg-destructive/10 text-destructive border-destructive/20',
-  manager: 'bg-secondary/10 text-secondary border-secondary/20',
-  supervisor: 'bg-accent/10 text-accent-foreground border-accent/20',
-  employee: 'bg-primary/10 text-primary border-primary/20',
+  admin: '!bg-destructive text-destructive border-destructive',
+  manager: '!bg-secondary text-secondary border-secondary',
+  supervisor: '!bg-accent text-accent-foreground border-accent',
+  employee: '!bg-primary text-primary border-primary',
 }
 
 const AppHeader = () => {
@@ -30,7 +30,7 @@ const AppHeader = () => {
       <div className="app-header-spacer" />
       {user && (
         <div className="app-header-right">
-          <Badge variant="outline" className={roleBadgeColors[user.role]}>
+          <Badge className={roleBadgeColors[user.role]}>
             {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
           </Badge>
           <div className="app-header-user">
