@@ -72,76 +72,104 @@
   margin: 0;
 }
 
-/* ── Two-column layout ───────────────────────────────────────────────────────── */
+/* ── One-column layout ───────────────────────────────────────────────────────── */
 
 .sad-main {
-  display: grid;
-  flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  gap: 1rem;
 }
 
 @media (max-width: 768px) {
   .sad-main {
     flex-direction: column;
+    gap: 1rem;
   }
 }
 
-/* ── Left panel ──────────────────────────────────────────────────────────────── */
+/* ── Site-header-panel ──────────────────────────────────────────────────────────────── */
 
-.sad-left {
-  width: 100%;
-  border-right: 1px solid var(--border);
-}
-
-.sad-card-header {
+.sad-header-panel {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding-bottom: 0.75rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
 }
 
-.sad-search-wrap {
+.sad-header-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+}
+.sad-header-content-top {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.sad-header-title {
+  display: flex;
+  align-items: center;
+  align-self: start;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.sad-header-search-wrap {
+  align-self: start;
   position: relative;
+  width: 100%;
+  max-width: 240px;
 }
 
 .sad-search-icon {
   position: absolute;
-  left: 0.625rem;
+  left: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
-  width: 1rem;
-  height: 1rem;
   color: var(--muted-foreground);
-  pointer-events: none;
 }
 
 .sad-search-input {
-  padding-left: 2rem;
+  width: 100%;
+  height: 2.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--input);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-family: var(--font-family);
+  padding: 0 0.75rem 0 2.25rem;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
-/* ── Site list ───────────────────────────────────────────────────────────────── */
+/* ── Site list  ───────────────────────────────────────────────────────────────── */
 
 .sad-site-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: 0.25rem;
+  width: 100%;
+  overflow-x: auto;
 }
 
 .sad-site-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.875rem 1rem;
+  padding: 1rem;
   border-bottom: 1px solid var(--border);
-  gap: 0.5rem;
-}
-
-.sad-site-item:last-child {
-  border-bottom: none;
-}
-
-.sad-site-item:hover {
-  background: var(--muted);
+  min-width: 280px;
 }
 
 .sad-site-item--active {
@@ -152,35 +180,39 @@
 .sad-site-item-main {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.75rem;
   min-width: 0;
 }
 
 .sad-site-item-name {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 600;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--foreground);
-  margin: 0 0 0.1rem;
 }
 
 .sad-site-item-icon {
-  color: var(--primary);
+  color: var(--secondary);
   flex-shrink: 0;
 }
 
 .sad-site-item-address {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--muted-foreground);
   margin: 0;
 }
 
 .sad-site-item-meta {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
-.sad-badge {
+.sad-badge-depts {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -188,6 +220,22 @@
   font-weight: 500;
   padding: 0.2rem 0.5rem;
   border-radius: 8px;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.sad-badge-employees {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--secondary) 50%, transparent);
 }
 
 .sad-site-item-actions {
@@ -203,7 +251,35 @@
 }
 
 .sad-delete-btn {
+  background: transparent;
+  border: none;
   color: var(--destructive);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.sad-delete-btn:hover {
+  background: color-mix(in srgb, var(--destructive) 12%, transparent);
+}
+
+.sad-edit-btn {
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.sad-edit-btn:hover {
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
 }
 
 .sad-empty {
@@ -215,11 +291,19 @@
   text-align: center;
 }
 
-/* ── Right panel ─────────────────────────────────────────────────────────────── */
+/* ── Detail panel ─────────────────────────────────────────────────────────────── */
 
-.sad-right {
+.sad-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   width: 100%;
-  padding: 1rem;
+}
+
+.sad-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .sad-detail-header {
@@ -227,14 +311,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  width: 100%;
+  flex-wrap: wrap;
 }
 
 .sad-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--foreground);
-  margin: 0;
 }
 
 .sad-detail-subtitle {
@@ -250,13 +336,67 @@
 }
 
 .sad-tabs-list {
-  display: grid;
-  grid-auto-flow: column;
-  gap: 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+  background: transparent !important;
+  padding: 0;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
+.sad-tabs-list [data-state='active'] {
+  background: var(--primary);
+  box-shadow: 0 2px 0 0 var(--primary) !important;
+  border-radius: calc(var(--radius) - 4px) calc(var(--radius) - 4px) 0 0 !important;
+  color: var(--primary-foreground) !important;
+  font-weight: 600;
+  margin-bottom: -1px; /* sits flush on top of the list border */
+}
+
+.sad-tabs-list [data-state='inactive'] {
+  color: var(--muted-foreground) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  border-bottom: 2px solid transparent !important;
+}
+
+.sad-tabs-list [data-state='inactive']:hover {
+  color: var(--foreground) !important;
+  background: color-mix(in srgb, var(--muted) 60%, transparent) !important;
+  box-shadow: 0 2px 0 0 color-mix(in srgb, var(--muted) 60%, transparent) !important;
+  border-radius: calc(var(--radius) - 4px) calc(var(--radius) - 4px) 0 0 !important;
+  border-bottom: none !important;
+}
+
+.sad-detail-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.sad-tab-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 12rem; /* prevents the panel from collapsing between tab switches */
+  ring: none !important;
+}
+
+.sad-tab-card {
+  background: var(--muted);
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--shadow);
 }
 
 /* ── Department list ─────────────────────────────────────────────────────────── */
 
+.sad-dept-item {
+  border-bottom: 1px solid var(--border);
+}
 .sad-dept-list {
   display: flex;
   flex-direction: column;
@@ -284,7 +424,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem;
-  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+  border-radius: var(--radius);
 }
 
 .sad-dept-item:last-child {
@@ -295,7 +436,6 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  min-width: 0;
 }
 
 .sad-dept-item-icon {
@@ -304,28 +444,22 @@
 }
 
 .sad-dept-item-name {
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 1rem;
   color: var(--foreground);
-  margin: 0 0 0.1rem;
 }
 
 .sad-dept-item-count {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--muted-foreground);
-  margin: 0;
 }
 
 .sad-dept-item-actions {
   display: flex;
   gap: 0.25rem;
   flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.sad-dept-item:hover .sad-dept-item-actions {
   opacity: 1;
+  transition: opacity 0.15s;
 }
 
 /* ── Activity list ───────────────────────────────────────────────────────────── */
@@ -333,32 +467,26 @@
 .sad-activity-list {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.75rem;
 }
 
 .sad-activity-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
   padding: 0.75rem;
   background: var(--muted);
   border-radius: var(--radius);
-  flex-wrap: wrap;
 }
 
 .sad-activity-date {
-  font-weight: 600;
   font-size: 0.875rem;
-  color: var(--foreground);
-  width: 90px;
-  flex-shrink: 0;
-  margin: 0;
+  color: var(--muted-foreground);
 }
 
 .sad-activity-badges {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .sad-activity-badge {
@@ -368,16 +496,16 @@
   font-size: 0.75rem;
   font-weight: 500;
   padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
+  border-radius: 8px;
 }
 
 .sad-badge-present {
-  background: color-mix(in srgb, var(--secondary) 15%, transparent);
+  background: color-mix(in srgb, var(--secondary) 12%, transparent);
   color: var(--secondary);
 }
 
 .sad-badge-late {
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--accent-foreground);
 }
 
@@ -396,16 +524,13 @@
 .sad-info-grid {
   display: flex;
   flex-direction: column;
-  padding: 0;
 }
 
 .sad-info-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: 0.625rem 1rem;
+  padding: 0.75rem;
   border-bottom: 1px solid var(--border);
-  gap: 1rem;
 }
 
 .sad-info-row:last-child {
@@ -413,32 +538,36 @@
 }
 
 .sad-info-label {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--muted-foreground);
   margin: 0;
-  flex-shrink: 0;
 }
 
 .sad-info-value {
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.875rem;
   color: var(--foreground);
   margin: 0;
-  text-align: right;
 }
 
 .sad-info-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  opacity: 1;
+  transition: opacity 0.15s;
+  padding: 0.25rem;
 }
 
 /* ── Placeholder (no site selected) ─────────────────────────────────────────── */
 
 .sad-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  text-align: center;
   border: 2px dashed var(--border);
-  background: transparent;
 }
 
 .sad-placeholder-content {
@@ -446,8 +575,6 @@
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding: 3rem 1rem;
-  text-align: center;
 }
 
 .sad-placeholder-icon {
@@ -457,7 +584,7 @@
 .sad-placeholder-text {
   font-size: 0.875rem;
   color: var(--muted-foreground);
-  max-width: 260px;
+  max-width: 280px;
   margin: 0;
 }
 
@@ -466,27 +593,26 @@
 .sad-form {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: 1rem;
 }
 
 .sad-form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.5rem;
 }
 
 .sad-form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  display: flex;
+  gap: 1rem;
 }
 
 .sad-native-select {
   width: 100%;
   height: 2.25rem;
   border-radius: var(--radius);
-  border: 1px solid var(--input);
-  background: var(--background);
+  border: 1px solid var(--primary);
+  background: transparent;
   color: var(--foreground);
   font-size: 0.875rem;
   font-family: var(--font-family);
@@ -499,6 +625,34 @@
 }
 
 .sad-native-select:focus {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 30%, transparent);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.sad-native-input {
+  width: 100%;
+  height: 2.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-family: var(--font-family);
+  padding: 0 0.75rem;
+  outline: none;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.sad-native-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.sad-dialog-header {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }

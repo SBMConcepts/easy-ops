@@ -33,8 +33,6 @@ import {
 import '../styles/pages.css'
 import '../styles/sitesanddepartments.css'
 
-/* ─── Types ──────────────────────────────────────────────────────────────────── */
-
 interface Site {
   id: string
   name: string
@@ -387,18 +385,18 @@ export default function SitesAndDepartments() {
         />
       </div>
 
-      {/* ── Two-column layout ─── */}
+      {/* ── One-column layout ─── */}
       <div className="sad-main">
-        {/* Left: site list */}
-        <div className="sad-left">
-          <Card>
-            <CardHeader className="sad-card-header">
-              <CardTitle className="card-title-row">
+        {/* Top: site list */}
+        <div className="sad-header-panel">
+          <div className="sad-header-content">
+            <div className="sad-header-content-top">
+              <div className="sad-header-title">
                 <MapPin className="h-4 w-4 icon-primary" />
                 Sites
-              </CardTitle>
-              <div className="sad-search-wrap">
-                <Search className="sad-search-icon" />
+              </div>
+              <div className="sad-header-search-wrap">
+                <Search className="h-4 w-4 sad-search-icon " />
                 <Input
                   placeholder="Search sites…"
                   value={search}
@@ -406,72 +404,74 @@ export default function SitesAndDepartments() {
                   className="sad-search-input"
                 />
               </div>
-            </CardHeader>
-
-            <CardContent className="sad-site-list">
-              {filteredSites.length === 0 ? (
-                <p className="sad-empty">
-                  {search ? 'No sites match your search.' : 'No sites yet. Add your first site.'}
-                </p>
-              ) : (
-                filteredSites.map((site) => {
-                  const depts = deptsBySite(site.id)
-                  const isActive = selectedSite?.id === site.id
-                  return (
-                    <div
-                      key={site.id}
-                      className={`sad-site-item${isActive ? ' sad-site-item--active' : ''}`}
-                      onClick={() => handleSelectSite(site)}
-                    >
-                      <div className="sad-site-item-main">
-                        <div className="sad-site-item-name">
-                          <MapPin className="h-4 w-4 sad-site-item-icon" />
-                          {site.name}
-                        </div>
-                        {site.address && <p className="sad-site-item-address">{site.address}</p>}
-                        <div className="sad-site-item-meta">
-                          <Badge variant="secondary" className="sad-badge">
-                            {depts.length} dept{depts.length !== 1 ? 's' : ''}
-                          </Badge>
-                          <Badge variant="outline" className="sad-badge">
-                            {depts.reduce((s, d) => s + (d.employee_count ?? 0), 0)} employees
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <div className="sad-site-item-actions" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          onClick={() => openEditSite(site)}
-                          title="Edit site"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          className="sad-delete-btn"
-                          onClick={() => handleDeleteSite(site)}
-                          title="Delete site"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-        {/* Right: detail panel */}
-        <div className="sad-right">
+        {/** Site and Department list */}
+        <div className="sad-site-list">
+          {filteredSites.length === 0 ? (
+            <p className="sad-empty">
+              {search ? 'No sites match your search.' : 'No sites yet. Add your first site.'}
+            </p>
+          ) : (
+            filteredSites.map((site) => {
+              const depts = deptsBySite(site.id)
+              const isActive = selectedSite?.id === site.id
+              return (
+                <div
+                  key={site.id}
+                  className={`sad-site-item${isActive ? ' sad-site-item--active' : ''} shadow-card`}
+                  onClick={() => handleSelectSite(site)}
+                >
+                  <div className="sad-site-item-main">
+                    <div className="sad-site-item-name">
+                      <MapPin className="h-4 w-4 sad-site-item-icon" />
+                      {site.name}
+                    </div>
+                    {site.address && <p className="sad-site-item-address">{site.address}</p>}
+                    <div className="sad-site-item-meta">
+                      <Badge variant="secondary" className="sad-badge-depts">
+                        {depts.length} dept{depts.length !== 1 ? 's' : ''}
+                      </Badge>
+                      <Badge variant="outline" className="sad-badge-employees">
+                        {depts.reduce((s, d) => s + (d.employee_count ?? 0), 0)} employees
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="sad-site-item-actions" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => openEditSite(site)}
+                      title="Edit site"
+                      className="sad-edit-btn"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      className="sad-delete-btn"
+                      onClick={() => handleDeleteSite(site)}
+                      title="Delete site"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+
+        <div className="sad-detail-panel">
           {selectedSite ? (
-            <Tabs defaultValue="departments">
+            <Tabs defaultValue="departments" className="sad-detail-content">
+              {/* ── Header ── */}
               <div className="sad-detail-header">
-                <div>
+                <div className="sad-detail-header-info">
                   <h2 className="sad-detail-title">{selectedSite.name}</h2>
                   {selectedSite.address && (
                     <p className="sad-detail-subtitle">{selectedSite.address}</p>
@@ -493,7 +493,8 @@ export default function SitesAndDepartments() {
                 </div>
               </div>
 
-              <TabsList className="sad-tabs-list">
+              {/* ── Tab bar ── */}
+              <TabsList className="sad-tabs-list" aria-label="Select details view">
                 <TabsTrigger value="departments">
                   <Building2 className="h-3.5 w-3.5 mr-1.5" />
                   Departments
@@ -508,13 +509,13 @@ export default function SitesAndDepartments() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Departments tab */}
-              <TabsContent value="departments">
-                <Card>
+              {/* ── Departments ── */}
+              <TabsContent value="departments" className="sad-tab-body">
+                <Card className="sad-tab-card shadow-card">
                   <CardContent className="sad-dept-list">
                     {deptsBySite(selectedSite.id).length === 0 ? (
                       <div className="sad-dept-empty">
-                        <Building2 className="h-8 w-8 text-muted-foreground" />
+                        <Building2 className="h-8 w-8 sad-placeholder-icon" />
                         <p className="sad-dept-empty-text">No departments for this site.</p>
                         <Button
                           size="sm"
@@ -542,6 +543,7 @@ export default function SitesAndDepartments() {
                             <Button
                               size="icon-sm"
                               variant="ghost"
+                              className="sad-edit-btn"
                               onClick={() => openEditDept(dept)}
                               title="Edit department"
                             >
@@ -564,11 +566,11 @@ export default function SitesAndDepartments() {
                 </Card>
               </TabsContent>
 
-              {/* Activity tab */}
-              <TabsContent value="activity">
-                <Card>
+              {/* ── Activity ── */}
+              <TabsContent value="activity" className="sad-tab-body">
+                <Card className="sad-tab-card shadow-card">
                   <CardHeader>
-                    <CardTitle className="card-title-row text-sm">
+                    <CardTitle className="card-title-row">
                       <BarChart3 className="h-4 w-4 icon-primary" />
                       Last 7 Days — {selectedSite.name}
                     </CardTitle>
@@ -616,11 +618,11 @@ export default function SitesAndDepartments() {
                 </Card>
               </TabsContent>
 
-              {/* Site Info tab */}
-              <TabsContent value="info">
-                <Card>
+              {/* ── Site Info ── */}
+              <TabsContent value="info" className="sad-tab-body">
+                <Card className="sad-tab-card shadow-card">
                   <CardHeader>
-                    <CardTitle className="card-title-row text-sm">
+                    <CardTitle className="card-title-row">
                       <MapPin className="h-4 w-4 icon-primary" />
                       Site Details
                     </CardTitle>
@@ -663,7 +665,7 @@ export default function SitesAndDepartments() {
               </TabsContent>
             </Tabs>
           ) : (
-            <Card className="sad-placeholder">
+            <Card className="sad-placeholder shadow-card">
               <CardContent className="sad-placeholder-content">
                 <MapPin className="h-10 w-10 sad-placeholder-icon" />
                 <p className="sad-placeholder-text">
@@ -678,13 +680,18 @@ export default function SitesAndDepartments() {
       {/* ── Site dialog ─── */}
       <Dialog open={siteDialogOpen} onOpenChange={setSiteDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingSite ? 'Edit Site' : 'Add Site'}</DialogTitle>
+          <DialogHeader className="pb-2 mb-2 border-b flex items-center justify-between">
+            <DialogTitle className="font-semibold text-lg flex items-center">
+              {editingSite ? 'Edit Site' : 'Add Site'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="sad-form">
+          <div className="sad-form max-w-md">
             <div className="sad-form-group">
-              <Label htmlFor="site-name">Site Name *</Label>
+              <Label className="font-semibold text-md" htmlFor="site-name">
+                Site Name *
+              </Label>
               <Input
+                className="sad-native-input"
                 id="site-name"
                 value={siteForm.name}
                 onChange={(e) => setSiteForm((f) => ({ ...f, name: e.target.value }))}
@@ -692,8 +699,11 @@ export default function SitesAndDepartments() {
               />
             </div>
             <div className="sad-form-group">
-              <Label htmlFor="site-address">Address</Label>
+              <Label className="font-semibold text-md" htmlFor="site-address">
+                Address *
+              </Label>
               <Input
+                className="sad-native-input"
                 id="site-address"
                 value={siteForm.address}
                 onChange={(e) => setSiteForm((f) => ({ ...f, address: e.target.value }))}
@@ -702,8 +712,11 @@ export default function SitesAndDepartments() {
             </div>
             <div className="sad-form-row">
               <div className="sad-form-group">
-                <Label htmlFor="site-lat">Latitude</Label>
+                <Label className="font-semibold text-md" htmlFor="site-lat">
+                  Latitude
+                </Label>
                 <Input
+                  className="sad-native-input"
                   id="site-lat"
                   type="number"
                   value={siteForm.latitude}
@@ -712,8 +725,11 @@ export default function SitesAndDepartments() {
                 />
               </div>
               <div className="sad-form-group">
-                <Label htmlFor="site-lng">Longitude</Label>
+                <Label className="font-semibold text-md" htmlFor="site-lng">
+                  Longitude
+                </Label>
                 <Input
+                  className="sad-native-input"
                   id="site-lng"
                   type="number"
                   value={siteForm.longitude}
@@ -723,9 +739,12 @@ export default function SitesAndDepartments() {
               </div>
             </div>
             <div className="sad-form-group">
-              <Label htmlFor="site-geo">Geofence Radius (metres)</Label>
+              <Label className="font-semibold text-md" htmlFor="site-geo">
+                Geofence Radius (metres)
+              </Label>
               <Input
                 id="site-geo"
+                className="sad-native-input"
                 type="number"
                 min={0}
                 value={siteForm.geofence_radius_m}
@@ -735,8 +754,12 @@ export default function SitesAndDepartments() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveSite} disabled={savingSite}>
-              {savingSite && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            <Button
+              onClick={handleSaveSite}
+              disabled={savingSite}
+              className="ml-auto bg-green-500 text-white hover:bg-green-600 focus-visible:ring-green-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              {savingSite && <Loader2 className="h-4 w-4 mr-2 animate-spin " />}
               {editingSite ? 'Save Changes' : 'Add Site'}
             </Button>
           </DialogFooter>
@@ -746,7 +769,7 @@ export default function SitesAndDepartments() {
       {/* ── Department dialog ─── */}
       <Dialog open={deptDialogOpen} onOpenChange={setDeptDialogOpen}>
         <DialogContent>
-          <DialogHeader>
+          <DialogHeader className="border-b pb-2 mb-4">
             <DialogTitle>{editingDept ? 'Edit Department' : 'Add Department'}</DialogTitle>
           </DialogHeader>
           <div className="sad-form">
@@ -754,6 +777,7 @@ export default function SitesAndDepartments() {
               <Label htmlFor="dept-name">Department Name *</Label>
               <Input
                 id="dept-name"
+                className="sad-native-input"
                 value={deptForm.name}
                 onChange={(e) => setDeptForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="e.g. Engineering"
@@ -777,8 +801,12 @@ export default function SitesAndDepartments() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveDept} disabled={savingDept}>
-              {savingDept && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            <Button
+              onClick={handleSaveDept}
+              disabled={savingDept}
+              className="ml-auto bg-green-500 text-white hover:bg-green-600 focus-visible:ring-green-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              {savingDept && <Loader2 className="h-4 w-4 mr-2 animate-spin " />}
               {editingDept ? 'Save Changes' : 'Add Department'}
             </Button>
           </DialogFooter>
@@ -802,7 +830,7 @@ function StatCard({
   label: string
 }) {
   return (
-    <Card className="sad-stat-card">
+    <Card className="sad-stat-card shadow-card">
       <CardContent className="sad-stat-content">
         <div className={`sad-stat-icon-wrap ${iconClass}`}>{icon}</div>
         <div>
