@@ -6,19 +6,33 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Components](#components)
-- [Responsive Design](#responsive-design)
-- [Styling Conventions](#styling-conventions)
-- [Getting Started](#getting-started)
+- [EazyOps — Workforce Management Platform](#eazyops--workforce-management-platform)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Tech Stack](#tech-stack)
+  - [Project Structure](#project-structure)
+  - [Components](#components)
+    - [`TopNavBar`](#topnavbar)
+    - [`Hero`](#hero)
+    - [`HowItWorksSection`](#howitworkssection)
+    - [`BenefitsSections`](#benefitssections)
+    - [`CTASection`](#ctasection)
+    - [`Footer`](#footer)
+    - [`DemoModal`](#demomodal)
+  - [Responsive Design](#responsive-design)
+  - [Styling Conventions](#styling-conventions)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Development](#development)
+    - [Build](#build)
+  - [CSS Custom Properties](#css-custom-properties)
 
 ---
 
 ## Overview
 
-EazyOps is a marketing and lead-generation website for a South African workforce operations SaaS platform. It presents the product's core features, check-in methods, benefits, pricing summary, and a demo request flow — all in a single-page layout with smooth scroll navigation.
+EasyOps is a marketing and lead-generation website for a South African workforce operations SaaS platform. It presents the product's core features, check-in methods, benefits, pricing summary, and a demo request flow — all in a single-page layout with smooth scroll navigation.
 
 Key product highlights communicated on the site:
 
@@ -151,10 +165,10 @@ CSS breakpoints follow a `min-width` mobile-first pattern:
 /* Mobile — base styles (no media query) */
 
 @media (min-width: 768px) {
-    /* Tablet */
+  /* Tablet */
 }
 @media (min-width: 1024px) {
-    /* Desktop */
+  /* Desktop */
 }
 ```
 
@@ -207,27 +221,27 @@ Define the following tokens in your global CSS (e.g. `globals.css`) for the comp
 
 ```css
 :root {
-    --secondary: #29aea0;
-    --foreground: #141d29;
-    --background: #f9fafb;
-    --border: #e0e5eb;
-    --gray-600: #475467;
-    --gray-900: #101828;
-    --shadow-xs: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
+  --secondary: #29aea0;
+  --foreground: #141d29;
+  --background: #f9fafb;
+  --border: #e0e5eb;
+  --gray-600: #475467;
+  --gray-900: #101828;
+  --shadow-xs: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
 
-    --text-md-regular-font-family: "Space Grotesk", sans-serif;
-    --text-md-regular-font-size: 16px;
-    --text-md-regular-font-style: normal;
-    --text-md-regular-font-weight: 400;
-    --text-md-regular-letter-spacing: normal;
-    --text-md-regular-line-height: 24px;
+  --text-md-regular-font-family: 'Space Grotesk', sans-serif;
+  --text-md-regular-font-size: 16px;
+  --text-md-regular-font-style: normal;
+  --text-md-regular-font-weight: 400;
+  --text-md-regular-letter-spacing: normal;
+  --text-md-regular-line-height: 24px;
 
-    --text-md-semibold-font-family: "Space Grotesk", sans-serif;
-    --text-md-semibold-font-size: 16px;
-    --text-md-semibold-font-style: normal;
-    --text-md-semibold-font-weight: 600;
-    --text-md-semibold-letter-spacing: normal;
-    --text-md-semibold-line-height: 24px;
+  --text-md-semibold-font-family: 'Space Grotesk', sans-serif;
+  --text-md-semibold-font-size: 16px;
+  --text-md-semibold-font-style: normal;
+  --text-md-semibold-font-weight: 600;
+  --text-md-semibold-letter-spacing: normal;
+  --text-md-semibold-line-height: 24px;
 }
 ```
 
