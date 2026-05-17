@@ -119,7 +119,7 @@ export default function SitesAndDepartments() {
       const depts = deptsRes.data ?? []
 
       // Build employee count map
-      let empCounts: Record<string, number> = {}
+      const empCounts: Record<string, number> = {}
       const deptIds = depts.map((d) => d.id)
       if (deptIds.length > 0) {
         const { data: empData } = await supabase
@@ -142,6 +142,7 @@ export default function SitesAndDepartments() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId])
@@ -149,6 +150,7 @@ export default function SitesAndDepartments() {
   const fetchSiteActivity = async (site: Site) => {
     setActivityLoading(true)
     try {
+      // eslint-disable-next-line react-hooks/purity
       const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().split('T')[0]
       const today = new Date().toISOString().split('T')[0]
 
@@ -166,7 +168,7 @@ export default function SitesAndDepartments() {
         string,
         { present: number; late: number; absent: number; total_hours: number }
       > = {}
-      ;(data ?? []).forEach((r: any) => {
+      ;(data ?? []).forEach((r: { date: string; status: string; hours_worked: number | null }) => {
         byDate[r.date] ??= { present: 0, late: 0, absent: 0, total_hours: 0 }
         if (r.status === 'present') byDate[r.date].present++
         if (r.status === 'late') byDate[r.date].late++
