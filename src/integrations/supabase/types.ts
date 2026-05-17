@@ -1,558 +1,925 @@
-export type Json =
-    | string
-    | number
-    | boolean
-    | null
-    | { [key: string]: Json | undefined }
-    | Json[]
+/* eslint-disable */
+/**
+ * Supabase PostgREST types shape:
+ * - `Json` = any (per your request)
+ * - Includes public tables, functions, enums, views, and relationships.
+ */
+
+export type Json = any
+
+export type UUID = string
+
+export type AppRole = 'admin' | 'manager' | 'supervisor' | 'employee'
+export type CheckInMethod = 'qr' | 'biometric' | 'whatsapp' | 'manual'
+export type AttendanceStatus = 'present' | 'late' | 'absent' | 'on_leave'
 
 export type Database = {
-    // Allows to automatically instantiate createClient with right options
-    // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-    __InternalSupabase: {
-        PostgrestVersion: "14.5"
-    }
-    public: {
-        Tables: {
-            attendance_records: {
-                Row: {
-                    clock_in: string | null
-                    clock_out: string | null
-                    created_at: string
-                    date: string
-                    employee_id: string
-                    hours_worked: number | null
-                    id: string
-                    latitude: number | null
-                    longitude: number | null
-                    method: Database["public"]["Enums"]["check_in_method"]
-                    notes: string | null
-                    overtime: number | null
-                    site_id: string | null
-                    status: Database["public"]["Enums"]["attendance_status"]
-                    updated_at: string
-                    verified: boolean
-                    verified_by: string | null
-                }
-                Insert: {
-                    clock_in?: string | null
-                    clock_out?: string | null
-                    created_at?: string
-                    date?: string
-                    employee_id: string
-                    hours_worked?: number | null
-                    id?: string
-                    latitude?: number | null
-                    longitude?: number | null
-                    method?: Database["public"]["Enums"]["check_in_method"]
-                    notes?: string | null
-                    overtime?: number | null
-                    site_id?: string | null
-                    status?: Database["public"]["Enums"]["attendance_status"]
-                    updated_at?: string
-                    verified?: boolean
-                    verified_by?: string | null
-                }
-                Update: {
-                    clock_in?: string | null
-                    clock_out?: string | null
-                    created_at?: string
-                    date?: string
-                    employee_id?: string
-                    hours_worked?: number | null
-                    id?: string
-                    latitude?: number | null
-                    longitude?: number | null
-                    method?: Database["public"]["Enums"]["check_in_method"]
-                    notes?: string | null
-                    overtime?: number | null
-                    site_id?: string | null
-                    status?: Database["public"]["Enums"]["attendance_status"]
-                    updated_at?: string
-                    verified?: boolean
-                    verified_by?: string | null
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "attendance_records_site_id_fkey"
-                        columns: ["site_id"]
-                        isOneToOne: false
-                        referencedRelation: "sites"
-                        referencedColumns: ["id"]
-                    },
-                ]
-            }
-            audit_log: {
-                Row: {
-                    action: string
-                    created_at: string
-                    details: Json | null
-                    id: string
-                    target_id: string | null
-                    target_table: string | null
-                    user_id: string | null
-                }
-                Insert: {
-                    action: string
-                    created_at?: string
-                    details?: Json | null
-                    id?: string
-                    target_id?: string | null
-                    target_table?: string | null
-                    user_id?: string | null
-                }
-                Update: {
-                    action?: string
-                    created_at?: string
-                    details?: Json | null
-                    id?: string
-                    target_id?: string | null
-                    target_table?: string | null
-                    user_id?: string | null
-                }
-                Relationships: []
-            }
-            departments: {
-                Row: {
-                    created_at: string
-                    id: string
-                    name: string
-                    organisation_id: string | null
-                    site_id: string | null
-                }
-                Insert: {
-                    created_at?: string
-                    id?: string
-                    name: string
-                    organisation_id?: string | null
-                    site_id?: string | null
-                }
-                Update: {
-                    created_at?: string
-                    id?: string
-                    name?: string
-                    organisation_id?: string | null
-                    site_id?: string | null
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "departments_organisation_id_fkey"
-                        columns: ["organisation_id"]
-                        isOneToOne: false
-                        referencedRelation: "organisations"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "departments_site_id_fkey"
-                        columns: ["site_id"]
-                        isOneToOne: false
-                        referencedRelation: "sites"
-                        referencedColumns: ["id"]
-                    },
-                ]
-            }
-            organisation_roles: {
-                Row: {
-                    base_role: Database["public"]["Enums"]["app_role"]
-                    created_at: string
-                    id: string
-                    name: string
-                    organisation_id: string
-                }
-                Insert: {
-                    base_role: Database["public"]["Enums"]["app_role"]
-                    created_at?: string
-                    id?: string
-                    name: string
-                    organisation_id: string
-                }
-                Update: {
-                    base_role?: Database["public"]["Enums"]["app_role"]
-                    created_at?: string
-                    id?: string
-                    name?: string
-                    organisation_id?: string
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "organisation_roles_organisation_id_fkey"
-                        columns: ["organisation_id"]
-                        isOneToOne: false
-                        referencedRelation: "organisations"
-                        referencedColumns: ["id"]
-                    },
-                ]
-            }
-            organisations: {
-                Row: {
-                    country: string
-                    created_at: string
-                    created_by: string
-                    id: string
-                    industry: string | null
-                    logo_url: string | null
-                    name: string
-                    onboarding_completed: boolean
-                    settings: Json
-                    updated_at: string
-                }
-                Insert: {
-                    country?: string
-                    created_at?: string
-                    created_by: string
-                    id?: string
-                    industry?: string | null
-                    logo_url?: string | null
-                    name: string
-                    onboarding_completed?: boolean
-                    settings?: Json
-                    updated_at?: string
-                }
-                Update: {
-                    country?: string
-                    created_at?: string
-                    created_by?: string
-                    id?: string
-                    industry?: string | null
-                    logo_url?: string | null
-                    name?: string
-                    onboarding_completed?: boolean
-                    settings?: Json
-                    updated_at?: string
-                }
-                Relationships: []
-            }
-            profiles: {
-                Row: {
-                    avatar_url: string | null
-                    created_at: string
-                    department: string | null
-                    email: string
-                    full_name: string
-                    id: string
-                    organisation_id: string | null
-                    site: string | null
-                    updated_at: string
-                    phone: string | null
-                    address: string | null
-                    job_title: string | null
-                    id_number: string | null
-                    date_of_birth: string | null
-                    start_date: string | null
-                    emergency_contact_name: string | null
-                    emergency_contact_phone: string | null
-                    bio: string | null
-                }
-                Insert: {
-                    avatar_url?: string | null
-                    created_at?: string
-                    department?: string | null
-                    email?: string
-                    full_name?: string
-                    id: string
-                    organisation_id?: string | null
-                    site?: string | null
-                    updated_at?: string
-                    phone?: string | null
-                    address?: string | null
-                    job_title?: string | null
-                    id_number?: string | null
-                    date_of_birth?: string | null
-                    start_date?: string | null
-                    emergency_contact_name?: string | null
-                    emergency_contact_phone?: string | null
-                    bio?: string | null
-                }
-                Update: {
-                    avatar_url?: string | null
-                    created_at?: string
-                    department?: string | null
-                    email?: string
-                    full_name?: string
-                    id?: string
-                    organisation_id?: string | null
-                    site?: string | null
-                    updated_at?: string
-                    phone?: string | null
-                    address?: string | null
-                    job_title?: string | null
-                    id_number?: string | null
-                    date_of_birth?: string | null
-                    start_date?: string | null
-                    emergency_contact_name?: string | null
-                    emergency_contact_phone?: string | null
-                    bio?: string | null
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "profiles_organisation_id_fkey"
-                        columns: ["organisation_id"]
-                        isOneToOne: false
-                        referencedRelation: "organisations"
-                        referencedColumns: ["id"]
-                    },
-                ]
-            }
-            shifts: {
-                Row: {
-                    created_at: string
-                    end_time: string
-                    grace_period_minutes: number
-                    id: string
-                    name: string
-                    organisation_id: string | null
-                    site_id: string | null
-                    start_time: string
-                }
-                Insert: {
-                    created_at?: string
-                    end_time: string
-                    grace_period_minutes?: number
-                    id?: string
-                    name: string
-                    organisation_id?: string | null
-                    site_id?: string | null
-                    start_time: string
-                }
-                Update: {
-                    created_at?: string
-                    end_time?: string
-                    grace_period_minutes?: number
-                    id?: string
-                    name?: string
-                    organisation_id?: string | null
-                    site_id?: string | null
-                    start_time?: string
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "shifts_organisation_id_fkey"
-                        columns: ["organisation_id"]
-                        isOneToOne: false
-                        referencedRelation: "organisations"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "shifts_site_id_fkey"
-                        columns: ["site_id"]
-                        isOneToOne: false
-                        referencedRelation: "sites"
-                        referencedColumns: ["id"]
-                    },
-                ]
-            }
-            sites: {
-                Row: {
-                    address: string | null
-                    created_at: string
-                    geofence_radius_m: number | null
-                    id: string
-                    latitude: number | null
-                    longitude: number | null
-                    name: string
-                    organisation_id: string | null
-                }
-                Insert: {
-                    address?: string | null
-                    created_at?: string
-                    geofence_radius_m?: number | null
-                    id?: string
-                    latitude?: number | null
-                    longitude?: number | null
-                    name: string
-                    organisation_id?: string | null
-                }
-                Update: {
-                    address?: string | null
-                    created_at?: string
-                    geofence_radius_m?: number | null
-                    id?: string
-                    latitude?: number | null
-                    longitude?: number | null
-                    name?: string
-                    organisation_id?: string | null
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "sites_organisation_id_fkey"
-                        columns: ["organisation_id"]
-                        isOneToOne: false
-                        referencedRelation: "organisations"
-                        referencedColumns: ["id"]
-                    },
-                ]
-            }
-            user_roles: {
-                Row: {
-                    id: string
-                    role: Database["public"]["Enums"]["app_role"]
-                    user_id: string
-                }
-                Insert: {
-                    id?: string
-                    role: Database["public"]["Enums"]["app_role"]
-                    user_id: string
-                }
-                Update: {
-                    id?: string
-                    role?: Database["public"]["Enums"]["app_role"]
-                    user_id?: string
-                }
-                Relationships: []
-            }
-        }
-        Views: {
-            [_ in never]: never
-        }
-        Functions: {
-            get_user_department: { Args: { _user_id: string }; Returns: string }
-            get_user_role: {
-                Args: { _user_id: string }
-                Returns: Database["public"]["Enums"]["app_role"]
-            }
-            get_user_site: { Args: { _user_id: string }; Returns: string }
-            has_role: {
-                Args: {
-                    _role: Database["public"]["Enums"]["app_role"]
-                    _user_id: string
-                }
-                Returns: boolean
-            }
-        }
-        Enums: {
-            app_role: "admin" | "manager" | "supervisor" | "employee"
-            attendance_status: "present" | "late" | "absent" | "on_leave"
-            check_in_method: "qr" | "biometric" | "whatsapp" | "manual"
-        }
-        CompositeTypes: {
-            [_ in never]: never
-        }
-    }
-}
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: UUID
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+          organisation_id: UUID | null
+          department_id: UUID | null
+          profile_site_id: UUID | null
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+          address: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          bio: string | null
 
-export type Tables<
-    DefaultSchemaTableNameOrOptions extends
-        | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-        | { schema: keyof DatabaseWithoutInternals },
-    TableName extends DefaultSchemaTableNameOrOptions extends {
-        schema: keyof DatabaseWithoutInternals
-    }
-        ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-              DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-        : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-}
-    ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-          DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-          Row: infer R
+          id_number: string | null
+          date_of_birth: string | null
+
+          start_date: string | null
+          full_name: string | null
+          email: string | null
+
+          is_active: boolean | null
+          cell_number: string | null
+
+          role: AppRole | null
+        }
+        Insert: {
+          id?: UUID
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+
+          organisation_id?: UUID | null
+          department_id?: UUID | null
+          profile_site_id?: UUID | null
+
+          address?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          bio?: string | null
+
+          id_number?: string | null
+          date_of_birth?: string | null
+
+          start_date?: string | null
+          full_name?: string | null
+          email?: string | null
+
+          is_active?: boolean | null
+          cell_number?: string | null
+
+          role?: AppRole | null
+        }
+        Update: {
+          id?: UUID
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+
+          organisation_id?: UUID | null
+          department_id?: UUID | null
+          profile_site_id?: UUID | null
+
+          address?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          bio?: string | null
+
+          id_number?: string | null
+          date_of_birth?: string | null
+
+          start_date?: string | null
+          full_name?: string | null
+          email?: string | null
+
+          is_active?: boolean | null
+          cell_number?: string | null
+
+          role?: AppRole | null
+        }
       }
-        ? R
-        : never
-    : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-            DefaultSchema["Views"])
-      ? (DefaultSchema["Tables"] &
-            DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-            Row: infer R
-        }
-          ? R
-          : never
-      : never
 
-export type TablesInsert<
-    DefaultSchemaTableNameOrOptions extends
-        | keyof DefaultSchema["Tables"]
-        | { schema: keyof DatabaseWithoutInternals },
-    TableName extends DefaultSchemaTableNameOrOptions extends {
-        schema: keyof DatabaseWithoutInternals
-    }
-        ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-        : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-}
-    ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-          Insert: infer I
+      user_roles: {
+        Row: {
+          id: UUID
+          user_id: UUID
+          organisation_roles: AppRole
+        }
+        Insert: {
+          id?: UUID
+          user_id: UUID
+          organisation_roles: AppRole
+        }
+        Update: {
+          id?: UUID
+          user_id?: UUID
+          organisation_roles?: AppRole
+        }
       }
-        ? I
-        : never
-    : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-      ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-            Insert: infer I
-        }
-          ? I
-          : never
-      : never
 
-export type TablesUpdate<
-    DefaultSchemaTableNameOrOptions extends
-        | keyof DefaultSchema["Tables"]
-        | { schema: keyof DatabaseWithoutInternals },
-    TableName extends DefaultSchemaTableNameOrOptions extends {
-        schema: keyof DatabaseWithoutInternals
-    }
-        ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-        : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-}
-    ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-          Update: infer U
+      sites: {
+        Row: {
+          id: UUID
+          name: string
+          address: string | null
+
+          latitude: number | null
+          longitude: number | null
+          geofence_radius_m: number | null
+
+          created_at: string
+          organisation_id: UUID | null
+        }
+        Insert: {
+          id?: UUID
+          name: string
+          address?: string | null
+
+          latitude?: number | null
+          longitude?: number | null
+          geofence_radius_m?: number | null
+
+          created_at?: string
+          organisation_id?: UUID | null
+        }
+        Update: {
+          id?: UUID
+          name?: string
+          address?: string | null
+
+          latitude?: number | null
+          longitude?: number | null
+          geofence_radius_m?: number | null
+
+          created_at?: string
+          organisation_id?: UUID | null
+        }
       }
-        ? U
-        : never
-    : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-      ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-            Update: infer U
+
+      departments: {
+        Row: {
+          id: UUID
+          name: string
+          site_id: UUID | null
+          created_at: string
+          organisation_id: UUID | null
         }
-          ? U
-          : never
-      : never
+        Insert: {
+          id?: UUID
+          name: string
+          site_id?: UUID | null
+          created_at?: string
+          organisation_id?: UUID | null
+        }
+        Update: {
+          id?: UUID
+          name?: string
+          site_id?: UUID | null
+          created_at?: string
+          organisation_id?: UUID | null
+        }
+      }
 
-export type Enums<
-    DefaultSchemaEnumNameOrOptions extends
-        | keyof DefaultSchema["Enums"]
-        | { schema: keyof DatabaseWithoutInternals },
-    EnumName extends DefaultSchemaEnumNameOrOptions extends {
-        schema: keyof DatabaseWithoutInternals
+      shifts: {
+        Row: {
+          id: UUID
+          name: string
+          start_time: string // time (no tz)
+          end_time: string // time (no tz)
+          grace_period_minutes: number | null
+
+          site_id: UUID | null
+
+          created_at: string
+          organisation_id: UUID | null
+
+          shift_date: string | null // date
+          employee_id: UUID | null
+        }
+        Insert: {
+          id?: UUID
+          name: string
+          start_time: string
+          end_time: string
+          grace_period_minutes?: number | null
+          site_id?: UUID | null
+
+          created_at?: string
+          organisation_id?: UUID | null
+
+          shift_date?: string | null
+          employee_id?: UUID | null
+        }
+        Update: {
+          id?: UUID
+          name?: string
+          start_time?: string
+          end_time?: string
+          grace_period_minutes?: number | null
+          site_id?: UUID | null
+
+          created_at?: string
+          organisation_id?: UUID | null
+
+          shift_date?: string | null
+          employee_id?: UUID | null
+        }
+      }
+
+      attendance_records: {
+        Row: {
+          id: UUID
+          employee_id: UUID
+          date: string
+
+          clock_in: string | null
+          clock_out: string | null
+
+          method: CheckInMethod
+          status: AttendanceStatus
+
+          site_id: UUID
+          latitude: number | null
+          longitude: number | null
+
+          verified: boolean | null
+          verified_by: UUID | null
+
+          hours_worked: string | null // numeric -> string
+          overtime: string | null // numeric -> string
+
+          notes: string | null
+
+          created_at: string
+          updated_at: string
+
+          organisation_id: UUID | null
+        }
+        Insert: {
+          id?: UUID
+          employee_id: UUID
+          date?: string
+
+          clock_in?: string | null
+          clock_out?: string | null
+
+          method?: CheckInMethod
+          status?: AttendanceStatus
+
+          site_id: UUID
+          latitude?: number | null
+          longitude?: number | null
+
+          verified?: boolean | null
+          verified_by?: UUID | null
+
+          hours_worked?: string | null
+          overtime?: string | null
+
+          notes?: string | null
+
+          created_at?: string
+          updated_at?: string
+
+          organisation_id?: UUID | null
+        }
+        Update: {
+          id?: UUID
+          employee_id?: UUID
+          date?: string
+
+          clock_in?: string | null
+          clock_out?: string | null
+
+          method?: CheckInMethod
+          status?: AttendanceStatus
+
+          site_id?: UUID
+          latitude?: number | null
+          longitude?: number | null
+
+          verified?: boolean | null
+          verified_by?: UUID | null
+
+          hours_worked?: string | null
+          overtime?: string | null
+
+          notes?: string | null
+
+          created_at?: string
+          updated_at?: string
+
+          organisation_id?: UUID | null
+        }
+      }
+
+      audit_log: {
+        Row: {
+          id: UUID
+          user_id: UUID | null
+          action: string
+          target_table: string | null
+          target_id: UUID | null
+          details: Json | null
+          created_at: string
+          organisation_id: UUID | null
+        }
+        Insert: {
+          id?: UUID
+          user_id?: UUID | null
+          action: string
+          target_table?: string | null
+          target_id?: UUID | null
+          details?: Json | null
+          created_at?: string
+          organisation_id?: UUID | null
+        }
+        Update: {
+          id?: UUID
+          user_id?: UUID | null
+          action?: string
+          target_table?: string | null
+          target_id?: UUID | null
+          details?: Json | null
+          created_at?: string
+          organisation_id?: UUID | null
+        }
+      }
+
+      organisations: {
+        Row: {
+          id: UUID
+          name: string
+          industry: string | null
+
+          country: string | null
+          logo_url: string | null
+
+          onboarding_completed: boolean | null
+          settings: Json | null
+
+          created_by: UUID
+
+          created_at: string
+          updated_at: string
+
+          subscription_status: string | null
+          max_employees: bigint | number | null
+        }
+        Insert: {
+          id?: UUID
+          name: string
+          industry?: string | null
+
+          country?: string | null
+          logo_url?: string | null
+
+          onboarding_completed?: boolean | null
+          settings?: Json | null
+
+          created_by: UUID
+
+          created_at?: string
+          updated_at?: string
+
+          subscription_status?: string | null
+          max_employees?: bigint | number | null
+        }
+        Update: {
+          id?: UUID
+          name?: string
+          industry?: string | null
+
+          country?: string | null
+          logo_url?: string | null
+
+          onboarding_completed?: boolean | null
+          settings?: Json | null
+
+          created_by?: UUID
+
+          created_at?: string
+          updated_at?: string
+
+          subscription_status?: string | null
+          max_employees?: bigint | number | null
+        }
+      }
+
+      organisation_roles: {
+        Row: {
+          id: UUID
+          organisation_id: UUID
+          name: string
+          base_role: AppRole
+          created_at: string
+        }
+        Insert: {
+          id?: UUID
+          organisation_id: UUID
+          name: string
+          base_role: AppRole
+          created_at?: string
+        }
+        Update: {
+          id?: UUID
+          organisation_id?: UUID
+          name?: string
+          base_role?: AppRole
+          created_at?: string
+        }
+      }
+
+      shift_sites: {
+        Row: {
+          shift_id: UUID
+          site_id: UUID
+        }
+        Insert: {
+          shift_id: UUID
+          site_id: UUID
+        }
+        Update: {
+          shift_id?: UUID
+          site_id?: UUID
+        }
+      }
+
+      employee_shifts: {
+        Row: {
+          id: UUID
+          employee_id: UUID
+          shift_id: UUID
+          organisation_id: UUID
+
+          effective_from: string // date
+          effective_to: string | null
+
+          created_at: string
+        }
+        Insert: {
+          id?: UUID
+          employee_id: UUID
+          shift_id: UUID
+          organisation_id: UUID
+
+          effective_from: string
+          effective_to?: string | null
+
+          created_at?: string
+        }
+        Update: {
+          id?: UUID
+          employee_id?: UUID
+          shift_id?: UUID
+          organisation_id?: UUID
+
+          effective_from?: string
+          effective_to?: string | null
+
+          created_at?: string
+        }
+      }
+
+      organisation_check_in_methods: {
+        Row: {
+          organisation_id: UUID
+          method: CheckInMethod
+        }
+        Insert: {
+          organisation_id: UUID
+          method: CheckInMethod
+        }
+        Update: {
+          organisation_id?: UUID
+          method?: CheckInMethod
+        }
+      }
+
+      leave_requests: {
+        Row: {
+          id: UUID
+          employee_id: UUID
+          organisation_id: UUID
+
+          leave_type: string
+          start_date: string
+          end_date: string
+
+          status: string
+
+          approved_by: UUID | null
+          notes: string | null
+
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: UUID
+          employee_id: UUID
+          organisation_id: UUID
+
+          leave_type: string
+          start_date: string
+          end_date: string
+
+          status?: string
+
+          approved_by?: UUID | null
+          notes?: string | null
+
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: UUID
+          employee_id?: UUID
+          organisation_id?: UUID
+
+          leave_type?: string
+          start_date?: string
+          end_date?: string
+
+          status?: string
+
+          approved_by?: UUID | null
+          notes?: string | null
+
+          created_at?: string
+          updated_at?: string
+        }
+      }
+
+      easy_ops_sales_leads: {
+        Row: {
+          sale_lead_id: UUID
+
+          full_name: string
+          lead_email: string
+          lead_phone: string
+
+          company_name: string
+          employee_count: string
+          selected_plan: string
+
+          country: string
+          message: string
+          status: string
+
+          created_at: string // date
+          updated_at: string | null // date
+        }
+        Insert: {
+          sale_lead_id?: UUID
+          full_name: string
+          lead_email: string
+          lead_phone: string
+
+          company_name: string
+          employee_count: string
+          selected_plan: string
+
+          country: string
+          message?: string
+          status?: string
+
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          sale_lead_id?: UUID
+
+          full_name?: string
+          lead_email?: string
+          lead_phone?: string
+
+          company_name?: string
+          employee_count?: string
+          selected_plan?: string
+
+          country?: string
+          message?: string
+          status?: string
+
+          created_at?: string
+          updated_at?: string | null
+        }
+      }
     }
-        ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-        : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-}
-    ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-    : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-      ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-      : never
 
-export type CompositeTypes<
-    PublicCompositeTypeNameOrOptions extends
-        | keyof DefaultSchema["CompositeTypes"]
-        | { schema: keyof DatabaseWithoutInternals },
-    CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-        schema: keyof DatabaseWithoutInternals
+    Views: {}
+
+    Enums: {
+      app_role: {
+        admin: 'admin'
+        manager: 'manager'
+        supervisor: 'supervisor'
+        employee: 'employee'
+      }
+      check_in_method: {
+        qr: 'qr'
+        biometric: 'biometric'
+        whatsapp: 'whatsapp'
+        manual: 'manual'
+      }
+      attendance_status: {
+        present: 'present'
+        late: 'late'
+        absent: 'absent'
+        on_leave: 'on_leave'
+      }
     }
-        ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-        : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-}
-    ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-    : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-      ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-      : never
 
-export const Constants = {
-    public: {
-        Enums: {
-            app_role: ["admin", "manager", "supervisor", "employee"],
-            attendance_status: ["present", "late", "absent", "on_leave"],
-            check_in_method: ["qr", "biometric", "whatsapp", "manual"],
-        },
-    },
-} as const
+    Relationships: [
+      {
+        foreignKeyName: 'profiles_department_id_fkey'
+        columns: ['department_id']
+        isOneToOne: false
+        referencedRelation: 'departments'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'user_roles_user_id_profiles_fkey'
+        columns: ['user_id']
+        isOneToOne: false
+        referencedRelation: 'profiles'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'profiles_id_fkey'
+        columns: ['id']
+        isOneToOne: true
+        referencedRelation: 'auth.users'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'profiles_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'shifts_employee_id_fkey'
+        columns: ['employee_id']
+        isOneToOne: false
+        referencedRelation: 'profiles'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'leave_requests_approved_by_fkey'
+        columns: ['approved_by']
+        isOneToOne: false
+        referencedRelation: 'profiles'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'leave_requests_employee_id_fkey'
+        columns: ['employee_id']
+        isOneToOne: false
+        referencedRelation: 'profiles'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'employee_shifts_employee_id_fkey'
+        columns: ['employee_id']
+        isOneToOne: false
+        referencedRelation: 'profiles'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'profiles_profile_site_id_fkey'
+        columns: ['profile_site_id']
+        isOneToOne: false
+        referencedRelation: 'sites'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'user_roles_user_id_fkey'
+        columns: ['user_id']
+        isOneToOne: false
+        referencedRelation: 'auth.users'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'departments_site_id_fkey'
+        columns: ['site_id']
+        isOneToOne: false
+        referencedRelation: 'sites'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'departments_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'sites_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'shifts_site_id_fkey'
+        columns: ['site_id']
+        isOneToOne: false
+        referencedRelation: 'sites'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'shifts_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'shift_sites_site_id_fkey'
+        columns: ['site_id']
+        isOneToOne: false
+        referencedRelation: 'sites'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'shift_sites_shift_id_fkey'
+        columns: ['shift_id']
+        isOneToOne: false
+        referencedRelation: 'shifts'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'employee_shifts_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'employee_shifts_shift_id_fkey'
+        columns: ['shift_id']
+        isOneToOne: false
+        referencedRelation: 'shifts'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'organisation_roles_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'organisation_check_in_methods_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'attendance_records_site_id_fkey'
+        columns: ['site_id']
+        isOneToOne: false
+        referencedRelation: 'sites'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'attendance_records_employee_id_fkey'
+        columns: ['employee_id']
+        isOneToOne: false
+        referencedRelation: 'auth.users'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'attendance_records_verified_by_fkey'
+        columns: ['verified_by']
+        isOneToOne: false
+        referencedRelation: 'auth.users'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'attendance_records_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'audit_log_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'audit_log_user_id_fkey'
+        columns: ['user_id']
+        isOneToOne: false
+        referencedRelation: 'auth.users'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'fk_organisations_created_by'
+        columns: ['created_by']
+        isOneToOne: false
+        referencedRelation: 'auth.users'
+        referencedColumns: ['id']
+      },
+
+      {
+        foreignKeyName: 'leave_requests_organisation_id_fkey'
+        columns: ['organisation_id']
+        isOneToOne: false
+        referencedRelation: 'organisations'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'leave_requests_approved_by_fkey'
+        columns: ['approved_by']
+        isOneToOne: false
+        referencedRelation: 'profiles'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'leave_requests_employee_id_fkey'
+        columns: ['employee_id']
+        isOneToOne: false
+        referencedRelation: 'profiles'
+        referencedColumns: ['id']
+      },
+    ]
+
+    Functions: {
+      clock_in: {
+        Args: {
+          p_site_id: UUID
+          p_lat: number
+          p_lng: number
+        }
+        Returns: Json
+      }
+
+      onboard_organisation_admin_tx: {
+        Args: {
+          p_email: string
+          p_role: string
+          p_organisation_name: string
+          p_sites: Json
+          p_departments: Json
+          p_admin_link: Json
+          p_industry?: string | null
+          p_country?: string | null
+          p_logo_url?: string | null
+          p_settings?: Json
+        }
+        Returns: Json
+      }
+
+      get_my_org_id: {
+        Args: {}
+        Returns: UUID
+      }
+
+      get_user_department: {
+        Args: {
+          _user_id: UUID
+        }
+        Returns: string
+      }
+
+      get_user_role: {
+        Args: {
+          _user_id: UUID
+        }
+        Returns: AppRole
+      }
+
+      get_user_site: {
+        Args: {
+          _user_id: UUID
+        }
+        Returns: string
+      }
+
+      has_role: {
+        Args: {
+          _user_id: UUID
+          _role: AppRole
+        }
+        Returns: boolean
+      }
+    }
+  }
+}

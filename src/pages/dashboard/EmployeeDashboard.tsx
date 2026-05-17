@@ -13,8 +13,8 @@ const EmployeeDashboard = () => {
   const { data: records, isLoading } = useMyAttendance()
 
   const myRecords = records || []
-  const totalHours = myRecords.reduce((sum, r) => sum + (r.hours_worked || 0), 0)
-  const totalOvertime = myRecords.reduce((sum, r) => sum + (r.overtime || 0), 0)
+  const totalHours = myRecords.reduce((sum, r) => sum + parseFloat(r.hours_worked ?? '0'), 0)
+  const totalOvertime = myRecords.reduce((sum, r) => sum + parseFloat(r.overtime ?? '0'), 0)
   const absentDays = myRecords.filter((r) => r.status === 'absent').length
 
   if (isLoading) {

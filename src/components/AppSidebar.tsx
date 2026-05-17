@@ -1,5 +1,7 @@
+import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import type { AppRole } from '../integrations/supabase/types'
 import {
   Sidebar,
   SidebarContent,
@@ -30,7 +32,7 @@ interface NavItem {
   title: string
   url: string
   icon: React.ElementType
-  roles: string[]
+  roles: AppRole[]
 }
 
 const navItems: NavItem[] = [
@@ -44,7 +46,7 @@ const navItems: NavItem[] = [
     title: 'Check In / Out',
     url: '/app/check-in',
     icon: QrCode,
-    roles: ['employee', 'supervisor'],
+    roles: ['employee', 'supervisor', 'manager', 'admin'],
   },
   {
     title: 'Live Attendance',
@@ -54,14 +56,24 @@ const navItems: NavItem[] = [
   },
   { title: 'Reports', url: '/app/reports', icon: BarChart3, roles: ['admin', 'manager'] },
   { title: 'Employee Management', url: '/app/employees', icon: Users, roles: ['admin', 'manager'] },
-  { title: 'Team Overview', url: '/app/team', icon: UserCheck, roles: ['supervisor'] },
+  {
+    title: 'Team Overview',
+    url: '/app/team',
+    icon: UserCheck,
+    roles: ['supervisor', 'manager', 'admin'],
+  },
   {
     title: 'Sites & Departments',
     url: '/app/sites',
     icon: Building,
     roles: ['admin', 'manager', 'supervisor', 'employee'],
   },
-  { title: 'Compliance & Audit', url: '/app/compliance', icon: Shield, roles: ['admin'] },
+  {
+    title: 'Compliance & Audit',
+    url: '/app/compliance',
+    icon: Shield,
+    roles: ['admin', 'manager', 'supervisor'],
+  },
   { title: 'Payroll Export', url: '/app/payroll', icon: FileText, roles: ['admin', 'manager'] },
   {
     title: 'Settings',
@@ -78,7 +90,7 @@ const AppSidebar = () => {
 
   const filteredItems = navItems.filter((item) => user && item.roles.includes(user.role))
 
-  const orgName = organisation?.name || 'EasyOps'
+  const orgName = organisation?.name
 
   return (
     <Sidebar className="sidebar-nav">

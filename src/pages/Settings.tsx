@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../integrations/supabase/client'
+import type { Database } from '../integrations/supabase/types'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -52,18 +53,19 @@ const Settings = () => {
   useEffect(() => {
     if (!session?.user) return
     ;(async () => {
-      const { data, error } = await supabase
-        .from('profiles')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: raw, error } = await (supabase.from('profiles') as any)
         .select('*')
         .eq('id', session.user.id)
         .single()
       if (error) toast.error('Failed to load profile')
-      else if (data) {
+      else if (raw) {
+        const data = raw as Database['public']['Tables']['profiles']['Row']
         setForm({
           full_name: data.full_name ?? '',
-          phone: data.phone ?? '',
+          phone: data.cell_number ?? '',
           address: data.address ?? '',
-          job_title: data.job_title ?? '',
+          job_title: '',
           id_number: data.id_number ?? '',
           date_of_birth: data.date_of_birth ?? '',
           start_date: data.start_date ?? '',
@@ -81,13 +83,19 @@ const Settings = () => {
     queryKey: ['settings-my-attendance', session?.user?.id],
     enabled: !!session?.user,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('attendance_records')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase.from('attendance_records') as any)
         .select('date, clock_in, clock_out, hours_worked, status')
         .eq('employee_id', session!.user.id)
         .order('date', { ascending: false })
         .limit(10)
-      return data ?? []
+      return (data ?? []) as Array<{
+        date: string
+        clock_in: string | null
+        clock_out: string | null
+        hours_worked: string | null
+        status: string
+      }>
     },
   })
 
@@ -95,9 +103,10 @@ const Settings = () => {
     queryKey: ['settings-team-count', user?.role, user?.site, user?.department],
     enabled: !!user && user.role !== 'employee',
     queryFn: async () => {
-      let q = supabase.from('profiles').select('id', { count: 'exact', head: true })
-      if (user!.role === 'supervisor' && user!.site) q = q.eq('site', user!.site)
-      if (user!.role === 'manager' && user!.department) q = q.eq('department', user!.department)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let q = (supabase.from('profiles') as any).select('id', { count: 'exact', head: true })
+      if (user!.role === 'supervisor' && user!.site) q = q.eq('profile_site_id', user!.site)
+      if (user!.role === 'manager' && user!.department) q = q.eq('department_id', user!.department)
       const { count } = await q
       return count ?? 0
     },
@@ -117,12 +126,13 @@ const Settings = () => {
     setSaving(true)
     const payload: Record<string, string | null> = {}
     for (const [k, v] of Object.entries(parsed.data)) {
-      payload[k] = v === '' ? null : (v as string)
+      if (k === 'job_title') continue // no DB column
+      const dbKey = k === 'phone' ? 'cell_number' : k
+      payload[dbKey] = v === '' ? null : (v as string)
     }
-    // eslint-disable-next-line ..typescript-eslint/no-explicit-any
-    const { error } = await supabase
-      .from('profiles')
-      .update(payload as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('profiles') as any)
+      .update(payload)
       .eq('id', session.user.id)
     setSaving(false)
     if (error) toast.error(error.message)

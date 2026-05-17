@@ -1,8 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../integrations/supabase/client'
-import type { Session, User as SupaUser } from '@supabase/supabase-js'
+import type { Session } from '@supabase/supabase-js'
+import type { Database, AppRole } from '../integrations/supabase/types'
 
-export type UserRole = 'admin' | 'manager' | 'supervisor' | 'employee'
+export type UserRole = AppRole
+
+type ProfileRow = Database['public']['Tables']['profiles']['Row']
+type OrganisationRow = Database['public']['Tables']['organisations']['Row']
 
 export interface Organisation {
   id: string
@@ -26,7 +30,7 @@ export interface User {
 interface AuthContextType {
   user: User | null
   session: Session | null
-  organisation: Organisation | null
+  organisation: Organisation
   isAuthenticated: boolean
   isLoading: boolean
   onboardingComplete: boolean
@@ -39,33 +43,43 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 async function fetchUserProfile(uid: string): Promise<User | null> {
-  const [profileRes, roleRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', uid).single(),
-    supabase.from('user_roles').select('role').eq('user_id', uid).single(),
-  ])
-  if (profileRes.error || !profileRes.data) return null
-  const p = profileRes.data
-  const role = roleRes.data?.role as UserRole
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('profiles') as any)
+    .select('*')
+    .eq('id', uid)
+    .single()
+  if (error || !data) return null
+  const p = data as ProfileRow
   return {
     id: p.id,
     name: p.full_name || p.email || '',
     email: p.email || '',
-    role,
-    department: p.department || '',
-    site: p.site || '',
+    role: (p.role ?? 'employee') as UserRole,
+    department: p.department_id || '',
+    site: p.profile_site_id || '',
     avatar: p.avatar_url || undefined,
     organisation_id: p.organisation_id || undefined,
   }
 }
 
 async function fetchOrganisation(orgId: string): Promise<Organisation | null> {
-  const { data, error } = await supabase
-    .from('organisations')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('organisations') as any)
     .select('id, name, logo_url, onboarding_completed, settings')
     .eq('id', orgId)
     .single()
   if (error || !data) return null
-  return data as Organisation
+  const row = data as Pick<
+    OrganisationRow,
+    'id' | 'name' | 'logo_url' | 'onboarding_completed' | 'settings'
+  >
+  return {
+    id: row.id,
+    name: row.name,
+    logo_url: row.logo_url ?? undefined,
+    onboarding_completed: row.onboarding_completed ?? false,
+    settings: (row.settings as Record<string, unknown>) ?? {},
+  }
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -77,16 +91,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadProfile = useCallback(async (uid: string) => {
     const profile = await fetchUserProfile(uid)
     setUser(profile)
-
-    let org: Organisation | null
-
     if (profile?.organisation_id) {
-      org = await fetchOrganisation(profile.organisation_id)
+      const org = await fetchOrganisation(profile.organisation_id)
       setOrganisation(org)
     } else {
       setOrganisation(null)
     }
-
     setIsLoading(false)
 
     // ── Onboarding redirect gate ──────────────────────────────────────
@@ -188,7 +198,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         session,
-        organisation,
+        organisation: organisation ?? {
+          id: '',
+          name: '',
+          logo_url: '',
+          onboarding_completed: false,
+          settings: {},
+        },
         isAuthenticated: !!session,
         isLoading,
         onboardingComplete,

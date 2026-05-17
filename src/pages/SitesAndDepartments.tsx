@@ -109,14 +109,19 @@ export default function SitesAndDepartments() {
     setLoading(true)
     try {
       const [sitesRes, deptsRes] = await Promise.all([
-        supabase.from('sites').select('*').eq('organisation_id', orgId).order('name'),
-        supabase.from('departments').select('*').eq('organisation_id', orgId).order('name'),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from('sites') as any).select('*').eq('organisation_id', orgId).order('name'),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from('departments') as any)
+          .select('*')
+          .eq('organisation_id', orgId)
+          .order('name'),
       ])
 
       if (sitesRes.error) throw sitesRes.error
       if (deptsRes.error) throw deptsRes.error
 
-      const depts = deptsRes.data ?? []
+      const depts = (deptsRes.data ?? []) as Omit<Department, 'employee_count'>[]
 
       // Build employee count map
       const empCounts: Record<string, number> = {}
@@ -132,7 +137,7 @@ export default function SitesAndDepartments() {
         })
       }
 
-      setSites(sitesRes.data ?? [])
+      setSites((sitesRes.data ?? []) as Site[])
       setDepartments(depts.map((d) => ({ ...d, employee_count: empCounts[d.id] ?? 0 })))
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to load data')
@@ -226,11 +231,15 @@ export default function SitesAndDepartments() {
       }
 
       if (editingSite) {
-        const { error } = await supabase.from('sites').update(payload).eq('id', editingSite.id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from('sites') as any)
+          .update(payload)
+          .eq('id', editingSite.id)
         if (error) throw error
         toast.success('Site updated')
       } else {
-        const { error } = await supabase.from('sites').insert(payload)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from('sites') as any).insert(payload)
         if (error) throw error
         toast.success('Site added')
       }
@@ -290,14 +299,15 @@ export default function SitesAndDepartments() {
       }
 
       if (editingDept) {
-        const { error } = await supabase
-          .from('departments')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from('departments') as any)
           .update(payload)
           .eq('id', editingDept.id)
         if (error) throw error
         toast.success('Department updated')
       } else {
-        const { error } = await supabase.from('departments').insert(payload)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from('departments') as any).insert(payload)
         if (error) throw error
         toast.success('Department added')
       }

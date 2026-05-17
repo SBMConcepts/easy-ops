@@ -19,6 +19,7 @@ import Onboarding from './pages/Onboarding'
 import ResetPassword from './pages/ResetPassword'
 import Settings from './pages/Settings'
 import SitesAndDepartments from './pages/SitesAndDepartments'
+import GetStarted from './pages/GetStarted'
 
 const queryClient = new QueryClient()
 
@@ -31,6 +32,7 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/get-started" element={<GetStarted />} />
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route
@@ -53,7 +55,7 @@ const App = () => {
                 <Route
                   path="check-in"
                   element={
-                    <ProtectedRoute allowedRoles={['employee', 'supervisor']}>
+                    <ProtectedRoute allowedRoles={['employee', 'supervisor', 'manager', 'admin']}>
                       <CheckIn />
                     </ProtectedRoute>
                   }
@@ -93,7 +95,7 @@ const App = () => {
                 <Route
                   path="compliance"
                   element={
-                    <ProtectedRoute allowedRoles={['admin']}>
+                    <ProtectedRoute allowedRoles={['admin', 'manager']}>
                       <Compliance />
                     </ProtectedRoute>
                   }
@@ -101,7 +103,7 @@ const App = () => {
                 <Route
                   path="sites"
                   element={
-                    <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                    <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
                       <SitesAndDepartments />
                     </ProtectedRoute>
                   }
@@ -109,7 +111,7 @@ const App = () => {
                 <Route
                   path="payroll"
                   element={
-                    <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                    <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
                       <ComingSoon title="Payroll Export" />
                     </ProtectedRoute>
                   }

@@ -30,9 +30,7 @@ const AppHeader = () => {
       <div className="app-header-spacer" />
       {user && (
         <div className="app-header-right">
-          <Badge className={roleBadgeColors[user.role]}>
-            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-          </Badge>
+          <Badge className={roleBadgeColors[user.role]}>{user.role}</Badge>
           <div className="app-header-user">
             <User className="h-4 w-4 icon-muted" style={{ color: 'var(--muted-foreground)' }} />
             <span className="app-header-username">{user.name}</span>
