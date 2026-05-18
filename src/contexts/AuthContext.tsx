@@ -24,13 +24,13 @@ export interface User {
   department: string
   site: string
   avatar?: string
-  organisation_id?: string
+  organisation_id: string
 }
 
 interface AuthContextType {
   user: User | null
   session: Session | null
-  organisation: Organisation
+  organisation: Organisation | null
   isAuthenticated: boolean
   isLoading: boolean
   onboardingComplete: boolean
@@ -58,7 +58,7 @@ async function fetchUserProfile(uid: string): Promise<User | null> {
     department: p.department_id || '',
     site: p.profile_site_id || '',
     avatar: p.avatar_url || undefined,
-    organisation_id: p.organisation_id || undefined,
+    organisation_id: p.organisation_id ?? '',
   }
 }
 

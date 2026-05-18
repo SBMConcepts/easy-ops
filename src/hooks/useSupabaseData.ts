@@ -26,6 +26,7 @@ export function useAttendanceRecords(dateFrom?: string, dateTo?: string) {
       const qs = new URLSearchParams(params).toString()
       const { data, error } = await supabase.functions.invoke(`attendance-report?${qs}`, {
         method: 'GET',
+        headers: { Authorization: `Bearer ${session?.access_token}` },
       })
       if (error) throw error
       return data as {
@@ -149,7 +150,10 @@ export function useComplianceCheck() {
   return useQuery({
     queryKey: ['compliance-check'],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('compliance-check', { method: 'GET' })
+      const { data, error } = await supabase.functions.invoke('compliance-check', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      })
       if (error) throw error
       return data as {
         compliance_score: number
@@ -173,16 +177,24 @@ export async function checkIn(
   latitude?: number,
   longitude?: number
 ) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   const { data, error } = await supabase.functions.invoke('check-in', {
     body: { method, site_id: siteId, latitude, longitude },
+    headers: { Authorization: `Bearer ${session?.access_token}` },
   })
   if (error) throw error
   return data
 }
 
 export async function checkOut() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   const { data, error } = await supabase.functions.invoke('check-out', {
     body: {},
+    headers: { Authorization: `Bearer ${session?.access_token}` },
   })
   if (error) throw error
   return data

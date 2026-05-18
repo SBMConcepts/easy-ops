@@ -1,10 +1,10 @@
-import { useState } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect } from 'react'
 import { supabase } from '../integrations/supabase/client'
 import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
-import { useEmployees } from '../hooks/useSupabaseData'
 import { Search } from 'lucide-react'
 import { Input } from '../components/ui/input'
 import { toast } from 'sonner'
@@ -21,10 +21,10 @@ interface Employee {
 }
 
 const ROLE_LABELS: Record<AppRole, string> = {
-  admin: 'Admin',
-  manager: 'Manager',
-  supervisor: 'Supervisor',
-  employee: 'Employee',
+  admin: 'admin',
+  manager: 'manager',
+  supervisor: 'supervisor',
+  employee: 'employee',
 }
 
 export default function EmployeeManagement() {
@@ -40,44 +40,58 @@ export default function EmployeeManagement() {
       (e.department || '').toLowerCase().includes(search.toLowerCase())
   )
 
-  // ── Fetch employees on mount ──────────────────────────────────────────────
-  // We join profiles → user_roles to get role in one query.
-  useState(() => {
+  useEffect(() => {
+    if (!user?.organisation_id) return
     ;(async () => {
       setLoadingList(true)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setListError(null)
+
       const { data: profiles, error } = await (supabase.from('profiles') as any)
-        .select('id, full_name, email, department_id, profile_site_id')
-        .eq('organisation_id', user?.organisation_id ?? '')
-        .neq('id', user?.id ?? '')
+        .select(
+          `
+          id,
+          full_name,
+          email,
+          department:departments!profiles_department_id_fkey(name),
+          site:sites!profiles_profile_site_id_fkey(name)
+        `
+        )
+        .eq('organisation_id', user.organisation_id)
+        .neq('id', user.id)
 
       if (error) {
         setListError('Could not load employees.')
-      } else {
-        const userIds = (profiles ?? []).map((p: any) => p.id)
-        const { data: roles } = userIds.length
-          ? await supabase
-              .from('user_roles')
-              .select('user_id, organisation_roles')
-              .in('user_id', userIds)
-          : { data: [] }
-
-        const roleMap = Object.fromEntries(
-          (roles ?? []).map((r: any) => [r.user_id, r.organisation_roles])
-        )
-        const rows: Employee[] = (profiles ?? []).map((p: any) => ({
-          id: p.id,
-          full_name: p.full_name,
-          email: p.email,
-          role: (roleMap[p.id] ?? 'employee') as AppRole,
-          department: p.department_id ?? null,
-          site: p.profile_site_id ?? null,
-        }))
-        setEmployees(rows)
+        setEmployees([])
+        setLoadingList(false)
+        return
       }
+
+      const userIds = (profiles ?? []).map((p: any) => p.id)
+
+      const { data: roles } = userIds.length
+        ? await supabase
+            .from('user_roles')
+            .select('user_id, organisation_roles')
+            .in('user_id', userIds)
+        : { data: [] }
+
+      const roleMap = Object.fromEntries(
+        (roles ?? []).map((r: any) => [r.user_id, r.organisation_roles])
+      )
+
+      const rows: Employee[] = (profiles ?? []).map((p: any) => ({
+        id: p.id,
+        full_name: p.full_name,
+        email: p.email,
+        role: (roleMap[p.id] ?? 'employee') as AppRole,
+        department: p.department ?? null,
+        site: p.site ?? null,
+      }))
+
+      setEmployees(rows)
       setLoadingList(false)
     })()
-  })
+  }, [user?.organisation_id, user?.id])
 
   return (
     <div className="space-y-6">
@@ -90,7 +104,7 @@ export default function EmployeeManagement() {
         </div>
         <InviteEmployeeDialog
           onInvited={(emp) =>
-            setEmployees((prev) => [...prev, { ...emp, role: emp.role as AppRole }])
+            setEmployees((prev) => [...prev, { ...emp, role: emp.role as AppRole } as Employee])
           }
         />
       </div>
@@ -104,6 +118,12 @@ export default function EmployeeManagement() {
           className="pl-10"
         />
       </div>
+
+      {listError && (
+        <div className="text-sm text-red-600" role="alert">
+          {listError}
+        </div>
+      )}
 
       <Card className="shadow-card">
         <CardContent className="p-0">
@@ -119,31 +139,39 @@ export default function EmployeeManagement() {
                   <th className="text-left p-4 text-muted-foreground font-medium">Actions</th>
                 </tr>
               </thead>
+
               <tbody>
-                {employees.map((emp) => (
-                  <tr
-                    key={emp.id}
-                    className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="p-4 font-medium text-foreground">{emp.full_name || '—'}</td>
-                    <td className="p-4 text-muted-foreground">{emp.email}</td>
-                    <td className="p-4 text-foreground">{emp.department || '—'}</td>
-                    <td className="p-4 text-muted-foreground">{emp.site || '—'}</td>
-                    <td className="p-4">
-                      <Badge variant="outline">{ROLE_LABELS[emp.role]}</Badge>
-                    </td>
-                    <td className="p-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toast.info(`Edit ${emp.full_name} — coming soon`)}
-                      >
-                        Edit
-                      </Button>
+                {loadingList ? (
+                  <tr>
+                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
+                      Loading employees...
                     </td>
                   </tr>
-                ))}
-                {employees.length === 0 && (
+                ) : filtered.length > 0 ? (
+                  filtered.map((emp) => (
+                    <tr
+                      key={emp.id}
+                      className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="p-4 font-medium text-foreground">{emp.full_name || '—'}</td>
+                      <td className="p-4 text-muted-foreground">{emp.email}</td>
+                      <td className="p-4 text-foreground">{emp.department || '—'}</td>
+                      <td className="p-4 text-muted-foreground">{emp.site || '—'}</td>
+                      <td className="p-4">
+                        <Badge variant="outline">{ROLE_LABELS[emp.role]}</Badge>
+                      </td>
+                      <td className="p-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toast.info(`Edit ${emp.full_name} — coming soon`)}
+                        >
+                          Edit
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
                   <tr>
                     <td colSpan={6} className="p-4 text-center text-muted-foreground">
                       No employees found.
