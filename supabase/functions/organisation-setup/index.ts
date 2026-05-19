@@ -1,4 +1,84 @@
+<<<<<<< Updated upstream
 import { createClient } from "npm:@supabase/supabase-js@2"
+=======
+import { createClient } from '@supabase/supabase-js'
+
+// ── Auth0 Management API helpers ─────────────────────────────────────────────
+
+/** URL-safe slug derived from a display name (max 50 chars). */
+function toSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 50)
+}
+
+async function getAuth0MgmtToken(
+  domain: string,
+  clientId: string,
+  clientSecret: string
+): Promise<string> {
+  const res = await fetch(`https://${domain}/oauth/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret,
+      audience: `https://${domain}/api/v2/`,
+    }),
+  })
+  if (!res.ok) throw new Error(`Auth0 token request failed: ${await res.text()}`)
+  const { access_token } = await res.json()
+  return access_token as string
+}
+
+async function createAuth0Organization(
+  domain: string,
+  token: string,
+  slug: string,
+  displayName: string
+): Promise<string> {
+  const res = await fetch(`https://${domain}/api/v2/organizations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ name: slug, display_name: displayName }),
+  })
+  if (!res.ok) throw new Error(`Auth0 org creation failed: ${await res.text()}`)
+  const { id } = await res.json()
+  return id as string
+}
+
+async function addAuth0OrgMember(
+  domain: string,
+  token: string,
+  auth0OrgId: string,
+  userId: string
+) {
+  const res = await fetch(`https://${domain}/api/v2/organizations/${auth0OrgId}/members`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ members: [userId] }),
+  })
+  if (!res.ok) throw new Error(`Auth0 add member failed: ${await res.text()}`)
+}
+
+async function setAuth0AppMetadata(
+  domain: string,
+  token: string,
+  userId: string,
+  metadata: Record<string, unknown>
+) {
+  const res = await fetch(`https://${domain}/api/v2/users/${encodeURIComponent(userId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ app_metadata: metadata }),
+  })
+  if (!res.ok) throw new Error(`Auth0 metadata update failed: ${await res.text()}`)
+}
+
+>>>>>>> Stashed changes
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers":
@@ -56,6 +136,7 @@ Deno.serve(async (req) => {
         return new Response("ok", { headers: corsHeaders })
     }
 
+<<<<<<< Updated upstream
     try {
         const authHeader = req.headers.get("Authorization")
         if (!authHeader) {
@@ -69,6 +150,65 @@ Deno.serve(async (req) => {
                     },
                 }
             )
+=======
+    const supabaseAdmin = createClient(
+      Deno.env.get('VITE_SUPABASE_URL')!,
+      Deno.env.get('VITE_SUPABASE_SERVICE_ROLE_KEY')!
+    )
+
+    const supabaseUser = createClient(
+      Deno.env.get('VITE_SUPABASE_URL')!,
+      Deno.env.get('VITE_SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    )
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseUser.auth.getUser()
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Allow if user is already admin OR has no organisation yet (first-time setup).
+    // New signups get 'employee' by default via trigger, so we can't require
+    // admin role before the org exists — that's a chicken-and-egg problem.
+    const [roleRes, profileRes] = await Promise.all([
+      supabaseAdmin.from('user_roles').select('role').eq('user_id', user.id).single(),
+      supabaseAdmin.from('profiles').select('organisation_id').eq('id', user.id).single(),
+    ])
+
+    const isAdmin = roleRes.data?.role === 'admin'
+    const hasNoOrg = !profileRes.data?.organisation_id
+
+    if (!isAdmin && !hasNoOrg) {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      })
+    }
+
+    const payload: OnboardingPayload = await req.json()
+
+    // Validate required fields
+    if (!payload.company?.name || !payload.sites?.length) {
+      return new Response(
+        JSON.stringify({
+          error: 'Company name and at least one site are required',
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+>>>>>>> Stashed changes
         }
 
         const supabaseAdmin = createClient(

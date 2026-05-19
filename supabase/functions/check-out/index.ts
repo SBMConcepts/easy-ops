@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream
 import { createClient } from "npm:@supabase/supabase-js@2"
 import { corsHeaders } from "../_shared/cors.ts"
+=======
+import { corsHeaders } from '../_shared/cors.ts'
+import { resolveAuthContext } from '../_shared/auth-middleware.ts'
+>>>>>>> Stashed changes
 
 function jsonResponse(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
