@@ -1,7 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { getSubdomain } from '../utils/subdomain'
-import { AUTH0_AUDIENCE } from '../lib/auth0-config'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
 interface TenantInfo {
   id: string // Local Database Tenant UUID
@@ -35,15 +37,17 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       try {
-        // Fetch tenant details from your backend API mapping layer
-        const response = await fetch(AUTH0_AUDIENCE)
+        const response = await fetch(
+          `${SUPABASE_URL}/functions/v1/tenant-lookup?slug=${encodeURIComponent(slug)}`,
+          { headers: { apikey: SUPABASE_ANON_KEY } }
+        )
         if (response.ok) {
           const data = await response.json()
           setTenant({
             id: data.id,
             name: data.name,
             auth0OrgId: data.auth0_org_id,
-            slug: slug,
+            slug,
           })
         }
       } catch (error) {

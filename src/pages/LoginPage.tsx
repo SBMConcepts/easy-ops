@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../contexts/AuthContext'
+import { useTenant } from '../contexts/TenantContext'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { LogIn, Loader2 } from 'lucide-react'
@@ -8,6 +9,7 @@ import '../styles/loginpage.css'
 
 function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth()
+  const { tenant } = useTenant()
   const navigate = useNavigate()
 
   // If the user is already authenticated (e.g. they navigated to /login
@@ -37,7 +39,11 @@ function LoginPage() {
           </CardHeader>
 
           <CardContent className="login-card-content">
-            <Button className="login-button" onClick={() => login()} disabled={isLoading}>
+            <Button
+              className="login-button"
+              onClick={() => login(tenant?.auth0OrgId ?? undefined)}
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (

@@ -33,8 +33,8 @@ interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
   onboardingComplete: boolean
-  /** Redirect to Auth0 Universal Login. */
-  login: () => void
+  /** Redirect to Auth0 Universal Login. Pass auth0OrgId on subdomain workspaces. */
+  login: (auth0OrgId?: string) => void
   /** Clear local state and redirect to Auth0 logout endpoint. */
   logout: () => void
   /**
@@ -168,9 +168,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOrganisation(org)
   }, [user, getAccessToken])
 
-  const login = useCallback(() => {
-    loginWithRedirect()
-  }, [loginWithRedirect])
+  const login = useCallback(
+    (auth0OrgId?: string) => {
+      loginWithRedirect({
+        authorizationParams: auth0OrgId ? { organization: auth0OrgId } : undefined,
+      })
+    },
+    [loginWithRedirect]
+  )
 
   const logout = useCallback(() => {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } })
