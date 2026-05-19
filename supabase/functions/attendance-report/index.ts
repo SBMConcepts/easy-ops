@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { corsHeaders } from '../_shared/cors.ts'
+import { resolveAuthContext, requireRole } from '../_shared/auth-middleware.ts'
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -34,69 +35,15 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // ── 1. Auth ──────────────────────────────────────────────────────────
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return jsonResponse({ error: 'Missing or invalid authorization header' }, 401)
+    // ── Auth + tenant resolution ──────────────────────────────────────────
+    const ctx = await resolveAuthContext(req).catch((r) => r)
+    if (ctx instanceof Response) return ctx
+    try {
+      requireRole(ctx, 'admin', 'manager', 'supervisor')
+    } catch (r) {
+      return r as Response
     }
-
-    const supabaseUser = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
-    )
-
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseUser.auth.getUser()
-    if (userError || !user) {
-      return jsonResponse({ error: 'Unauthorized' }, 401)
-    }
-
-    // ── 2. Role check — only admin / manager may view full reports ────────
-    const { data: roleRow, error: roleError } = await supabaseAdmin
-      .from('user_roles')
-      .select('organisation_roles')
-      .eq('user_id', user.id)
-      .single()
-
-    if (roleError || !roleRow) {
-      return jsonResponse({ error: 'Could not resolve user role' }, 403)
-    }
-
-    const allowedRoles = ['admin', 'manager', 'supervisor']
-    if (!allowedRoles.includes(roleRow.organisation_roles)) {
-      return jsonResponse(
-        {
-          error: 'Forbidden: insufficient role to access attendance reports',
-        },
-        403
-      )
-    }
-
-    // ── 3. Scoping — resolve the user's organisation ─────────────────────
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .select('organisation_id')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile?.organisation_id) {
-      return jsonResponse(
-        {
-          error: 'User has no organisation. Complete onboarding first.',
-        },
-        403
-      )
-    }
-
-    const organisationId: string = profile.organisation_id
+    const { organisationId, adminClient: supabaseAdmin } = ctx
 
     // ── 4. Query parameter validation ─────────────────────────────────────
     const today = new Date().toISOString().split('T')[0]

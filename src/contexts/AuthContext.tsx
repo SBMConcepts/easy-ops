@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { supabase } from '../integrations/supabase/client'
-import type { Session } from '@supabase/supabase-js'
-import type { Database, AppRole } from '../integrations/supabase/types'
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { useAuth0 } from '@auth0/auth0-react'
+import { createSupabaseClient } from '../integrations/supabase/client'
+import type { AppRole } from '../integrations/supabase/types'
+import { AUTH0_AUDIENCE, AUTH0_CLAIM_NS } from '../lib/auth0-config'
+
+// ── Public types ─────────────────────────────────────────────────────────────
 
 export type UserRole = AppRole
-
-type ProfileRow = Database['public']['Tables']['profiles']['Row']
-type OrganisationRow = Database['public']['Tables']['organisations']['Row']
 
 export interface Organisation {
   id: string
@@ -29,189 +29,181 @@ export interface User {
 
 interface AuthContextType {
   user: User | null
-  session: Session | null
   organisation: Organisation | null
   isAuthenticated: boolean
   isLoading: boolean
   onboardingComplete: boolean
-  login: (email: string, password: string) => Promise<boolean>
-  signup: (email: string, password: string, fullName: string) => Promise<boolean>
-  logout: () => Promise<void>
+  /** Redirect to Auth0 Universal Login. Pass auth0OrgId on subdomain workspaces. */
+  login: (auth0OrgId?: string) => void
+  /** Clear local state and redirect to Auth0 logout endpoint. */
+  logout: () => void
+  /**
+   * Re-fetch the organisation record from Supabase — call this after
+   * onboarding writes `onboarding_completed = true` so the guard updates.
+   */
   refreshOrganisation: () => Promise<void>
+  /**
+   * Return a fresh Auth0 access token.  Pass this as the Authorization
+   * Bearer header when calling Supabase Edge Functions or any protected API.
+   */
+  getAccessToken: () => Promise<string>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-async function fetchUserProfile(uid: string): Promise<User | null> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from('profiles') as any)
-    .select('*')
-    .eq('id', uid)
-    .single()
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+async function fetchUserProfile(uid: string, accessToken: string): Promise<User | null> {
+  const db = createSupabaseClient(accessToken)
+  const { data, error } = await db.from('profiles').select('*').eq('id', uid).single()
   if (error || !data) return null
-  const p = data as ProfileRow
   return {
-    id: p.id,
-    name: p.full_name || p.email || '',
-    email: p.email || '',
-    role: (p.role ?? 'employee') as UserRole,
-    department: p.department_id || '',
-    site: p.profile_site_id || '',
-    avatar: p.avatar_url || undefined,
-    organisation_id: p.organisation_id ?? '',
+    id: data.id,
+    name: data.full_name || data.email || '',
+    email: data.email || '',
+    role: (data.role ?? 'employee') as UserRole,
+    department: data.department_id || '',
+    site: data.profile_site_id || '',
+    avatar: data.avatar_url || undefined,
+    organisation_id: data.organisation_id ?? '',
   }
 }
 
-async function fetchOrganisation(orgId: string): Promise<Organisation | null> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from('organisations') as any)
+async function fetchOrganisation(orgId: string, accessToken: string): Promise<Organisation | null> {
+  const db = createSupabaseClient(accessToken)
+  const { data, error } = await db
+    .from('organisations')
     .select('id, name, logo_url, onboarding_completed, settings')
     .eq('id', orgId)
     .single()
   if (error || !data) return null
-  const row = data as Pick<
-    OrganisationRow,
-    'id' | 'name' | 'logo_url' | 'onboarding_completed' | 'settings'
-  >
   return {
-    id: row.id,
-    name: row.name,
-    logo_url: row.logo_url ?? undefined,
-    onboarding_completed: row.onboarding_completed ?? false,
-    settings: (row.settings as Record<string, unknown>) ?? {},
+    id: data.id,
+    name: data.name,
+    logo_url: data.logo_url ?? undefined,
+    onboarding_completed: data.onboarding_completed ?? false,
+    settings: (data.settings as Record<string, unknown>) ?? {},
   }
 }
 
+// ── Provider ──────────────────────────────────────────────────────────────────
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const {
+    user: auth0User,
+    isAuthenticated,
+    isLoading: auth0Loading,
+    loginWithRedirect,
+    logout: auth0Logout,
+    getAccessTokenSilently,
+  } = useAuth0()
+
   const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
   const [organisation, setOrganisation] = useState<Organisation | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
 
-  const loadProfile = useCallback(async (uid: string) => {
-    const profile = await fetchUserProfile(uid)
-    setUser(profile)
-    if (profile?.organisation_id) {
-      const org = await fetchOrganisation(profile.organisation_id)
-      setOrganisation(org)
-    } else {
-      setOrganisation(null)
-    }
-    setIsLoading(false)
+  const getAccessToken = useCallback((): Promise<string> => {
+    return getAccessTokenSilently({ authorizationParams: { audience: AUTH0_AUDIENCE } })
+  }, [getAccessTokenSilently])
 
-    // ── Onboarding redirect gate ──────────────────────────────────────
-    // After every login / session restore we check whether the admin
-    // still needs to complete onboarding.  We only redirect when:
-    //   1. The user is an admin
-    //   2. Their organisation's onboarding_completed flag is false
-    //   3. They are not already on the onboarding page (prevents an
-    //      infinite redirect loop if navigate() fires more than once)
-    //
-    // Non-admin roles never go through onboarding; they land on /app
-    // directly and ProtectedRoute handles role-based access from there.
-  }, [])
+  const loadProfile = useCallback(
+    async (auth0Sub: string, token: string) => {
+      setProfileLoading(true)
+      try {
+        // Prefer custom claims injected by the Auth0 Post-Login Action (fast
+        // path). Fall back to the Supabase profiles row (slow path).
+        const claimedRole = auth0User?.[AUTH0_CLAIM_NS + 'role'] as AppRole | undefined
+        const claimedOrgId = auth0User?.[AUTH0_CLAIM_NS + 'organisation_id'] as string | undefined
+
+        const profile = await fetchUserProfile(auth0Sub, token)
+
+        if (profile) {
+          if (claimedRole) profile.role = claimedRole
+          if (claimedOrgId) profile.organisation_id = claimedOrgId
+          setUser(profile)
+          if (profile.organisation_id) {
+            const org = await fetchOrganisation(profile.organisation_id, token)
+            setOrganisation(org)
+          }
+        } else {
+          // Profile row not yet created (e.g. first login before a
+          // post-registration webhook runs). Build minimal user from claims.
+          setUser({
+            id: auth0Sub,
+            name: auth0User?.name || auth0User?.email || '',
+            email: auth0User?.email || '',
+            role: claimedRole ?? 'employee',
+            department: '',
+            site: '',
+            avatar: auth0User?.picture ?? undefined,
+            organisation_id: claimedOrgId ?? '',
+          })
+        }
+      } finally {
+        setProfileLoading(false)
+      }
+    },
+    [auth0User]
+  )
 
   useEffect(() => {
-    // onAuthStateChange fires for: SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED,
-    // USER_UPDATED, and PASSWORD_RECOVERY.  It is the single source of
-    // truth for the session object after the initial getSession() call
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session)
-      if (session?.user) {
-        // setTimeout(0) defers the Supabase DB calls so they don't run
-        // inside the auth state-change callback itself.  Without this,
-        // nested Supabase calls can deadlock the GoTrue client in some
-        // versions of the JS SDK.
-        setTimeout(() => loadProfile(session.user.id), 0)
-      } else {
+    if (!isAuthenticated || !auth0User?.sub) {
+      // Use a microtask to avoid synchronous setState inside effect body
+      Promise.resolve().then(() => {
         setUser(null)
         setOrganisation(null)
-        setIsLoading(false)
-      }
-    })
-
-    // getSession() hydrates the session from localStorage on page load
-    // without waiting for the onAuthStateChange event.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session?.user) {
-        loadProfile(session.user.id)
-      } else {
-        setIsLoading(false)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [loadProfile])
+      })
+      return
+    }
+    getAccessToken()
+      .then((token) => loadProfile(auth0User.sub!, token))
+      .catch(() => setProfileLoading(false))
+  }, [isAuthenticated, auth0User?.sub, getAccessToken, loadProfile])
 
   const refreshOrganisation = useCallback(async () => {
-    // Called by the Onboarding page after it writes onboarding_completed=true
-    // so that the context reflects the updated flag immediately, allowing
-    // ProtectedRoute to let the admin through to /app.
-    if (!session?.user) return
-    await loadProfile(session.user.id)
-  }, [session, loadProfile])
+    // Use full `user` object so the compiler can infer the dependency correctly
+    if (!user?.organisation_id) return
+    const token = await getAccessToken()
+    const org = await fetchOrganisation(user.organisation_id, token)
+    setOrganisation(org)
+  }, [user, getAccessToken])
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    // On success, onAuthStateChange fires SIGNED_IN → loadProfile runs →
-    // redirect logic executes automatically. No manual navigate() here.
-    return !error
-  }, [])
-
-  const signup = useCallback(
-    async (email: string, password: string, fullName: string): Promise<boolean> => {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
-          emailRedirectTo: window.location.origin,
-        },
+  const login = useCallback(
+    (auth0OrgId?: string) => {
+      loginWithRedirect({
+        authorizationParams: auth0OrgId ? { organization: auth0OrgId } : undefined,
       })
-      return !error
     },
-    []
+    [loginWithRedirect]
   )
-  // Employees are never self-registering; they receive a Supabase invite email
-  // triggered by the admin from the EmployeeManagement page (see notes below).
-  // If you need a public sign-up flow in future, add it back here
 
-  const logout = useCallback(async () => {
-    await supabase.auth.signOut()
+  const logout = useCallback(() => {
+    auth0Logout({ logoutParams: { returnTo: window.location.origin } })
     setUser(null)
-    setSession(null)
     setOrganisation(null)
-    // After sign-out, navigate to the marketing root rather than /login so
-    // the user lands on the public-facing site, not an app page.
-  }, [])
+  }, [auth0Logout])
 
+  const isLoading = auth0Loading || profileLoading
   const onboardingComplete = organisation?.onboarding_completed ?? false
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        session,
         organisation: organisation ?? {
           id: '',
           name: '',
-          logo_url: '',
+          logo_url: undefined,
           onboarding_completed: false,
           settings: {},
         },
-        isAuthenticated: !!session,
+        isAuthenticated,
         isLoading,
         onboardingComplete,
         login,
         logout,
         refreshOrganisation,
-        signup,
+        getAccessToken,
       }}
     >
       {children}

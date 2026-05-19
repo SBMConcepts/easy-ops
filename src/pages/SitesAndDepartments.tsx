@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../integrations/supabase/client'
+import { createSupabaseClient } from '../integrations/supabase/client'
 import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -76,7 +76,7 @@ const EMPTY_DEPT_FORM = { name: '', site_id: '' }
 /* ─── Component ──────────────────────────────────────────────────────────────── */
 
 export default function SitesAndDepartments() {
-  const { user } = useAuth()
+  const { user, getAccessToken } = useAuth()
   const orgId = user?.organisation_id ?? null
 
   // Data
@@ -108,6 +108,8 @@ export default function SitesAndDepartments() {
     if (!orgId) return
     setLoading(true)
     try {
+      const token = await getAccessToken()
+      const supabase = createSupabaseClient(token)
       const [sitesRes, deptsRes] = await Promise.all([
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from('sites') as any).select('*').eq('organisation_id', orgId).order('name'),
@@ -158,6 +160,8 @@ export default function SitesAndDepartments() {
       // eslint-disable-next-line react-hooks/purity
       const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().split('T')[0]
       const today = new Date().toISOString().split('T')[0]
+      const token = await getAccessToken()
+      const supabase = createSupabaseClient(token)
 
       const { data, error } = await supabase
         .from('attendance_records')
@@ -221,6 +225,8 @@ export default function SitesAndDepartments() {
     }
     setSavingSite(true)
     try {
+      const token = await getAccessToken()
+      const supabase = createSupabaseClient(token)
       const payload = {
         name: siteForm.name.trim(),
         address: siteForm.address.trim() || null,
@@ -261,6 +267,8 @@ export default function SitesAndDepartments() {
   const handleDeleteSite = async (site: Site) => {
     if (!window.confirm(`Delete site "${site.name}"? This cannot be undone.`)) return
     try {
+      const token = await getAccessToken()
+      const supabase = createSupabaseClient(token)
       const { error } = await supabase.from('sites').delete().eq('id', site.id)
       if (error) throw error
       toast.success('Site deleted')
@@ -292,6 +300,8 @@ export default function SitesAndDepartments() {
     }
     setSavingDept(true)
     try {
+      const token = await getAccessToken()
+      const supabase = createSupabaseClient(token)
       const payload = {
         name: deptForm.name.trim(),
         site_id: deptForm.site_id || null,
@@ -324,6 +334,8 @@ export default function SitesAndDepartments() {
   const handleDeleteDept = async (dept: Department) => {
     if (!window.confirm(`Delete department "${dept.name}"?`)) return
     try {
+      const token = await getAccessToken()
+      const supabase = createSupabaseClient(token)
       const { error } = await supabase.from('departments').delete().eq('id', dept.id)
       if (error) throw error
       toast.success('Department deleted')

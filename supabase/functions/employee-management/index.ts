@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@supabase/supabase-js'
 import { corsHeaders } from '../_shared/cors.ts'
+import { resolveAuthContext, requireRole } from '../_shared/auth-middleware.ts'
 
 const SUPABASE_URL = Deno.env.get('VITE_SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('VITE_SUPABASE_ANON_KEY')!

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
-import { supabase } from '../integrations/supabase/client'
+import { supabasePublic } from '../integrations/supabase/client'
 import type { Database } from '../integrations/supabase/types'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -82,7 +82,7 @@ const GetStarted = () => {
       message: parsed.data.message || '',
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await supabase.from('easy_ops_sales_leads').insert(payload as any)
+    const { error } = await supabasePublic.from('easy_ops_sales_leads').insert(payload as any)
     setSubmitting(false)
     if (error) {
       toast({ title: 'Submission failed', description: error.message, variant: 'destructive' })
