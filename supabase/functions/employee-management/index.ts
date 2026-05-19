@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { resolveAuthContext, requireRole } from '../_shared/auth-middleware.ts'
 
 const VALID_ROLES = ['admin', 'manager', 'supervisor', 'employee']
 

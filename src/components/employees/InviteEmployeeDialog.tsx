@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../../integrations/supabase/client'
+import { createSupabaseClient } from '../../integrations/supabase/client'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/button'
 import {
@@ -30,7 +30,7 @@ interface Props {
 }
 
 export const InviteEmployeeDialog = ({ onInvited }: Props) => {
-  const { user } = useAuth()
+  const { user, getAccessToken } = useAuth()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fullName, setFullName] = useState('')
@@ -68,7 +68,9 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
     }
 
     setLoading(true)
-    const { data, error: fnError } = await supabase.functions.invoke('invite-employee', {
+    const token = await getAccessToken()
+    const db = createSupabaseClient(token)
+    const { data, error: fnError } = await db.functions.invoke('invite-employee', {
       body: {
         full_name: fullName.trim(),
         email: email.trim(),
@@ -78,6 +80,7 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
         department: department || undefined,
         site: site || undefined,
       },
+      headers: { Authorization: `Bearer ${token}` },
     })
     setLoading(false)
 

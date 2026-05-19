@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { useAttendanceRecords } from '../hooks/useSupabaseData'
-import { supabase } from '../integrations/supabase/client'
+import { createSupabaseClient } from '../integrations/supabase/client'
+import { useAuth } from '../contexts/AuthContext'
 import { FileText, Download, BarChart3, Clock, AlertTriangle, TrendingUp } from 'lucide-react'
 import { toast } from 'sonner'
 import '../styles/pages.css'
@@ -23,6 +24,7 @@ const reportCards = [
 
 const Reports = () => {
   const { data: reportData, isLoading } = useAttendanceRecords()
+  const { getAccessToken } = useAuth()
   const stats = reportData?.stats
   const records = reportData?.records || []
 
@@ -31,7 +33,9 @@ const Reports = () => {
       try {
         const today = new Date().toISOString().split('T')[0]
         const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-        const { data, error } = await supabase.functions.invoke(
+        const token = await getAccessToken()
+        const db = createSupabaseClient(token)
+        const { data, error } = await db.functions.invoke(
           `payroll-export?date_from=${thirtyDaysAgo}&date_to=${today}&format=csv`,
           { method: 'GET' }
         )

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
-import { supabase } from '../integrations/supabase/client'
+import { createSupabaseClient } from '../integrations/supabase/client'
 import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -28,7 +28,7 @@ const ROLE_LABELS: Record<AppRole, string> = {
 }
 
 export default function EmployeeManagement() {
-  const { user } = useAuth()
+  const { user, getAccessToken } = useAuth()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loadingList, setLoadingList] = useState(true)
   const [listError, setListError] = useState<string | null>(null)
@@ -45,6 +45,8 @@ export default function EmployeeManagement() {
     ;(async () => {
       setLoadingList(true)
       setListError(null)
+      const token = await getAccessToken()
+      const supabase = createSupabaseClient(token)
 
       const { data: profiles, error } = await (supabase.from('profiles') as any)
         .select(
@@ -91,7 +93,7 @@ export default function EmployeeManagement() {
       setEmployees(rows)
       setLoadingList(false)
     })()
-  }, [user?.organisation_id, user?.id])
+  }, [user?.organisation_id, user?.id, getAccessToken])
 
   return (
     <div className="space-y-6">

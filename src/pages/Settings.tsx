@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../integrations/supabase/client'
+import { createSupabaseClient } from '../integrations/supabase/client'
 import type { Database } from '../integrations/supabase/types'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
@@ -45,18 +45,20 @@ const empty: ProfileForm = {
 }
 
 const Settings = () => {
-  const { user, session, refreshOrganisation } = useAuth()
+  const { user, getAccessToken, refreshOrganisation } = useAuth()
   const [form, setForm] = useState<ProfileForm>(empty)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!session?.user) return
+    if (!user?.id) return
     ;(async () => {
+      const token = await getAccessToken()
+      const db = createSupabaseClient(token)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: raw, error } = await (supabase.from('profiles') as any)
+      const { data: raw, error } = await (db.from('profiles') as any)
         .select('*')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single()
       if (error) toast.error('Failed to load profile')
       else if (raw) {
@@ -76,17 +78,19 @@ const Settings = () => {
       }
       setLoading(false)
     })()
-  }, [session])
+  }, [user?.id])
 
   // Role-specific data
   const { data: myAttendance } = useQuery({
-    queryKey: ['settings-my-attendance', session?.user?.id],
-    enabled: !!session?.user,
+    queryKey: ['settings-my-attendance', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
+      const token = await getAccessToken()
+      const db = createSupabaseClient(token)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase.from('attendance_records') as any)
+      const { data } = await (db.from('attendance_records') as any)
         .select('date, clock_in, clock_out, hours_worked, status')
-        .eq('employee_id', session!.user.id)
+        .eq('employee_id', user!.id)
         .order('date', { ascending: false })
         .limit(10)
       return (data ?? []) as Array<{
@@ -103,8 +107,10 @@ const Settings = () => {
     queryKey: ['settings-team-count', user?.role, user?.site, user?.department],
     enabled: !!user && user.role !== 'employee',
     queryFn: async () => {
+      const token = await getAccessToken()
+      const db = createSupabaseClient(token)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let q = (supabase.from('profiles') as any).select('id', { count: 'exact', head: true })
+      let q = (db.from('profiles') as any).select('id', { count: 'exact', head: true })
       if (user!.role === 'supervisor' && user!.site) q = q.eq('profile_site_id', user!.site)
       if (user!.role === 'manager' && user!.department) q = q.eq('department_id', user!.department)
       const { count } = await q
@@ -122,8 +128,10 @@ const Settings = () => {
       toast.error(parsed.error.errors[0].message)
       return
     }
-    if (!session?.user) return
+    if (!user?.id) return
     setSaving(true)
+    const token = await getAccessToken()
+    const db = createSupabaseClient(token)
     const payload: Record<string, string | null> = {}
     for (const [k, v] of Object.entries(parsed.data)) {
       if (k === 'job_title') continue // no DB column
@@ -131,9 +139,7 @@ const Settings = () => {
       payload[dbKey] = v === '' ? null : (v as string)
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('profiles') as any)
-      .update(payload)
-      .eq('id', session.user.id)
+    const { error } = await (db.from('profiles') as any).update(payload).eq('id', user.id)
     setSaving(false)
     if (error) toast.error(error.message)
     else {
