@@ -1,12 +1,7 @@
-<<<<<<< Updated upstream
-import { createClient } from "npm:@supabase/supabase-js@2"
-import { corsHeaders } from "../_shared/cors.ts"
-=======
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@supabase/supabase-js'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveAuthContext } from '../_shared/auth-middleware.ts'
->>>>>>> Stashed changes
 
 const VALID_METHODS = ['qr', 'biometric', 'whatsapp', 'manual']
 

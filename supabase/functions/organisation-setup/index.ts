@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-import { createClient } from "npm:@supabase/supabase-js@2"
-=======
 import { createClient } from '@supabase/supabase-js'
 
 // ── Auth0 Management API helpers ─────────────────────────────────────────────
@@ -78,7 +75,6 @@ async function setAuth0AppMetadata(
   if (!res.ok) throw new Error(`Auth0 metadata update failed: ${await res.text()}`)
 }
 
->>>>>>> Stashed changes
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -135,80 +131,17 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-<<<<<<< Updated upstream
-    try {
-        const authHeader = req.headers.get("Authorization")
-        if (!authHeader) {
-            return new Response(
-                JSON.stringify({ error: "Missing authorization" }),
-                {
-                    status: 401,
-                    headers: {
-                        ...corsHeaders,
-                        "Content-Type": "application/json",
-                    },
-                }
-            )
-=======
-    const supabaseAdmin = createClient(
-      Deno.env.get('VITE_SUPABASE_URL')!,
-      Deno.env.get('VITE_SUPABASE_SERVICE_ROLE_KEY')!
-    )
-
-    const supabaseUser = createClient(
-      Deno.env.get('VITE_SUPABASE_URL')!,
-      Deno.env.get('VITE_SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
-    )
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseUser.auth.getUser()
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+  try {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Missing authorization' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Allow if user is already admin OR has no organisation yet (first-time setup).
-    // New signups get 'employee' by default via trigger, so we can't require
-    // admin role before the org exists — that's a chicken-and-egg problem.
-    const [roleRes, profileRes] = await Promise.all([
-      supabaseAdmin.from('user_roles').select('role').eq('user_id', user.id).single(),
-      supabaseAdmin.from('profiles').select('organisation_id').eq('id', user.id).single(),
-    ])
-
-    const isAdmin = roleRes.data?.role === 'admin'
-    const hasNoOrg = !profileRes.data?.organisation_id
-
-    if (!isAdmin && !hasNoOrg) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403,
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',
         },
       })
     }
-
-    const payload: OnboardingPayload = await req.json()
-
-    // Validate required fields
-    if (!payload.company?.name || !payload.sites?.length) {
-      return new Response(
-        JSON.stringify({
-          error: 'Company name and at least one site are required',
-        }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
->>>>>>> Stashed changes
-        }
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
