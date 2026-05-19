@@ -1,35 +1,30 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../integrations/supabase/client'
-import { useAuth } from '../contexts/AuthContext'
 import type {
-  Database,
   AppRole,
   AttendanceStatus,
   CheckInMethod,
+  Database,
 } from '../integrations/supabase/types'
+import { useTenantApi } from './useTenantApi'
 
 type AttendanceRecord = Database['public']['Tables']['attendance_records']['Row']
 type Profile = Database['public']['Tables']['profiles']['Row']
 type Site = Database['public']['Tables']['sites']['Row']
 type UserRole = Database['public']['Tables']['user_roles']['Row']
 
+// ── Query hooks ───────────────────────────────────────────────────────────────
+
 export function useAttendanceRecords(dateFrom?: string, dateTo?: string) {
-  const { session } = useAuth()
+  const { apiFetch, isAuthenticated } = useTenantApi()
   return useQuery({
     queryKey: ['attendance-records', dateFrom, dateTo],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0]
-      const params: Record<string, string> = {
+      const qs = new URLSearchParams({
         date_from: dateFrom || today,
         date_to: dateTo || today,
-      }
-      const qs = new URLSearchParams(params).toString()
-      const { data, error } = await supabase.functions.invoke(`attendance-report?${qs}`, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      })
-      if (error) throw error
-      return data as {
+      }).toString()
+      return apiFetch<{
         records: Array<{
           id: string
           date: string
@@ -54,18 +49,19 @@ export function useAttendanceRecords(dateFrom?: string, dateTo?: string) {
           total_overtime: number
           total: number
         }
-      }
+      }>(`attendance-report?${qs}`)
     },
-    enabled: !!session,
+    enabled: isAuthenticated,
   })
 }
 
 export function useMyAttendance() {
-  const { session } = useAuth()
+  const { getDb, isAuthenticated } = useTenantApi()
   return useQuery({
     queryKey: ['my-attendance'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const db = await getDb()
+      const { data, error } = await db
         .from('attendance_records')
         .select('*')
         .order('date', { ascending: false })
@@ -73,17 +69,18 @@ export function useMyAttendance() {
       if (error) throw error
       return data as AttendanceRecord[]
     },
-    enabled: !!session,
+    enabled: isAuthenticated,
   })
 }
 
 export function useTodayStatus() {
-  const { session } = useAuth()
+  const { getDb, isAuthenticated } = useTenantApi()
   return useQuery({
     queryKey: ['today-status'],
     queryFn: async () => {
+      const db = await getDb()
       const today = new Date().toISOString().split('T')[0]
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('attendance_records')
         .select('*')
         .eq('date', today)
@@ -92,31 +89,25 @@ export function useTodayStatus() {
       if (error) throw error
       return data as AttendanceRecord | null
     },
-    enabled: !!session,
+    enabled: isAuthenticated,
     refetchInterval: 30000,
   })
 }
 
 export function useEmployees() {
-  const { session } = useAuth()
+  const { getDb, isAuthenticated } = useTenantApi()
   return useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
-      const { data: profilesData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('full_name')
+      const db = await getDb()
+      const { data: profilesData, error } = await db.from('profiles').select('*').order('full_name')
       if (error) throw error
       const profiles = (profilesData ?? []) as Profile[]
 
       const userIds = profiles.map((p) => p.id)
       const rolesData = userIds.length
-        ? (
-            await supabase
-              .from('user_roles')
-              .select('user_id, organisation_roles')
-              .in('user_id', userIds)
-          ).data
+        ? (await db.from('user_roles').select('user_id, organisation_roles').in('user_id', userIds))
+            .data
         : ([] as Pick<UserRole, 'user_id' | 'organisation_roles'>[])
 
       const roles = (rolesData ?? []) as Pick<UserRole, 'user_id' | 'organisation_roles'>[]
@@ -128,34 +119,30 @@ export function useEmployees() {
         user_roles: roleMap[p.id] ? [{ role: roleMap[p.id] as AppRole }] : [],
       })) as (Profile & { user_roles: { role: AppRole }[] })[]
     },
-    enabled: !!session,
+    enabled: isAuthenticated,
   })
 }
 
 export function useSites() {
-  const { session } = useAuth()
+  const { getDb, isAuthenticated } = useTenantApi()
   return useQuery({
     queryKey: ['sites'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('sites').select('*').order('name')
+      const db = await getDb()
+      const { data, error } = await db.from('sites').select('*').order('name')
       if (error) throw error
       return data as Site[]
     },
-    enabled: !!session,
+    enabled: isAuthenticated,
   })
 }
 
 export function useComplianceCheck() {
-  const { session } = useAuth()
+  const { apiFetch, isAuthenticated } = useTenantApi()
   return useQuery({
     queryKey: ['compliance-check'],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('compliance-check', {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      })
-      if (error) throw error
-      return data as {
+    queryFn: () =>
+      apiFetch<{
         compliance_score: number
         total_checks: number
         pass_count: number
@@ -165,37 +152,48 @@ export function useComplianceCheck() {
           rule: string
           detail: string
         }>
-      }
-    },
-    enabled: !!session,
+      }>('compliance-check'),
+    enabled: isAuthenticated,
   })
 }
 
+// ── Standalone mutation helpers ───────────────────────────────────────────────
+
+type GetToken = () => Promise<string>
+
+const FUNCTIONS_BASE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
+
+async function tenantPost<T = unknown>(
+  getToken: GetToken,
+  path: string,
+  body: unknown
+): Promise<T> {
+  const token = await getToken()
+  const response = await fetch(`${FUNCTIONS_BASE_URL}/${path}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    const detail = await response.text().catch(() => response.statusText)
+    throw new Error(`[${response.status}] /${path}: ${detail}`)
+  }
+  return response.json() as Promise<T>
+}
+
 export async function checkIn(
+  getToken: GetToken,
   method: CheckInMethod,
   siteId?: string,
   latitude?: number,
   longitude?: number
 ) {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const { data, error } = await supabase.functions.invoke('check-in', {
-    body: { method, site_id: siteId, latitude, longitude },
-    headers: { Authorization: `Bearer ${session?.access_token}` },
-  })
-  if (error) throw error
-  return data
+  return tenantPost(getToken, 'check-in', { method, site_id: siteId, latitude, longitude })
 }
 
-export async function checkOut() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const { data, error } = await supabase.functions.invoke('check-out', {
-    body: {},
-    headers: { Authorization: `Bearer ${session?.access_token}` },
-  })
-  if (error) throw error
-  return data
+export async function checkOut(getToken: GetToken) {
+  return tenantPost(getToken, 'check-out', {})
 }
