@@ -70,7 +70,7 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
     setLoading(true)
     const token = await getAccessToken()
     const db = createSupabaseClient(token)
-    const { data, error: fnError } = await db.functions.invoke('invite-employee', {
+    const { data, error: fnError } = await db.functions.invoke('invite-user-by-email', {
       body: {
         full_name: fullName.trim(),
         email: email.trim(),

@@ -37,22 +37,10 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  // Derive slug from company name using the same toSlug logic as organisation-setup
-  // organisations don't have a slug column yet — match on the stored auth0_org slug
-  // by comparing the slugified name. We store the slug as auth0_org_id prefix, so
-  // we query organisations where lower(regexp_replace(name,'[^a-zA-Z0-9]+','-','g'))
-  // matches. Simplest: expose a generated slug column via RPC or match name directly.
-  // For now: the organisation-setup function stores name as-is; we derive slug on read.
   const { data, error } = await supabase
     .from('organisations')
     .select('id, name, auth0_org_id')
-    .filter(
-      'auth0_org_id',
-      'like',
-      // auth0 org names are exactly the slug we stored; match prefix before any suffix
-      `${slug}%`
-    )
-    .limit(1)
+    .eq('slug', slug)
     .single()
 
   if (error || !data) {

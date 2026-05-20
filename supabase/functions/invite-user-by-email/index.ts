@@ -4,7 +4,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
-import { resolveAuthContext } from '../_shared/auth-middleware.ts'
 
 interface InvitePayload {
   email: string
@@ -47,9 +46,9 @@ Deno.serve(async (req) => {
     // Confirm caller is admin
     const { data: roleRow } = await admin
       .from('user_roles')
-      .select('role')
+      .select('organisation_roles')
       .eq('user_id', user.id)
-      .eq('role', 'admin')
+      .eq('organisation_roles', 'admin')
       .maybeSingle()
     if (!roleRow) return json({ error: 'Admin role required' }, 403)
 
@@ -94,8 +93,6 @@ Deno.serve(async (req) => {
         id: newUserId,
         full_name,
         email,
-        department: body.department ?? null,
-        site: body.site ?? null,
         organisation_id,
       },
       { onConflict: 'id' }
@@ -103,7 +100,7 @@ Deno.serve(async (req) => {
 
     // Replace role(s) with the requested one
     await admin.from('user_roles').delete().eq('user_id', newUserId)
-    await admin.from('user_roles').insert({ user_id: newUserId, role })
+    await admin.from('user_roles').insert({ user_id: newUserId, organisation_roles: role })
 
     // Audit log
     await admin.from('audit_log').insert({

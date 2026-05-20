@@ -169,11 +169,11 @@ Deno.serve(async (req) => {
     // New signups get 'employee' by default via trigger, so we can't require
     // admin role before the org exists — that's a chicken-and-egg problem.
     const [roleRes, profileRes] = await Promise.all([
-      supabaseAdmin.from('user_roles').select('role').eq('user_id', user.id).single(),
+      supabaseAdmin.from('user_roles').select('organisation_roles').eq('user_id', user.id).single(),
       supabaseAdmin.from('profiles').select('organisation_id').eq('id', user.id).single(),
     ])
 
-    const isAdmin = roleRes.data?.role === 'admin'
+    const isAdmin = roleRes.data?.organisation_roles === 'admin'
     const hasNoOrg = !profileRes.data?.organisation_id
 
     if (!isAdmin && !hasNoOrg) {
@@ -209,6 +209,7 @@ Deno.serve(async (req) => {
       .from('organisations')
       .insert({
         name: payload.company.name,
+        slug: toSlug(payload.company.name),
         industry: payload.company.industry || null,
         country: payload.company.country || 'South Africa',
         logo_url: payload.company.logo_url || null,
@@ -320,7 +321,7 @@ Deno.serve(async (req) => {
 
     // 7. Elevate user to admin role (new signups default to 'employee')
     await supabaseAdmin.from('user_roles').delete().eq('user_id', user.id)
-    await supabaseAdmin.from('user_roles').insert({ user_id: user.id, role: 'admin' })
+    await supabaseAdmin.from('user_roles').insert({ user_id: user.id, organisation_roles: 'admin' })
 
     // 8. Auth0 double-write: create org, add member, stamp app_metadata
     // This runs after all DB writes succeed so a DB failure never leaves
