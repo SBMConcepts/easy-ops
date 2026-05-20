@@ -161,7 +161,7 @@ export function useComplianceCheck() {
 
 type GetToken = () => Promise<string>
 
-const FUNCTIONS_BASE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
+const FUNCTIONS_BASE_URL = `${import.meta.env.SUPABASE_URL}/functions/v1`
 
 async function tenantPost<T = unknown>(
   getToken: GetToken,

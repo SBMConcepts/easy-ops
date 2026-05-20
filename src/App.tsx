@@ -44,7 +44,7 @@ const MarketingRoutes = () => (
 const WorkspaceRoutes = () => (
   <Routes>
     {/* Root redirects straight into the app; ProtectedRoute handles auth gate */}
-    <Route path="/" element={<Navigate to="/app" replace />} />
+    <Route path="/" element={<Navigate to="/" replace />} />
     <Route path="/login" element={<Login />} />
     <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -141,13 +141,14 @@ const WorkspaceRoutes = () => (
 
 // ── App root ──────────────────────────────────────────────────────────────────
 const App = () => {
-  const { isLoading: tenantLoading, isCustomSubdomain } = useTenant()
-  // Wait for Auth0 to rehydrate a cached session before deciding which shell
-  // to render — prevents a flash of the marketing site on authenticated refresh.
+  const { isCustomSubdomain } = useTenant()
+  // For workspace subdomains, wait for Auth0 to rehydrate a cached session
+  // before rendering — prevents a flash of the login page on authenticated refresh.
+  // Marketing site renders immediately with no loading gate.
   const { isLoading: authLoading } = useAuth0()
 
-  if (tenantLoading || authLoading) {
-    return <div className="loading-screen">Loading workspace security infrastructure...</div>
+  if (isCustomSubdomain && authLoading) {
+    return <div className="loading-screen">Loading workspace...</div>
   }
 
   return (

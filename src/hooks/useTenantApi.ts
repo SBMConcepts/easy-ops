@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { createSupabaseClient } from '../integrations/supabase/client'
 
-const FUNCTIONS_BASE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
+const FUNCTIONS_BASE_URL = `${import.meta.env.SUPABASE_URL}/functions/v1`
 
 /**
  * Returns two stable, tenant-scoped async helpers:

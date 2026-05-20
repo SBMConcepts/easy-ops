@@ -9,8 +9,15 @@ import '../styles/loginpage.css'
 
 function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth()
-  const { tenant } = useTenant()
+  const { tenant, isLoading: tenantLoading, isCustomSubdomain, resolveTenant } = useTenant()
   const navigate = useNavigate()
+
+  // Resolve the tenant when the login page mounts on a workspace subdomain.
+  useEffect(() => {
+    if (isCustomSubdomain) {
+      resolveTenant()
+    }
+  }, [isCustomSubdomain, resolveTenant])
 
   // If the user is already authenticated (e.g. they navigated to /login
   // manually while logged in), send them to the app immediately.
@@ -19,6 +26,8 @@ function LoginPage() {
       navigate('/app', { replace: true })
     }
   }, [isAuthenticated, isLoading, navigate])
+
+  const isBusy = isLoading || tenantLoading
 
   return (
     <div className="login-page">
@@ -42,14 +51,14 @@ function LoginPage() {
             <Button
               className="login-button"
               onClick={() => login(tenant?.auth0OrgId ?? undefined)}
-              disabled={isLoading}
+              disabled={isBusy}
             >
-              {isLoading ? (
+              {isBusy ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
                 <LogIn className="h-3 w-3" />
               )}
-              {isLoading ? 'Redirecting…' : 'Continue to Sign In'}
+              {isBusy ? 'Redirecting…' : 'Continue to Sign In'}
             </Button>
 
             <div className="login-footer">
