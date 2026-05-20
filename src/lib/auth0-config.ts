@@ -16,7 +16,7 @@
  *       event.user.app_metadata.organisation_id
  *     Example Action snippet:
  *       exports.onExecutePostLogin = async (event, api) => {
- *         const ns = 'https://easyops.app/';
+ *         const ns = 'https://easy-ops-za.vercel.app/';
  *         api.idToken.setCustomClaim(ns + 'role', event.user.app_metadata?.role ?? 'employee');
  *         api.idToken.setCustomClaim(ns + 'organisation_id', event.user.app_metadata?.organisation_id ?? null);
  *         api.accessToken.setCustomClaim(ns + 'role', event.user.app_metadata?.role ?? 'employee');

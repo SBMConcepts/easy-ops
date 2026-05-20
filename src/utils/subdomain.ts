@@ -1,5 +1,5 @@
 export function getSubdomain(): string | null {
-  const host = window.location.host // e.g., "https://easy-ops-za.vercel.app/" or "easyops.localhost:5173"
+  const host = 'https://easy-ops-za.vercel.app/' // e.g., "https://easy-ops-za.vercel.app/" or "easyops.localhost:5173"
   const parts = host.split('.')
 
   // Handle local development (e.g., localhost:5173 or acme.localhost:5173)

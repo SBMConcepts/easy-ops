@@ -171,7 +171,7 @@ BEGIN
     COALESCE(NEW.email, '')
   );
   INSERT INTO public.user_roles (user_id, role)
-  VALUES (NEW.id, 'employee');
+  VALUES (NEW.id, '');
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

@@ -1,9 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { corsHeaders } from './cors.ts'
 
-const SUPABASE_URL = Deno.env.get('VITE_SUPABASE_URL')!
-const SUPABASE_ANON_KEY = Deno.env.get('VITE_SUPABASE_ANON_KEY')!
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('VITE_SUPABASE_SERVICE_ROLE_KEY')!
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 export type AppRole = 'admin' | 'manager' | 'supervisor' | 'employee'
 
@@ -119,10 +119,10 @@ export async function resolveAuthContext(req: Request): Promise<AuthContext> {
   // Step 4 — Resolve caller role
   const { data: roleRow } = await adminClient
     .from('user_roles')
-    .select('role')
+    .select('organisation_roles')
     .eq('user_id', user.id)
     .single()
-  const role: AppRole = (roleRow?.role as AppRole) ?? 'employee'
+  const role: AppRole = (roleRow?.organisation_roles as AppRole) ?? 'employee'
 
   return { userId: user.id, organisationId, auth0OrgId, role, adminClient }
 }

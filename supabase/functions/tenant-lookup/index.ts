@@ -33,8 +33,8 @@ Deno.serve(async (req: Request) => {
   }
 
   const supabase = createClient(
-    Deno.env.get('VITE_SUPABASE_URL')!,
-    Deno.env.get('VITE_SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
   // Derive slug from company name using the same toSlug logic as organisation-setup

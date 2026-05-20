@@ -3,9 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveAuthContext, requireRole } from '../_shared/auth-middleware.ts'
 
-const SUPABASE_URL = Deno.env.get('VITE_SUPABASE_URL')!
-const SUPABASE_ANON_KEY = Deno.env.get('VITE_SUPABASE_ANON_KEY')!
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('VITE_SUPABASE_SERVICE_ROLE_KEY')!
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const VALID_ROLES = ['admin', 'manager', 'supervisor', 'employee']
 
