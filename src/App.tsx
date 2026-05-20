@@ -13,6 +13,7 @@ import Compliance from './pages/Compliance'
 import EmployeeManagement from './pages/EmployeeManagement'
 import GetStarted from './pages/GetStarted'
 import Index from './pages/Index'
+import Register from './pages/Register'
 import LiveAttendance from './pages/LiveAttendance'
 import Login from './pages/LoginPage'
 import NotFound from './pages/NotFound'
@@ -32,6 +33,7 @@ const MarketingRoutes = () => (
   <Routes>
     <Route path="/" element={<Index />} />
     <Route path="/get-started" element={<GetStarted />} />
+    <Route path="/register" element={<Register />} />
     <Route path="/login" element={<Login />} />
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="*" element={<NotFound />} />

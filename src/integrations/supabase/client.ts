@@ -1,7 +1,7 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = import.meta.env.SUPABASE_URL as string
-const SUPABASE_ANON_KEY = import.meta.env.SUPABASE_ANON_KEY as string
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
 /**
  * Create a Supabase client authenticated with an Auth0 access token.
@@ -14,7 +14,7 @@ const SUPABASE_ANON_KEY = import.meta.env.SUPABASE_ANON_KEY as string
  *   const token = await getAccessTokenSilently()
  *   const db = createSupabaseClient(token)
  */
-export function createSupabaseClient(accessToken?: string): SupabaseClient {
+export function createSupabaseClient(accessToken?: string) {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : undefined,
     auth: {
