@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Badge } from '../../components/ui/badge'
-import { useAttendanceRecords } from '../../hooks/useSupabaseData'
+import { useAttendanceRecords } from '../../hooks/useTenantData'
 import { Users, UserCheck, Clock, AlertTriangle, BarChart3 } from 'lucide-react'
 import '../../styles/dashboard.css'
 

@@ -1,98 +1,59 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { createSupabaseClient } from '../integrations/supabase/client'
+import { useTenant } from '../contexts/TenantContext'
 
-const FUNCTIONS_BASE_URL = `${import.meta.env.SUPABASE_URL}/functions/v1`
+// Point to your Next.js/Express API Base URL
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001') + '/api'
 
 /**
- * Returns two stable, tenant-scoped async helpers:
+ * Returns a stable, tenant-scoped fetch helper: apiFetch
  *
- *   getDb()            → Supabase client with the current Auth0 Bearer token.
- *   apiFetch(path, …)  → fetch() to an Edge Function with the same token.
+ * apiFetch(path, …) → fetch() to your Express Backend.
  *
- * Both helpers silently acquire (or refresh) the Auth0 access token before
- * every call.  The token carries the custom claim:
+ * It silently acquires the Auth0 access token and automatically injects:
+ * 1. Authorization: Bearer <token>
+ * 2. x-tenant-slug: <tenant.slug>
  *
- *   https://easyops.app/organisation_id
- *
- * Supabase Row Level Security policies read this claim via:
- *
- *   auth.jwt() ->> 'https://easyops.app/organisation_id'
- *
- * so every query and Edge Function call is automatically scoped to the
- * authenticated user's organisation without any manual WHERE clauses on the
- * frontend.
- *
- * Usage inside a React Query queryFn:
- *
- *   const { getDb, apiFetch } = useTenantApi()
- *
- *   useQuery({
- *     queryKey: ['sites'],
- *     queryFn: async () => {
- *       const db = await getDb()
- *       const { data, error } = await db.from('sites').select('*')
- *       if (error) throw error
- *       return data
- *     },
- *     enabled: isAuthenticated,
- *   })
+ * Your Express middleware uses the slug and token to securely initialize
+ * PostgreSQL Row-Level Security (RLS) for the transaction.
  */
 export function useTenantApi() {
   const { getAccessToken, isAuthenticated } = useAuth()
+  const { tenant } = useTenant()
 
-  /**
-   * Resolves an authenticated Supabase client.
-   *
-   * The Auth0 JWT is injected as `Authorization: Bearer <token>` so Supabase
-   * validates it against your Third-Party Auth / custom JWT config and maps
-   * `auth.uid()` to the Auth0 `sub`.  RLS then applies org-level isolation
-   * automatically via the `organisation_id` claim in the token.
-   */
-  const getDb = useCallback(async (): Promise<SupabaseClient> => {
-    const token = await getAccessToken()
-    return createSupabaseClient(token)
-  }, [getAccessToken])
-
-  /**
-   * Fetch a Supabase Edge Function with a Bearer token.
-   *
-   * @param path   Function name + optional query string.
-   *               e.g. `'attendance-report?date_from=2024-01-01'`
-   * @param init   Standard `RequestInit`.  `Authorization` and `Content-Type`
-   *               headers are injected automatically — do not set them manually.
-   * @returns      Parsed JSON body typed as `T`.
-   * @throws       On any non-2xx status or network failure.
-   *
-   * @example
-   *   const data = await apiFetch<AttendanceReport>('attendance-report', {
-   *     method: 'POST',
-   *     body: JSON.stringify({ date_from: '2024-01-01' }),
-   *   })
-   */
   const apiFetch = useCallback(
     async <T = unknown>(path: string, init: RequestInit = {}): Promise<T> => {
       const token = await getAccessToken()
 
       const headers = new Headers(init.headers)
-      headers.set('Authorization', `Bearer ${token}`)
-      if (!headers.has('Content-Type')) {
+
+      // Inject Identity Context
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+
+      // Inject Workspace Context (Zero-Trust Cross-Check)
+      if (tenant?.slug) {
+        headers.set('x-tenant-slug', tenant.slug)
+      }
+
+      if (!headers.has('Content-Type') && init.method !== 'GET') {
         headers.set('Content-Type', 'application/json')
       }
 
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/${path}`, { ...init, headers })
+      // Clean up path slashes to prevent malformed URLs
+      const cleanPath = path.startsWith('/') ? path.slice(1) : path
+      const response = await fetch(`${API_BASE_URL}/${cleanPath}`, { ...init, headers })
 
       if (!response.ok) {
-        // Capture backend error detail without swallowing it.
-        const body = await response.text().catch(() => response.statusText)
-        throw new Error(`[${response.status}] /${path}: ${body}`)
+        const errorText = await response.text().catch(() => response.statusText)
+        throw new Error(`[${response.status}] /${cleanPath}: ${errorText}`)
       }
 
       return response.json() as Promise<T>
     },
-    [getAccessToken]
+    [getAccessToken, tenant?.slug]
   )
 
-  return { getDb, apiFetch, isAuthenticated }
+  return { apiFetch, isAuthenticated }
 }

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { useAuth } from '../../contexts/AuthContext'
-import { useMyAttendance } from '../../hooks/useSupabaseData'
+import { useMyAttendance } from '../../hooks/useTenantData'
 import { QrCode, Clock, CalendarDays, TrendingUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import '../../styles/dashboard.css'

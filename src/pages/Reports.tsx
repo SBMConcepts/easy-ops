@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { useAttendanceRecords } from '../hooks/useSupabaseData'
+import { useAttendanceRecords } from '../hooks/useTenantData'
 import { createSupabaseClient } from '../integrations/supabase/client'
 import { useAuth } from '../contexts/AuthContext'
 import { FileText, Download, BarChart3, Clock, AlertTriangle, TrendingUp } from 'lucide-react'

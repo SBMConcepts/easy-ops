@@ -6,7 +6,8 @@ import { TooltipProvider } from './components/ui/tooltip'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthProvider } from './contexts/AuthContext'
-import { useTenant } from './contexts/TenantContext'
+import { TenantProvider } from './contexts/TenantContext'
+import { getSubdomain } from './utils/subdomain'
 import CheckIn from './pages/CheckIn'
 import ComingSoon from './pages/ComingSoon'
 import Compliance from './pages/Compliance'
@@ -46,7 +47,7 @@ const MarketingRoutes = () => (
 const WorkspaceRoutes = () => (
   <Routes>
     {/* Root redirects straight into the app; ProtectedRoute handles auth gate */}
-    <Route path="/" element={<Navigate to="/" replace />} />
+    <Route path="/app" element={<Navigate to="/app" replace />} />
     <Route path="/login" element={<Login />} />
     <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -143,7 +144,10 @@ const WorkspaceRoutes = () => (
 
 // ── App root ──────────────────────────────────────────────────────────────────
 const App = () => {
-  const { isCustomSubdomain } = useTenant()
+  // Pure synchronous check — no context needed to decide which shell to render.
+  // TenantProvider is scoped inside WorkspaceRoutes so marketing pages carry
+  // zero tenant overhead.
+  const isCustomSubdomain = !!getSubdomain()
   // For workspace subdomains, wait for Auth0 to rehydrate a cached session
   // before rendering — prevents a flash of the login page on authenticated refresh.
   // Marketing site renders immediately with no loading gate.
@@ -159,7 +163,13 @@ const App = () => {
         <TooltipProvider>
           <Sonner />
           <BrowserRouter>
-            {isCustomSubdomain ? <WorkspaceRoutes /> : <MarketingRoutes />}
+            {isCustomSubdomain ? (
+              <TenantProvider>
+                <WorkspaceRoutes />
+              </TenantProvider>
+            ) : (
+              <MarketingRoutes />
+            )}
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

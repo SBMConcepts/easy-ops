@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
-import { useAttendanceRecords } from '../../hooks/useSupabaseData'
+import { useAttendanceRecords } from '../../hooks/useTenantData'
 import { UserCheck, Clock, AlertTriangle, QrCode } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import '../../styles/dashboard.css'

@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select'
-import { useAttendanceRecords, useSites } from '../hooks/useSupabaseData'
+import { useAttendanceRecords, useSites } from '../hooks/useTenantData'
 import { MapPin, Users, Clock } from 'lucide-react'
 import '../styles/pages.css'
 

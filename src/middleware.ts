@@ -1,51 +1,51 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { auth0 } from '.auth0-config' // Your Auth0 config
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  // 1. Run Auth0's native middleware first to handle sessions and protected routes
+  const authResponse = await auth0.middleware(request)
+
+  // 2. Extract the subdomain for Multi-Tenancy
   const host = request.headers.get('host') || ''
-
-  // Define your root production domain name (set this in your env)
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'easy-ops-za.vercel.app'
 
   let subdomain: string | null = null
 
-  // 1. Extract the subdomain based on the environment
   if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    // Handle local development mapping (e.g., acme.localhost:3000)
     const parts = host.split('.')
     if (parts.length > 1 && !parts[0].includes('localhost')) {
       subdomain = parts[0].toLowerCase()
     }
   } else if (host.endsWith(rootDomain)) {
-    // Handle cloud production environments (e.g., acme.your-saas.com)
     const parts = host.replace(`.${rootDomain}`, '').split('.')
     subdomain = parts[parts.length - 1].toLowerCase()
   }
 
-  // 2. Filter out infrastructure-level reserved keywords
-  const reservedSubdomains = ['www', 'api', 'admin', 'billing', 'status', 'app']
+  const reservedSubdomains = [
+    'www',
+    'api',
+    'admin',
+    'billing',
+    'status',
+    'app',
+    'support',
+    'vercel',
+    'auth',
+    'login',
+  ]
 
-  // 3. Forward the request with isolation headers injected
+  // 3. Inject Tenant Headers into the Auth0 Response
   if (subdomain && !reservedSubdomains.includes(subdomain)) {
-    // Clone the incoming headers so we can modify them
-    const requestHeaders = new Headers(request.headers)
-
-    // Inject the tenant slug safely into the request flow
-    requestHeaders.set('x-tenant-slug', subdomain)
-
-    // Continue the request pipeline, supplying the API routes with the header
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    })
+    // We attach the header directly to the authResponse created by Auth0
+    authResponse.headers.set('x-tenant-slug', subdomain)
   }
 
-  // If no tenant-specific subdomain is found (e.g., global landing page), continue normally
-  return NextResponse.next()
+  // 4. Return the combined response
+  return authResponse
 }
 
-// 4. Configure the middleware matcher to optimize performance
+// 5. Configure the matcher (Combined exclusions from both files)
 export const config = {
   matcher: [
     /*
@@ -53,8 +53,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - sitemap.xml / robots.txt
      * - Public assets (svg, png, jpg, etc.)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

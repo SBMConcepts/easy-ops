@@ -2,170 +2,194 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { useAuth0 } from '@auth0/auth0-react'
 import { createSupabaseClient } from '../integrations/supabase/client'
 import type { AppRole } from '../integrations/supabase/types'
-import { AUTH0_AUDIENCE, AUTH0_CLAIM_NS } from '../lib/auth0-config'
+import { AUTH0_CLAIM_NS } from '../lib/auth0-config'
 
 // ── Public types ─────────────────────────────────────────────────────────────
 
 export type UserRole = AppRole
 
-export interface Organisation {
+export interface Tenant {
   id: string
   name: string
+  slug: string
   logo_url?: string
-  onboarding_completed: boolean
-  settings: Record<string, unknown>
+  status: string
 }
 
 export interface User {
-  id: string
-  name: string
+  id: string // From public.users
+  auth0_user_id: string
   email: string
-  role: UserRole
-  department: string
-  site: string
-  avatar?: string
-  organisation_id: string
+  full_name: string
+  avatar_url?: string
+
+  // Scoped Data
+  tenant_id: string // From public.tenant_memberships
+  role: UserRole // From public.tenant_memberships
+  job_title?: string // From public.employee_profiles
 }
 
 interface AuthContextType {
   user: User | null
-  organisation: Organisation | null
+  tenant: Tenant | null
   isAuthenticated: boolean
   isLoading: boolean
-  onboardingComplete: boolean
   /** Redirect to Auth0 Universal Login. Pass auth0OrgId on subdomain workspaces. */
   login: (auth0OrgId?: string) => void
   /** Clear local state and redirect to Auth0 logout endpoint. */
   logout: () => void
-  /**
-   * Re-fetch the organisation record from Supabase — call this after
-   * onboarding writes `onboarding_completed = true` so the guard updates.
-   */
-  refreshOrganisation: () => Promise<void>
-  /**
-   * Return a fresh Auth0 access token.  Pass this as the Authorization
-   * Bearer header when calling Supabase Edge Functions or any protected API.
-   */
-  getAccessToken: () => Promise<string>
+  /** Re-fetch the tenant record from Supabase */
+  refreshTenant: () => Promise<void>
+  /** Helper to grab the raw JWT */
+  getAccessToken: () => Promise<string | undefined>
 }
 
-const AuthContext = createContext<AuthContextType | null>(null)
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-async function fetchUserProfile(uid: string, accessToken: string): Promise<User | null> {
-  const db = createSupabaseClient(accessToken)
-  const { data, error } = await db.from('profiles').select('*').eq('id', uid).single()
-  if (error || !data) return null
-  return {
-    id: data.id,
-    name: data.full_name || data.email || '',
-    email: data.email || '',
-    role: (data.role ?? 'employee') as UserRole,
-    department: data.department_id || '',
-    site: data.profile_site_id || '',
-    avatar: data.avatar_url || undefined,
-    organisation_id: data.organisation_id ?? '',
-  }
-}
-
-async function fetchOrganisation(orgId: string, accessToken: string): Promise<Organisation | null> {
-  const db = createSupabaseClient(accessToken)
-  const { data, error } = await db
-    .from('organisations')
-    .select('id, name, logo_url, onboarding_completed, settings')
-    .eq('id', orgId)
-    .single()
-  if (error || !data) return null
-  return {
-    id: data.id,
-    name: data.name,
-    logo_url: data.logo_url ?? undefined,
-    onboarding_completed: data.onboarding_completed ?? false,
-    settings: (data.settings as Record<string, unknown>) ?? {},
-  }
-}
-
-// ── Provider ──────────────────────────────────────────────────────────────────
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  tenant: null,
+  isAuthenticated: false,
+  isLoading: true,
+  login: () => {},
+  logout: () => {},
+  refreshTenant: async () => {},
+  getAccessToken: async () => undefined,
+})
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
-    user: auth0User,
     isAuthenticated,
     isLoading: auth0Loading,
+    user: auth0User,
     loginWithRedirect,
     logout: auth0Logout,
     getAccessTokenSilently,
   } = useAuth0()
 
   const [user, setUser] = useState<User | null>(null)
-  const [organisation, setOrganisation] = useState<Organisation | null>(null)
+  const [tenant, setTenant] = useState<Tenant | null>(null)
   const [profileLoading, setProfileLoading] = useState(false)
 
-  const getAccessToken = useCallback((): Promise<string> => {
-    return getAccessTokenSilently({ authorizationParams: { audience: AUTH0_AUDIENCE } })
+  const getAccessToken = useCallback(async () => {
+    try {
+      return await getAccessTokenSilently()
+    } catch (e) {
+      console.warn('Failed to get access token silently', e)
+      return undefined
+    }
   }, [getAccessTokenSilently])
 
-  const loadProfile = useCallback(
-    async (auth0Sub: string, token: string) => {
-      setProfileLoading(true)
-      try {
-        // Prefer custom claims injected by the Auth0 Post-Login Action (fast
-        // path). Fall back to the Supabase profiles row (slow path).
-        const claimedRole = auth0User?.[AUTH0_CLAIM_NS + 'role'] as AppRole | undefined
-        const claimedOrgId = auth0User?.[AUTH0_CLAIM_NS + 'organisation_id'] as string | undefined
+  // Helper to fetch the Tenant record
+  const fetchTenant = async (tenantId: string, token: string) => {
+    const supabase = createSupabaseClient(token)
+    const { data, error } = await supabase.from('tenants').select('*').eq('id', tenantId).single()
 
-        const profile = await fetchUserProfile(auth0Sub, token)
-
-        if (profile) {
-          if (claimedRole) profile.role = claimedRole
-          if (claimedOrgId) profile.organisation_id = claimedOrgId
-          setUser(profile)
-          if (profile.organisation_id) {
-            const org = await fetchOrganisation(profile.organisation_id, token)
-            setOrganisation(org)
-          }
-        } else {
-          // Profile row not yet created (e.g. first login before a
-          // post-registration webhook runs). Build minimal user from claims.
-          setUser({
-            id: auth0Sub,
-            name: auth0User?.name || auth0User?.email || '',
-            email: auth0User?.email || '',
-            role: claimedRole ?? 'employee',
-            department: '',
-            site: '',
-            avatar: auth0User?.picture ?? undefined,
-            organisation_id: claimedOrgId ?? '',
-          })
-        }
-      } finally {
-        setProfileLoading(false)
-      }
-    },
-    [auth0User]
-  )
-
-  useEffect(() => {
-    if (!isAuthenticated || !auth0User?.sub) {
-      // Use a microtask to avoid synchronous setState inside effect body
-      Promise.resolve().then(() => {
-        setUser(null)
-        setOrganisation(null)
-      })
-      return
+    if (error) {
+      console.error('Error fetching tenant:', error)
+      return null
     }
-    getAccessToken()
-      .then((token) => loadProfile(auth0User.sub!, token))
-      .catch(() => setProfileLoading(false))
-  }, [isAuthenticated, auth0User?.sub, getAccessToken, loadProfile])
+    return data as Tenant
+  }
 
-  const refreshOrganisation = useCallback(async () => {
-    // Use full `user` object so the compiler can infer the dependency correctly
-    if (!user?.organisation_id) return
+  // Hydrate local state when Auth0 authentication is confirmed
+  useEffect(() => {
+    let mounted = true
+
+    const loadProfileAndTenant = async () => {
+      if (!isAuthenticated || !auth0User) {
+        if (mounted) {
+          setUser(null)
+          setTenant(null)
+          setProfileLoading(false)
+        }
+        return
+      }
+
+      setProfileLoading(true)
+      const token = await getAccessToken()
+      if (!token) {
+        if (mounted) setProfileLoading(false)
+        return
+      }
+
+      const supabase = createSupabaseClient(token)
+      const auth0UserId = auth0User.sub!
+      const auth0OrgId = auth0User[`${AUTH0_CLAIM_NS}org_id`] as string | undefined
+
+      try {
+        // 1. Fetch Global User
+        const { data: globalUser, error: userErr } = await supabase
+          .from('users')
+          .select('*')
+          .eq('auth0_user_id', auth0UserId)
+          .single()
+
+        if (userErr || !globalUser) throw new Error('Global user not found')
+
+        const finalUser: User = {
+          id: globalUser.id,
+          auth0_user_id: globalUser.auth0_user_id,
+          email: globalUser.email,
+          full_name: globalUser.full_name,
+          avatar_url: globalUser.avatar_url,
+          tenant_id: '',
+          role: 'employee',
+        }
+
+        // 2. If logged into a specific tenant, fetch membership & HR profile
+        if (auth0OrgId) {
+          // Note: In a real app, you'd resolve localTenantId first.
+          // Assuming your Supabase RLS policies are using the JWT's org_id securely.
+
+          const { data: membership } = await supabase
+            .from('tenant_memberships')
+            .select('tenant_id, role')
+            .eq('user_id', globalUser.id)
+            .single()
+
+          if (membership) {
+            finalUser.tenant_id = membership.tenant_id
+            finalUser.role = membership.role
+
+            const { data: hrProfile } = await supabase
+              .from('employee_profiles')
+              .select('job_title')
+              .eq('user_id', globalUser.id)
+              .eq('tenant_id', membership.tenant_id)
+              .single()
+
+            if (hrProfile) {
+              finalUser.job_title = hrProfile.job_title
+            }
+
+            // Load the Tenant object
+            const tenantData = await fetchTenant(membership.tenant_id, token)
+            if (mounted && tenantData) {
+              setTenant(tenantData)
+            }
+          }
+        }
+
+        if (mounted) setUser(finalUser)
+      } catch (err) {
+        console.error('Failed to load user context:', err)
+      } finally {
+        if (mounted) setProfileLoading(false)
+      }
+    }
+
+    loadProfileAndTenant()
+
+    return () => {
+      mounted = false
+    }
+  }, [isAuthenticated, auth0User, getAccessToken])
+
+  const refreshTenant = useCallback(async () => {
+    if (!user?.tenant_id) return
     const token = await getAccessToken()
-    const org = await fetchOrganisation(user.organisation_id, token)
-    setOrganisation(org)
+    if (!token) return
+    const updatedTenant = await fetchTenant(user.tenant_id, token)
+    if (updatedTenant) setTenant(updatedTenant)
   }, [user, getAccessToken])
 
   const login = useCallback(
@@ -180,29 +204,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(() => {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } })
     setUser(null)
-    setOrganisation(null)
+    setTenant(null)
   }, [auth0Logout])
 
   const isLoading = auth0Loading || profileLoading
-  const onboardingComplete = organisation?.onboarding_completed ?? false
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        organisation: organisation ?? {
-          id: '',
-          name: '',
-          logo_url: undefined,
-          onboarding_completed: false,
-          settings: {},
-        },
+        tenant,
         isAuthenticated,
         isLoading,
-        onboardingComplete,
         login,
         logout,
-        refreshOrganisation,
+        refreshTenant,
         getAccessToken,
       }}
     >
@@ -212,8 +228,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useAuth = () => {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
-}
+export const useAuth = () => useContext(AuthContext)

@@ -2,21 +2,20 @@
 import React, { createContext, useCallback, useContext, useState } from 'react'
 import { getSubdomain } from '../utils/subdomain'
 
-const SUPABASE_URL = import.meta.env.SUPABASE_URL as string
-const SUPABASE_ANON_KEY = import.meta.env.SUPABASE_ANON_KEY as string
+// Point this to your new Express Backend URL
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 interface TenantInfo {
-  id: string // Local Database Tenant UUID
-  name: string // Company Title (e.g., Acme Corp)
-  auth0OrgId: string // Auth0 org_id (e.g., org_123)
-  slug: string
+  id: string // Local Postgres UUID (public.tenants.id)
+  name: string // Company Title
+  auth0OrgId: string // Auth0 org_id
+  slug: string // Workspace subdomain slug
 }
 
 interface TenantContextType {
   tenant: TenantInfo | null
   isLoading: boolean
   isCustomSubdomain: boolean
-  /** Call this when the user initiates login to resolve the tenant. */
   resolveTenant: () => Promise<void>
 }
 
@@ -37,10 +36,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setIsLoading(true)
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/tenant-lookup?slug=${encodeURIComponent(slug)}`,
-        { headers: { apikey: SUPABASE_ANON_KEY } }
-      )
+      // Lookup the tenant via your Express API instead of a Supabase Edge Function
+      const response = await fetch(`${API_URL}/api/tenant-lookup?slug=${encodeURIComponent(slug)}`)
+
       if (response.ok) {
         const data = await response.json()
         setTenant({
@@ -58,7 +56,14 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [slug, tenant])
 
   return (
-    <TenantContext.Provider value={{ tenant, isLoading, isCustomSubdomain: !!slug, resolveTenant }}>
+    <TenantContext.Provider
+      value={{
+        tenant,
+        isLoading,
+        isCustomSubdomain: !!slug,
+        resolveTenant,
+      }}
+    >
       {children}
     </TenantContext.Provider>
   )
