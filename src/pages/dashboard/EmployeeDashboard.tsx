@@ -1,119 +1,76 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
-import { Badge } from '../../components/ui/badge'
-import { Button } from '../../components/ui/button'
 import { useAuth } from '../../contexts/AuthContext'
-import { useMyAttendance } from '../../hooks/useTenantData'
-import { QrCode, Clock, CalendarDays, TrendingUp } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useAttendanceRecords } from '../../hooks/useTenantData' // <-- Replaced useMyAttendance
+import { Clock, CalendarDays } from 'lucide-react'
+import { DashboardLoader, AttendanceRow } from './DashboardLoader'
 import '../../styles/dashboard.css'
 
 const EmployeeDashboard = () => {
   const { user } = useAuth()
-  const navigate = useNavigate()
-  const { data: records, isLoading } = useMyAttendance()
 
-  const myRecords = records || []
-  const totalHours = myRecords.reduce((sum, r) => sum + parseFloat(r.hours_worked ?? '0'), 0)
-  const totalOvertime = myRecords.reduce((sum, r) => sum + parseFloat(r.overtime ?? '0'), 0)
-  const absentDays = myRecords.filter((r) => r.status === 'absent').length
+  // The Express API + Postgres RLS guarantees this only contains their own records!
+  const { data: records = [], isLoading } = useAttendanceRecords()
 
-  if (isLoading) {
-    return (
-      <div className="dashboard-loader">
-        <div className="dashboard-spinner" />
-      </div>
-    )
-  }
+  if (isLoading) return <DashboardLoader />
+
+  const totalHours = records.reduce((sum, r) => sum + parseFloat(r.hours_worked ?? '0'), 0)
+  const absentDays = records.filter((r) => r.status === 'absent').length
 
   return (
     <div className="dashboard-page">
       <div className="dashboard-heading">
         <div className="dashboard-heading-text">
-          <h1 className="dashboard-title">Welcome, {user?.name?.split(' ')[0] || 'Employee'}</h1>
-          <p className="dashboard-subtitle">Your attendance summary</p>
+          <h1 className="dashboard-title">Welcome, {user?.full_name || 'User'}</h1>
+          <p className="dashboard-subtitle">Your personalized performance metric tracker</p>
         </div>
-        <Button
-          onClick={() => navigate('/app/check-in')}
-          size="lg"
-          className="bg-secondary hover:bg-secondary/90"
-        >
-          <QrCode className="h-5 w-5 mr-2" />
-          Clock In / Out
-        </Button>
       </div>
 
-      <div className="dashboard-stat-grid dashboard-stat-grid--3">
+      <div className="dashboard-stat-grid dashboard-stat-grid-2">
         <Card className="shadow-card">
-          <CardContent className="stat-card-body--row">
-            <Clock className="h-8 w-8 icon-secondary" />
+          <CardContent className="stat-card-content">
+            <div className="icon-container icon-secondary">
+              <Clock className="h-6 w-6" />
+            </div>
             <div>
               <p className="stat-value">{totalHours.toFixed(1)}h</p>
               <p className="stat-label">Hours Worked</p>
             </div>
           </CardContent>
         </Card>
+
         <Card className="shadow-card">
-          <CardContent className="stat-card-body--row">
-            <TrendingUp className="h-8 w-8 icon-accent" />
-            <div>
-              <p className="stat-value">{totalOvertime.toFixed(1)}h</p>
-              <p className="stat-label">Overtime</p>
+          <CardContent className="stat-card-content">
+            <div className="icon-container icon-accent">
+              <CalendarDays className="h-6 w-6" />
             </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-card">
-          <CardContent className="stat-card-body--row">
-            <CalendarDays className="h-8 w-8 icon-primary" />
             <div>
               <p className="stat-value">{absentDays}</p>
-              <p className="stat-label">Absent Days</p>
+              <p className="stat-label">Days Absent</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-card">
+      <Card className="shadow-card mt-6">
         <CardHeader>
-          <CardTitle className="card-title-with-icon">Recent Attendance</CardTitle>
+          <CardTitle className="card-title-with-icon">My Shift Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          {myRecords.length === 0 ? (
-            <p className="attendance-empty">No records yet. Clock in to get started!</p>
+          {records.length === 0 ? (
+            <p className="attendance-empty">No shifts recorded during this payroll frame.</p>
           ) : (
             <div className="attendance-list">
-              {myRecords.map((rec) => (
-                <div key={rec.id} className="attendance-row">
-                  <div className="attendance-row-left">
-                    <p className="attendance-name">{rec.date}</p>
-                    <p className="attendance-meta">{rec.method?.toUpperCase()}</p>
-                  </div>
-                  <div className="attendance-row-right">
-                    <span className="attendance-time">
-                      {rec.clock_in
-                        ? new Date(rec.clock_in).toLocaleTimeString('en-ZA', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
-                        : '—'}
-                      {' — '}
-                      {rec.clock_out
-                        ? new Date(rec.clock_out).toLocaleTimeString('en-ZA', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
-                        : '...'}
-                    </span>
-                    {rec.hours_worked && (
-                      <span className="attendance-hours">{rec.hours_worked}h</span>
-                    )}
-                    <Badge
-                      variant="outline"
-                      className="bg-secondary/10 text-secondary border-secondary/20"
-                    >
-                      {rec.status}
-                    </Badge>
-                  </div>
-                </div>
+              {records.map((rec: any) => (
+                <AttendanceRow
+                  key={rec.id}
+                  fullName={rec.date}
+                  metaText={rec.method?.toUpperCase()}
+                  clockIn={rec.clock_in}
+                  clockOut={rec.clock_out}
+                  status={rec.status}
+                  hoursWorked={rec.hours_worked}
+                />
               ))}
             </div>
           )}
