@@ -14,11 +14,16 @@ const statusColors: Record<string, string> = {
 const AdminDashboard = () => {
   const { data: reportData, isLoading: loadingReport } = useAttendanceRecords()
 
-  const stats = reportData?.stats
+  const stats = reportData?.stats || {}
   const records = reportData?.records || []
 
   const statCards = [
-    { label: 'Total Employees', value: employees?.length || 0, icon: Users, color: 'icon-primary' },
+    {
+      label: 'Total Employees',
+      value: stats?.total_employees || 0,
+      icon: Users,
+      color: 'icon-primary',
+    },
     {
       label: 'Present Today',
       value: stats?.present || 0,
@@ -41,7 +46,7 @@ const AdminDashboard = () => {
     },
   ]
 
-  if (loadingReport || loadingEmployees) {
+  if (loadingReport) {
     return (
       <div className="dashboard-loader">
         <div className="dashboard-spinner" />
@@ -75,7 +80,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="attendance-list">
-              {(employees || []).slice(0, 6).map((emp: any) => (
+              {(reportData?.employees || []).slice(0, 6).map((emp: any) => (
                 <div key={emp.id} className="attendance-row">
                   <div className="attendance-row-left">
                     <p className="attendance-name">{emp.full_name}</p>
