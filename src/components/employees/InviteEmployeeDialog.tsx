@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
-import { createSupabaseClient } from '../../integrations/supabase/client'
-import { useAuth } from '../../contexts/AuthContext'
+import { useTenantApi } from '../../hooks/useTenantApi'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/button'
 import {
   Dialog,
@@ -11,15 +12,14 @@ import {
   DialogTrigger,
 } from '../../components/ui/dialog'
 import { toast } from 'sonner'
-import { UserPlus } from 'lucide-react'
+import { UserPlus, Loader2 } from 'lucide-react'
 
 export type AppRole = 'admin' | 'manager' | 'supervisor' | 'employee'
 
 export interface NewEmployee {
-  id: string
+  id?: string
   full_name: string
   email: string
-  custom_role: string | null
   role: AppRole
   department: string | null
   site: string | null
@@ -30,197 +30,158 @@ interface Props {
 }
 
 export const InviteEmployeeDialog = ({ onInvited }: Props) => {
-  const { user, getAccessToken } = useAuth()
+  const { apiFetch } = useTenantApi() // Leverage your new secure API bridge
+  const queryClient = useQueryClient()
+
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // Form State
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
-  const [customRole, setCustomRole] = useState('')
   const [role, setRole] = useState<AppRole>('employee')
   const [department, setDepartment] = useState('')
   const [site, setSite] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
 
-  const reset = () => {
+  const resetForm = () => {
     setFullName('')
     setEmail('')
-    setCustomRole('')
     setRole('employee')
     setDepartment('')
     setSite('')
-    setError(null)
-    setInviteSuccess(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setInviteSuccess(null)
-
-    if (!fullName.trim()) {
-      setError('Full name is required.')
-      return
-    }
-    if (!email.trim() || !email.includes('@')) {
-      setError('A valid email address is required.')
-      return
+    if (!email.trim() || !fullName.trim()) {
+      return toast.error('Email and Full Name are required.')
     }
 
     setLoading(true)
-    const token = await getAccessToken()
-    const db = createSupabaseClient(token)
-    const { data, error: fnError } = await db.functions.invoke('invite-user-by-email', {
-      body: {
-        full_name: fullName.trim(),
-        email: email.trim(),
-        custom_role: customRole.trim() || null,
-        role,
-        organisation_id: user?.organisation_id,
-        department: department || undefined,
-        site: site || undefined,
-      },
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    setLoading(false)
+    try {
+      // Send a single, secure payload to the Express backend.
+      // The backend will handle the Auth0 invitation ticket and DB inserts securely.
+      const newEmployee = await apiFetch<NewEmployee>('employees/invite', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: email.trim(),
+          full_name: fullName.trim(),
+          role,
+          department: department.trim() || null,
+          site: site.trim() || null,
+        }),
+      })
 
-    if (fnError || data?.error) {
-      const msg = data?.error || fnError?.message || 'Failed to invite employee'
-      setError(msg)
-      return
+      toast.success(`Invitation successfully dispatched to ${email}`)
+
+      // Auto-refresh the employee table behind the modal
+      queryClient.invalidateQueries({ queryKey: ['workspace-employees'] })
+
+      if (onInvited && newEmployee) onInvited(newEmployee)
+
+      resetForm()
+      setOpen(false)
+    } catch (err: any) {
+      console.error('Invite error:', err)
+      toast.error(err.message || 'Failed to dispatch invitation.')
+    } finally {
+      setLoading(false)
     }
-
-    const newEmployee: NewEmployee = {
-      id: data?.user_id ?? '',
-      full_name: fullName.trim(),
-      email: email.trim(),
-      custom_role: customRole.trim() || null,
-      role,
-      department: department || null,
-      site: site || null,
-    }
-
-    setInviteSuccess(
-      `Invite sent to ${email.trim()}. They'll receive an email to set their password and log in.`
-    )
-    onInvited?.(newEmployee)
-    toast.success(`Invitation sent to ${email.trim()}`)
-    setFullName('')
-    setEmail('')
-    setRole('employee')
-    setDepartment('')
-    setSite('')
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (!o) reset()
-      }}
-    >
-      <DialogTrigger
-        render={
-          <Button>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Employee
-          </Button>
-        }
-      />
-      <DialogContent className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 shadow-2xl max-w-md gap-0">
-        <DialogHeader className="mb-5">
-          <DialogTitle className="text-base font-semibold text-zinc-100">
-            Invite a team member
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger>
+        <Button className="bg-primary text-primary-foreground">
+          <UserPlus className="mr-2 h-4 w-4" />
+          Invite Team Member
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-106.25 bg-zinc-950 text-zinc-50 border border-zinc-800 shadow-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold tracking-tight">
+            Invite Team Member
           </DialogTitle>
-          <DialogDescription className="text-xs text-zinc-500 mt-0.5">
-            They'll receive an email to verify and set their password.
+          <DialogDescription className="text-zinc-400 text-sm">
+            Send an email invitation allowing a new member to join this company workspace.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <ModalField label="Full name">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <ModalField label="Full Name *">
             <ModalInput
+              required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="e.g. Thabo Mokoena"
-              autoFocus
+              placeholder="e.g. Jane Doe"
             />
           </ModalField>
 
-          <ModalField label="Work email">
+          <ModalField label="Email Address *">
             <ModalInput
+              required
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@company.co.za"
-            />
-          </ModalField>
-          <ModalField label="Custom role (optional)">
-            <ModalInput
-              value={customRole}
-              onChange={(e) => setCustomRole(e.target.value)}
-              placeholder="e.g. Team Lead (will be added as a tag)"
+              placeholder="jane@example.com"
             />
           </ModalField>
 
-          <ModalField label="Role at the company">
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as AppRole)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-            >
-              <option value="employee">Admin</option>
-              <option value="supervisor">Supervisor</option>
-              <option value="manager">Manager</option>
-              <option value="admin">Employee</option>
-            </select>
-          </ModalField>
+          <div className="grid grid-cols-2 gap-4">
+            <ModalField label="System Role *">
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value as AppRole)}
+                className="w-full bg-zinc-900 border border-zinc-700 text-zinc-100 text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block p-2.5 transition-colors"
+              >
+                <option value="employee">Employee</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </ModalField>
 
-          <div className="grid grid-cols-2 gap-3">
-            <ModalField label="Department (optional)">
+            <ModalField label="Department">
               <ModalInput
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                placeholder="e.g. Finance"
-              />
-            </ModalField>
-            <ModalField label="Site (optional)">
-              <ModalInput
-                value={site}
-                onChange={(e) => setSite(e.target.value)}
-                placeholder="e.g. Cape Town"
+                placeholder="e.g. Operations"
               />
             </ModalField>
           </div>
 
-          {error && (
-            <p className="text-sm text-red-400 bg-red-950/40 border border-red-800 rounded-lg px-4 py-2.5">
-              {error}
-            </p>
-          )}
+          <ModalField label="Default Site">
+            <ModalInput
+              value={site}
+              onChange={(e) => setSite(e.target.value)}
+              placeholder="e.g. Main Factory"
+            />
+          </ModalField>
 
-          {inviteSuccess && (
-            <p className="text-sm text-green-400 bg-green-950/40 border border-green-800 rounded-lg px-4 py-2.5">
-              {inviteSuccess}
-            </p>
-          )}
-
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3 pt-4 border-t border-zinc-800">
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                resetForm()
+                setOpen(false)
+              }}
               disabled={loading}
-              className="flex-1 py-2.5 text-sm text-zinc-400 border border-zinc-700 rounded-lg hover:border-zinc-500 hover:text-zinc-200 transition-colors disabled:opacity-50"
+              className="flex-1 py-2.5 text-sm font-medium text-zinc-300 border border-zinc-700 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading || !!inviteSuccess}
-              className="flex-1 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-400 disabled:bg-amber-900 disabled:text-amber-700 text-zinc-950 rounded-lg transition-colors"
+              disabled={loading}
+              className="flex flex-1 items-center justify-center py-2.5 text-sm font-semibold bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg transition-colors disabled:opacity-50"
             >
-              {loading ? 'Sending…' : inviteSuccess ? 'Sent ✓' : 'Send Invitation'}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Dispatching…
+                </>
+              ) : (
+                'Send Invitation'
+              )}
             </button>
           </div>
         </form>
@@ -229,10 +190,12 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
   )
 }
 
+/* ── Auxiliary Sub-Components ────────────────────────────────────────────── */
+
 function ModalField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">
+      <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
         {label}
       </label>
       {children}
@@ -244,9 +207,7 @@ function ModalInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
+      className="bg-zinc-900 border border-zinc-700 text-zinc-100 text-sm rounded-lg focus:ring-secondary focus:border-secondary block w-full p-2.5 transition-colors placeholder-zinc-600 outline-none"
     />
   )
 }
-
-export default InviteEmployeeDialog

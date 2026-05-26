@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router-dom' // <-- Added useSearchParams
 import { useAuth } from '../contexts/AuthContext'
 import { useTenant } from '../contexts/TenantContext'
 import { Button } from '../components/ui/button'
@@ -11,6 +11,11 @@ function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth()
   const { tenant, isLoading: tenantLoading, isCustomSubdomain, resolveTenant } = useTenant()
   const navigate = useNavigate()
+
+  // 1. Extract Auth0 invitation parameters from the URL
+  const [searchParams] = useSearchParams()
+  const invitation = searchParams.get('invitation')
+  const organization = searchParams.get('organization')
 
   // Automatically resolve the tenant information if accessed via an organization subdomain
   useEffect(() => {
@@ -26,6 +31,17 @@ function LoginPage() {
     }
   }, [isAuthenticated, isLoading, navigate])
 
+  const handleLogin = () => {
+    // 2. Resolve the target organization (URL parameter overrides local tenant context)
+    const targetOrgId = organization || tenant?.auth0OrgId || undefined
+
+    // 3. Pass both the organization ID and the invitation ticket to your login handler
+    login({
+      auth0OrgId: targetOrgId,
+      invitation: invitation || undefined,
+    })
+  }
+
   const isBusy = isLoading || tenantLoading
 
   return (
@@ -38,24 +54,29 @@ function LoginPage() {
 
         <Card className="login-card">
           <CardHeader className="login-card-header">
-            <CardTitle className="login-card-title">Sign In</CardTitle>
+            {/* 4. Update the UI conditionally if an invite is detected */}
+            <CardTitle className="login-card-title">
+              {invitation ? 'Accept Invitation' : 'Sign In'}
+            </CardTitle>
             <CardDescription className="login-card-description">
-              Sign in to your isolated company workspace
+              {invitation
+                ? 'You have been invited to join a workspace.'
+                : 'Sign in to your isolated company workspace'}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="login-card-content">
-            <Button
-              className="login-button"
-              onClick={() => login(tenant?.auth0OrgId ?? undefined)} // Securely passes organization token metadata
-              disabled={isBusy}
-            >
+            <Button className="login-button" onClick={handleLogin} disabled={isBusy}>
               {isBusy ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <LogIn className="h-4 w-4 mr-2" />
               )}
-              {isBusy ? 'Verifying Workspace…' : 'Continue to Sign In'}
+              {isBusy
+                ? 'Verifying Workspace…'
+                : invitation
+                  ? 'Accept Invite & Continue'
+                  : 'Continue to Sign In'}
             </Button>
 
             <div className="login-footer">

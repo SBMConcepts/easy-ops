@@ -8,6 +8,11 @@ import { AUTH0_CLAIM_NS } from '../lib/auth0-config'
 
 export type UserRole = AppRole
 
+interface LoginOptions {
+  auth0OrgId?: string
+  invitation?: string
+}
+
 export interface Tenant {
   id: string
   name: string
@@ -35,7 +40,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
   /** Redirect to Auth0 Universal Login. Pass auth0OrgId on subdomain workspaces. */
-  login: (auth0OrgId?: string) => void
+  login: (options?: LoginOptions) => void
   /** Clear local state and redirect to Auth0 logout endpoint. */
   logout: () => void
   /** Re-fetch the tenant record from Supabase */
@@ -193,9 +198,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, getAccessToken])
 
   const login = useCallback(
-    (auth0OrgId?: string) => {
+    (options?: LoginOptions) => {
       loginWithRedirect({
-        authorizationParams: auth0OrgId ? { organization: auth0OrgId } : undefined,
+        authorizationParams: options?.auth0OrgId ? { organization: options.auth0OrgId } : undefined,
       })
     },
     [loginWithRedirect]
