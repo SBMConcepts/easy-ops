@@ -1,169 +1,161 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
-import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { ArrowLeft, Loader2, Building2, Globe } from 'lucide-react'
+import { Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
 
-function toSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 50)
-}
+const PACKAGES = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: 'Free',
+    features: ['Up to 10 Employees', 'Basic Check-in'],
+  },
+  {
+    id: 'pro',
+    name: 'Professional',
+    price: '$49/mo',
+    features: ['Up to 100 Employees', 'Geofencing', 'Reports'],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: 'Custom',
+    features: ['Unlimited', 'API Access', 'Custom Roles'],
+  },
+]
 
-const Register = () => {
+export default function Register() {
   const navigate = useNavigate()
+  const [step, setStep] = useState<1 | 2>(1)
+  const [selectedPackage, setSelectedPackage] = useState('pro')
+  const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
     companyName: '',
     companySlug: '',
     adminEmail: '',
+    password: '',
   })
-  const [slugEdited, setSlugEdited] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [submitting, setSubmitting] = useState(false)
 
-  useEffect(() => {
-    if (!slugEdited) {
-      setForm((f) => ({ ...f, companySlug: toSlug(f.companyName) }))
-    }
-  }, [form.companyName, slugEdited])
-
-  const set = (key: string, val: string) => {
-    setForm((f) => ({ ...f, [key]: val }))
-    if (errors[key])
-      setErrors((e) => {
-        const c = { ...e }
-        delete c[key]
-        return c
-      })
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.companyName) return setErrors({ companyName: 'Company title required' })
-    if (!form.companySlug) return setErrors({ companySlug: 'Workspace identifier required' })
-    if (!form.adminEmail) return setErrors({ adminEmail: 'Administrator contact email required' })
-
     setSubmitting(true)
+
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-      // Hit global provisioning route instead of client direct write
-      const res = await fetch(`${API_URL}/api/workspaces/register`, {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        // Pass the selected package to the backend!
+        body: JSON.stringify({ ...form, subscriptionPlan: selectedPackage }),
       })
 
-      if (!res.ok) {
-        const errorData = await res.text()
-        throw new Error(errorData || 'Failed to initialize workspace organization.')
-      }
+      if (!res.ok) throw new Error(await res.text())
 
-      toast.success('Organization workspace initialized successfully!')
-      // Redirect to success state or login layout
+      toast.success('Workspace created! Please log in to complete onboarding.')
       navigate('/login')
     } catch (err: any) {
-      toast.error(err.message || 'Registration processing failure')
+      toast.error(err.message || 'Registration failed')
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <div className="w-full max-w-md space-y-4">
-        <Link
-          to="/"
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to home
-        </Link>
-        <Card className="p-6 space-y-6 shadow-md border-border bg-card">
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold tracking-tight text-foreground">
-              Create your workspace
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Set up an isolated instance for your company operations
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      {step === 1 ? (
+        <div className="max-w-4xl w-full space-y-6">
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold">Choose your workspace plan</h1>
+            <p className="text-muted-foreground">
+              Select a package to start your EasyOps environment
             </p>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name *</Label>
-              <div className="relative">
-                <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="companyName"
-                  className="pl-9"
-                  value={form.companyName}
-                  onChange={(e) => set('companyName', e.target.value)}
-                  placeholder="Acme Logistics SA"
-                />
-              </div>
-              {errors.companyName && (
-                <p className="text-xs text-destructive">{errors.companyName}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="companySlug">Workspace Subdomain *</Label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="companySlug"
-                  className="pl-9"
-                  value={form.companySlug}
-                  onChange={(e) => {
-                    setSlugEdited(true)
-                    set('companySlug', toSlug(e.target.value))
-                  }}
-                  placeholder="acme-logistics"
-                />
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                Access link:{' '}
-                <span className="font-mono text-foreground">
-                  {form.companySlug || 'slug'}.easyops.app
-                </span>
-              </p>
-              {errors.companySlug && (
-                <p className="text-xs text-destructive">{errors.companySlug}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="adminEmail">Account Administrator Email *</Label>
+          <div className="grid md:grid-cols-3 gap-6">
+            {PACKAGES.map((pkg) => (
+              <Card
+                key={pkg.id}
+                className={`cursor-pointer transition-all ${selectedPackage === pkg.id ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'}`}
+                onClick={() => setSelectedPackage(pkg.id)}
+              >
+                <CardHeader>
+                  <CardTitle>{pkg.name}</CardTitle>
+                  <p className="text-2xl font-bold">{pkg.price}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-2 text-sm">
+                    {pkg.features.map((f, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-primary" /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className="w-full"
+                    variant={selectedPackage === pkg.id ? 'default' : 'outline'}
+                    onClick={() => setStep(2)}
+                  >
+                    Select {pkg.name}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <Card className="w-full max-w-md p-6">
+          <h2 className="text-xl font-bold mb-4">Create Admin Account</h2>
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <Label>Company Name</Label>
               <Input
-                id="adminEmail"
-                type="email"
-                value={form.adminEmail}
-                onChange={(e) => set('adminEmail', e.target.value)}
-                placeholder="admin@company.com"
+                required
+                value={form.companyName}
+                onChange={(e) => setForm({ ...form, companyName: e.target.value })}
               />
-              {errors.adminEmail && <p className="text-xs text-destructive">{errors.adminEmail}</p>}
             </div>
-
-            <Button type="submit" className="w-full bg-primary" disabled={submitting}>
-              {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Provisioning Instance…
-                </>
-              ) : (
-                'Create workspace'
-              )}
-            </Button>
+            <div>
+              <Label>Subdomain (e.g., acme)</Label>
+              <Input
+                required
+                value={form.companySlug}
+                onChange={(e) => setForm({ ...form, companySlug: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Admin Email</Label>
+              <Input
+                type="email"
+                required
+                value={form.adminEmail}
+                onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Password</Label>
+              <Input
+                type="password"
+                required
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+              />
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button type="button" variant="ghost" onClick={() => setStep(1)}>
+                Back
+              </Button>
+              <Button type="submit" className="flex-1" disabled={submitting}>
+                {submitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null} Create
+                Workspace
+              </Button>
+            </div>
           </form>
         </Card>
-      </div>
+      )}
     </div>
   )
 }
-
-export default Register

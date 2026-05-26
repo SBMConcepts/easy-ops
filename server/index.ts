@@ -4,6 +4,7 @@ import cors from 'cors'
 import registerRouter from './routes/register.js'
 import attendanceRouter from './routes/attendance.js'
 import auth0SyncRouter from './routes/auth0-sync.js'
+import employeesRouter from './routes/employees.js'
 import userRouter from './routes/user.js' // <-- Added Import
 
 const app = express()
@@ -23,6 +24,7 @@ app.use('/api/auth/register', registerRouter)
 app.use('/api/auth/sync', auth0SyncRouter)
 
 app.use('/api/user', userRouter) // <-- Mounted User Router (Required for useCurrentUser hook!)
+app.use('/api/employees', employeesRouter)
 app.use('/api/attendance', attendanceRouter)
 
 // ── Health Check ───────────────────────────────────────────────────────────
