@@ -1,6 +1,8 @@
-import { Navigate } from "react-router-dom"
+import { Navigate } from 'react-router-dom'
 
-// This legacy login page redirects to the Auth0-based login flow.
+/**
+ * Legacy entry router pointing traffic directly to the Auth0-backed LoginPage
+ */
 const Login = () => <Navigate to="/login" replace />
 
 export default Login

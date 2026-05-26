@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
-import { createSupabaseClient } from '../integrations/supabase/client'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useTenantApi } from '../hooks/useTenantApi'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -15,21 +17,7 @@ import {
 } from '../components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { toast } from 'sonner'
-import {
-  MapPin,
-  Building2,
-  Users,
-  Plus,
-  Pencil,
-  BarChart3,
-  Loader2,
-  Search,
-  Trash2,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  RefreshCw,
-} from 'lucide-react'
+import { MapPin, Building2, Plus, Pencil, Loader2, Search, Trash2, RefreshCw } from 'lucide-react'
 import '../styles/pages.css'
 import '../styles/sitesanddepartments.css'
 
@@ -40,169 +28,124 @@ interface Site {
   latitude: number | null
   longitude: number | null
   geofence_radius_m: number | null
-  organisation_id: string | null
-  created_at: string
 }
 
 interface Department {
   id: string
   name: string
+  code: string | null
   site_id: string | null
-  organisation_id: string | null
-  created_at: string
-  employee_count?: number
 }
-
-interface SiteActivity {
-  date: string
-  present: number
-  late: number
-  absent: number
-  total_hours: number
-}
-
-/* ─── Constants ──────────────────────────────────────────────────────────────── */
-
-const EMPTY_SITE_FORM = {
-  name: '',
-  address: '',
-  latitude: '',
-  longitude: '',
-  geofence_radius_m: '200',
-}
-
-const EMPTY_DEPT_FORM = { name: '', site_id: '' }
-
-/* ─── Component ──────────────────────────────────────────────────────────────── */
 
 export default function SitesAndDepartments() {
-  const { user, getAccessToken } = useAuth()
-  const orgId = user?.organisation_id ?? null
+  const { user } = useAuth()
+  const { apiFetch } = useTenantApi()
+  const queryClient = useQueryClient()
 
-  // Data
-  const [sites, setSites] = useState<Site[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'sites' | 'departments'>('sites')
+  const [siteSearch, setSiteSearch] = useState('')
+  const [deptSearch, setDeptSearch] = useState('')
 
-  // UI
-  const [search, setSearch] = useState('')
-  const [selectedSite, setSelectedSite] = useState<Site | null>(null)
-  const [activityData, setActivityData] = useState<SiteActivity[]>([])
-  const [activityLoading, setActivityLoading] = useState(false)
-
-  // Site dialog
+  // Modals visibility setup
   const [siteDialogOpen, setSiteDialogOpen] = useState(false)
-  const [editingSite, setEditingSite] = useState<Site | null>(null)
-  const [siteForm, setSiteForm] = useState(EMPTY_SITE_FORM)
-  const [savingSite, setSavingSite] = useState(false)
-
-  // Department dialog
   const [deptDialogOpen, setDeptDialogOpen] = useState(false)
+
+  // Edit references states
+  const [editingSite, setEditingSite] = useState<Site | null>(null)
   const [editingDept, setEditingDept] = useState<Department | null>(null)
-  const [deptForm, setDeptForm] = useState(EMPTY_DEPT_FORM)
-  const [savingDept, setSavingDept] = useState(false)
 
-  /* ── Data fetching ───────────────────────────────────────────────────────────── */
+  // Form states
+  const [siteForm, setSiteForm] = useState({
+    name: '',
+    address: '',
+    latitude: '',
+    longitude: '',
+    geofence_radius_m: '150',
+  })
+  const [deptForm, setDeptForm] = useState({
+    name: '',
+    code: '',
+    site_id: '',
+  })
 
-  const fetchData = async () => {
-    if (!orgId) return
-    setLoading(true)
-    try {
-      const token = await getAccessToken()
-      const supabase = createSupabaseClient(token)
-      const [sitesRes, deptsRes] = await Promise.all([
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from('sites') as any).select('*').eq('organisation_id', orgId).order('name'),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from('departments') as any)
-          .select('*')
-          .eq('organisation_id', orgId)
-          .order('name'),
-      ])
+  // ── Queries ────────────────────────────────────────────────────────────────
+  const {
+    data: sites = [],
+    isLoading: loadingSites,
+    refetch: refetchSites,
+  } = useQuery({
+    queryKey: ['sites'],
+    queryFn: () => apiFetch<Site[]>('sites'),
+  })
 
-      if (sitesRes.error) throw sitesRes.error
-      if (deptsRes.error) throw deptsRes.error
+  const {
+    data: departments = [],
+    isLoading: loadingDepts,
+    refetch: refetchDepts,
+  } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => apiFetch<Department[]>('departments'),
+  })
 
-      const depts = (deptsRes.data ?? []) as Omit<Department, 'employee_count'>[]
-
-      // Build employee count map
-      const empCounts: Record<string, number> = {}
-      const deptIds = depts.map((d) => d.id)
-      if (deptIds.length > 0) {
-        const { data: empData } = await supabase
-          .from('profiles')
-          .select('department_id')
-          .in('department_id', deptIds)
-          .eq('organisation_id', orgId)
-        ;((empData as unknown as { department_id: string | null }[]) ?? []).forEach((e) => {
-          if (e.department_id) empCounts[e.department_id] = (empCounts[e.department_id] ?? 0) + 1
-        })
-      }
-
-      setSites((sitesRes.data ?? []) as Site[])
-      setDepartments(depts.map((d) => ({ ...d, employee_count: empCounts[d.id] ?? 0 })))
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load data')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId])
-
-  const fetchSiteActivity = async (site: Site) => {
-    setActivityLoading(true)
-    try {
-      // eslint-disable-next-line react-hooks/purity
-      const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().split('T')[0]
-      const today = new Date().toISOString().split('T')[0]
-      const token = await getAccessToken()
-      const supabase = createSupabaseClient(token)
-
-      const { data, error } = await supabase
-        .from('attendance_records')
-        .select('date, status, hours_worked')
-        .eq('site_id', site.id)
-        .gte('date', sevenDaysAgo)
-        .lte('date', today)
-        .order('date', { ascending: false })
-
-      if (error) throw error
-
-      const byDate: Record<
-        string,
-        { present: number; late: number; absent: number; total_hours: number }
-      > = {}
-      ;(data ?? []).forEach((r: { date: string; status: string; hours_worked: number | null }) => {
-        byDate[r.date] ??= { present: 0, late: 0, absent: 0, total_hours: 0 }
-        if (r.status === 'present') byDate[r.date].present++
-        if (r.status === 'late') byDate[r.date].late++
-        if (r.status === 'absent') byDate[r.date].absent++
-        byDate[r.date].total_hours += Number(r.hours_worked ?? 0)
+  // ── Mutations ──────────────────────────────────────────────────────────────
+  const saveSiteMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const isEdit = !!editingSite?.id
+      return apiFetch(isEdit ? `sites/${editingSite?.id}` : 'sites', {
+        method: isEdit ? 'PUT' : 'POST',
+        body: JSON.stringify(payload),
       })
+    },
+    onSuccess: () => {
+      toast.success(
+        editingSite ? 'Site modified successfully' : 'New operational site operationalized'
+      )
+      queryClient.invalidateQueries({ queryKey: ['sites'] })
+      setSiteDialogOpen(false)
+    },
+    onError: (err: any) => toast.error(err.message || 'Error processing site data'),
+  })
 
-      setActivityData(Object.entries(byDate).map(([date, vals]) => ({ date, ...vals })))
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load activity')
-    } finally {
-      setActivityLoading(false)
-    }
-  }
+  const deleteSiteMutation = useMutation({
+    mutationFn: async (id: string) => apiFetch(`sites/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('Site deleted successfully')
+      queryClient.invalidateQueries({ queryKey: ['sites'] })
+    },
+    onError: (err: any) => toast.error(err.message || 'Error removing site configuration'),
+  })
 
-  const handleSelectSite = (site: Site) => {
-    setSelectedSite(site)
-    fetchSiteActivity(site)
-  }
+  const saveDeptMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const isEdit = !!editingDept?.id
+      return apiFetch(isEdit ? `departments/${editingDept?.id}` : 'departments', {
+        method: isEdit ? 'PUT' : 'POST',
+        body: JSON.stringify(payload),
+      })
+    },
+    onSuccess: () => {
+      toast.success(
+        editingDept ? 'Department details updated' : 'New internal tracking department provisioned'
+      )
+      queryClient.invalidateQueries({ queryKey: ['departments'] })
+      setDeptDialogOpen(false)
+    },
+    onError: (err: any) => toast.error(err.message || 'Error executing department action'),
+  })
 
-  /* ── Site CRUD ───────────────────────────────────────────────────────────────── */
+  const deleteDeptMutation = useMutation({
+    mutationFn: async (id: string) => apiFetch(`departments/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('Department entry archived')
+      queryClient.invalidateQueries({ queryKey: ['departments'] })
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed archiving target department'),
+  })
 
+  // ── Handle Open Actions ────────────────────────────────────────────────────
   const openAddSite = () => {
     setEditingSite(null)
-    setSiteForm(EMPTY_SITE_FORM)
+    setSiteForm({ name: '', address: '', latitude: '', longitude: '', geofence_radius_m: '150' })
     setSiteDialogOpen(true)
   }
 
@@ -210,608 +153,359 @@ export default function SitesAndDepartments() {
     setEditingSite(site)
     setSiteForm({
       name: site.name,
-      address: site.address ?? '',
-      latitude: site.latitude !== null ? String(site.latitude) : '',
-      longitude: site.longitude !== null ? String(site.longitude) : '',
-      geofence_radius_m: site.geofence_radius_m !== null ? String(site.geofence_radius_m) : '200',
+      address: site.address || '',
+      latitude: site.latitude?.toString() || '',
+      longitude: site.longitude?.toString() || '',
+      geofence_radius_m: site.geofence_radius_m?.toString() || '150',
     })
     setSiteDialogOpen(true)
   }
 
-  const handleSaveSite = async () => {
-    if (!siteForm.name.trim()) {
-      toast.error('Site name is required')
-      return
-    }
-    setSavingSite(true)
-    try {
-      const token = await getAccessToken()
-      const supabase = createSupabaseClient(token)
-      const payload = {
-        name: siteForm.name.trim(),
-        address: siteForm.address.trim() || null,
-        latitude: siteForm.latitude ? Number(siteForm.latitude) : null,
-        longitude: siteForm.longitude ? Number(siteForm.longitude) : null,
-        geofence_radius_m: siteForm.geofence_radius_m ? Number(siteForm.geofence_radius_m) : 200,
-        organisation_id: orgId,
-      }
-
-      if (editingSite) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase.from('sites') as any)
-          .update(payload)
-          .eq('id', editingSite.id)
-        if (error) throw error
-        toast.success('Site updated')
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase.from('sites') as any).insert(payload)
-        if (error) throw error
-        toast.success('Site added')
-      }
-
-      setSiteDialogOpen(false)
-      await fetchData()
-
-      if (selectedSite?.id === editingSite?.id) {
-        const refreshed = sites.find((s) => s.id === editingSite?.id)
-        if (refreshed) handleSelectSite(refreshed)
-      }
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Save failed')
-    } finally {
-      setSavingSite(false)
-    }
-  }
-
-  const handleDeleteSite = async (site: Site) => {
-    if (!window.confirm(`Delete site "${site.name}"? This cannot be undone.`)) return
-    try {
-      const token = await getAccessToken()
-      const supabase = createSupabaseClient(token)
-      const { error } = await supabase.from('sites').delete().eq('id', site.id)
-      if (error) throw error
-      toast.success('Site deleted')
-      if (selectedSite?.id === site.id) setSelectedSite(null)
-      await fetchData()
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Delete failed')
-    }
-  }
-
-  /* ── Department CRUD ─────────────────────────────────────────────────────────── */
-
-  const openAddDept = (siteId?: string) => {
+  const openAddDept = () => {
     setEditingDept(null)
-    setDeptForm({ name: '', site_id: siteId ?? '' })
+    setDeptForm({ name: '', code: '', site_id: sites[0]?.id || '' })
     setDeptDialogOpen(true)
   }
 
   const openEditDept = (dept: Department) => {
     setEditingDept(dept)
-    setDeptForm({ name: dept.name, site_id: dept.site_id ?? '' })
+    setDeptForm({
+      name: dept.name,
+      code: dept.code || '',
+      site_id: dept.site_id || '',
+    })
     setDeptDialogOpen(true)
   }
 
-  const handleSaveDept = async () => {
-    if (!deptForm.name.trim()) {
-      toast.error('Department name is required')
-      return
-    }
-    setSavingDept(true)
-    try {
-      const token = await getAccessToken()
-      const supabase = createSupabaseClient(token)
-      const payload = {
-        name: deptForm.name.trim(),
-        site_id: deptForm.site_id || null,
-        organisation_id: orgId,
-      }
+  // ── Submissions ────────────────────────────────────────────────────────────
+  const handleSaveSite = () => {
+    if (!siteForm.name.trim()) return toast.error('Site designation is required')
 
-      if (editingDept) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase.from('departments') as any)
-          .update(payload)
-          .eq('id', editingDept.id)
-        if (error) throw error
-        toast.success('Department updated')
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase.from('departments') as any).insert(payload)
-        if (error) throw error
-        toast.success('Department added')
-      }
+    const lat = parseFloat(siteForm.latitude)
+    const lng = parseFloat(siteForm.longitude)
+    const radius = parseInt(siteForm.geofence_radius_m, 10)
 
-      setDeptDialogOpen(false)
-      await fetchData()
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Save failed')
-    } finally {
-      setSavingDept(false)
-    }
+    saveSiteMutation.mutate({
+      name: siteForm.name.trim(),
+      address: siteForm.address.trim() || null,
+      latitude: isNaN(lat) ? null : lat,
+      longitude: isNaN(lng) ? null : lng,
+      geofence_radius_m: isNaN(radius) ? null : radius,
+    })
   }
 
-  const handleDeleteDept = async (dept: Department) => {
-    if (!window.confirm(`Delete department "${dept.name}"?`)) return
-    try {
-      const token = await getAccessToken()
-      const supabase = createSupabaseClient(token)
-      const { error } = await supabase.from('departments').delete().eq('id', dept.id)
-      if (error) throw error
-      toast.success('Department deleted')
-      await fetchData()
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Delete failed')
-    }
+  const handleSaveDept = () => {
+    if (!deptForm.name.trim()) return toast.error('Department field name missing')
+    saveDeptMutation.mutate({
+      name: deptForm.name.trim(),
+      code: deptForm.code.trim() || null,
+      site_id: deptForm.site_id || null,
+    })
   }
 
-  /* ── Derived ─────────────────────────────────────────────────────────────────── */
-
-  const filteredSites = sites.filter(
-    (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      (s.address ?? '').toLowerCase().includes(search.toLowerCase())
+  // Filter Arrays locally matching dynamic searches
+  const filteredSites = sites.filter((s) => s.name.toLowerCase().includes(siteSearch.toLowerCase()))
+  const filteredDepts = departments.filter((d) =>
+    d.name.toLowerCase().includes(deptSearch.toLowerCase())
   )
 
-  const deptsBySite = (siteId: string) => departments.filter((d) => d.site_id === siteId)
-
-  const totalEmployees = departments.reduce((sum, d) => sum + (d.employee_count ?? 0), 0)
-
-  /* ── Render ──────────────────────────────────────────────────────────────────── */
-
-  if (loading) {
-    return (
-      <div className="page-loader">
-        <div className="page-spinner" />
-      </div>
-    )
-  }
+  const isLoading = activeTab === 'sites' ? loadingSites : loadingDepts
 
   return (
-    <div className="page">
-      {/* ── Page heading ─── */}
-      <div className="page-heading">
-        <div className="page-heading-text">
-          <h1 className="page-title">Sites &amp; Departments</h1>
-          <p className="page-subtitle">Manage locations, departments and activity reports</p>
+    <div className="sad-page page-container">
+      {/* Header Banner */}
+      <div className="sad-header-block flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground">Sites & Departments</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Configure work boundaries, localized sites, and operational structural units.
+          </p>
         </div>
-        <div className="sad-heading-actions">
-          <Button variant="outline" onClick={() => openAddDept()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Department
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => (activeTab === 'sites' ? refetchSites() : refetchDepts())}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} /> Sync Data
           </Button>
-          <Button onClick={openAddSite}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Site
+          <Button size="sm" onClick={activeTab === 'sites' ? openAddSite : openAddDept}>
+            <Plus className="h-4 w-4 mr-1" /> Add {activeTab === 'sites' ? 'Site' : 'Department'}
           </Button>
         </div>
       </div>
 
-      {/* ── Summary stats ─── */}
-      <div className="sad-stat-grid">
+      {/* Aggregate Structural Metric Widgets */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
         <StatCard
           icon={<MapPin className="h-5 w-5" />}
-          iconClass="sad-stat-icon-primary"
+          iconClass="text-secondary bg-secondary/10"
           value={sites.length}
-          label="Total Sites"
+          label="Configured Work Sites"
         />
         <StatCard
           icon={<Building2 className="h-5 w-5" />}
-          iconClass="sad-stat-icon-secondary"
+          iconClass="text-primary bg-primary/10"
           value={departments.length}
-          label="Departments"
-        />
-        <StatCard
-          icon={<Users className="h-5 w-5" />}
-          iconClass="sad-stat-icon-accent"
-          value={totalEmployees}
-          label="Assigned Employees"
+          label="Active Tracked Departments"
         />
       </div>
 
-      {/* ── One-column layout ─── */}
-      <div className="sad-main">
-        {/* Top: site list */}
-        <div className="sad-header-panel">
-          <div className="sad-header-content">
-            <div className="sad-header-content-top">
-              <div className="sad-header-title">
-                <MapPin className="h-4 w-4 icon-primary" />
-                Sites
-              </div>
-              <div className="sad-header-search-wrap">
-                <Search className="h-4 w-4 sad-search-icon " />
+      {/* Core Operational Workspaces Tabs view */}
+      <div className="sad-tabs-section mt-6">
+        <Tabs
+          defaultValue="sites"
+          onValueChange={(val) => setActiveTab(val as any)}
+          className="w-full"
+        >
+          <TabsList className="mb-4">
+            <TabsTrigger value="sites">Sites Configuration</TabsTrigger>
+            <TabsTrigger value="departments">Department Routing</TabsTrigger>
+          </TabsList>
+
+          {/* Sites Configuration Tab Content Context */}
+          <TabsContent value="sites">
+            <Card className="shadow-card">
+              <div className="p-4 border-b border-border flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search sites…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="sad-search-input"
+                  placeholder="Filter site targets..."
+                  value={siteSearch}
+                  onChange={(e) => setSiteSearch(e.target.value)}
+                  className="max-w-xs border-none shadow-none focus-visible:ring-0"
                 />
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/** Site and Department list */}
-        <div className="sad-site-list">
-          {filteredSites.length === 0 ? (
-            <p className="sad-empty">
-              {search ? 'No sites match your search.' : 'No sites yet. Add your first site.'}
-            </p>
-          ) : (
-            filteredSites.map((site) => {
-              const depts = deptsBySite(site.id)
-              const isActive = selectedSite?.id === site.id
-              return (
-                <div
-                  key={site.id}
-                  className={`sad-site-item${isActive ? ' sad-site-item--active' : ''} shadow-card`}
-                  onClick={() => handleSelectSite(site)}
-                >
-                  <div className="sad-site-item-main">
-                    <div className="sad-site-item-name">
-                      <MapPin className="h-4 w-4 sad-site-item-icon" />
-                      {site.name}
-                    </div>
-                    {site.address && <p className="sad-site-item-address">{site.address}</p>}
-                    <div className="sad-site-item-meta">
-                      <Badge variant="secondary" className="sad-badge-depts">
-                        {depts.length} dept{depts.length !== 1 ? 's' : ''}
-                      </Badge>
-                      <Badge variant="outline" className="sad-badge-employees">
-                        {depts.reduce((s, d) => s + (d.employee_count ?? 0), 0)} employees
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="sad-site-item-actions" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => openEditSite(site)}
-                      title="Edit site"
-                      className="sad-edit-btn"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      className="sad-delete-btn"
-                      onClick={() => handleDeleteSite(site)}
-                      title="Delete site"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              )
-            })
-          )}
-        </div>
-
-        <div className="sad-detail-panel">
-          {selectedSite ? (
-            <Tabs defaultValue="departments" className="sad-detail-content">
-              {/* ── Header ── */}
-              <div className="sad-detail-header">
-                <div className="sad-detail-header-info">
-                  <h2 className="sad-detail-title">{selectedSite.name}</h2>
-                  {selectedSite.address && (
-                    <p className="sad-detail-subtitle">{selectedSite.address}</p>
-                  )}
-                </div>
-                <div className="sad-detail-header-actions">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => fetchSiteActivity(selectedSite)}
-                  >
-                    <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                    Refresh
-                  </Button>
-                  <Button size="sm" onClick={() => openAddDept(selectedSite.id)}>
-                    <Plus className="h-3.5 w-3.5 mr-1.5" />
-                    Add Dept
-                  </Button>
-                </div>
-              </div>
-
-              {/* ── Tab bar ── */}
-              <TabsList className="sad-tabs-list" aria-label="Select details view">
-                <TabsTrigger value="departments">
-                  <Building2 className="h-3.5 w-3.5 mr-1.5" />
-                  Departments
-                </TabsTrigger>
-                <TabsTrigger value="activity">
-                  <BarChart3 className="h-3.5 w-3.5 mr-1.5" />
-                  Activity Report
-                </TabsTrigger>
-                <TabsTrigger value="info">
-                  <MapPin className="h-3.5 w-3.5 mr-1.5" />
-                  Site Info
-                </TabsTrigger>
-              </TabsList>
-
-              {/* ── Departments ── */}
-              <TabsContent value="departments" className="sad-tab-body">
-                <Card className="sad-tab-card shadow-card">
-                  <CardContent className="sad-dept-list">
-                    {deptsBySite(selectedSite.id).length === 0 ? (
-                      <div className="sad-dept-empty">
-                        <Building2 className="h-8 w-8 sad-placeholder-icon" />
-                        <p className="sad-dept-empty-text">No departments for this site.</p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openAddDept(selectedSite.id)}
-                        >
-                          <Plus className="h-3.5 w-3.5 mr-1.5" />
-                          Add Department
-                        </Button>
-                      </div>
-                    ) : (
-                      deptsBySite(selectedSite.id).map((dept) => (
-                        <div key={dept.id} className="sad-dept-item">
-                          <div className="sad-dept-item-info">
-                            <Building2 className="h-4 w-4 sad-dept-item-icon" />
-                            <div>
-                              <p className="sad-dept-item-name">{dept.name}</p>
-                              <p className="sad-dept-item-count">
-                                {dept.employee_count ?? 0} employee
-                                {dept.employee_count !== 1 ? 's' : ''}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="sad-dept-item-actions">
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              className="sad-edit-btn"
-                              onClick={() => openEditDept(dept)}
-                              title="Edit department"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
+              <CardContent className="p-0">
+                <div className="sad-table-wrapper">
+                  <table className="sad-data-table">
+                    <thead>
+                      <tr>
+                        <th>Site Name</th>
+                        <th>Address</th>
+                        <th>GPS Geo-Coordinates</th>
+                        <th>Radius Check</th>
+                        <th className="text-right">Management</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredSites.map((site) => (
+                        <tr key={site.id}>
+                          <td className="font-semibold">{site.name}</td>
+                          <td className="text-muted-foreground">{site.address || '—'}</td>
+                          <td className="cell-mono text-xs">
+                            {site.latitude && site.longitude
+                              ? `${site.latitude}, ${site.longitude}`
+                              : 'Not mapped'}
+                          </td>
+                          <td>
+                            {site.geofence_radius_m ? (
+                              <Badge variant="secondary">{site.geofence_radius_m}m Range</Badge>
+                            ) : (
+                              <Badge variant="outline">No Boundary</Badge>
+                            )}
+                          </td>
+                          <td className="text-right space-x-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEditSite(site)}>
+                              <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
-                              size="icon-sm"
                               variant="ghost"
-                              className="sad-delete-btn"
-                              onClick={() => handleDeleteDept(dept)}
-                              title="Delete department"
+                              size="icon"
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={() => deleteSiteMutation.mutate(site.id)}
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* ── Activity ── */}
-              <TabsContent value="activity" className="sad-tab-body">
-                <Card className="sad-tab-card shadow-card">
-                  <CardHeader>
-                    <CardTitle className="card-title-row">
-                      <BarChart3 className="h-4 w-4 icon-primary" />
-                      Last 7 Days — {selectedSite.name}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {activityLoading ? (
-                      <div className="page-loader">
-                        <div className="page-spinner" />
-                      </div>
-                    ) : activityData.length === 0 ? (
-                      <p className="sad-empty">No attendance records in the last 7 days.</p>
-                    ) : (
-                      <div className="sad-activity-list">
-                        {activityData.map((row) => (
-                          <div key={row.date} className="sad-activity-row">
-                            <p className="sad-activity-date">
-                              {new Date(row.date).toLocaleDateString('en-ZA', {
-                                weekday: 'short',
-                                day: 'numeric',
-                                month: 'short',
-                              })}
-                            </p>
-                            <div className="sad-activity-badges">
-                              <span className="sad-activity-badge sad-badge-present">
-                                <CheckCircle2 className="h-3 w-3" />
-                                {row.present} present
-                              </span>
-                              <span className="sad-activity-badge sad-badge-late">
-                                <Clock className="h-3 w-3" />
-                                {row.late} late
-                              </span>
-                              <span className="sad-activity-badge sad-badge-absent">
-                                <AlertCircle className="h-3 w-3" />
-                                {row.absent} absent
-                              </span>
-                              <span className="sad-activity-badge sad-badge-hours">
-                                {row.total_hours.toFixed(1)} hrs
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* ── Site Info ── */}
-              <TabsContent value="info" className="sad-tab-body">
-                <Card className="sad-tab-card shadow-card">
-                  <CardHeader>
-                    <CardTitle className="card-title-row">
-                      <MapPin className="h-4 w-4 icon-primary" />
-                      Site Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="sad-info-grid">
-                    <InfoRow label="Name" value={selectedSite.name} />
-                    <InfoRow label="Address" value={selectedSite.address ?? '—'} />
-                    <InfoRow
-                      label="Latitude"
-                      value={selectedSite.latitude !== null ? String(selectedSite.latitude) : '—'}
-                    />
-                    <InfoRow
-                      label="Longitude"
-                      value={selectedSite.longitude !== null ? String(selectedSite.longitude) : '—'}
-                    />
-                    <InfoRow
-                      label="Geofence Radius"
-                      value={
-                        selectedSite.geofence_radius_m !== null
-                          ? `${selectedSite.geofence_radius_m} m`
-                          : '—'
-                      }
-                    />
-                    <InfoRow
-                      label="Created"
-                      value={new Date(selectedSite.created_at).toLocaleDateString('en-ZA')}
-                    />
-                  </CardContent>
-                </Card>
-                <div className="sad-info-actions">
-                  <Button variant="outline" onClick={() => openEditSite(selectedSite)}>
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit Site
-                  </Button>
-                  <Button variant="destructive" onClick={() => handleDeleteSite(selectedSite)}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Site
-                  </Button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredSites.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="sad-table-empty">
+                            No workspace sites found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              </TabsContent>
-            </Tabs>
-          ) : (
-            <Card className="sad-placeholder shadow-card">
-              <CardContent className="sad-placeholder-content">
-                <MapPin className="h-10 w-10 sad-placeholder-icon" />
-                <p className="sad-placeholder-text">
-                  Select a site to view departments, activity reports, and details.
-                </p>
               </CardContent>
             </Card>
-          )}
-        </div>
+          </TabsContent>
+
+          {/* Department Content Tab Context */}
+          <TabsContent value="departments">
+            <Card className="shadow-card">
+              <div className="p-4 border-b border-border flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Filter department codes..."
+                  value={deptSearch}
+                  onChange={(e) => setDeptSearch(e.target.value)}
+                  className="max-w-xs border-none shadow-none focus-visible:ring-0"
+                />
+              </div>
+              <CardContent className="p-0">
+                <div className="sad-table-wrapper">
+                  <table className="sad-data-table">
+                    <thead>
+                      <tr>
+                        <th>Department Title</th>
+                        <th>Internal Org Code</th>
+                        <th>Primary Site Context</th>
+                        <th className="text-right">Management</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredDepts.map((dept) => {
+                        const boundSite = sites.find((s) => s.id === dept.site_id)
+                        return (
+                          <tr key={dept.id}>
+                            <td className="font-semibold">{dept.name}</td>
+                            <td className="cell-mono text-sm">{dept.code || '—'}</td>
+                            <td>
+                              <Badge variant="outline">
+                                {boundSite ? boundSite.name : 'Global Allocation'}
+                              </Badge>
+                            </td>
+                            <td className="text-right space-x-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEditDept(dept)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:bg-destructive/10"
+                                onClick={() => deleteDeptMutation.mutate(dept.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                      {filteredDepts.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="sad-table-empty">
+                            No departments matching selection parameters.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* ── Site dialog ─── */}
+      {/* ── Dialog Modals Area ──────────────────────────────────────────────── */}
+
+      {/* Site Dialog Modal Context */}
       <Dialog open={siteDialogOpen} onOpenChange={setSiteDialogOpen}>
         <DialogContent>
-          <DialogHeader className="pb-2 mb-2 border-b flex items-center justify-between">
-            <DialogTitle className="font-semibold text-lg flex items-center">
-              {editingSite ? 'Edit Site' : 'Add Site'}
+          <DialogHeader>
+            <DialogTitle>
+              {editingSite ? 'Edit Workspace Site Details' : 'Provision New Operational Boundary'}
             </DialogTitle>
           </DialogHeader>
-          <div className="sad-form max-w-md">
-            <div className="sad-form-group">
-              <Label className="font-semibold text-md" htmlFor="site-name">
-                Site Name *
-              </Label>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label>Site Name / Factory Designation *</Label>
               <Input
-                className="sad-native-input"
-                id="site-name"
                 value={siteForm.name}
-                onChange={(e) => setSiteForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. Cape Town Office"
+                onChange={(e) => setSiteForm({ ...siteForm, name: e.target.value })}
+                placeholder="Durban Distribution Hub"
               />
             </div>
-            <div className="sad-form-group">
-              <Label className="font-semibold text-md" htmlFor="site-address">
-                Address *
-              </Label>
+            <div className="space-y-1">
+              <Label>Physical Street Address</Label>
               <Input
-                className="sad-native-input"
-                id="site-address"
                 value={siteForm.address}
-                onChange={(e) => setSiteForm((f) => ({ ...f, address: e.target.value }))}
-                placeholder="123 Main St, Cape Town"
+                onChange={(e) => setSiteForm({ ...siteForm, address: e.target.value })}
+                placeholder="45 Extraction Way, Industrial Area"
               />
             </div>
-            <div className="sad-form-row">
-              <div className="sad-form-group">
-                <Label className="font-semibold text-md" htmlFor="site-lat">
-                  Latitude
-                </Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>Latitude coordinate</Label>
                 <Input
-                  className="sad-native-input"
-                  id="site-lat"
                   type="number"
+                  step="any"
                   value={siteForm.latitude}
-                  onChange={(e) => setSiteForm((f) => ({ ...f, latitude: e.target.value }))}
-                  placeholder="-33.9249"
+                  onChange={(e) => setSiteForm({ ...siteForm, latitude: e.target.value })}
+                  placeholder="-29.8587"
                 />
               </div>
-              <div className="sad-form-group">
-                <Label className="font-semibold text-md" htmlFor="site-lng">
-                  Longitude
-                </Label>
+              <div className="space-y-1">
+                <Label>Longitude coordinate</Label>
                 <Input
-                  className="sad-native-input"
-                  id="site-lng"
                   type="number"
+                  step="any"
                   value={siteForm.longitude}
-                  onChange={(e) => setSiteForm((f) => ({ ...f, longitude: e.target.value }))}
-                  placeholder="18.4241"
+                  onChange={(e) => setSiteForm({ ...siteForm, longitude: e.target.value })}
+                  placeholder="31.0218"
                 />
               </div>
             </div>
-            <div className="sad-form-group">
-              <Label className="font-semibold text-md" htmlFor="site-geo">
-                Geofence Radius (metres)
-              </Label>
+            <div className="space-y-1">
+              <Label>Geofencing Attendance Validation Radius (meters)</Label>
               <Input
-                id="site-geo"
-                className="sad-native-input"
                 type="number"
-                min={0}
                 value={siteForm.geofence_radius_m}
-                onChange={(e) => setSiteForm((f) => ({ ...f, geofence_radius_m: e.target.value }))}
-                placeholder="200"
+                onChange={(e) => setSiteForm({ ...siteForm, geofence_radius_m: e.target.value })}
+                placeholder="150"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveSite} disabled={savingSite} className="sad-dialog-save-btn">
-              {savingSite && <Loader2 className="h-4 w-4 mr-2 animate-spin " />}
-              {editingSite ? 'Save Changes' : 'Add Site'}
+            <Button onClick={handleSaveSite} disabled={saveSiteMutation.isPending}>
+              {saveSiteMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {editingSite ? 'Update Changes' : 'Confirm Save'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Department dialog ─── */}
+      {/* Department Dialog Modal Context */}
       <Dialog open={deptDialogOpen} onOpenChange={setDeptDialogOpen}>
         <DialogContent>
-          <DialogHeader className="border-b pb-2 mb-4">
-            <DialogTitle>{editingDept ? 'Edit Department' : 'Add Department'}</DialogTitle>
+          <DialogHeader>
+            <DialogTitle>
+              {editingDept ? 'Edit Operational Department' : 'Configure New Department Allocation'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="sad-form">
-            <div className="sad-form-group">
-              <Label htmlFor="dept-name">Department Name *</Label>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label>Department Title Name *</Label>
               <Input
-                id="dept-name"
-                className="sad-native-input"
                 value={deptForm.name}
-                onChange={(e) => setDeptForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. Engineering"
+                onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
+                placeholder="Logistics & Freight Planning"
               />
             </div>
-            <div className="sad-form-group">
-              <Label htmlFor="dept-site">Site</Label>
+            <div className="space-y-1">
+              <Label>Internal Tracking Ledger Code</Label>
+              <Input
+                value={deptForm.code}
+                onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value })}
+                placeholder="LOG-ZA-DBN"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Assigned Primary Site Boundary</Label>
               <select
-                id="dept-site"
-                className="sad-native-select"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={deptForm.site_id}
-                onChange={(e) => setDeptForm((f) => ({ ...f, site_id: e.target.value }))}
+                onChange={(e) => setDeptForm({ ...deptForm, site_id: e.target.value })}
               >
-                <option value="">— No site assigned —</option>
+                <option value="">— Globally Allocated / Multi-Site —</option>
                 {sites.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -821,9 +515,9 @@ export default function SitesAndDepartments() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveDept} disabled={savingDept} className="sad-dialog-save-btn">
-              {savingDept && <Loader2 className="h-4 w-4 mr-2 animate-spin " />}
-              {editingDept ? 'Save Changes' : 'Add Department'}
+            <Button onClick={handleSaveDept} disabled={saveDeptMutation.isPending}>
+              {saveDeptMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {editingDept ? 'Update Details' : 'Create Unit'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -832,8 +526,7 @@ export default function SitesAndDepartments() {
   )
 }
 
-/* ─── Sub-components ─────────────────────────────────────────────────────────── */
-
+/* ─── Shared Metric Auxiliary Layout Presenter Component ───────────────────── */
 function StatCard({
   icon,
   iconClass,
@@ -847,22 +540,13 @@ function StatCard({
 }) {
   return (
     <Card className="sad-stat-card shadow-card">
-      <CardContent className="sad-stat-content">
-        <div className={`sad-stat-icon-wrap ${iconClass}`}>{icon}</div>
+      <CardContent className="sad-stat-content p-6 flex items-center gap-4">
+        <div className={`sad-stat-icon-wrap p-3 rounded-full ${iconClass}`}>{icon}</div>
         <div>
-          <p className="sad-stat-value">{value}</p>
-          <p className="sad-stat-label">{label}</p>
+          <p className="sad-stat-value text-2xl font-bold">{value}</p>
+          <p className="sad-stat-label text-sm text-muted-foreground">{label}</p>
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="sad-info-row">
-      <p className="sad-info-label">{label}</p>
-      <p className="sad-info-value">{value}</p>
-    </div>
   )
 }

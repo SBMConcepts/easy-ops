@@ -1,286 +1,153 @@
-import { Card, CardContent } from "../ui/card"
+import { Card, CardContent } from '../ui/card'
 import {
-	Building2,
-	MapPin,
-	Users,
-	ShieldCheck,
-	Clock,
-	QrCode,
-	Fingerprint,
-	MessageCircle,
-	PenLine,
-	Scale,
-	CheckCircle2,
-	XCircle,
-} from "lucide-react"
-import type { CompanyData } from "./CompanyStep"
-import type { SiteData } from "./SitesStep"
-import type { DepartmentData } from "./DepartmentsStep"
-import type { RoleData } from "./RolesStep"
-import type { ShiftData, WorkRules } from "./ShiftsStep"
-import type { CheckInSettings } from "./CheckInMethodsStep"
+  Building2,
+  MapPin,
+  Users,
+  Clock,
+  QrCode,
+  Fingerprint,
+  MessageCircle,
+  PenLine,
+  Scale,
+  CheckCircle2,
+  XCircle,
+} from 'lucide-react'
+import type { CompanyData } from './CompanyStep'
+import type { SiteData } from './SitesStep'
+import type { DepartmentData } from './DepartmentsStep'
+import type { ShiftData, WorkRules } from './ShiftsStep'
+import type { CheckInSettings } from './CheckInMethodsStep'
 
-import "../../styles/form.css"
-import "../../styles/reviewstep.css"
+import '../../styles/form.css'
+import '../../styles/reviewstep.css'
 
 interface Props {
-	company: CompanyData
-	sites: SiteData[]
-	departments: DepartmentData[]
-	roles: RoleData[]
-	shifts: ShiftData[]
-	checkInMethods: CheckInSettings
-	workRules: WorkRules
+  company: CompanyData
+  sites: SiteData[]
+  departments: DepartmentData[]
+  shifts: ShiftData[]
+  checkInMethods: CheckInSettings
+  workRules: WorkRules
 }
 
 const METHOD_ICONS: Record<string, React.ElementType> = {
-	qr: QrCode,
-	biometric: Fingerprint,
-	whatsapp: MessageCircle,
-	manual: PenLine,
+  qrEnabled: QrCode,
+  biometricEnabled: Fingerprint,
+  whatsappEnabled: MessageCircle,
+  manualEnabled: PenLine,
 }
 
 const METHOD_LABELS: Record<string, string> = {
-	qr: "QR Code",
-	biometric: "Biometric",
-	whatsapp: "WhatsApp",
-	manual: "Manual Entry",
+  qrEnabled: 'QR Code',
+  biometricEnabled: 'Biometric',
+  whatsappEnabled: 'WhatsApp',
+  manualEnabled: 'Manual Entry',
 }
 
-const shiftDuration = (start: string, end: string): string | null => {
-	const [sh, sm] = start.split(":").map(Number)
-	const [eh, em] = end.split(":").map(Number)
-	const totalMins = eh * 60 + em - (sh * 60 + sm)
-	if (totalMins <= 0) return null
-	const h = Math.floor(totalMins / 60)
-	const m = totalMins % 60
-	return m > 0 ? `${h}h ${m}m` : `${h}h`
-}
+const ReviewStep = ({ company, sites, departments, shifts, checkInMethods, workRules }: Props) => {
+  return (
+    <div className="review-step space-y-4">
+      {/* Company Summary */}
+      <Card className="review-card shadow-sm border-border">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-2 text-primary">
+            <Building2 className="h-5 w-5" />
+            <h3 className="font-semibold text-lg">Organization</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <p>
+              <span className="text-muted-foreground">Name:</span> {company.name || 'Not provided'}
+            </p>
+            <p>
+              <span className="text-muted-foreground">Industry:</span>{' '}
+              {company.industry || 'Not provided'}
+            </p>
+            <p>
+              <span className="text-muted-foreground">Country:</span>{' '}
+              {company.country || 'Not provided'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
-const ReviewStep = ({
-	company,
-	sites,
-	departments,
-	roles,
-	shifts,
-	checkInMethods,
-	workRules,
-}: Props) => {
-	const enabledMethods = Object.entries(checkInMethods.methods).filter(
-		([, v]) => v,
-	)
+      {/* Operational Scope */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="review-card shadow-sm border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2 text-primary">
+              <MapPin className="h-5 w-5" />
+              <h3 className="font-semibold text-lg">Sites</h3>
+            </div>
+            <p className="text-sm font-medium">{sites.length} Active Sites</p>
+          </CardContent>
+        </Card>
 
-	return (
-		<div className="review-step">
-			<p className="review-step__desc">
-				Review your organisation setup before confirming.
-			</p>
+        <Card className="review-card shadow-sm border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2 text-primary">
+              <Users className="h-5 w-5" />
+              <h3 className="font-semibold text-lg">Departments</h3>
+            </div>
+            <p className="text-sm font-medium">{departments.length} Monitored Departments</p>
+          </CardContent>
+        </Card>
+      </div>
 
-			{/* ── Company ──────────────────────────────────────── */}
-			<Card className="review-card">
-				<CardContent className="review-card__content">
-					<div className="review-card__heading">
-						<Building2 className="review-card__heading-icon" />
-						<span className="review-card__title">Company</span>
-					</div>
-					<div className="review-card__body">
-						<p className="review-company__name">{company.name}</p>
-						<div className="review-pills">
-							{company.industry && (
-								<span className="review-pill">{company.industry}</span>
-							)}
-							{company.country && (
-								<span className="review-pill">{company.country}</span>
-							)}
-						</div>
-					</div>
-				</CardContent>
-			</Card>
+      {/* Policies & Rules */}
+      <Card className="review-card shadow-sm border-border">
+        <CardContent className="p-4 space-y-4">
+          <div className="flex items-center gap-2 text-primary">
+            <Scale className="h-5 w-5" />
+            <h3 className="font-semibold text-lg">Compliance & Tracking Rules</h3>
+          </div>
 
-			{/* ── Sites ────────────────────────────────────────── */}
-			<Card className="review-card">
-				<CardContent className="review-card__content">
-					<div className="review-card__heading">
-						<MapPin className="review-card__heading-icon" />
-						<span className="review-card__title">Sites</span>
-						<span className="review-card__count">{sites.length}</span>
-					</div>
-					<div className="review-card__body">
-						{sites.map((s, i) => (
-							<div key={i} className="review-row">
-								<span className="review-row__name">
-									{s.name || `Site ${i + 1}`}
-								</span>
-								{s.address && (
-									<span className="review-row__meta">{s.address}</span>
-								)}
-								{s.latitude && s.longitude && (
-									<span className="review-row__tag review-row__tag--mono">
-										{s.latitude}, {s.longitude}
-									</span>
-								)}
-								<span className="review-row__tag">
-									{s.geofence_radius_m || 200}m radius
-								</span>
-							</div>
-						))}
-					</div>
-				</CardContent>
-			</Card>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Weekly Limit:</p>
+              <p className="font-medium">{workRules.weeklyHoursLimit} Hours</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Overtime Multiplier:</p>
+              <p className="font-medium">{workRules.overtimeRate}x</p>
+            </div>
+          </div>
 
-			{/* ── Departments ──────────────────────────────────── */}
-			<Card className="review-card">
-				<CardContent className="review-card__content">
-					<div className="review-card__heading">
-						<Users className="review-card__heading-icon" />
-						<span className="review-card__title">Departments</span>
-						<span className="review-card__count">{departments.length}</span>
-					</div>
-					<div className="review-card__body">
-						{departments.map((d, i) => (
-							<div key={i} className="review-row">
-								<span className="review-row__name">{d.name}</span>
-								<span className="review-row__arrow">→</span>
-								<span className="review-row__meta">
-									{sites[d.site_index]?.name || "Unknown site"}
-								</span>
-							</div>
-						))}
-					</div>
-				</CardContent>
-			</Card>
+          <div className="border-t border-border pt-4 mt-4">
+            <p className="text-sm font-semibold mb-3">Allowed Check-In Terminals</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {['qrEnabled', 'biometricEnabled', 'whatsappEnabled', 'manualEnabled'].map((key) => {
+                const enabled = checkInMethods.methods[
+                  key as keyof typeof checkInMethods.methods
+                ] as boolean
+                const Icon = METHOD_ICONS[key]
+                return (
+                  <div
+                    key={key}
+                    className={`flex flex-col items-center p-3 rounded-lg border ${enabled ? 'bg-secondary/10 border-secondary' : 'bg-muted/30 border-transparent opacity-50'}`}
+                  >
+                    <Icon
+                      className={`h-6 w-6 mb-1 ${enabled ? 'text-secondary' : 'text-muted-foreground'}`}
+                    />
+                    <span className="text-xs font-medium text-center">{METHOD_LABELS[key]}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
-			{/* ── Roles ────────────────────────────────────────── */}
-			<Card className="review-card">
-				<CardContent className="review-card__content">
-					<div className="review-card__heading">
-						<ShieldCheck className="review-card__heading-icon" />
-						<span className="review-card__title">Roles</span>
-						<span className="review-card__count">{roles.length}</span>
-					</div>
-					<div className="review-card__body">
-						<div className="review-roles">
-							{roles.map((r, i) => (
-								<div
-									key={i}
-									className={`review-role-badge review-role-badge--${r.base_role}`}>
-									<span className="review-role-badge__name">{r.name}</span>
-									<span className="review-role-badge__base">{r.base_role}</span>
-								</div>
-							))}
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-
-			{/* ── Shifts ───────────────────────────────────────── */}
-			<Card className="review-card">
-				<CardContent className="review-card__content">
-					<div className="review-card__heading">
-						<Clock className="review-card__heading-icon" />
-						<span className="review-card__title">Shifts</span>
-						<span className="review-card__count">{shifts.length}</span>
-					</div>
-					<div className="review-card__body">
-						{shifts.map((s, i) => {
-							const duration = shiftDuration(s.start_time, s.end_time)
-							return (
-								<div key={i} className="review-row">
-									<span className="review-row__name">{s.name}</span>
-									<span className="review-row__tag review-row__tag--mono">
-										{s.start_time} – {s.end_time}
-									</span>
-									{duration && (
-										<span className="review-row__tag review-row__tag--primary">
-											{duration}
-										</span>
-									)}
-									<span className="review-row__meta">
-										{s.grace_period_minutes}min grace
-									</span>
-									<span className="review-row__meta">
-										{sites[s.site_index]?.name || `Site ${s.site_index + 1}`}
-									</span>
-								</div>
-							)
-						})}
-
-						<div className="review-divider" />
-
-						<div className="review-card__heading review-card__heading--sub">
-							<Scale className="review-card__heading-icon" />
-							<span className="review-card__title">Work Rules</span>
-						</div>
-						<div className="review-row">
-							<span className="review-row__meta">Max weekly hours</span>
-							<span className="review-row__tag review-row__tag--mono">
-								{workRules.max_weekly_hours}h
-							</span>
-							<span className="review-row__meta review-row__sep">·</span>
-							<span className="review-row__meta">Overtime</span>
-							<span className="review-row__tag review-row__tag--mono">
-								{workRules.overtime_multiplier}×
-							</span>
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-
-			{/* ── Check-In Methods ─────────────────────────────── */}
-			<Card className="review-card">
-				<CardContent className="review-card__content">
-					<div className="review-card__heading">
-						<QrCode className="review-card__heading-icon" />
-						<span className="review-card__title">Check-In Methods</span>
-						<span className="review-card__count">
-							{enabledMethods.length} enabled
-						</span>
-					</div>
-					<div className="review-card__body">
-						<div className="review-methods">
-							{Object.entries(checkInMethods.methods).map(([key, enabled]) => {
-								const Icon = METHOD_ICONS[key]
-								return (
-									<div
-										key={key}
-										className={`review-method ${enabled ? "review-method--on" : "review-method--off"}`}>
-										{Icon && <Icon className="review-method__icon" />}
-										<span className="review-method__label">
-											{METHOD_LABELS[key] ?? key}
-										</span>
-										{enabled ?
-											<CheckCircle2 className="review-method__status review-method__status--on" />
-										:	<XCircle className="review-method__status review-method__status--off" />
-										}
-									</div>
-								)
-							})}
-						</div>
-
-						<div className="review-divider" />
-
-						<div className="review-row">
-							<MapPin className="review-row__inline-icon" />
-							<span className="review-row__meta">Geofencing</span>
-							{checkInMethods.geofencing_enabled ?
-								<>
-									<span className="review-row__tag review-row__tag--green">
-										Enabled
-									</span>
-									<span className="review-row__tag review-row__tag--mono">
-										{checkInMethods.default_geofence_radius}m default
-									</span>
-								</>
-							:	<span className="review-row__tag review-row__tag--muted">
-									Disabled
-								</span>
-							}
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-		</div>
-	)
+          {checkInMethods.methods.geofencingEnabled && (
+            <div className="bg-primary/10 border border-primary/20 rounded p-3 text-sm flex items-start gap-2 mt-2">
+              <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <p>
+                Geofencing is <strong>active</strong> with a default global radius of{' '}
+                {checkInMethods.methods.defaultGeofenceRadius} meters.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
 
 export default ReviewStep

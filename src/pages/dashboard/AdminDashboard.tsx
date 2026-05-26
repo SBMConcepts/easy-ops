@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Badge } from '../../components/ui/badge'
-import { useAttendanceRecords, useEmployees } from '../../hooks/useTenantData'
+import { useAttendanceRecords } from '../../hooks/useTenantData'
 import { Users, UserCheck, Clock, AlertTriangle, Shield, TrendingUp } from 'lucide-react'
 import '../../styles/dashboard.css'
 
@@ -13,7 +13,6 @@ const statusColors: Record<string, string> = {
 
 const AdminDashboard = () => {
   const { data: reportData, isLoading: loadingReport } = useAttendanceRecords()
-  const { data: employees, isLoading: loadingEmployees } = useEmployees()
 
   const stats = reportData?.stats
   const records = reportData?.records || []

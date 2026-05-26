@@ -1,15 +1,23 @@
 import { useAuth } from '../../contexts/AuthContext'
 import { Navigate } from 'react-router-dom'
+import { DashboardLoader } from './DashboardLoader'
 import AdminDashboard from './AdminDashboard'
 import ManagerDashboard from './ManagerDashboard'
 import SupervisorDashboard from './SupervisorDashboard'
 import EmployeeDashboard from './EmployeeDashboard'
 
 const DashboardRouter = () => {
-  const { user, onboardingComplete } = useAuth()
+  // Destructure tenant instead of onboardingComplete from the updated AuthContext
+  const { user, tenant, isLoading } = useAuth()
 
-  // Redirect admin to onboarding if not completed and no org set
-  if (user?.role === 'admin' && !onboardingComplete && !user.organisation_id) {
+  if (isLoading) return <DashboardLoader />
+
+  // A tenant is fully onboarded and ready when its status is marked 'active'
+  const isTenantSetupComplete = tenant?.status === 'active'
+
+  // Redirect admin to onboarding if they haven't been assigned a tenant
+  // or if that tenant's configuration status is not yet finalized ('active')
+  if (user?.role === 'admin' && (!user.tenant_id || !isTenantSetupComplete)) {
     return <Navigate to="/app/onboarding" replace />
   }
 

@@ -18,10 +18,8 @@ import {
   LayoutDashboard,
   QrCode,
   Users,
-  FileText,
   Settings,
   Shield,
-  Clock,
   Building,
   BarChart3,
   UserCheck,
@@ -50,31 +48,34 @@ const navItems: NavItem[] = [
   },
   {
     title: 'Live Attendance',
-    url: '/app/attendance',
-    icon: Clock,
+    url: '/app/live-attendance',
+    icon: UserCheck,
     roles: ['admin', 'manager', 'supervisor'],
   },
-  { title: 'Reports', url: '/app/reports', icon: BarChart3, roles: ['admin', 'manager'] },
-  { title: 'Employee Management', url: '/app/employees', icon: Users, roles: ['admin', 'manager'] },
   {
-    title: 'Team Overview',
-    url: '/app/team',
-    icon: UserCheck,
-    roles: ['supervisor', 'manager', 'admin'],
+    title: 'Employees',
+    url: '/app/employees',
+    icon: Users,
+    roles: ['admin', 'manager'],
   },
   {
-    title: 'Sites & Departments',
+    title: 'Sites & Depts',
     url: '/app/sites',
     icon: Building,
-    roles: ['admin', 'manager', 'supervisor', 'employee'],
+    roles: ['admin', 'manager'],
   },
   {
-    title: 'Compliance & Audit',
+    title: 'Compliance',
     url: '/app/compliance',
     icon: Shield,
+    roles: ['admin', 'manager'],
+  },
+  {
+    title: 'Reports',
+    url: '/app/reports',
+    icon: BarChart3,
     roles: ['admin', 'manager', 'supervisor'],
   },
-  { title: 'Payroll Export', url: '/app/payroll', icon: FileText, roles: ['admin', 'manager'] },
   {
     title: 'Settings',
     url: '/app/settings',
@@ -84,18 +85,22 @@ const navItems: NavItem[] = [
 ]
 
 const AppSidebar = () => {
-  const { user, organisation } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+  const { user, tenant } = useAuth()
 
-  const filteredItems = navItems.filter((item) => user && item.roles.includes(user.role))
-
-  const orgName = organisation?.name
+  // Gracefully filter routes matching the modern AppRole permissions context
+  const filteredItems = navItems.filter((item) => user?.role && item.roles.includes(user.role))
+  const orgName = tenant?.name || 'EasyOps Workspace'
 
   return (
     <Sidebar className="sidebar-nav">
       <SidebarHeader className="sidebar-header">
-        <div className="sidebar-brand" onClick={() => navigate('/app')}>
+        <div
+          className="sidebar-brand"
+          onClick={() => navigate('/app')}
+          style={{ cursor: 'pointer' }}
+        >
           <span className="sidebar-brand-name">{orgName}</span>
         </div>
       </SidebarHeader>

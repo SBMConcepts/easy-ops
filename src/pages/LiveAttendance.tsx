@@ -8,9 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select'
-import { useAttendanceRecords, useSites } from '../hooks/useTenantData'
-import { MapPin, Users, Clock } from 'lucide-react'
-import '../styles/pages.css'
+import { useAttendanceRecords } from '../hooks/useTenantData'
+import { Clock, MapPin, Loader2 } from 'lucide-react'
 
 const statusColors: Record<string, string> = {
   present: 'bg-secondary/10 text-secondary border-secondary/20',
@@ -21,116 +20,99 @@ const statusColors: Record<string, string> = {
 
 const LiveAttendance = () => {
   const [siteFilter, setSiteFilter] = useState('all')
-  const { data: reportData, isLoading: loadingRecords } = useAttendanceRecords()
-  const { data: sites } = useSites()
 
-  const records = reportData?.records || []
-  const filtered = siteFilter === 'all' ? records : records.filter((r) => r.site_id === siteFilter)
+  // Directly binds backend dataset scoped safely via headers
+  const { data: records = [], isLoading } = useAttendanceRecords()
 
-  if (loadingRecords) {
+  // Collect distinct operational locations present in real-time records
+  const uniqueSites = Array.from(new Map(records.map((r) => [r.site_id, r])).values())
+  const filteredRecords =
+    siteFilter === 'all' ? records : records.filter((r) => r.site_id === siteFilter)
+
+  if (isLoading) {
     return (
-      <div className="page-loader">
-        <div className="page-spinner" />
+      <div className="flex justify-center items-center h-48">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }
 
   return (
-    <div className="page">
-      {/* Heading */}
-      <div className="page-heading">
-        <div className="page-heading-text">
-          <h1 className="page-title">Live Attendance</h1>
-          <p className="page-subtitle">Real-time employee status across all sites</p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Live Tracking Dashboard
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Real-time attendance streams across active company zones
+          </p>
         </div>
-        <Select value={siteFilter} onValueChange={(v) => setSiteFilter(v ?? 'all')}>
-          <SelectTrigger className="w-56">
-            <SelectValue placeholder="Filter by site" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Sites</SelectItem>
-            {(sites || []).map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        <div className="w-full sm:w-48">
+          <Select value={siteFilter} onValueChange={(value) => setSiteFilter(value ?? 'all')}>
+            <SelectTrigger className="w-full border-border">
+              <SelectValue placeholder="All Operations Locations" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Locations</SelectItem>
+              {uniqueSites.map((r) => (
+                <SelectItem key={r.site_id} value={r.site_id}>
+                  Location Space {r.site_id.slice(0, 5)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Site summary cards */}
-      {(sites || []).length > 0 && (
-        <div className="site-grid">
-          {(sites || []).map((site) => {
-            const siteRecords = records.filter((r) => r.site_id === site.id)
-            const present = siteRecords.filter((r) => r.status === 'present').length
-            return (
-              <Card
-                key={site.id}
-                className="shadow-card cursor-pointer hover:shadow-card-hover transition-shadow"
-                onClick={() => setSiteFilter(site.id)}
-              >
-                <CardContent className="site-card-body">
-                  <div className="site-card-name-row">
-                    <MapPin className="h-4 w-4 icon-secondary" />
-                    <p className="site-card-name">{site.name}</p>
-                  </div>
-                  <div className="site-card-count-row">
-                    <Users className="h-4 w-4 icon-muted" />
-                    <p className="site-card-count">
-                      {present}/{siteRecords.length} present
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Record list */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="card-title-row">
-            <Clock className="h-5 w-5 icon-secondary" />
-            {siteFilter === 'all'
-              ? 'All Employees'
-              : (sites || []).find((s) => s.id === siteFilter)?.name || 'Site'}
-            <Badge variant="secondary" className="ml-1">
-              {filtered.length}
+      <Card className="border-border shadow-sm">
+        <CardHeader className="border-b border-border bg-muted/10">
+          <CardTitle className="flex items-center justify-between text-base font-semibold">
+            <span>Active Record Logs</span>
+            <Badge variant="outline" className="font-mono text-xs">
+              Count: {filteredRecords.length}
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="record-list">
-            {filtered.map((rec) => (
-              <div key={rec.id} className="record-row">
-                <div className="record-row-left">
-                  <p className="record-name">{rec.profiles?.full_name || '—'}</p>
-                  <p className="record-meta">
-                    {rec.profiles?.department || '—'} · {rec.sites?.name || '—'}
-                  </p>
-                </div>
-                <div className="record-row-right">
-                  <Badge variant="outline" className="text-xs">
-                    {rec.method}
-                  </Badge>
-                  {rec.clock_in && (
-                    <span className="record-time">
-                      {new Date(rec.clock_in).toLocaleTimeString('en-ZA', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  )}
-                  <Badge variant="outline" className={statusColors[rec.status] || ''}>
-                    {rec.status}
-                  </Badge>
-                </div>
+        <CardContent className="p-0 divide-y divide-border">
+          {filteredRecords.map((rec) => (
+            <div
+              key={rec.id}
+              className="flex items-center justify-between p-4 hover:bg-muted/5 transition-all"
+            >
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">
+                  Employee Profile Token {rec.employee_profile_id.slice(0, 8)}
+                </p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> Method: {rec.method.toUpperCase()}
+                </p>
               </div>
-            ))}
-            {filtered.length === 0 && <p className="record-empty">No attendance records found.</p>}
-          </div>
+              <div className="flex items-center gap-4">
+                {rec.clock_in && (
+                  <span className="text-xs font-mono font-medium text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {new Date(rec.clock_in).toLocaleTimeString('en-ZA', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                )}
+                <Badge
+                  variant="outline"
+                  className={`capitalize text-xs ${statusColors[rec.status] || ''}`}
+                >
+                  {rec.status}
+                </Badge>
+              </div>
+            </div>
+          ))}
+          {filteredRecords.length === 0 && (
+            <p className="text-sm text-center text-muted-foreground py-12 bg-card">
+              No operational entries recorded today.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

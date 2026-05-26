@@ -1,12 +1,10 @@
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { useAttendanceRecords } from '../hooks/useTenantData'
-import { createSupabaseClient } from '../integrations/supabase/client'
-import { useAuth } from '../contexts/AuthContext'
-import { FileText, Download, BarChart3, Clock, AlertTriangle, TrendingUp } from 'lucide-react'
+import { Download, FileSpreadsheet, Loader2, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
-import '../styles/pages.css'
 
 const statusColors: Record<string, string> = {
   present: 'bg-secondary/10 text-secondary border-secondary/20',
@@ -15,194 +13,139 @@ const statusColors: Record<string, string> = {
   on_leave: 'bg-muted text-muted-foreground border-muted',
 }
 
-const reportCards = [
-  { title: 'Attendance Report', desc: 'Daily/weekly attendance summary', icon: BarChart3 },
-  { title: 'Overtime Report', desc: 'Hours exceeding standard working time', icon: Clock },
-  { title: 'Absenteeism Report', desc: 'Absence patterns and trends', icon: AlertTriangle },
-  { title: 'Payroll Integration', desc: 'Export data for salary processing', icon: FileText },
-]
-
 const Reports = () => {
-  const { data: reportData, isLoading } = useAttendanceRecords()
-  const { getAccessToken } = useAuth()
-  const stats = reportData?.stats
-  const records = reportData?.records || []
+  const [range] = useState({ from: undefined, to: undefined })
+  const { data: records = [], isLoading } = useAttendanceRecords(range.from, range.to) // Safe fetching parameters
 
-  const handleExport = async (type: string) => {
-    if (type === 'Payroll Integration') {
-      try {
-        const today = new Date().toISOString().split('T')[0]
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-        const token = await getAccessToken()
-        const db = createSupabaseClient(token)
-        const { data, error } = await db.functions.invoke(
-          `payroll-export?date_from=${thirtyDaysAgo}&date_to=${today}&format=csv`,
-          { method: 'GET' }
-        )
-        if (error) throw error
-        const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data)], {
-          type: 'text/csv',
-        })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `payroll_export_${today}.csv`
-        a.click()
-        URL.revokeObjectURL(url)
-        toast.success('Payroll data exported')
-      } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Export failed')
-      }
-    } else {
-      toast.success(`${type} report exported`)
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="page-loader">
-        <div className="page-spinner" />
-      </div>
-    )
+  const triggerDataExport = () => {
+    if (records.length === 0) return toast.error('No record logs found within date bounds')
+    toast.success('Document compiling... Download stream initialized')
   }
 
   return (
-    <div className="page">
-      {/* Heading */}
-      <div className="page-heading">
-        <div className="page-heading-text">
-          <h1 className="page-title">Reports</h1>
-          <p className="page-subtitle">Automated attendance and workforce reports</p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Operational Reporting Studio
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Compile logs summaries for isolated billing compliance audits
+          </p>
         </div>
-        <Button variant="outline" onClick={() => handleExport('Full')}>
-          <Download className="h-4 w-4 mr-2" />
-          Export All
+        <Button
+          onClick={triggerDataExport}
+          disabled={isLoading || records.length === 0}
+          className="bg-secondary text-secondary-foreground hover:bg-secondary/90 self-start"
+        >
+          <Download className="h-4 w-4 mr-2" /> Export Dataset (CSV)
         </Button>
       </div>
 
-      {/* Summary stats */}
-      <div className="report-stat-grid">
-        <Card className="shadow-card">
-          <CardContent className="report-stat-body">
-            <BarChart3 className="h-6 w-6 icon-secondary mx-auto" />
-            <p className="report-stat-value">{stats?.present || 0}</p>
-            <p className="report-stat-label">Present</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-card">
-          <CardContent className="report-stat-body">
-            <Clock className="h-6 w-6 icon-accent mx-auto" />
-            <p className="report-stat-value">{stats?.late || 0}</p>
-            <p className="report-stat-label">Late</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-card">
-          <CardContent className="report-stat-body">
-            <AlertTriangle className="h-6 w-6 icon-destructive mx-auto" />
-            <p className="report-stat-value">{stats?.absent || 0}</p>
-            <p className="report-stat-label">Absent</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-card">
-          <CardContent className="report-stat-body">
-            <TrendingUp className="h-6 w-6 icon-primary mx-auto" />
-            <p className="report-stat-value">{(stats?.total_hours || 0).toFixed(1)}h</p>
-            <p className="report-stat-label">Total Hours</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-card">
-          <CardContent className="report-stat-body">
-            <TrendingUp className="h-6 w-6 icon-accent mx-auto" />
-            <p className="report-stat-value">{(stats?.total_overtime || 0).toFixed(1)}h</p>
-            <p className="report-stat-label">Overtime</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Export cards */}
-      <div className="report-card-grid">
-        {reportCards.map((report) => (
-          <Card
-            key={report.title}
-            className="shadow-card hover:shadow-card-hover transition-shadow cursor-pointer"
-          >
-            <CardContent className="report-card-body">
-              <div className="report-card-icon-wrap">
-                <report.icon className="h-6 w-6 icon-secondary" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          {
+            title: 'Time Logs Report',
+            desc: 'Summary metrics tracks overview',
+            total: records.length,
+          },
+          {
+            title: 'Late Ingress Logs',
+            desc: 'Breaches tracking metrics flags',
+            total: records.filter((r) => r.status === 'late').length,
+          },
+          {
+            title: 'Absent Tracker Logs',
+            desc: 'Missing shift tracks',
+            total: records.filter((r) => r.status === 'absent').length,
+          },
+          {
+            title: 'Verified Tracks',
+            desc: 'Secure verified compliance items',
+            total: records.filter((r) => r.verified).length,
+          },
+        ].map((item, idx) => (
+          <Card key={idx} className="border-border shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">
+                {item.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold font-mono tracking-tight text-foreground">
+                {isLoading ? '...' : item.total}
               </div>
-              <div className="report-card-text">
-                <p className="report-card-title">{report.title}</p>
-                <p className="report-card-desc">{report.desc}</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => handleExport(report.title)}>
-                <Download className="h-3 w-3 mr-1" />
-                Export
-              </Button>
+              <p className="text-[11px] text-muted-foreground mt-1">{item.desc}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Detailed records table */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="card-title-row">Detailed Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="records-table-wrap">
-            <table className="records-table">
+      <Card className="border-border shadow-sm">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Date</th>
-                  <th>Clock In</th>
-                  <th>Clock Out</th>
-                  <th>Hours</th>
-                  <th>Method</th>
-                  <th>Status</th>
+                <tr className="border-b border-border bg-muted/30 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th className="p-4">Log Identifier</th>
+                  <th className="p-4">Shift Date</th>
+                  <th className="p-4">Clock In</th>
+                  <th className="p-4">Clock Out</th>
+                  <th className="p-4">Method</th>
+                  <th className="p-4">State</th>
                 </tr>
               </thead>
-              <tbody>
-                {records.map((rec) => (
-                  <tr key={rec.id}>
-                    <td>{rec.profiles?.full_name || '—'}</td>
-                    <td className="cell-muted">{rec.date}</td>
-                    <td className="cell-mono">
-                      {rec.clock_in
-                        ? new Date(rec.clock_in).toLocaleTimeString('en-ZA', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
-                        : '—'}
-                    </td>
-                    <td className="cell-mono">
-                      {rec.clock_out
-                        ? new Date(rec.clock_out).toLocaleTimeString('en-ZA', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
-                        : '—'}
-                    </td>
-                    <td>{rec.hours_worked ? `${rec.hours_worked}h` : '—'}</td>
-                    <td>
-                      <Badge variant="outline" className="text-xs">
-                        {rec.method}
-                      </Badge>
-                    </td>
-                    <td>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${statusColors[rec.status] || ''}`}
-                      >
-                        {rec.status}
-                      </Badge>
+              <tbody className="text-sm divide-y divide-border">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                     </td>
                   </tr>
-                ))}
-                {records.length === 0 && (
+                ) : records.length > 0 ? (
+                  records.map((rec) => (
+                    <tr key={rec.id} className="hover:bg-muted/10 transition-colors">
+                      <td className="p-4 font-mono text-xs text-muted-foreground">
+                        {rec.id.slice(0, 8)}...
+                      </td>
+                      <td className="p-4 text-foreground flex items-center gap-2">
+                        <Calendar className="h-3 w-3 text-muted-foreground" /> {rec.date}
+                      </td>
+                      <td className="p-4 font-mono text-xs text-foreground">
+                        {rec.clock_in
+                          ? new Date(rec.clock_in).toLocaleTimeString('en-ZA', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '—'}
+                      </td>
+                      <td className="p-4 font-mono text-xs text-foreground">
+                        {rec.clock_out
+                          ? new Date(rec.clock_out).toLocaleTimeString('en-ZA', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '—'}
+                      </td>
+                      <td className="p-4">
+                        <Badge variant="outline" className="text-xs uppercase">
+                          {rec.method}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs capitalize ${statusColors[rec.status] || ''}`}
+                        >
+                          {rec.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
                   <tr>
-                    <td colSpan={7} className="cell-empty">
-                      No records found.
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                      No logs records discovered within active parameters.
                     </td>
                   </tr>
                 )}

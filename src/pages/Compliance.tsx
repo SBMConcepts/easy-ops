@@ -1,15 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import { Shield, FileCheck, AlertTriangle, CheckCircle2, Clock } from 'lucide-react'
 import { useComplianceCheck } from '../hooks/useTenantData'
+import { Shield, FileCheck, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
 
 const Compliance = () => {
+  // Uses multi-tenant data layer directly
   const { data, isLoading } = useComplianceCheck()
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
       </div>
     )
   }
@@ -22,72 +23,96 @@ const Compliance = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-foreground">Compliance & Audit</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground font-display">
+          Compliance Management Hub
+        </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          BCEA & IRA compliance monitoring and audit trails
+          Automated labor monitoring logs matching standard BCEA requirements
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card className="shadow-card border-secondary/20 border-2">
-          <CardContent className="p-6 text-center">
-            <Shield className="h-10 w-10 text-secondary mx-auto mb-2" />
-            <p className="text-3xl font-bold font-display text-foreground">{complianceScore}%</p>
-            <p className="text-sm text-muted-foreground mt-1">Compliance Score</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-card">
-          <CardContent className="p-6 text-center">
-            <FileCheck className="h-10 w-10 text-primary mx-auto mb-2" />
-            <p className="text-3xl font-bold font-display text-foreground">
-              {passCount}/{totalChecks}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-secondary/30 border shadow-sm">
+          <CardContent className="p-6 text-center space-y-2">
+            <Shield className="h-8 w-8 text-secondary mx-auto" />
+            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Health Rating Score
             </p>
-            <p className="text-sm text-muted-foreground mt-1">Checks Passed</p>
+            <div className="text-4xl font-extrabold tracking-tight text-foreground font-mono">
+              {complianceScore}%
+            </div>
           </CardContent>
         </Card>
-        <Card className="shadow-card">
-          <CardContent className="p-6 text-center">
-            <Clock className="h-10 w-10 text-accent mx-auto mb-2" />
-            <p className="text-3xl font-bold font-display text-foreground">{violations.length}</p>
-            <p className="text-sm text-muted-foreground mt-1">Violations Found</p>
+
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-6 text-center space-y-2">
+            <FileCheck className="h-8 w-8 text-primary mx-auto" />
+            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Passed Audits Checks
+            </p>
+            <div className="text-4xl font-extrabold tracking-tight text-foreground font-mono">
+              {passCount}{' '}
+              <span className="text-sm font-normal text-muted-foreground">/ {totalChecks}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-6 text-center space-y-2">
+            <AlertTriangle
+              className={`h-8 w-8 mx-auto ${violations.length > 0 ? 'text-destructive' : 'text-muted-foreground/40'}`}
+            />
+            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Open Breaches Flags
+            </p>
+            <div className="text-4xl font-extrabold tracking-tight text-foreground font-mono">
+              {violations.length}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="font-display text-lg">Compliance Results</CardTitle>
+      <Card className="border-border shadow-sm bg-card">
+        <CardHeader className="border-b border-border bg-muted/10">
+          <CardTitle className="text-base font-semibold">
+            Active BCEA Operational Violations Logs
+          </CardTitle>
           <CardDescription>
-            Automated checks against BCEA requirements for this week
+            Real-time checks generated across systemic transaction audits
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           {violations.length === 0 ? (
-            <div className="flex items-center gap-3 py-4">
-              <CheckCircle2 className="h-6 w-6 text-secondary" />
-              <p className="text-sm text-foreground">
-                All checks passed. No BCEA violations detected.
+            <div className="flex items-center gap-3 py-6 justify-center text-muted-foreground">
+              <CheckCircle2 className="h-5 w-5 text-secondary" />
+              <p className="text-sm font-medium">
+                All workspace records confirm with compliance targets perfectly.
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-1 divide-y divide-border">
               {violations.map((v, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 py-3 border-b border-border last:border-0"
+                  className="flex items-start justify-between py-4 first:pt-0 last:pb-0 gap-4"
                 >
-                  <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{v.rule}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {v.name}: {v.detail}
-                    </p>
+                  <div className="flex gap-3 items-start">
+                    <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground tracking-tight">
+                        {v.rule}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        <span className="font-medium text-foreground/80">Employee Reference:</span>{' '}
+                        {v.name || v.employee_id} — {v.detail}
+                      </p>
+                    </div>
                   </div>
                   <Badge
                     variant="outline"
-                    className="bg-destructive/10 text-destructive border-destructive/20"
+                    className="bg-destructive/10 text-destructive border-destructive/20 text-xs font-semibold shrink-0 uppercase tracking-wider"
                   >
-                    Violation
+                    Violation Action Required
                   </Badge>
                 </div>
               ))}
