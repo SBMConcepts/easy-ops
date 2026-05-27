@@ -48,8 +48,8 @@ const WorkspaceRoutes = () => (
   <Routes>
     {/* Root redirects straight into the app; ProtectedRoute handles auth gate */}
     <Route path="/app" element={<Navigate to="/app" replace />} />
-    <Route path="/login" element={<Login />} />
-    <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/app/login" element={<Login />} />
+    <Route path="/app/reset-password" element={<ResetPassword />} />
 
     {/* Onboarding is outside AppLayout so it gets a full-screen flow */}
     <Route

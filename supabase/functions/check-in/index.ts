@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@supabase/supabase-js'
-import { corsHeaders } from '../_shared/cors.ts'
-import { resolveAuthContext } from '../_shared/auth-middleware.ts'
+import { corsHeaders } from '../../_legacy/functions/_shared/cors.ts'
+import { resolveAuthContext } from '../../_legacy/functions/_shared/auth-middleware.ts'
 
 const VALID_METHODS = ['qr', 'biometric', 'whatsapp', 'manual']
 

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
-import { corsHeaders } from '../_shared/cors.ts'
-import { resolveAuthContext, requireRole } from '../_shared/auth-middleware.ts'
+import { corsHeaders } from '../../_legacy/functions/_shared/cors.ts'
+import { resolveAuthContext, requireRole } from '../../_legacy/functions/_shared/auth-middleware.ts'
 
 // ── helpers ────────────────────────────────────────────────────────────────
 

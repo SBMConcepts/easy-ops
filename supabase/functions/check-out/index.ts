@@ -1,5 +1,5 @@
-import { corsHeaders } from '../_shared/cors.ts'
-import { resolveAuthContext } from '../_shared/auth-middleware.ts'
+import { corsHeaders } from '../../_legacy/functions/_shared/cors.ts'
+import { resolveAuthContext } from '../../_legacy/functions/_shared/auth-middleware.ts'
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
