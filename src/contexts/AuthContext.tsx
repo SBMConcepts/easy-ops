@@ -7,36 +7,43 @@ import type { AppRole } from '../integrations/supabase/types'
 
 export type UserRole = AppRole
 
-interface LoginOptions {
+export interface LoginOptions {
+  // matches public.tenants.auth0_org_id
   auth0OrgId?: string
   invitation?: string
 }
 
-interface CredentialLoginOptions {
+export interface CredentialLoginOptions {
   email: string
   password: string
+  // matches public.tenants.auth0_org_id
   auth0OrgId?: string
 }
 
 export interface Tenant {
-  id: string
-  name: string
-  slug: string
-  logo_url?: string
-  status: string
+  id: string // public.tenants.id (uuid)
+
+  name: string // public.tenants.name
+
+  slug: string // public.tenants.slug
+
+  logo_url?: string | null // public.tenants.logo_url
+
+  status: string // public.tenants.status (tenant_status enum)
 }
 
 export interface User {
-  id: string // From public.users
+  // matches public.users.id
+  id: string
+  // keep for compatibility with your current naming
   auth0_user_id: string
   email: string
   full_name: string
-  avatar_url?: string
-
-  // Scoped Data
-  tenant_id: string // From public.tenant_memberships
-  role: UserRole // From public.tenant_memberships
-  job_title?: string // From public.employee_profiles
+  avatar_url?: string | null // Scoped Data (from public.memberships)
+  tenant_id: string // public.memberships.tenant_id (uuid)
+  role: UserRole // public.memberships.role (tenant_role enum)
+  // Optional employee scoped data
+  job_title?: string | null
 }
 
 interface AuthContextType {
@@ -73,7 +80,7 @@ const AuthContext = createContext<AuthContextType>({
   loginWithCredentials: async () => {},
   logout: () => {},
   refreshTenant: async () => {},
-  getAccessToken: async () => {},
+  getAccessToken: async () => undefined,
 })
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -121,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (mounted) {
           setUser(null)
           setTenant(null)
+          setSession(null)
           setProfileLoading(false)
         }
         return
@@ -141,23 +149,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const auth0OrgId = auth0User.org_id as string | undefined
 
       try {
-        // 1. Fetch Global User
+        // 1. Fetch Global User (by users.id == Auth0 sub)
         const { data: globalUser, error: userErr } = await supabase
           .from('users')
           .select('*')
-          .eq('auth0_user_id', auth0UserId)
+          .eq('id', auth0UserId)
           .single()
 
         if (userErr || !globalUser) throw new Error('Global user not found')
 
         const finalUser: User = {
           id: globalUser.id,
-          auth0_user_id: globalUser.auth0_user_id,
           email: globalUser.email,
           full_name: globalUser.full_name,
           avatar_url: globalUser.avatar_url,
           tenant_id: '',
           role: 'employee',
+          auth0_user_id: auth0UserId,
+          // job_title is optional
         }
 
         // 2. If logged into a specific tenant, resolve it directly from JWT org_id
@@ -172,23 +181,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (mounted) setTenant(tenantData as Tenant)
             finalUser.tenant_id = tenantData.id
 
-            const { data: membership } = await supabase
-              .from('tenant_memberships')
-              .select('role')
+            // memberships table (NOT tenant_memberships)
+            const { data: membership, error: membershipErr } = await supabase
+              .from('memberships')
+              .select('id, role')
               .eq('user_id', globalUser.id)
               .eq('tenant_id', tenantData.id)
               .single()
 
-            if (membership) finalUser.role = membership.role
+            if (membership && !membershipErr) {
+              finalUser.role = membership.role
 
-            const { data: hrProfile } = await supabase
-              .from('employee_profiles')
-              .select('job_title')
-              .eq('user_id', globalUser.id)
-              .eq('tenant_id', tenantData.id)
-              .single()
+              // employee_profiles links via membership_id (NOT user_id)
+              const { data: hrProfile } = await supabase
+                .from('employee_profiles')
+                .select('job_title')
+                .eq('membership_id', membership.id)
+                .eq('tenant_id', tenantData.id)
+                .single()
 
-            if (hrProfile) finalUser.job_title = hrProfile.job_title
+              if (hrProfile) finalUser.job_title = hrProfile.job_title
+            }
           }
         }
 
@@ -218,12 +231,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(
     (options?: LoginOptions) => {
       loginWithRedirect({
-        authorizationParams: options?.auth0OrgId ? { organization: options.auth0OrgId } : undefined,
+        authorizationParams: {
+          ...(options?.auth0OrgId ? { organization: options.auth0OrgId } : {}),
+          ...(options?.invitation ? { invitation: options.invitation } : {}),
+        },
       })
     },
     [loginWithRedirect]
   )
-
   /**
    * Redirects to Auth0 Universal Login with the email pre-filled (login_hint)
    * and the username/password database connection forced.
@@ -242,8 +257,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await loginWithRedirect({
         authorizationParams: {
           login_hint: options.email,
-          // Force the username/password connection so Auth0 skips the
-          // "choose your connection" screen on tenants with social logins.
           connection: 'Username-Password-Authentication',
           ...(options.auth0OrgId ? { organization: options.auth0OrgId } : {}),
         },
@@ -280,6 +293,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   )
 }
-
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext)

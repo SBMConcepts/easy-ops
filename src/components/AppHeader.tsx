@@ -20,7 +20,7 @@ const AppHeader = () => {
 
   const handleLogout = async () => {
     await logout()
-    navigate('/login')
+    navigate('/app')
   }
 
   return (

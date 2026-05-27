@@ -1,6 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
 import { Toaster as Sonner } from './components/ui/sonner'
 import { TooltipProvider } from './components/ui/tooltip'
 import AppLayout from './components/AppLayout'
@@ -46,135 +46,165 @@ const MarketingRoutes = () => (
 // All /app/* routes are protected; unauthenticated visitors land on /login.
 const WorkspaceRoutes = () => (
   <Routes>
-    {/* Root redirects straight into the app; ProtectedRoute handles auth gate */}
-    <Route path="/app" element={<Navigate to="/app" replace />} />
-    <Route path="/app/login" element={<Login />} />
-    <Route path="/app/reset-password" element={<ResetPassword />} />
+    {/* Workspace-only root redirects */}
+    <Route path="/" element={<Navigate to="/app" replace />} />
 
-    {/* Onboarding is outside AppLayout so it gets a full-screen flow */}
-    <Route
-      path="/app/onboarding"
-      element={
-        <ProtectedRoute allowedRoles={['admin']}>
-          <Onboarding />
-        </ProtectedRoute>
-      }
-    />
+    {/* All workspace routes share the /app prefix */}
+    <Route path="/app" element={<Outlet />}>
+      {/* Public (within workspace) */}
+      <Route path="/app/login" element={<Login />} />
+      <Route path="/app/reset-password" element={<ResetPassword />} />
 
-    {/* Main app shell — AppLayout provides sidebar + top-nav chrome */}
-    <Route
-      path="/app"
-      element={
-        <ProtectedRoute>
-          <AppLayout />
-        </ProtectedRoute>
-      }
-    >
-      <Route index element={<DashboardRouter />} />
+      {/* Protected onboarding */}
       <Route
-        path="check-in"
+        path="/app/onboarding"
         element={
-          <ProtectedRoute allowedRoles={['employee', 'supervisor', 'manager', 'admin']}>
-            <CheckIn />
+          <ProtectedRoute allowedRoles={['admin']}>
+            <Onboarding />
           </ProtectedRoute>
         }
       />
+
+      {/* Everything after this is authenticated */}
       <Route
-        path="attendance"
+        path="/app/*"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
-            <LiveAttendance />
+          <ProtectedRoute>
+            <AppLayout />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="reports"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager']}>
-            <Reports />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="employees"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager']}>
-            <EmployeeManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="team"
-        element={
-          <ProtectedRoute allowedRoles={['supervisor']}>
-            <ComingSoon title="Team Overview" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="compliance"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager']}>
-            <Compliance />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="sites"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
-            <SitesAndDepartments />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="payroll"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
-            <ComingSoon title="Payroll Export" />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="settings" element={<Settings />} />
+      >
+        <Route index element={<DashboardRouter />} />
+
+        <Route
+          path="check-in"
+          element={
+            <ProtectedRoute allowedRoles={['employee', 'supervisor', 'manager', 'admin']}>
+              <CheckIn />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="attendance"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+              <LiveAttendance />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="reports"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="employees"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <EmployeeManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="team"
+          element={
+            <ProtectedRoute allowedRoles={['supervisor']}>
+              <ComingSoon title="Team Overview" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="compliance"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <Compliance />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="sites"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+              <SitesAndDepartments />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="payroll"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+              <ComingSoon title="Payroll Export" />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Any authenticated role */}
+        <Route
+          path="settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
     </Route>
 
     <Route path="*" element={<NotFound />} />
   </Routes>
 )
 
+const WorkspaceGate = () => {
+  const isCustomSubdomain = !!getSubdomain()
+  // If this is not a workspace subdomain, show nothing (or NotFound).
+  // This prevents workspace routes from “competing” with marketing routes.
+  if (!isCustomSubdomain) return
+  ;<></>
+
+  return (
+    <TenantProvider>
+      <WorkspaceRoutes />
+    </TenantProvider>
+  )
+}
+
 // ── App root ──────────────────────────────────────────────────────────────────
 const App = () => {
-  // Pure synchronous check — no context needed to decide which shell to render.
-  // TenantProvider is scoped inside WorkspaceRoutes so marketing pages carry
-  // zero tenant overhead.
   const isCustomSubdomain = !!getSubdomain()
-  // For workspace subdomains, wait for Auth0 to rehydrate a cached session
-  // before rendering — prevents a flash of the login page on authenticated refresh.
-  // Marketing site renders immediately with no loading gate.
   const { isLoading: authLoading } = useAuth0()
-
   if (isCustomSubdomain && authLoading) {
-    return <div className="loading-screen">Loading workspace...</div>
+    return
+    ;<div className="loading-screen">Loading workspace...</div>
   }
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
           <Sonner />
+
           <BrowserRouter>
-            {isCustomSubdomain ? (
-              <TenantProvider>
-                <WorkspaceRoutes />
-              </TenantProvider>
-            ) : (
-              <MarketingRoutes />
-            )}
+            <Routes>
+              {/* Marketing shell (root domain / www) */}
+
+              <Route path="/*" element={<MarketingRoutes />} />
+              {/* Workspace shell (org subdomains) */}
+
+              <Route path="/*" element={<WorkspaceGate />} />
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
   )
 }
-
 export default App

@@ -2,19 +2,22 @@ import { createRoot } from 'react-dom/client'
 import { Auth0Provider } from '@auth0/auth0-react'
 import App from './App.tsx'
 import './index.css'
-
+import { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_AUDIENCE } from './lib/auth0-config'
 import { getSubdomain } from './utils/subdomain'
 
-// Read the tenant slug from the subdomain (e.g. "acme" from acme.easy-ops-za.vercel.app).
-// Passed as `organization` so Auth0 scopes the login to that org automatically.
 const organization = getSubdomain() ?? undefined
+
+const isWorkspace = !!organization
+const redirectUri = `${window.location.origin}${isWorkspace ? '/app/' : '/'}`
 
 createRoot(document.getElementById('root')!).render(
   <Auth0Provider
-    domain="easy-ops.us.auth0.com"
-    clientId="4mq3vC8yk6e2odjAM7OtXjC5OPeKFecZ"
+    domain={AUTH0_DOMAIN}
+    clientId={AUTH0_CLIENT_ID}
     authorizationParams={{
-      redirect_uri: window.location.origin,
+      redirect_uri: redirectUri,
+      audience: AUTH0_AUDIENCE,
+      ...(organization ? { organization } : {}),
     }}
   >
     <App />
