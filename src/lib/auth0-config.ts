@@ -27,4 +27,4 @@
 export const AUTH0_DOMAIN = import.meta.env.AUTH0_DOMAIN as string
 export const AUTH0_CLIENT_ID = import.meta.env.AUTH0_CLIENT_ID as string
 export const AUTH0_AUDIENCE = import.meta.env.AUTH0_AUDIENCE as string
-export const AUTH0_CLAIM_NS = 'https://easy-ops-za.vercel.app/'
+export const AUTH0_CLAIM_NS = 'https://easy-ops-za.vercel.app/' // Must match the namespace used in your Auth0 Action custom claims

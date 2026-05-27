@@ -2,7 +2,6 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { useAuth0 } from '@auth0/auth0-react'
 import { createSupabaseClient } from '../integrations/supabase/client'
 import type { AppRole } from '../integrations/supabase/types'
-import { AUTH0_CLAIM_NS } from '../lib/auth0-config'
 
 // ── Public types ─────────────────────────────────────────────────────────────
 
@@ -58,6 +57,8 @@ interface AuthContextType {
   logout: () => void
   /** Re-fetch the tenant record from Supabase */
   refreshTenant: () => Promise<void>
+  /** Raw Auth0 access token for the current session (null when logged out). */
+  session: string | null
   /** Helper to grab the raw JWT */
   getAccessToken: () => Promise<string | undefined>
 }
@@ -67,11 +68,12 @@ const AuthContext = createContext<AuthContextType>({
   tenant: null,
   isAuthenticated: false,
   isLoading: true,
+  session: null,
   login: () => {},
   loginWithCredentials: async () => {},
   logout: () => {},
   refreshTenant: async () => {},
-  getAccessToken: async () => undefined,
+  getAccessToken: async () => {},
 })
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -86,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [user, setUser] = useState<User | null>(null)
   const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [session, setSession] = useState<string | null>(null)
   const [profileLoading, setProfileLoading] = useState(false)
 
   const getAccessToken = useCallback(async () => {
@@ -130,9 +133,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return
       }
 
+      if (mounted) setSession(token)
+
       const supabase = createSupabaseClient(token)
       const auth0UserId = auth0User.sub!
-      const auth0OrgId = auth0User[`${AUTH0_CLAIM_NS}org_id`] as string | undefined
+      // `org_id` is set natively by Auth0 Organizations on every token.
+      const auth0OrgId = auth0User.org_id as string | undefined
 
       try {
         // 1. Fetch Global User
@@ -154,37 +160,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: 'employee',
         }
 
-        // 2. If logged into a specific tenant, fetch membership & HR profile
+        // 2. If logged into a specific tenant, resolve it directly from JWT org_id
         if (auth0OrgId) {
-          // Note: In a real app, you'd resolve localTenantId first.
-          // Assuming your Supabase RLS policies are using the JWT's org_id securely.
-
-          const { data: membership } = await supabase
-            .from('tenant_memberships')
-            .select('tenant_id, role')
-            .eq('user_id', globalUser.id)
+          const { data: tenantData, error: tenantErr } = await supabase
+            .from('tenants')
+            .select('*')
+            .eq('auth0_org_id', auth0OrgId)
             .single()
 
-          if (membership) {
-            finalUser.tenant_id = membership.tenant_id
-            finalUser.role = membership.role
+          if (tenantData && !tenantErr) {
+            if (mounted) setTenant(tenantData as Tenant)
+            finalUser.tenant_id = tenantData.id
+
+            const { data: membership } = await supabase
+              .from('tenant_memberships')
+              .select('role')
+              .eq('user_id', globalUser.id)
+              .eq('tenant_id', tenantData.id)
+              .single()
+
+            if (membership) finalUser.role = membership.role
 
             const { data: hrProfile } = await supabase
               .from('employee_profiles')
               .select('job_title')
               .eq('user_id', globalUser.id)
-              .eq('tenant_id', membership.tenant_id)
+              .eq('tenant_id', tenantData.id)
               .single()
 
-            if (hrProfile) {
-              finalUser.job_title = hrProfile.job_title
-            }
-
-            // Load the Tenant object
-            const tenantData = await fetchTenant(membership.tenant_id, token)
-            if (mounted && tenantData) {
-              setTenant(tenantData)
-            }
+            if (hrProfile) finalUser.job_title = hrProfile.job_title
           }
         }
 
@@ -252,6 +256,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     auth0Logout({ logoutParams: { returnTo: window.location.origin } })
     setUser(null)
     setTenant(null)
+    setSession(null)
   }, [auth0Logout])
 
   const isLoading = auth0Loading || profileLoading
@@ -263,6 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         tenant,
         isAuthenticated,
         isLoading,
+        session,
         login,
         loginWithCredentials,
         logout,

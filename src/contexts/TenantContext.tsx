@@ -3,7 +3,7 @@ import React, { createContext, useCallback, useContext, useState } from 'react'
 import { getSubdomain } from '../utils/subdomain'
 
 // Point this to your new Express Backend URL
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL as string
 
 interface TenantInfo {
   id: string // Local Postgres UUID (public.tenants.id)
