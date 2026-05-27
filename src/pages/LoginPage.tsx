@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTenant } from '../contexts/TenantContext'
 import { Button } from '../components/ui/button'
@@ -499,7 +499,7 @@ function RequestAccessFlow({ onBack }: { onBack: () => void }) {
 
 // ─── Main LoginPage ───────────────────────────────────────────────────────────
 
-function LoginPage() {
+const LoginPage = () => {
   const { login, loginWithCredentials, isAuthenticated, isLoading } = useAuth()
   const { tenant, isLoading: tenantLoading, isCustomSubdomain, resolveTenant } = useTenant()
   const navigate = useNavigate()
