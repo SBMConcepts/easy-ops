@@ -11,10 +11,27 @@
  *
  * Returns:
  *   { auth0OrgId: string, tenantId: string }
+ *
+ * ─── SDK version notes ────────────────────────────────────────────────────────
+ * This file targets the auth0 npm package.
+ *
+ * v4 (legacy)  →  import from 'auth0/legacy'
+ *   auth0.organizations.createInvitation({ id }, body)
+ *   auth0.organizations.delete({ id })
+ *   org.id  (no .data wrapper)
+ *
+ * v5 (current) →  import from 'auth0'   ← what this file uses
+ *   auth0.organizations.invitations.create(orgId, body)
+ *   auth0.organizations.delete(orgId)
+ *   org.data.id
+ *
+ * If you are on v4, either upgrade or change the import to 'auth0/legacy'
+ * and revert the three call sites marked [v4 vs v5] below.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import { Router } from 'express' // swap for your framework
-import { ManagementClient } from 'auth0'
+import { ManagementClient } from 'auth0' // auth0 v5
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
 
@@ -24,8 +41,8 @@ const router = Router()
 
 const auth0 = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN!,
-  clientId: process.env.AUTH0_MANAGEMENT_CLIENT_ID!,
-  clientSecret: process.env.AUTH0_MANAGEMENT_CLIENT_SECRET!,
+  clientId: process.env.AUTH0_M2M_CLIENT_ID!,
+  clientSecret: process.env.AUTH0_M2M_CLIENT_SECRET!,
 })
 
 const supabase = createClient(
@@ -62,6 +79,7 @@ router.post('/api/tenants/create', async (req, res) => {
 
   try {
     // ── Step 1: Create Auth0 organisation ──────────────────────────────────
+    // [v4 vs v5] v5: org.data.id | v4 (legacy): org.id
     const org = await auth0.organizations.create({
       name: slug,
       display_name: orgName,
@@ -71,7 +89,7 @@ router.post('/api/tenants/create', async (req, res) => {
       },
     })
 
-    const auth0OrgId: string = org.data.id
+    const auth0OrgId: string = org.data.id // v5 wraps the response in { data }
 
     // ── Step 2: Insert tenant row in Supabase ──────────────────────────────
     const { error: insertError } = await supabase.from('tenants').insert({
@@ -86,31 +104,34 @@ router.post('/api/tenants/create', async (req, res) => {
     })
 
     if (insertError) {
-      // Roll back Auth0 org to keep state consistent
-      await auth0.organizations.delete({ id: auth0OrgId }).catch(() => null)
+      // Roll back the Auth0 org so state stays consistent
+      // [v4 vs v5] v5: delete(orgId) | v4 (legacy): delete({ id: orgId })
+      await auth0.organizations.delete(auth0OrgId).catch(() => null)
       throw new Error(`Supabase insert failed: ${insertError.message}`)
     }
 
     // ── Step 3: Create Auth0 invitation (sends onboarding email) ──────────
-    // This generates a magic link the admin clicks to set their password,
-    // then lands them in /app/onboarding where they complete the workspace setup.
-    await auth0.organizations.createInvitation(
-      { id: auth0OrgId },
-      {
-        inviter: { name: 'EasyOps' },
-        invitee: { email: adminEmail },
-        client_id: process.env.AUTH0_CLIENT_ID!,
-        roles: [process.env.AUTH0_ADMIN_ROLE_ID!], // pre-assign admin role
-        send_invitation_email: true,
-        ttl_sec: 60 * 60 * 72, // 72-hour expiry
-        app_metadata: {
-          tenantId,
-          auth0OrgId,
-          plan,
-          isFirstAdmin: true,
-        },
-      }
-    )
+    // The admin clicks the emailed link → Auth0 sets their password → they
+    // land on /login?invitation=...&organization=... which your LoginPage
+    // already handles, routing them through to /app/onboarding.
+    //
+    // [v4 vs v5]
+    //   v5 (current):  auth0.organizations.invitations.create(orgId, body)
+    //   v4 (legacy):   auth0.organizations.createInvitation({ id: orgId }, body)
+    await auth0.organizations.invitations.create(auth0OrgId, {
+      inviter: { name: 'EasyOps' },
+      invitee: { email: adminEmail },
+      client_id: process.env.AUTH0_CLIENT_ID!,
+      roles: [process.env.AUTH0_ADMIN_ROLE_ID!], // pre-assign admin role
+      send_invitation_email: true,
+      ttl_sec: 60 * 60 * 72, // 72-hour expiry
+      app_metadata: {
+        tenantId,
+        auth0OrgId,
+        plan,
+        isFirstAdmin: true,
+      },
+    })
 
     return res.status(201).json({ auth0OrgId, tenantId })
   } catch (err: unknown) {

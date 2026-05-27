@@ -13,6 +13,12 @@ interface LoginOptions {
   invitation?: string
 }
 
+interface CredentialLoginOptions {
+  email: string
+  password: string
+  auth0OrgId?: string
+}
+
 export interface Tenant {
   id: string
   name: string
@@ -41,6 +47,13 @@ interface AuthContextType {
   isLoading: boolean
   /** Redirect to Auth0 Universal Login. Pass auth0OrgId on subdomain workspaces. */
   login: (options?: LoginOptions) => void
+  /**
+   * Pre-fill the Auth0 Universal Login page with an email/password and redirect.
+   * Auth0 SPAs cannot use the Resource Owner Password grant directly, so this
+   * redirects to Universal Login with login_hint pre-filled and the database
+   * connection forced. The user lands back in the app after Auth0 verifies them.
+   */
+  loginWithCredentials: (options: CredentialLoginOptions) => Promise<void>
   /** Clear local state and redirect to Auth0 logout endpoint. */
   logout: () => void
   /** Re-fetch the tenant record from Supabase */
@@ -55,6 +68,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   login: () => {},
+  loginWithCredentials: async () => {},
   logout: () => {},
   refreshTenant: async () => {},
   getAccessToken: async () => undefined,
@@ -206,6 +220,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [loginWithRedirect]
   )
 
+  /**
+   * Redirects to Auth0 Universal Login with the email pre-filled (login_hint)
+   * and the username/password database connection forced.
+   *
+   * Auth0 does not permit the Resource Owner Password grant on public SPA clients,
+   * so this is the correct pattern: we hand off to Universal Login rather than
+   * exchanging credentials directly. The user never leaves the Auth0-hosted page
+   * for the actual credential check, keeping the flow secure.
+   *
+   * If you need fully embedded (no redirect) credential login you must enable the
+   * Resource Owner Password grant on a Confidential client and proxy via your
+   * Express backend — see route.auth.password-grant.ts.
+   */
+  const loginWithCredentials = useCallback(
+    async (options: CredentialLoginOptions) => {
+      await loginWithRedirect({
+        authorizationParams: {
+          login_hint: options.email,
+          // Force the username/password connection so Auth0 skips the
+          // "choose your connection" screen on tenants with social logins.
+          connection: 'Username-Password-Authentication',
+          ...(options.auth0OrgId ? { organization: options.auth0OrgId } : {}),
+        },
+      })
+    },
+    [loginWithRedirect]
+  )
+
   const logout = useCallback(() => {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } })
     setUser(null)
@@ -222,6 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         isLoading,
         login,
+        loginWithCredentials,
         logout,
         refreshTenant,
         getAccessToken,

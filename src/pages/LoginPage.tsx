@@ -118,7 +118,8 @@ function SignInFlow({
   loginWithCredentials,
 }: {
   onBack: () => void
-  loginWithCredentials: (email: string, password: string) => void
+  // email + password are collected here; auth is completed via Auth0 redirect
+  loginWithCredentials: (email: string, password: string) => Promise<void>
 }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -133,12 +134,15 @@ function SignInFlow({
     }
     setLoading(true)
     try {
+      // loginWithCredentials calls loginWithRedirect — the page navigates away,
+      // so the code below only runs if Auth0 throws before the redirect fires
+      // (e.g. network error, misconfigured client).
       await loginWithCredentials(email, password)
     } catch {
-      setError('Invalid credentials. Please try again.')
-    } finally {
       setLoading(false)
+      setError('Could not reach the login service. Please try again.')
     }
+    // Do NOT setLoading(false) on the happy path — the page is navigating away
   }
 
   return (
