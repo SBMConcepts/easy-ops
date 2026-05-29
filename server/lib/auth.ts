@@ -21,7 +21,9 @@ export async function verifyAuth0Token(req: Request): Promise<AuthContext | null
     const audience = process.env.AUTH0_AUDIENCE
     if (!domain || !audience) throw new Error('AUTH0_DOMAIN / AUTH0_AUDIENCE not configured')
 
-    const jwks = createRemoteJWKSet(new URL(`https://${domain}/.well-known/jwks.json`))
+    const jwks = createRemoteJWKSet(
+      new URL(`https://ewniypaosorbepjxnqqz.supabase.co/auth/v1/.well-known/jwks.json`)
+    )
     const { payload } = await jwtVerify(token, jwks, { audience, issuer: `https://${domain}/` })
 
     const auth0UserId = payload.sub
@@ -40,9 +42,9 @@ export async function verifyAuth0Token(req: Request): Promise<AuthContext | null
          (SELECT id FROM public.users WHERE auth0_user_id = $1) AS local_user_id,
          (SELECT id FROM public.tenants WHERE auth0_org_id = $2) AS local_tenant_id,
          (
-           SELECT role FROM public.tenant_memberships tm
-           JOIN public.users u ON tm.user_id = u.id
-           JOIN public.tenants t ON tm.tenant_id = t.id
+           SELECT role FROM public.memberships m
+           JOIN public.users u ON m.user_id = u.id
+           JOIN public.tenants t ON m.tenant_id = t.id
            WHERE u.auth0_user_id = $1 AND t.auth0_org_id = $2
            LIMIT 1
          ) AS local_role`,

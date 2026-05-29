@@ -7,11 +7,6 @@ import crypto from 'crypto'
 
 const router = Router()
 
-/**
- * POST /api/auth/register
- *
- * Provisions Auth0 + Supabase entities atomically.
- */
 router.post('/', async (req: Request, res: Response) => {
   const { companyName, companySlug, adminEmail, password, subscriptionPlan } = req.body as {
     companyName?: string
@@ -28,7 +23,6 @@ router.post('/', async (req: Request, res: Response) => {
 
   const slug = companySlug.toLowerCase().trim()
 
-  // ── Phase A: Auth0 provisioning ─────────────────────────────────────────
   const auth0 = new ManagementClient({
     domain: process.env.AUTH0_DOMAIN!,
     clientId: process.env.AUTH0_MANAGEMENT_CLIENT_ID!,
@@ -47,33 +41,34 @@ router.post('/', async (req: Request, res: Response) => {
       connection: 'Username-Password-Authentication',
     })
 
-    await auth0.organizations.members.create(auth0Org.id, { members: [auth0User.user_id!] })
-    // ── Phase B: Postgres Provisioning ────────────────────────────────────
+    await auth0.organizations.members.create(auth0Org.id, {
+      members: [auth0User.user_id!],
+    })
+
     const pool = getPool()
     const client = await pool.connect()
 
     try {
       await client.query('BEGIN')
 
-      // 1. Create the B2B Tenant WITH the subscription plan and 'pending_setup' status!
       const tenantInsert = await client.query(
         `INSERT INTO public.tenants (name, slug, auth0_org_id, subscription_tier, status)
          VALUES ($1, $2, $3, $4, 'pending_setup')
          RETURNING id`,
         [companyName, slug, auth0Org.id, subscriptionPlan || 'starter']
       )
+
       const tenantId = tenantInsert.rows[0].id
 
-      // 2. Create the Admin User
       const userUpsert = await client.query(
         `INSERT INTO public.users (id, auth0_user_id, email, full_name)
          VALUES ($1, $2, $3, $4)
          RETURNING id`,
         [crypto.randomUUID(), auth0User.user_id, adminEmail, `${companyName} Admin`]
       )
+
       const finalLocalUserId = userUpsert.rows[0].id
 
-      // 3. Link them as an Admin
       await client.query(
         `INSERT INTO public.tenant_memberships (tenant_id, user_id, role, status)
          VALUES ($1, $2, 'admin'::app_role, 'active')`,
@@ -90,7 +85,6 @@ router.post('/', async (req: Request, res: Response) => {
     } catch (dbErr: unknown) {
       await client.query('ROLLBACK')
       console.error('Registration Database Error:', dbErr)
-      // Note: A compensating saga should delete the Auth0 Org/User here in production
       res.status(500).json({ error: 'Database provisioning failed.' })
     } finally {
       client.release()

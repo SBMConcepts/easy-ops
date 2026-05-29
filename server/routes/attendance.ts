@@ -24,25 +24,25 @@ router.get('/', async (req: Request, res: Response) => {
       authCtx.localTenantId,
       authCtx.localUserId,
       async (client) => {
-        // RBAC CHECK: If Supervisor or higher, return all records for the tenant
         if (hasRequiredRole(authCtx, 'supervisor')) {
           const result = await client.query(
-            `SELECT * FROM public.attendance_records ORDER BY date DESC, clock_in DESC`
+            `SELECT * 
+             FROM public.attendance_records 
+             ORDER BY date DESC, clock_in DESC`
           )
           return result.rows
         }
 
-        // RBAC CHECK: If standard Employee, ONLY return their own records
-        else {
-          const result = await client.query(
-            `SELECT ar.* FROM public.attendance_records ar
-             JOIN public.employee_profiles ep ON ar.employee_profile_id = ep.id
-             WHERE ep.user_id = $1 
-             ORDER BY ar.date DESC, ar.clock_in DESC`,
-            [authCtx.localUserId]
-          )
-          return result.rows
-        }
+        const result = await client.query(
+          `SELECT ar.* 
+           FROM public.attendance_records ar
+           JOIN public.employee_profiles ep ON ar.employee_profile_id = ep.id
+           WHERE ep.user_id = $1
+           ORDER BY ar.date DESC, ar.clock_in DESC`,
+          [authCtx.localUserId]
+        )
+
+        return result.rows
       }
     )
 

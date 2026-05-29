@@ -7,13 +7,13 @@ let _pool: InstanceType<typeof Pool> | null = null
 
 /**
  * Returns a lazily-initialised pg Pool that connects to Supabase via its
- * Supavisor pooled connection string (Transaction mode, port 6543).
+ * Supavisor pooled connection string (Transaction mode, port 5432).
  */
 export function getPool(): InstanceType<typeof Pool> {
   if (!_pool) {
-    const connectionString = process.env.DATABASE_URL
+    const connectionString = process.env.SUPABASE_DATABASE_URL
     if (!connectionString) {
-      throw new Error('DATABASE_URL environment variable is not set')
+      throw new Error('SUPABASE_DATABASE_URL environment variable is not set')
     }
     _pool = new Pool({
       connectionString,

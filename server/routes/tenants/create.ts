@@ -1,43 +1,12 @@
-/**
- * POST /api/tenants/create
- *
- * 1. Creates an Auth0 organisation (Management API)
- * 2. Inserts a tenant row in Supabase (tenants table)
- * 3. Creates the admin user in Auth0 and assigns them the "admin" role
- * 4. Sends an onboarding email via Auth0's invitation flow
- *
- * Expected request body:
- *   { orgName: string, adminEmail: string, plan: 'starter' | 'growth' | 'enterprise' }
- *
- * Returns:
- *   { auth0OrgId: string, tenantId: string }
- *
- * ─── SDK version notes ────────────────────────────────────────────────────────
- * This file targets the auth0 npm package.
- *
- * v4 (legacy)  →  import from 'auth0/legacy'
- *   auth0.organizations.createInvitation({ id }, body)
- *   auth0.organizations.delete({ id })
- *   org.id  (no .data wrapper)
- *
- * v5 (current) →  import from 'auth0'   ← what this file uses
- *   auth0.organizations.invitations.create(orgId, body)
- *   auth0.organizations.delete(orgId)
- *   org.data.id
- *
- * If you are on v4, either upgrade or change the import to 'auth0/legacy'
- * and revert the three call sites marked [v4 vs v5] below.
- * ─────────────────────────────────────────────────────────────────────────────
- */
-
-import { Router } from 'express' // swap for your framework
-import { ManagementClient } from 'auth0' // auth0 v5
+import { Router } from 'express'
+import { ManagementClient } from 'auth0'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
 
 const router = Router()
 
-// ── Clients ──────────────────────────────────────────────────────────────────
+type Plan = 'starter' | 'growth' | 'enterprise'
+const PLAN_VALUES: Plan[] = ['starter', 'growth', 'enterprise']
 
 const auth0 = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN!,
@@ -45,12 +14,7 @@ const auth0 = new ManagementClient({
   clientSecret: process.env.AUTH0_MANAGEMENT_CLIENT_SECRET!,
 })
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // service-role key — backend only!
-)
-
-// ── Helper: slugify org name for Auth0 org identifier ────────────────────────
+const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 function toOrgSlug(name: string): string {
   return name
@@ -61,74 +25,68 @@ function toOrgSlug(name: string): string {
     .slice(0, 60)
 }
 
-// ── Route ─────────────────────────────────────────────────────────────────────
-
 router.post('/api/tenants/create', async (req, res) => {
   const { orgName, adminEmail, plan } = req.body as {
     orgName?: string
     adminEmail?: string
-    plan?: string
+    plan?: Plan | string
   }
 
   if (!orgName || !adminEmail || !plan) {
     return res.status(400).json({ message: 'orgName, adminEmail, and plan are required.' })
   }
 
+  if (!PLAN_VALUES.includes(plan as Plan)) {
+    return res.status(400).json({ message: `plan must be one of: ${PLAN_VALUES.join(', ')}` })
+  }
+
+  const normalizedPlan = plan as Plan
   const slug = toOrgSlug(orgName)
   const tenantId = randomUUID()
 
   try {
-    // ── Step 1: Create Auth0 organisation ──────────────────────────────────
-    // [v4 vs v5] v5: org.data.id | v4 (legacy): org.id
+    // 1) Create Auth0 org (LET Auth0 generate the org identifier)
     const org = await auth0.organizations.create({
-      name: slug,
+      name: slug, // display identifier in Auth0 UI
       display_name: orgName,
       metadata: {
-        plan,
-        tenantId, // link back to your Supabase row
+        plan: normalizedPlan,
+        tenantId,
       },
+      // IMPORTANT: do NOT set `id:` here, so org.data.id is the true org_id used in JWT
     })
 
-    const auth0OrgId: string = org.data.id // v5 wraps the response in { data }
+    const auth0OrgId: string = org.data.id
 
-    // ── Step 2: Insert tenant row in Supabase ──────────────────────────────
+    // 2) Insert tenant row in Supabase (MATCHES verifyAuth0Token expectations)
     const { error: insertError } = await supabase.from('tenants').insert({
       id: tenantId,
-      name: orgName,
+      auth0_org_id: auth0OrgId, // must equal JWT org_id
       slug,
-      plan,
-      auth0_org_id: auth0OrgId,
-      admin_email: adminEmail,
-      status: 'pending_onboarding',
-      created_at: new Date().toISOString(),
+      name: orgName,
+      status: 'provisioning',
+      country: 'South Africa',
+      settings: {},
+      plan: normalizedPlan,
     })
 
     if (insertError) {
-      // Roll back the Auth0 org so state stays consistent
-      // [v4 vs v5] v5: delete(orgId) | v4 (legacy): delete({ id: orgId })
       await auth0.organizations.delete(auth0OrgId).catch(() => null)
       throw new Error(`Supabase insert failed: ${insertError.message}`)
     }
 
-    // ── Step 3: Create Auth0 invitation (sends onboarding email) ──────────
-    // The admin clicks the emailed link → Auth0 sets their password → they
-    // land on /login?invitation=...&organization=... which your LoginPage
-    // already handles, routing them through to /app/onboarding.
-    //
-    // [v4 vs v5]
-    //   v5 (current):  auth0.organizations.invitations.create(orgId, body)
-    //   v4 (legacy):   auth0.organizations.createInvitation({ id: orgId }, body)
+    // 3) Create Auth0 invitation email for the admin
     await auth0.organizations.invitations.create(auth0OrgId, {
       inviter: { name: 'EasyOps' },
       invitee: { email: adminEmail },
-      client_id: process.env.AUTH0_CLIENT_ID!,
-      roles: [process.env.AUTH0_ADMIN_ROLE_ID!], // pre-assign admin role
+      client_id: process.env.AUTH0_CLIENT_ID!, // required for invitation flow
+      roles: [process.env.AUTH0_ADMIN_ROLE_ID!],
       send_invitation_email: true,
-      ttl_sec: 60 * 60 * 72, // 72-hour expiry
+      ttl_sec: 60 * 60 * 72,
       app_metadata: {
         tenantId,
         auth0OrgId,
-        plan,
+        plan: normalizedPlan,
         isFirstAdmin: true,
       },
     })

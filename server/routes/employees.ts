@@ -10,7 +10,6 @@ const router = Router()
 
 router.post('/invite', async (req: Request, res: Response) => {
   try {
-    // 1. Authenticate and extract context
     const tenantSlug = req.headers['x-tenant-slug'] as string | undefined
     if (!tenantSlug) {
       res.status(400).json({ error: 'Tenant workspace context missing.' })
@@ -23,27 +22,30 @@ router.post('/invite', async (req: Request, res: Response) => {
       return
     }
 
-    // 2. RBAC Protection
     if (!hasRequiredRole(authCtx, 'manager')) {
       res.status(403).json({ error: 'Forbidden: Insufficient privileges to invite staff.' })
       return
     }
 
-    const { email, full_name, role, department, site } = req.body
+    const { email, full_name, role, department, site } = req.body as {
+      email?: string
+      full_name?: string
+      role?: any
+      department?: string | null
+      site?: string | null
+    }
 
     if (!email || !full_name || !role) {
       res.status(400).json({ error: 'Missing required fields: email, full_name, role' })
       return
     }
 
-    // 3. Initialize Auth0 Management Client
     const auth0 = new ManagementClient({
       domain: process.env.AUTH0_DOMAIN!,
       clientId: process.env.AUTH0_MANAGEMENT_CLIENT_ID!,
       clientSecret: process.env.AUTH0_MANAGEMENT_CLIENT_SECRET!,
     })
 
-    // 4. Get token manually via client_credentials and send invite
     const tokenRes = await fetch(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -54,6 +56,11 @@ router.post('/invite', async (req: Request, res: Response) => {
         audience: `https://${process.env.AUTH0_DOMAIN}/api/v2/`,
       }),
     })
+
+    if (!tokenRes.ok) {
+      const err = await tokenRes.text()
+      throw new Error(`Auth0 token fetch failed: ${err}`)
+    }
 
     const { access_token: accessToken } = (await tokenRes.json()) as { access_token: string }
 
@@ -78,15 +85,15 @@ router.post('/invite', async (req: Request, res: Response) => {
     )
 
     if (!inviteRes.ok) {
-      const errBody = await inviteRes.json()
+      const errBody = await inviteRes.json().catch(() => ({}))
       throw new Error(`Auth0 invitation failed: ${JSON.stringify(errBody)}`)
     }
 
-    // 5. Pre-provision user in local database
     const newEmployee = await withTenantContext(
       authCtx.localTenantId,
       authCtx.localUserId,
       async (client) => {
+        // Pre-provision / upsert local user
         const userRes = await client.query(
           `INSERT INTO public.users (id, auth0_user_id, email, full_name)
            VALUES (gen_random_uuid(), $1, $2, $3)
@@ -94,6 +101,7 @@ router.post('/invite', async (req: Request, res: Response) => {
            RETURNING id`,
           [`pending|${email.trim()}`, email.trim(), full_name.trim()]
         )
+
         const newUserId = userRes.rows[0].id
 
         await client.query(
@@ -106,22 +114,21 @@ router.post('/invite', async (req: Request, res: Response) => {
         await client.query(
           `INSERT INTO public.employee_profiles (tenant_id, user_id, full_name, department, site)
            VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (tenant_id, user_id) DO UPDATE SET 
+           ON CONFLICT (tenant_id, user_id) DO UPDATE SET
              full_name = EXCLUDED.full_name,
              department = EXCLUDED.department,
              site = EXCLUDED.site`,
-          [authCtx.localTenantId, newUserId, full_name.trim(), department || null, site || null]
+          [authCtx.localTenantId, newUserId, full_name.trim(), department ?? null, site ?? null]
         )
 
         return { id: newUserId, email, full_name, role, department, site }
       }
     )
 
-    // 6. Return success
     res.status(201).json(newEmployee)
   } catch (error: any) {
     console.error('Error inviting employee:', error)
-    res.status(500).json({ error: error.message || 'Failed to dispatch invitation.' })
+    res.status(500).json({ error: error?.message || 'Failed to dispatch invitation.' })
   }
 })
 

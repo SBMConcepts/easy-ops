@@ -6,6 +6,7 @@ import attendanceRouter from './routes/attendance.js'
 import auth0SyncRouter from './routes/auth0-sync.js'
 import employeesRouter from './routes/employees.js'
 import userRouter from './routes/user.js' // <-- Added Import
+import accessRequestsRouter from './routes/access-requests.js'
 
 const app = express()
 const PORT = Number(process.env.API_PORT ?? 3001)
@@ -26,6 +27,7 @@ app.use('/api/auth/sync', auth0SyncRouter)
 app.use('/api/user', userRouter) // <-- Mounted User Router (Required for useCurrentUser hook!)
 app.use('/api/employees', employeesRouter)
 app.use('/api/attendance', attendanceRouter)
+app.use('/api/access-requests', accessRequestsRouter)
 
 // ── Health Check ───────────────────────────────────────────────────────────
 app.get('/api/health', (_req: Request, res: Response) => {

@@ -5,19 +5,13 @@ import { getPool } from '../lib/db.js'
 
 const router = Router()
 
-/**
- * GET /api/user/me
- * * Returns the enriched user profile (Identity + Role + Tenant).
- */
 router.get('/me', async (req: Request, res: Response) => {
-  // 1. Verify Workspace Context
   const tenantSlug = req.headers['x-tenant-slug'] as string | undefined
   if (!tenantSlug) {
     res.status(400).json({ error: 'Tenant workspace context missing.' })
     return
   }
 
-  // 2. Verify Auth0 JWT Identity
   const authCtx = await verifyAuth0Token(req)
   if (!authCtx) {
     res.status(401).json({ error: 'Unauthorized' })
@@ -28,7 +22,6 @@ router.get('/me', async (req: Request, res: Response) => {
   const client = await pool.connect()
 
   try {
-    // 3. Resolve the Tenant ID from the slug
     const tenantResult = await client.query(
       `SELECT id FROM public.tenants WHERE slug = $1 LIMIT 1`,
       [tenantSlug]
@@ -38,9 +31,9 @@ router.get('/me', async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Tenant not found.' })
       return
     }
+
     const tenantId = tenantResult.rows[0].id
 
-    // 4. Fetch the enriched Profile + Roles
     const userResult = await client.query(
       `
       SELECT 
@@ -51,10 +44,10 @@ router.get('/me', async (req: Request, res: Response) => {
         ur.organisation_roles as role
       FROM public.profiles p
       LEFT JOIN public.user_roles ur ON p.id = ur.user_id
-      WHERE p.auth0_user_id = $1 
+      WHERE p.auth0_user_id = $1
       AND p.organisation_id = $2
       LIMIT 1
-    `,
+      `,
       [authCtx.auth0UserId, tenantId]
     )
 
