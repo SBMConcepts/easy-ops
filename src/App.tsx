@@ -106,7 +106,16 @@ const WorkspaceShell = () => {
             path="employees"
             element={
               <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                <EmployeeManagement />
+                <EmployeeManagement
+                  requests={[]}
+                  prefillEmailForRequest={function (req: {
+                    id: string
+                    status: string
+                    requester_email: string
+                  }): string {
+                    throw new Error('Function not implemented.')
+                  }}
+                />
               </ProtectedRoute>
             }
           />

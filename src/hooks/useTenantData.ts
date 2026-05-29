@@ -22,7 +22,7 @@ export interface AttendanceRecord {
 // ── Query Hooks ───────────────────────────────────────────────────────────────
 
 export function useAttendanceRecords(dateFrom?: string, dateTo?: string) {
-  const { apiFetch, isAuthenticated } = useTenantApi()
+  const { apiFetch } = useTenantApi()
 
   return useQuery({
     queryKey: ['attendance-records', dateFrom, dateTo],
@@ -36,12 +36,11 @@ export function useAttendanceRecords(dateFrom?: string, dateTo?: string) {
       // Hits Express: GET /api/attendance?date_from=...
       return apiFetch<AttendanceRecord[]>(`attendance?${qs}`)
     },
-    enabled: isAuthenticated,
   })
 }
 
 export function useComplianceCheck() {
-  const { apiFetch, isAuthenticated } = useTenantApi()
+  const { apiFetch } = useTenantApi()
 
   return useQuery({
     queryKey: ['compliance-check'],
@@ -57,7 +56,6 @@ export function useComplianceCheck() {
           detail: string
         }>
       }>('compliance/check'), // Update to match your Express compliance route
-    enabled: isAuthenticated,
   })
 }
 
