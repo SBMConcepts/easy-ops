@@ -1,6 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useCallback, useContext, useState } from 'react'
-import { getSubdomain } from '../utils/subdomain'
 
 // Point this to your new Express Backend URL
 const API_URL = import.meta.env.VITE_API_URL as string
@@ -26,10 +25,13 @@ const TenantContext = createContext<TenantContextType>({
   resolveTenant: async () => {},
 })
 
-export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const TenantProvider: React.FC<{ children: React.ReactNode; slug: string }> = ({
+  children,
+  slug,
+}) => {
   const [tenant, setTenant] = useState<TenantInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const slug = getSubdomain()
+  // slug comes from the /t/:slug route param — no URL reading needed here
 
   const resolveTenant = useCallback(async () => {
     if (!slug || tenant) return

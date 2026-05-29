@@ -1,5 +1,5 @@
 import React from 'react'
-import { Navigate, useLocation } from 'react-router'
+import { Navigate, useLocation, useParams } from 'react-router'
 import { useAuth, type UserRole } from '../contexts/AuthContext'
 
 interface ProtectedRouteProps {
@@ -10,6 +10,14 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading, user, tenant } = useAuth()
   const location = useLocation()
+  // useParams picks up :slug from the parent /t/:slug/* route
+  const { slug } = useParams<{ slug?: string }>()
+
+  // Build absolute paths that work in both path mode (/t/:slug) and
+  // subdomain mode (no slug prefix needed, but we keep the fallback).
+  const loginPath = slug ? `/t/${slug}/app/login` : '/login'
+  const onboardingPath = slug ? `/t/${slug}/app/onboarding` : '/onboarding'
+  const appPath = slug ? `/t/${slug}/app` : '/app'
 
   // ── 1. Loading guard ─────────────────────────────────────────────────────
   // While AuthContext is resolving the Auth0 session + Supabase profile, we
@@ -21,7 +29,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   // Not logged in → send to the workspace login page and preserve the
   // intended destination so we can redirect back after a successful login.
   if (!isAuthenticated) {
-    return <Navigate to="/app/login" replace state={{ from: location }} />
+    return <Navigate to={loginPath} replace state={{ from: location }} />
   }
 
   // ── 3. Onboarding guard ───────────────────────────────────────────────────
@@ -34,17 +42,17 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const needsOnboarding =
     user?.role === 'admin' &&
     (tenant === null || tenant.status === 'onboarding') &&
-    location.pathname !== '/app/onboarding'
+    location.pathname !== onboardingPath
 
   if (needsOnboarding) {
-    return <Navigate to="/app/onboarding" replace />
+    return <Navigate to={onboardingPath} replace />
   }
 
   // ── 4. Role-based access guard ───────────────────────────────────────────
   // If the route specifies allowedRoles and the user's role isn't in the list,
   // redirect to the app root. DashboardRouter will render their correct view.
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/app" replace />
+    return <Navigate to={appPath} replace />
   }
 
   return <>{children}</>
