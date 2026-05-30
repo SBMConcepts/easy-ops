@@ -557,9 +557,12 @@ CREATE OR REPLACE FUNCTION public.current_tenant_id()
  STABLE SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
-  SELECT NULLIF(auth.jwt() ->> 'org_id','')::uuid
-$function$
-;
+  -- Takes the native Auth0 'org_id' string and finds your internal UUID
+  SELECT t.id
+  FROM public.tenants t
+  WHERE t.auth0_org_id = (auth.jwt() ->> 'org_id')
+  LIMIT 1;
+$function$;
 
 CREATE OR REPLACE FUNCTION public.current_user_id()
  RETURNS text
@@ -571,6 +574,7 @@ AS $function$
 $function$
 ;
 
+-- 2. Update the defensive trigger to use the fixed function
 CREATE OR REPLACE FUNCTION public.defensive_set_tenant_id()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -580,24 +584,22 @@ AS $function$
 DECLARE
   v_tenant_id uuid;
 BEGIN
-  IF NEW.tenant_id IS NULL THEN
-    v_tenant_id := (auth.jwt() ->> 'tenant_id')::uuid;
-    IF v_tenant_id IS NULL THEN
-      RAISE EXCEPTION 'Missing tenant_id claim in JWT';
-    END IF;
-    NEW.tenant_id := v_tenant_id;
+  -- Get the UUID using our unified function above
+  v_tenant_id := public.current_tenant_id();
+
+  IF v_tenant_id IS NULL THEN
+    RAISE EXCEPTION 'Missing or invalid Auth0 org_id claim in JWT';
   END IF;
 
-  -- Also prevent spoofing if client tries to provide a different tenant_id
-  v_tenant_id := (auth.jwt() ->> 'tenant_id')::uuid;
-  IF v_tenant_id IS NOT NULL AND NEW.tenant_id <> v_tenant_id THEN
-    RAISE EXCEPTION 'tenant_id mismatch';
+  IF NEW.tenant_id IS NULL THEN
+    NEW.tenant_id := v_tenant_id;
+  ELSIF NEW.tenant_id <> v_tenant_id THEN
+    RAISE EXCEPTION 'tenant_id mismatch: Cannot insert data for a different tenant';
   END IF;
 
   RETURN NEW;
 END;
-$function$
-;
+$function$;
 
 CREATE OR REPLACE FUNCTION public.enforce_seat_cap()
  RETURNS trigger
