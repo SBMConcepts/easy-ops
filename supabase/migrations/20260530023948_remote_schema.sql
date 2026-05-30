@@ -440,8 +440,8 @@ begin
     raise exception 'Tenant not found for slug: %', v_tenant_slug;
   end if;
 
-  -- Current signed-in user
-  v_decider_user_id := (select auth.uid())::text;
+-- Current signed-in user (Fixed for Auth0)
+  v_decider_user_id := public.current_user_id();
   if v_decider_user_id is null or v_decider_user_id = '' then
     raise exception 'Not authenticated';
   end if;
@@ -1389,17 +1389,19 @@ using (((tenant_id = public.current_tenant_id()) AND (EXISTS ( SELECT 1
   WHERE ((m.id = employee_profiles.membership_id) AND (m.user_id = public.current_user_id()))))));
 
 
+DROP POLICY IF EXISTS "Tenant active members can read" ON public.memberships;
 
-  create policy "Tenant active members can read"
-  on "public"."memberships"
-  as permissive
-  for select
-  to authenticated
-using (((status = 'active'::public.membership_status) AND (EXISTS ( SELECT 1
-   FROM public.memberships m2
-  WHERE ((m2.tenant_id = memberships.tenant_id) AND (m2.user_id = (( SELECT auth.uid() AS uid))::text) AND (m2.status = 'active'::public.membership_status))))));
-
-
+CREATE POLICY "Tenant active members can read"
+ON public.memberships
+AS PERMISSIVE FOR SELECT TO authenticated
+USING (
+  status = 'active'::public.membership_status AND EXISTS (
+    SELECT 1 FROM public.memberships m2
+    WHERE m2.tenant_id = memberships.tenant_id 
+      AND m2.user_id = public.current_user_id() 
+      AND m2.status = 'active'::public.membership_status
+  )
+);
 
   create policy "memberships_admin_write"
   on "public"."memberships"
