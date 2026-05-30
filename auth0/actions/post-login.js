@@ -9,7 +9,7 @@
  *     row up to date (email, avatar, name).
  *
  * Required Secrets (set in Auth0 Dashboard → Actions → Secrets):
- *   API_BASE_URL       — e.g. https://api.easy-ops-za.vercel.app
+ *   BACKEND_URL        — Your Express server: https://api.easyops.co.za
  *   AUTH0_SYNC_SECRET  — must match process.env.AUTH0_SYNC_SECRET on your server
  */
 
@@ -32,16 +32,16 @@ exports.onExecutePostLogin = async (event, api) => {
   api.accessToken.setCustomClaim(CLAIM_NS + 'role', role)
 
   // 3. Sync user row to Supabase (fire-and-forget — never blocks login)
-  const apiBaseUrl = event.secrets && event.secrets.API_BASE_URL
+  const backendUrl = event.secrets && event.secrets.BACKEND_URL
   const syncSecret = event.secrets && event.secrets.AUTH0_SYNC_SECRET
 
-  if (!apiBaseUrl || !syncSecret) {
-    console.warn('[post-login] API_BASE_URL or AUTH0_SYNC_SECRET not set — skipping sync')
+  if (!backendUrl || !syncSecret) {
+    console.warn('[post-login] BACKEND_URL or AUTH0_SYNC_SECRET not set — skipping sync')
     return
   }
 
   try {
-    const res = await fetch(apiBaseUrl + '/api/auth/sync', {
+    const res = await fetch(backendUrl + '/api/auth/sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

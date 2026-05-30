@@ -9,7 +9,8 @@
  *   AUTH0_DOMAIN               — e.g. easy-ops.us.auth0.com
  *   AUTH0_MANAGEMENT_CLIENT_ID
  *   AUTH0_MANAGEMENT_CLIENT_SECRET
- *   API_BASE_URL               — e.g. https://api.easyops.co.za
+ *   API_BASE_URL               — Auth0 Management API audience: https://easy-ops.us.auth0.com/api/v2/
+ *   BACKEND_URL                — Your Express server: https://api.easyops.co.za
  *   AUTH0_SYNC_SECRET
  */
 
@@ -17,7 +18,8 @@ exports.onExecutePostUserRegistration = async (event, api) => {
   var domain = event.secrets.AUTH0_DOMAIN
   var clientId = event.secrets.AUTH0_MANAGEMENT_CLIENT_ID
   var clientSecret = event.secrets.AUTH0_MANAGEMENT_CLIENT_SECRET
-  var apiBaseUrl = event.secrets.API_BASE_URL
+  var managementAudience = event.secrets.API_BASE_URL // https://easy-ops.us.auth0.com/api/v2/
+  var backendUrl = event.secrets.BACKEND_URL // https://api.easyops.co.za
   var syncSecret = event.secrets.AUTH0_SYNC_SECRET
 
   // ── 1. Stamp app_metadata via Management API ──────────────────────────────
@@ -37,7 +39,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
           grant_type: 'client_credentials',
           client_id: clientId,
           client_secret: clientSecret,
-          audience: 'https://' + domain + '/api/v2/',
+          audience: managementAudience,
         }),
       })
       var tokenData = await tokenRes.json()
@@ -72,13 +74,13 @@ exports.onExecutePostUserRegistration = async (event, api) => {
   }
 
   // ── 2. Sync user row to Supabase ──────────────────────────────────────────
-  if (!apiBaseUrl || !syncSecret) {
-    console.warn('[post-registration] API_BASE_URL or AUTH0_SYNC_SECRET not set — skipping sync')
+  if (!backendUrl || !syncSecret) {
+    console.warn('[post-registration] BACKEND_URL or AUTH0_SYNC_SECRET not set — skipping sync')
     return
   }
 
   try {
-    var res = await fetch(apiBaseUrl + '/api/auth/sync', {
+    var res = await fetch(backendUrl + '/api/auth/sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
