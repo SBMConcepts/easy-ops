@@ -15,9 +15,19 @@
 function login(email, password, context, callback) {
   var pg = require('pg')
   var bcrypt = require('bcrypt')
+  var url = require('url')
+
+  // Auth0's sandbox pg version does not support connectionString reliably —
+  // parse the URL manually and pass individual parameters instead.
+  var parsed = url.parse(configuration.DATABASE_URL)
+  var auth = parsed.auth ? parsed.auth.split(':') : ['', '']
 
   var client = new pg.Client({
-    connectionString: configuration.DATABASE_URL,
+    host: parsed.hostname,
+    port: parseInt(parsed.port, 10) || 5432,
+    database: parsed.pathname ? parsed.pathname.replace(/^\//, '') : 'postgres',
+    user: decodeURIComponent(auth[0] || ''),
+    password: decodeURIComponent(auth[1] || ''),
     ssl: { rejectUnauthorized: false },
   })
 

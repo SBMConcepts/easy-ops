@@ -17,36 +17,29 @@
  */
 
 exports.onExecutePreUserRegistration = async (event, api) => {
-  // event.transaction is only present for interactive (browser) flows.
-  // Programmatic user creation via the Management API (your register route)
-  // will NOT trigger this Action, so the check below only applies to
-  // users signing up through the Universal Login UI directly.
-
+  // Programmatic creation via the Management API does not trigger this Action.
+  // Only interactive (browser) signups reach this point.
   const isInteractiveSignup = !!event.transaction
 
   if (isInteractiveSignup) {
     const hasInvitation = !!(
-      event.transaction?.params?.invitation ||
-      event.request?.query?.invitation ||
-      event.user?.app_metadata?.invitation_token
+      event.transaction &&
+      event.transaction.params &&
+      event.transaction.params.invitation
     )
+    const hasOrgContext = !!(event.organization && event.organization.id)
 
-    const hasOrgContext = !!event.organization?.id
-
-    // Block signups that are not invitation-based
     if (!hasInvitation && !hasOrgContext) {
+      // api.access.deny requires (code, message) — two arguments
       api.access.deny(
-        'Self-service registration is not available. ' +
-          'Please ask your workspace administrator to invite you.'
+        'unauthorized',
+        'Self-service registration is not available. Please ask your workspace administrator to invite you.'
       )
       return
     }
   }
 
-  // For invited users: pre-stamp the org_id into app_metadata so it is
-  // available immediately after creation without waiting for post-login.
-  const orgId = event.organization?.id
-  if (orgId) {
-    api.user.setAppMetadata('org_id', orgId)
+  if (event.organization && event.organization.id) {
+    api.user.setAppMetadata('org_id', event.organization.id)
   }
 }
