@@ -1,45 +1,53 @@
 /* eslint-disable react-refresh/only-export-components */
-// src/contexts/DatabaseContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://ewniypaosorbepjxnqqz.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_qXU5qD57lx-TG94X2IYq_g_4j-eqrja' // Safe to expose publicly
+const SUPABASE_URL = 'https://your-project-ref.supabase.co'
+const SUPABASE_ANON_KEY = 'your-public-anon-key' // Safe to expose publicly on client bundles
 
 const DatabaseContext = createContext<SupabaseClient | null>(null)
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0()
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
+  const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0()
+  const [supabaseClient, setSupabaseClient] = useState<SupabaseClient | null>(null)
 
   useEffect(() => {
-    const initClient = async () => {
+    if (isLoading) return
+
+    const buildKeylessClient = async () => {
       if (!isAuthenticated) {
-        // Initialize an unauthenticated client for public registration routes
-        setSupabase(createClient(SUPABASE_URL, SUPABASE_ANON_KEY))
+        // Fallback for public checkout / registration pages
+        setSupabaseClient(createClient(SUPABASE_URL, SUPABASE_ANON_KEY))
         return
       }
 
-      // Fetch the cryptographic token issued by Auth0
-      const token = await getAccessTokenSilently()
+      try {
+        // Fetch the cryptographic token issued natively by Auth0
+        const token = await getAccessTokenSilently()
 
-      // Instantiate Supabase with the incoming Auth0 Authorization Bearer Context
-      const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        // Instantiate Supabase injected with our active token
+        const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        },
-      })
-
-      setSupabase(client)
+        })
+        setSupabaseClient(client)
+      } catch (err) {
+        console.error('Failed to instantiate secure database layer:', err)
+      }
     }
 
-    void initClient()
-  }, [getAccessTokenSilently, isAuthenticated])
+    void buildKeylessClient()
+  }, [getAccessTokenSilently, isAuthenticated, isLoading])
 
-  return <DatabaseContext.Provider value={supabase}>{children}</DatabaseContext.Provider>
+  return <DatabaseContext.Provider value={supabaseClient}>{children}</DatabaseContext.Provider>
 }
 
-export const useDB = () => useContext(DatabaseContext)
+export const useDB = () => {
+  const context = useContext(DatabaseContext)
+  if (!context) throw new Error('useDB must be wrapped inside a DatabaseProvider element.')
+  return context
+}
