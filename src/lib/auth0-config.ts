@@ -13,13 +13,13 @@
  */
 
 // Note: Switched from process.env to Vite's import.meta.env syntax
-export const AUTH0_DOMAIN = import.meta.env.AUTH0_DOMAIN || ''
-export const AUTH0_CLIENT_ID = import.meta.env.AUTH0_MANAGEMENT_CLIENT_ID || ''
-export const AUTH0_CLIENT_SECRET = import.meta.env.AUTH0_MANAGEMENT_CLIENT_SECRET || ''
-export const AUTH0_AUDIENCE = import.meta.env.AUTH0_MANAGEMENT_AUDIENCE || ''
+export const AUTH0_DOMAIN = import.meta.env.VITE_AUTH0_DOMAIN || ''
+export const AUTH0_CLIENT_ID = import.meta.env.VITE_AUTH0_CLIENT_ID || ''
+export const AUTH0_CLIENT_SECRET = import.meta.env.VITE_AUTH0_MANAGEMENT_CLIENT_SECRET || ''
+export const AUTH0_AUDIENCE = import.meta.env.VITE_AUTH0_AUDIENCE || ''
 
 /**
  * Must match the exact domain namespace used in your Auth0 post-login Action
  * when applying custom claims (e.g., api.idToken.setCustomClaim(ns + 'role', ...))
  */
-export const AUTH0_CLAIM_NS = 'https://easy-ops-za.vercel.app/'
+export const AUTH0_CLAIM_NS = 'https://easy-ops.us.auth0.com/' // <-- Trailing slash is important for namespacing claims
