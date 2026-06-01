@@ -2,6 +2,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
+import { AppRole } from '../integrations/supabase/types'
+
+export type UserRole = AppRole
 
 // ── Public types ─────────────────────────────────────────────────────────────
 
@@ -32,7 +35,7 @@ export interface User {
   full_name: string
   avatar_url?: string | null
   tenant_id: string // public.tenants.id
-  role: 'admin' | 'manager' | 'supervisor' | 'employee'
+  role: UserRole
 }
 
 interface AuthContextType {
@@ -89,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           full_name: profileData.full_name,
           avatar_url: profileData.avatar_url,
           tenant_id: profileData.tenant_id,
-          role: profileData.role,
+          role: profileData.role as UserRole,
         })
 
         // Populate local tenant states

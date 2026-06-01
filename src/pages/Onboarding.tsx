@@ -24,7 +24,6 @@ const LAST_STEP = 5
 export default function Onboarding() {
   const navigate = useNavigate()
   const { apiFetch } = useTenantApi() // Safe backend connectivity for current workspace
-  const { refreshTenant } = useAuth() // Force a context update after setup is complete
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
 
@@ -67,7 +66,6 @@ export default function Onboarding() {
       toast.success('Workspace profile finalized successfully!')
 
       // Refresh the local user/tenant context to reflect the new 'active' status
-      await refreshTenant()
       navigate('/app/dashboard', { replace: true })
     } catch (err: any) {
       toast.error(err.message || 'Failed saving workspace layout settings.')

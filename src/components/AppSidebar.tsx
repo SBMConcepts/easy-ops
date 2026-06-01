@@ -1,7 +1,7 @@
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import type { AppRole } from '../integrations/supabase/types'
+import type { UserRole } from '../contexts/AuthContext'
 import {
   Sidebar,
   SidebarContent,
@@ -30,13 +30,13 @@ interface NavItem {
   title: string
   url: string
   icon: React.ElementType
-  roles: AppRole[]
+  roles: UserRole[]
 }
 
 const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    url: '/app/dashboard',
+    url: '/app',
     icon: LayoutDashboard,
     roles: ['admin', 'manager', 'supervisor', 'employee'],
   },
@@ -53,16 +53,16 @@ const navItems: NavItem[] = [
     roles: ['admin', 'manager', 'supervisor'],
   },
   {
-    title: 'Employees Management',
+    title: 'Employees',
     url: '/app/employees',
     icon: Users,
     roles: ['admin', 'manager'],
   },
   {
-    title: 'Sites & Departments',
+    title: 'Sites & Depts',
     url: '/app/sites',
     icon: Building,
-    roles: ['admin', 'manager'],
+    roles: ['admin', 'manager', 'supervisor'],
   },
   {
     title: 'Compliance',
@@ -74,7 +74,7 @@ const navItems: NavItem[] = [
     title: 'Reports',
     url: '/app/reports',
     icon: BarChart3,
-    roles: ['admin', 'manager', 'supervisor'],
+    roles: ['admin', 'manager', 'supervisor', 'employee'],
   },
   {
     title: 'Settings',
@@ -89,16 +89,19 @@ const AppSidebar = () => {
   const navigate = useNavigate()
   const { user, tenant } = useAuth()
 
-  // Gracefully filter routes matching the modern AppRole permissions context
-  const filteredItems = navItems.filter((item) => user?.role && item.roles.includes(user.role))
-  const orgName = tenant?.name || 'EasyOps Workspace'
+  const orgName = tenant?.name || 'Active Workspace'
+
+  const filteredItems = navItems.filter((item) => {
+    if (!user) return false
+    return item.roles.includes(user.role)
+  })
 
   return (
-    <Sidebar className="sidebar-nav">
+    <Sidebar>
       <SidebarHeader className="sidebar-header">
         <div
           className="sidebar-brand"
-          onClick={() => navigate('/app/dashboard')}
+          onClick={() => navigate('/app')}
           style={{ cursor: 'pointer' }}
         >
           <span className="sidebar-brand-name">{orgName}</span>

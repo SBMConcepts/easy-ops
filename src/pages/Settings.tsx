@@ -50,7 +50,7 @@ export default function Settings() {
         full_name: user.full_name || '',
         phone: '', // Map custom properties returned by your profile payload here if available
         address: '',
-        job_title: user.job_title || '',
+        job_title: '',
       })
     }
   }, [user])

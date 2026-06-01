@@ -20,7 +20,7 @@ const AppHeader = () => {
 
   const handleLogout = async () => {
     await logout()
-    navigate('/app')
+    navigate('/login')
   }
 
   return (
@@ -35,8 +35,8 @@ const AppHeader = () => {
             <User className="h-4 w-4 icon-muted" style={{ color: 'var(--muted-foreground)' }} />
             <span className="app-header-username">{user.full_name || 'User Profile'}</span>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout} title="Sign Out">
-            <LogOut className="h-4 w-4" />
+          <Button variant="ghost" size="icon" onClick={handleLogout} title="Log Out">
+            <LogOut className="h-4 w-4 text-muted-foreground" />
           </Button>
         </div>
       )}

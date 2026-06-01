@@ -1,5 +1,5 @@
 import React from 'react'
-import { Navigate, useLocation, useParams } from 'react-router'
+import { Navigate, useLocation } from 'react-router'
 import { useAuth, type UserRole } from '../contexts/AuthContext'
 
 interface ProtectedRouteProps {
@@ -10,14 +10,11 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading, user, tenant } = useAuth()
   const location = useLocation()
-  // useParams picks up :slug from the parent /t/:slug/* route
-  const { slug } = useParams<{ slug?: string }>()
 
-  // Build absolute paths that work in both path mode (/t/:slug) and
-  // subdomain mode (no slug prefix needed, but we keep the fallback).
-  const loginPath = slug ? `/t/${slug}/app/login` : '/login'
-  const onboardingPath = slug ? `/t/${slug}/app/onboarding` : '/onboarding'
-  const appPath = slug ? `/t/${slug}/app` : '/app'
+  // Strict root-relative paths matching the single-domain application routing tree
+  const loginPath = '/login'
+  const onboardingPath = '/app/onboarding'
+  const appPath = '/app'
 
   // ── 1. Loading guard ─────────────────────────────────────────────────────
   // While AuthContext is resolving the Auth0 session + Supabase profile, we
