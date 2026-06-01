@@ -1,6 +1,6 @@
 ﻿import { useAuth0 } from '@auth0/auth0-react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { Toaster as Sonner } from './components/ui/sonner'
 import { TooltipProvider } from './components/ui/tooltip'
 import AppLayout from './components/AppLayout'
@@ -39,67 +39,20 @@ const MarketingRoutes = () => (
 )
 
 // ── Workspace shell ──────────────────────────────────────────────────────────────
-// Mounted at /t/:slug/* — all child paths are relative to that prefix.
-// To switch to subdomain mode, set VITE_TENANT_MODE=subdomain in .env.
+// Authenticated application routes. Tenant context is derived automatically via JWT.
 const WorkspaceShell = () => {
-  const { slug } = useParams<{ slug: string }>()
-  const { isLoading: authLoading } = useAuth0()
-
-  if (authLoading) {
-    return <div className="loading-screen">Loading workspace...</div>
-  }
-
   return (
     <Routes>
-      {/* /t/:slug -> /t/:slug/app */}
-      <Route index element={<Navigate to="app" replace />} />
-      <Route path="app/login" element={<Login />} />
-      <Route path="app/reset-password" element={<ResetPassword />} />
-
-      {/* Onboarding has its own full-screen layout */}
-      <Route
-        path="app/onboarding"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <Onboarding />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Main app shell — AppLayout provides sidebar + top-nav chrome */}
-      <Route
-        path="app"
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
+      <Route element={<AppLayout />}>
+        {/* Workspace default landing (Dashboard) */}
         <Route index element={<DashboardRouter />} />
-        <Route
-          path="check-in"
-          element={
-            <ProtectedRoute allowedRoles={['employee', 'supervisor', 'manager', 'admin']}>
-              <CheckIn />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="attendance"
-          element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
-              <LiveAttendance />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="reports"
-          element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
-              <Reports />
-            </ProtectedRoute>
-          }
-        />
+
+        {/* General Staff & Operator Views */}
+        <Route path="check-in" element={<CheckIn />} />
+        <Route path="onboarding" element={<Onboarding />} />
+        <Route path="reports" element={<Reports />} />
+
+        {/* Management & Administration Views with RBAC */}
         <Route
           path="employees"
           element={
@@ -118,10 +71,10 @@ const WorkspaceShell = () => {
           }
         />
         <Route
-          path="team"
+          path="live-attendance"
           element={
-            <ProtectedRoute allowedRoles={['supervisor']}>
-              <ComingSoon title="Team Overview" />
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+              <LiveAttendance />
             </ProtectedRoute>
           }
         />
@@ -157,7 +110,7 @@ const WorkspaceShell = () => {
   )
 }
 
-// ── App root ──────────────────────────────────────────────────────────────────
+// ── App Root ──────────────────────────────────────────────────────────────────
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -165,9 +118,10 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Workspace shell — all tenant routes live under /t/:slug */}
-            <Route path="/t/:slug/*" element={<WorkspaceShell />} />
-            {/* Marketing shell — root domain public pages */}
+            {/* All secure workspace views live under /app instead of /t/:slug */}
+            <Route path="/app/*" element={<WorkspaceShell />} />
+
+            {/* Root-level marketing/public pages */}
             <Route path="/*" element={<MarketingRoutes />} />
           </Routes>
         </BrowserRouter>

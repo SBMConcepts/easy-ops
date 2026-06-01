@@ -5,8 +5,8 @@ import './index.css'
 import { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_AUDIENCE } from './lib/auth0-config'
 
 // After login Auth0 returns the org_id inside the JWT; AuthContext uses that
-// to resolve the tenant from the database.  No slug hint is needed here.
-const redirectUri = `${window.location.origin}/`
+// to resolve the tenant from the database. No slug hints or subdomains needed.
+const redirectUri = `${window.location.origin}/app`
 
 createRoot(document.getElementById('root')!).render(
   <Auth0Provider
