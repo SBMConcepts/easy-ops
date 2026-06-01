@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // src/contexts/DatabaseContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
