@@ -3,15 +3,10 @@ import { Auth0Provider } from '@auth0/auth0-react'
 import App from './App.tsx'
 import './index.css'
 import { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_AUDIENCE } from './lib/auth0-config'
-import { getTenantSlug } from './utils/subdomain'
 
-// Resolve the tenant slug from either /t/:slug path or subdomain (based on VITE_TENANT_MODE).
-// Used to pre-select the Auth0 Organization and set the correct callback URL.
-const slug = getTenantSlug()
-
-const redirectUri = slug
-  ? `${window.location.origin}/t/${slug}/app/`
-  : `${window.location.origin}/app/`
+// After login Auth0 returns the org_id inside the JWT; AuthContext uses that
+// to resolve the tenant from the database.  No slug hint is needed here.
+const redirectUri = `${window.location.origin}/`
 
 createRoot(document.getElementById('root')!).render(
   <Auth0Provider
@@ -20,7 +15,6 @@ createRoot(document.getElementById('root')!).render(
     authorizationParams={{
       redirect_uri: redirectUri,
       audience: AUTH0_AUDIENCE,
-      ...(slug ? { organization: slug } : {}),
     }}
   >
     <App />

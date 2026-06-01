@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useTenant } from '../contexts/TenantContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
@@ -501,17 +500,17 @@ function RequestAccessFlow({ onBack }: { onBack: () => void }) {
 
 const LoginPage = () => {
   const { login, loginWithCredentials, isAuthenticated, isLoading } = useAuth()
-  const { tenant, isLoading: tenantLoading, isCustomSubdomain, resolveTenant } = useTenant()
+  const { slug } = useParams<{ slug?: string }>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const invitation = searchParams.get('invitation')
   const organization = searchParams.get('organization')
 
-  const [mode, setMode] = useState<FlowMode>('select')
+  // Derive org identifier from URL params: prefer explicit ?organization= query param,
+  // then fall back to the workspace slug which Auth0 accepts as an org name.
+  const orgId = organization || slug || undefined
 
-  useEffect(() => {
-    if (isCustomSubdomain) resolveTenant()
-  }, [isCustomSubdomain, resolveTenant])
+  const [mode, setMode] = useState<FlowMode>('select')
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) navigate('/app', { replace: true })
@@ -520,18 +519,16 @@ const LoginPage = () => {
   // If arriving via an Auth0 invitation link, skip straight to sign-in
   useEffect(() => {
     if (invitation) {
-      const targetOrgId = organization || tenant?.auth0OrgId || undefined
-      login({ auth0OrgId: targetOrgId, invitation })
+      login({ auth0OrgId: orgId, invitation })
     }
-  }, [invitation, organization, tenant, login])
+  }, [invitation, orgId, login])
 
   // Wrapper so SignInFlow can call Auth0 username/password
   const handleCredentialLogin = async (email: string, password: string) => {
-    const targetOrgId = organization || tenant?.auth0OrgId || undefined
-    await loginWithCredentials({ email, password, auth0OrgId: targetOrgId })
+    await loginWithCredentials({ email, password, auth0OrgId: orgId })
   }
 
-  if (isLoading || tenantLoading || invitation) {
+  if (isLoading || invitation) {
     return (
       <div className="login-page">
         <div className="login-content-column">

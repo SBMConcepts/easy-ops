@@ -6,7 +6,6 @@ import { TooltipProvider } from './components/ui/tooltip'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthProvider } from './contexts/AuthContext'
-import { TenantProvider } from './contexts/TenantContext'
 import CheckIn from './pages/CheckIn'
 import ComingSoon from './pages/ComingSoon'
 import Compliance from './pages/Compliance'
@@ -51,112 +50,110 @@ const WorkspaceShell = () => {
   }
 
   return (
-    <TenantProvider slug={slug!}>
-      <Routes>
-        {/* /t/:slug -> /t/:slug/app */}
-        <Route index element={<Navigate to="app" replace />} />
-        <Route path="app/login" element={<Login />} />
-        <Route path="app/reset-password" element={<ResetPassword />} />
+    <Routes>
+      {/* /t/:slug -> /t/:slug/app */}
+      <Route index element={<Navigate to="app" replace />} />
+      <Route path="app/login" element={<Login />} />
+      <Route path="app/reset-password" element={<ResetPassword />} />
 
-        {/* Onboarding has its own full-screen layout */}
+      {/* Onboarding has its own full-screen layout */}
+      <Route
+        path="app/onboarding"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <Onboarding />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Main app shell — AppLayout provides sidebar + top-nav chrome */}
+      <Route
+        path="app"
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<DashboardRouter />} />
         <Route
-          path="app/onboarding"
+          path="check-in"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <Onboarding />
+            <ProtectedRoute allowedRoles={['employee', 'supervisor', 'manager', 'admin']}>
+              <CheckIn />
             </ProtectedRoute>
           }
         />
-
-        {/* Main app shell — AppLayout provides sidebar + top-nav chrome */}
         <Route
-          path="app"
+          path="attendance"
           element={
-            <ProtectedRoute>
-              <AppLayout />
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+              <LiveAttendance />
             </ProtectedRoute>
           }
-        >
-          <Route index element={<DashboardRouter />} />
-          <Route
-            path="check-in"
-            element={
-              <ProtectedRoute allowedRoles={['employee', 'supervisor', 'manager', 'admin']}>
-                <CheckIn />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="attendance"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
-                <LiveAttendance />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="reports"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                <Reports />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="employees"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                <EmployeeManagement
-                  requests={[]}
-                  prefillEmailForRequest={function (req: {
-                    id: string
-                    status: string
-                    requester_email: string
-                  }): string {
-                    throw new Error('Function not implemented.')
-                  }}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="team"
-            element={
-              <ProtectedRoute allowedRoles={['supervisor']}>
-                <ComingSoon title="Team Overview" />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="compliance"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                <Compliance />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="sites"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
-                <SitesAndDepartments />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="payroll"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
-                <ComingSoon title="Payroll Export" />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="settings" element={<Settings />} />
-        </Route>
+        />
+        <Route
+          path="reports"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="employees"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <EmployeeManagement
+                requests={[]}
+                prefillEmailForRequest={function (req: {
+                  id: string
+                  status: string
+                  requester_email: string
+                }): string {
+                  throw new Error('Function not implemented.')
+                }}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="team"
+          element={
+            <ProtectedRoute allowedRoles={['supervisor']}>
+              <ComingSoon title="Team Overview" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="compliance"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <Compliance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="sites"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+              <SitesAndDepartments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="payroll"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+              <ComingSoon title="Payroll Export" />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="settings" element={<Settings />} />
+      </Route>
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </TenantProvider>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   )
 }
 

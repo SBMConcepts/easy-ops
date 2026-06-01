@@ -1,10 +1,8 @@
 import { useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { useTenant } from '../contexts/TenantContext'
 
 export function useTenantApi() {
-  const { getAccessToken } = useAuth()
-  const { tenant } = useTenant()
+  const { getAccessToken, tenant } = useAuth()
 
   const tenantSlug = tenant?.slug
 

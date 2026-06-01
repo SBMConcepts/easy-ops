@@ -52,8 +52,8 @@ router.post('/', async (req: Request, res: Response) => {
       await client.query('BEGIN')
 
       const tenantInsert = await client.query(
-        `INSERT INTO public.tenants (name, slug, auth0_org_id, subscription_tier, status)
-         VALUES ($1, $2, $3, $4, 'pending_setup')
+        `INSERT INTO public.tenants (name, slug, auth0_org_id, plan, status)
+         VALUES ($1, $2, $3, $4, 'provisioning')
          RETURNING id`,
         [companyName, slug, auth0Org.id, subscriptionPlan || 'starter']
       )
@@ -70,8 +70,8 @@ router.post('/', async (req: Request, res: Response) => {
       const finalLocalUserId = userUpsert.rows[0].id
 
       await client.query(
-        `INSERT INTO public.tenant_memberships (tenant_id, user_id, role, status)
-         VALUES ($1, $2, 'admin'::app_role, 'active')`,
+        `INSERT INTO public.memberships (tenant_id, user_id, role, status, invited_by, joined_at)
+         VALUES ($1, $2, 'admin'::public.tenant_role, 'active', $1, now())`,
         [tenantId, finalLocalUserId]
       )
 
@@ -79,7 +79,7 @@ router.post('/', async (req: Request, res: Response) => {
 
       res.status(201).json({
         success: true,
-        workspace: `${slug}.easy-ops-za.vercel.app`,
+        workspace: `${process.env.VITE_APP_URL ?? 'http://localhost:5173'}/t/${slug}/app`,
         subscriptionPlan,
       })
     } catch (dbErr: unknown) {

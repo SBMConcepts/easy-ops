@@ -21,9 +21,7 @@ export async function verifyAuth0Token(req: Request): Promise<AuthContext | null
     const audience = process.env.AUTH0_AUDIENCE
     if (!domain || !audience) throw new Error('AUTH0_DOMAIN / AUTH0_AUDIENCE not configured')
 
-    const jwks = createRemoteJWKSet(
-      new URL(`https://ewniypaosorbepjxnqqz.supabase.co/auth/v1/.well-known/jwks.json`)
-    )
+    const jwks = createRemoteJWKSet(new URL(`https://${domain}/.well-known/jwks.json`))
     const { payload } = await jwtVerify(token, jwks, { audience, issuer: `https://${domain}/` })
 
     const auth0UserId = payload.sub
