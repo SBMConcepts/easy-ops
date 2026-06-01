@@ -33,7 +33,6 @@ export function useAttendanceRecords(dateFrom?: string, dateTo?: string) {
         date_to: dateTo || today,
       }).toString()
 
-      // Hits Express: GET /api/attendance?date_from=...
       return apiFetch<AttendanceRecord[]>(`attendance?${qs}`)
     },
   })
@@ -55,22 +54,16 @@ export function useComplianceCheck() {
           rule: string
           detail: string
         }>
-      }>('compliance/check'), // Update to match your Express compliance route
+      }>('compliance/check'),
   })
 }
 
 // ── Mutation Hooks ────────────────────────────────────────────────────────────
 
-/**
- * Encapsulates attendance actions.
- * By placing these inside a hook, they automatically inherit the tenant
- * and authentication headers managed by `useTenantApi`.
- */
 export function useAttendanceMutations() {
   const { apiFetch } = useTenantApi()
 
   const checkIn = async (method: CheckInMethod, siteId: string, lat?: number, lng?: number) => {
-    // Hits Express: POST /api/attendance
     return apiFetch<AttendanceRecord>('attendance', {
       method: 'POST',
       body: JSON.stringify({
@@ -83,7 +76,6 @@ export function useAttendanceMutations() {
   }
 
   const clockOut = async (recordId: string) => {
-    // Hits Express: PATCH /api/attendance/:id/clock-out
     return apiFetch<AttendanceRecord>(`attendance/${recordId}/clock-out`, {
       method: 'PATCH',
     })

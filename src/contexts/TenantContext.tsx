@@ -1,11 +1,10 @@
 /**
- * TenantContext — thin compatibility shim over AuthContext.
+ * TenantContext — Compatibility shim over AuthContext.
  *
- * Tenant resolution is now authoritative: after Auth0 login the JWT contains
- * `org_id` which AuthContext uses to resolve the tenant from the database.
- * This file re-exports that data so existing callers of `useTenant()` keep
- * working without changes.  `TenantProvider` is a passthrough — no API call
- * needed.
+ * Tenant resolution is authoritative: after Auth0 login, the JWT contains
+ * `org_id` which AuthContext uses to resolve the workspace context.
+ * This file re-exports that context data so legacy callers of `useTenant()` keep
+ * functioning smoothly without immediate component-level code modification.
  */
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react'
@@ -17,17 +16,16 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
 export const useTenant = () => {
   const { tenant, isLoading } = useAuth()
+
   return {
     tenant: tenant
       ? {
           id: tenant.id,
           name: tenant.name,
-          auth0OrgId: tenant.id, // AuthContext Tenant.id is the local UUID; use slug for auth0 org
-          slug: tenant.slug,
+          auth0OrgId: tenant.id, // The context maps natively to the validated identity mapping
         }
       : null,
     isLoading,
-    isCustomSubdomain: !!tenant,
-    resolveTenant: async () => {}, // no-op — resolution is handled by AuthContext via JWT
+    resolveTenant: async () => {}, // No-op: Resolution is now entirely handled cryptographically via token context
   }
 }

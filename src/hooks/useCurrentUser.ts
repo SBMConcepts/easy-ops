@@ -7,12 +7,12 @@ export interface EnrichedUser {
   full_name: string
   email: string
   avatar_url: string | null
-  role: 'admin' | 'manager' | 'employee' | 'supervisor' // Map this to your AppRole types
+  role: 'admin' | 'manager' | 'employee' | 'supervisor'
 }
 
 /**
- * Replaces `supabase.auth.getUser()`.
- * Automatically merges Auth0 session state with PostgreSQL profile data.
+ * Automatically merges active Auth0 session state with PostgreSQL backend profile data.
+ * Multi-tenant context is automatically resolved via the backend's token verification layer.
  */
 export function useCurrentUser() {
   const { user: auth0User, isLoading: isAuth0Loading, isAuthenticated } = useAuth0()
@@ -26,16 +26,15 @@ export function useCurrentUser() {
     queryKey: ['user-profile', auth0User?.sub],
     // Hits Express: GET /api/user/me
     queryFn: () => apiFetch<EnrichedUser>('user/me'),
-    // Only run the DB fetch if Auth0 says we are definitely logged in
+    // Only fetch from database if verified as authenticated by Auth0
     enabled: isAuthenticated && !!auth0User?.sub,
-    staleTime: 1000 * 60 * 5, // Cache profile for 5 minutes to prevent spamming the API
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   })
 
   return {
-    // The raw Auth0 identity (good for immediate UI rendering like avatars)
-    identity: auth0User,
-    // The database profile (contains roles, permissions, internal UUIDs)
+    auth0User,
     profile,
+    role: profile?.role ?? null,
     isLoading: isAuth0Loading || isProfileLoading,
     isAuthenticated,
     error,

@@ -1,18 +1,19 @@
 import { useCallback } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext' // Or your chosen Auth0 / context wrapper
 
 export function useTenantApi() {
-  const { getAccessToken, tenant } = useAuth()
-
-  const tenantSlug = tenant?.slug
+  // Removed 'tenant' state extraction since multi-tenancy is native within the JWT
+  const { getAccessToken } = useAuth()
 
   const apiFetch = useCallback(
     async <T = unknown>(path: string, init: RequestInit = {}): Promise<T> => {
       const token = await getAccessToken()
 
       const headers = new Headers(init.headers)
-      if (token) headers.set('Authorization', `Bearer ${token}`)
-      if (tenantSlug) headers.set('x-tenant-slug', tenantSlug)
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+      headers.set('Content-Type', 'application/json') // Enforced standard
 
       const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/${path}`, {
         ...init,
@@ -20,11 +21,10 @@ export function useTenantApi() {
       })
 
       if (!response.ok) {
-        // Try to return server-provided message
         let message = `Request failed: ${response.status}`
         try {
           const data = await response.json()
-          message = data?.message ?? message
+          message = data?.error ?? data?.message ?? message
         } catch (_) {
           /* ignore JSON parsing errors */
         }
@@ -33,7 +33,7 @@ export function useTenantApi() {
 
       return (await response.json()) as T
     },
-    [getAccessToken, tenantSlug]
+    [getAccessToken] // Removed tenantSlug dependency
   )
 
   return { apiFetch }

@@ -10,12 +10,6 @@ const router = Router()
 
 router.post('/invite', async (req: Request, res: Response) => {
   try {
-    const tenantSlug = req.headers['x-tenant-slug'] as string | undefined
-    if (!tenantSlug) {
-      res.status(400).json({ error: 'Tenant workspace context missing.' })
-      return
-    }
-
     const authCtx = await verifyAuth0Token(req)
     if (!authCtx) {
       res.status(401).json({ error: 'Unauthorized security context.' })
@@ -93,7 +87,6 @@ router.post('/invite', async (req: Request, res: Response) => {
       authCtx.localTenantId,
       authCtx.localUserId,
       async (client) => {
-        // Pre-provision / upsert local user
         const userRes = await client.query(
           `INSERT INTO public.users (id, auth0_user_id, email, full_name)
            VALUES (gen_random_uuid(), $1, $2, $3)

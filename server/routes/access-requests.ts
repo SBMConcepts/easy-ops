@@ -8,19 +8,12 @@ import { hasRequiredRole } from '../lib/rbac.js'
 const router = Router()
 
 router.post('/approve-and-invite', async (req: Request, res: Response) => {
-  const tenantSlug = req.headers['x-tenant-slug'] as string | undefined
-  if (!tenantSlug) {
-    res.status(400).json({ error: 'Tenant workspace context missing.' })
-    return
-  }
-
   const authCtx = await verifyAuth0Token(req)
   if (!authCtx) {
     res.status(401).json({ error: 'Unauthorized security context.' })
     return
   }
 
-  // Adjust this if your RBAC expects a different permission than manager
   if (!hasRequiredRole(authCtx, 'manager')) {
     res.status(403).json({ error: 'Forbidden: Insufficient privileges to approve requests.' })
     return
@@ -36,8 +29,6 @@ router.post('/approve-and-invite', async (req: Request, res: Response) => {
     return
   }
 
-  // email is currently unused by your RPC, but keeping it means the route
-  // safely accepts the payload your client sends.
   void email
 
   try {

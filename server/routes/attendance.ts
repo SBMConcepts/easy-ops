@@ -7,12 +7,6 @@ import { hasRequiredRole } from '../lib/rbac.js'
 const router = Router()
 
 router.get('/', async (req: Request, res: Response) => {
-  const tenantSlug = req.headers['x-tenant-slug'] as string | undefined
-  if (!tenantSlug) {
-    res.status(400).json({ error: 'Tenant workspace context missing from routing.' })
-    return
-  }
-
   const authCtx = await verifyAuth0Token(req)
   if (!authCtx) {
     res.status(401).json({ error: 'Unauthorized security context.' })

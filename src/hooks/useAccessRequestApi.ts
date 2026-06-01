@@ -11,7 +11,6 @@ export function useAccessRequestApi() {
   const approveAndInvite = async (body: ApproveAndInviteBody) => {
     return apiFetch<{ ok: true }>('access-requests/approve-and-invite', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
   }

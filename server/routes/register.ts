@@ -8,20 +8,25 @@ import crypto from 'crypto'
 const router = Router()
 
 router.post('/', async (req: Request, res: Response) => {
-  const { companyName, companySlug, adminEmail, password, subscriptionPlan } = req.body as {
+  const { companyName, adminEmail, password, subscriptionPlan } = req.body as {
     companyName?: string
-    companySlug?: string
     adminEmail?: string
     password?: string
     subscriptionPlan?: string
   }
 
-  if (!companyName || !companySlug || !adminEmail || !password || !subscriptionPlan) {
+  if (!companyName || !adminEmail || !password || !subscriptionPlan) {
     res.status(400).json({ error: 'Missing registration payload inputs' })
     return
   }
 
-  const slug = companySlug.toLowerCase().trim()
+  // Generate an automated internal slug safely for Auth0 Organization registration mapping requirements
+  const slug = companyName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60)
 
   const auth0 = new ManagementClient({
     domain: process.env.AUTH0_DOMAIN!,
@@ -52,8 +57,8 @@ router.post('/', async (req: Request, res: Response) => {
       await client.query('BEGIN')
 
       const tenantInsert = await client.query(
-        `INSERT INTO public.tenants (name, slug, auth0_org_id, plan, status)
-         VALUES ($1, $2, $3, $4, 'provisioning')
+        `INSERT INTO public.tenants (name, slug, auth0_org_id, subscription_tier, status)
+         VALUES ($1, $2, $3, $4, 'pending_setup')
          RETURNING id`,
         [companyName, slug, auth0Org.id, subscriptionPlan || 'starter']
       )
@@ -70,8 +75,8 @@ router.post('/', async (req: Request, res: Response) => {
       const finalLocalUserId = userUpsert.rows[0].id
 
       await client.query(
-        `INSERT INTO public.memberships (tenant_id, user_id, role, status, invited_by, joined_at)
-         VALUES ($1, $2, 'admin'::public.tenant_role, 'active', $1, now())`,
+        `INSERT INTO public.tenant_memberships (tenant_id, user_id, role, status)
+         VALUES ($1, $2, 'admin'::app_role, 'active')`,
         [tenantId, finalLocalUserId]
       )
 
@@ -79,7 +84,6 @@ router.post('/', async (req: Request, res: Response) => {
 
       res.status(201).json({
         success: true,
-        workspace: `${process.env.VITE_APP_URL ?? 'http://localhost:5173'}/t/${slug}/app`,
         subscriptionPlan,
       })
     } catch (dbErr: unknown) {
