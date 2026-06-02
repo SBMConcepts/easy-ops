@@ -1,11 +1,11 @@
 ﻿import { useAuth0 } from '@auth0/auth0-react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom' // Standardized router import
 import { Toaster as Sonner } from './components/ui/sonner'
 import { TooltipProvider } from './components/ui/tooltip'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
-import { AuthProvider } from './contexts/AuthContext'
+import { useAuth, AuthProvider } from './contexts/AuthContext'
 import CheckIn from './pages/CheckIn'
 import ComingSoon from './pages/ComingSoon'
 import Compliance from './pages/Compliance'
@@ -22,6 +22,7 @@ import ResetPassword from './pages/ResetPassword'
 import Settings from './pages/Settings'
 import SitesAndDepartments from './pages/SitesAndDepartments'
 import DashboardRouter from './pages/dashboard/DashboardRouter'
+import { DashboardLoader } from './pages/dashboard/DashboardLoader'
 
 const queryClient = new QueryClient()
 
@@ -41,10 +42,22 @@ const MarketingRoutes = () => (
 // ── Workspace shell ──────────────────────────────────────────────────────────────
 // Authenticated application routes. Tenant context is derived automatically via JWT.
 const WorkspaceShell = () => {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  // Handle initialization loading frames safely
+  if (isLoading) {
+    return <DashboardLoader />
+  }
+
+  // Enforce global authentication fallback across the workspace route tree
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        {/* Workspace default landing (Dashboard) */}
+        {/* Workspace default landing (DashboardRouter dynamically renders based on user.role) */}
         <Route index element={<DashboardRouter />} />
 
         {/* General Staff & Operator Views */}
