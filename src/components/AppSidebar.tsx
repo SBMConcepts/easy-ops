@@ -36,7 +36,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    url: '/app',
+    url: '/app/dashboard',
     icon: LayoutDashboard,
     roles: ['admin', 'manager', 'supervisor', 'employee'],
   },
@@ -89,7 +89,7 @@ const AppSidebar = () => {
   const navigate = useNavigate()
   const { user, tenant } = useAuth()
 
-  const orgName = tenant?.name || 'Active Workspace'
+  const orgName = tenant?.name
 
   const filteredItems = navItems.filter((item) => {
     if (!user) return false
@@ -101,7 +101,7 @@ const AppSidebar = () => {
       <SidebarHeader className="sidebar-header">
         <div
           className="sidebar-brand"
-          onClick={() => navigate('/app')}
+          onClick={() => navigate('/app/dashboard')}
           style={{ cursor: 'pointer' }}
         >
           <span className="sidebar-brand-name">{orgName}</span>

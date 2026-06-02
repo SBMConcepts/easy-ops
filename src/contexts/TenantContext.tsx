@@ -22,7 +22,7 @@ export const useTenant = () => {
       ? {
           id: tenant.id,
           name: tenant.name,
-          auth0OrgId: tenant.id, // The context maps natively to the validated identity mapping
+          auth0_org_id: tenant.id, // The context maps natively to the validated identity mapping
         }
       : null,
     isLoading,
