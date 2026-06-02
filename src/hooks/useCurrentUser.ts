@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth0 } from '@auth0/auth0-react'
+import { useAuth } from '../contexts/AuthContext'
 import { useTenantApi } from './useTenantApi'
 import type {
   TenantRole,
@@ -73,15 +74,16 @@ export const currentUserKeys = {
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useCurrentUser() {
-  const { user: auth0User, isLoading: isAuth0Loading, isAuthenticated } = useAuth0()
+  const { user: auth0User, isLoading: isAuth0Loading } = useAuth0()
+  const { isAuthenticated, user: authUser } = useAuth()
   const { apiFetch } = useTenantApi()
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: currentUserKeys.profile(auth0User?.sub),
+    queryKey: currentUserKeys.profile(authUser?.id ?? auth0User?.sub),
     queryFn: () => apiFetch<CurrentUserProfile>('user/me'),
-    // Only run when Auth0 has confirmed identity — avoids a 401 flash on mount
-    enabled: isAuthenticated && !!auth0User?.sub,
+    // Only run when AuthContext has confirmed identity — avoids a 401 flash on mount
+    enabled: isAuthenticated && !!(authUser?.id ?? auth0User?.sub),
     // 5 minutes: profile data is slow-changing; role/plan changes trigger
     // explicit invalidation via refreshProfile() or refetch()
     staleTime: 1000 * 60 * 5,

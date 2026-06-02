@@ -92,7 +92,7 @@ export interface AttendanceRecordRow {
   id: string
   tenant_id: string
   employee_id: string
-  site_id: string | null
+  site_id: string
   date: string
   clock_in: string | null
   clock_out: string | null
@@ -115,7 +115,7 @@ export interface AttendanceRecordInsert {
   id?: string
   tenant_id: string
   employee_id: string
-  site_id?: string | null
+  site_id?: string
   date?: string
   clock_in?: string | null
   clock_out?: string | null
@@ -137,7 +137,7 @@ export interface AttendanceRecordInsert {
 export interface AttendanceRecordUpdate {
   tenant_id?: string
   employee_id?: string
-  site_id?: string | null
+  site_id?: string
   date?: string
   clock_in?: string | null
   clock_out?: string | null

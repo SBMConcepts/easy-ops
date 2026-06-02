@@ -1,12 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react'
 import { Badge } from '../../components/ui/badge'
+import type { AttendanceStatus } from '../../integrations/supabase/types'
 
-export const STATUS_COLORS: Record<string, string> = {
+export const STATUS_COLORS: Record<AttendanceStatus, string> = {
   present: 'bg-secondary/10 text-secondary border-secondary/20',
   late: 'bg-accent/10 text-accent-foreground border-accent/20',
   absent: 'bg-destructive/10 text-destructive border-destructive/20',
-  on_leave: 'bg-muted text-muted-foreground border-muted',
+  leave: 'bg-muted text-muted-foreground border-muted',
+  holiday: 'bg-muted text-muted-foreground border-muted',
 }
 
 export const DashboardLoader = () => (
@@ -20,7 +22,7 @@ interface AttendanceItemProps {
   metaText: string
   clockIn?: string | null
   clockOut?: string | null
-  status: string
+  status: AttendanceStatus
   hoursWorked?: string | null
 }
 

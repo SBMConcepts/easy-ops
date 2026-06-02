@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
 import { useTenantApi } from '../hooks/useTenantApi'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -18,27 +17,18 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { toast } from 'sonner'
 import { MapPin, Building2, Plus, Pencil, Loader2, Search, Trash2, RefreshCw } from 'lucide-react'
+import type {
+  SiteRow,
+  DepartmentRow,
+  SiteInsert,
+  SiteUpdate,
+  DepartmentInsert,
+  DepartmentUpdate,
+} from '../integrations/supabase/types'
 import '../styles/pages.css'
 import '../styles/sitesanddepartments.css'
 
-interface Site {
-  id: string
-  name: string
-  address: string | null
-  latitude: number | null
-  longitude: number | null
-  geofence_radius_m: number | null
-}
-
-interface Department {
-  id: string
-  name: string
-  code: string | null
-  site_id: string | null
-}
-
 export default function SitesAndDepartments() {
-  const { user } = useAuth()
   const { apiFetch } = useTenantApi()
   const queryClient = useQueryClient()
 
@@ -51,8 +41,8 @@ export default function SitesAndDepartments() {
   const [deptDialogOpen, setDeptDialogOpen] = useState(false)
 
   // Edit references states
-  const [editingSite, setEditingSite] = useState<Site | null>(null)
-  const [editingDept, setEditingDept] = useState<Department | null>(null)
+  const [editingSite, setEditingSite] = useState<SiteRow | null>(null)
+  const [editingDept, setEditingDept] = useState<DepartmentRow | null>(null)
 
   // Form states
   const [siteForm, setSiteForm] = useState({
@@ -64,7 +54,6 @@ export default function SitesAndDepartments() {
   })
   const [deptForm, setDeptForm] = useState({
     name: '',
-    code: '',
     site_id: '',
   })
 
@@ -75,7 +64,7 @@ export default function SitesAndDepartments() {
     refetch: refetchSites,
   } = useQuery({
     queryKey: ['sites'],
-    queryFn: () => apiFetch<Site[]>('sites'),
+    queryFn: () => apiFetch<SiteRow[]>('sites'),
   })
 
   const {
@@ -84,12 +73,12 @@ export default function SitesAndDepartments() {
     refetch: refetchDepts,
   } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => apiFetch<Department[]>('departments'),
+    queryFn: () => apiFetch<DepartmentRow[]>('departments'),
   })
 
   // ── Mutations ──────────────────────────────────────────────────────────────
   const saveSiteMutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: SiteInsert | SiteUpdate) => {
       const isEdit = !!editingSite?.id
       return apiFetch(isEdit ? `sites/${editingSite?.id}` : 'sites', {
         method: isEdit ? 'PUT' : 'POST',
@@ -103,7 +92,8 @@ export default function SitesAndDepartments() {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
       setSiteDialogOpen(false)
     },
-    onError: (err: any) => toast.error(err.message || 'Error processing site data'),
+    onError: (err: unknown) =>
+      toast.error((err instanceof Error ? err.message : null) || 'Error processing site data'),
   })
 
   const deleteSiteMutation = useMutation({
@@ -112,11 +102,14 @@ export default function SitesAndDepartments() {
       toast.success('Site deleted successfully')
       queryClient.invalidateQueries({ queryKey: ['sites'] })
     },
-    onError: (err: any) => toast.error(err.message || 'Error removing site configuration'),
+    onError: (err: unknown) =>
+      toast.error(
+        (err instanceof Error ? err.message : null) || 'Error removing site configuration'
+      ),
   })
 
   const saveDeptMutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: DepartmentInsert | DepartmentUpdate) => {
       const isEdit = !!editingDept?.id
       return apiFetch(isEdit ? `departments/${editingDept?.id}` : 'departments', {
         method: isEdit ? 'PUT' : 'POST',
@@ -130,7 +123,10 @@ export default function SitesAndDepartments() {
       queryClient.invalidateQueries({ queryKey: ['departments'] })
       setDeptDialogOpen(false)
     },
-    onError: (err: any) => toast.error(err.message || 'Error executing department action'),
+    onError: (err: unknown) =>
+      toast.error(
+        (err instanceof Error ? err.message : null) || 'Error executing department action'
+      ),
   })
 
   const deleteDeptMutation = useMutation({
@@ -139,7 +135,10 @@ export default function SitesAndDepartments() {
       toast.success('Department entry archived')
       queryClient.invalidateQueries({ queryKey: ['departments'] })
     },
-    onError: (err: any) => toast.error(err.message || 'Failed archiving target department'),
+    onError: (err: unknown) =>
+      toast.error(
+        (err instanceof Error ? err.message : null) || 'Failed archiving target department'
+      ),
   })
 
   // ── Handle Open Actions ────────────────────────────────────────────────────
@@ -149,7 +148,7 @@ export default function SitesAndDepartments() {
     setSiteDialogOpen(true)
   }
 
-  const openEditSite = (site: Site) => {
+  const openEditSite = (site: SiteRow) => {
     setEditingSite(site)
     setSiteForm({
       name: site.name,
@@ -163,15 +162,14 @@ export default function SitesAndDepartments() {
 
   const openAddDept = () => {
     setEditingDept(null)
-    setDeptForm({ name: '', code: '', site_id: sites[0]?.id || '' })
+    setDeptForm({ name: '', site_id: sites[0]?.id || '' })
     setDeptDialogOpen(true)
   }
 
-  const openEditDept = (dept: Department) => {
+  const openEditDept = (dept: DepartmentRow) => {
     setEditingDept(dept)
     setDeptForm({
       name: dept.name,
-      code: dept.code || '',
       site_id: dept.site_id || '',
     })
     setDeptDialogOpen(true)
@@ -198,7 +196,6 @@ export default function SitesAndDepartments() {
     if (!deptForm.name.trim()) return toast.error('Department field name missing')
     saveDeptMutation.mutate({
       name: deptForm.name.trim(),
-      code: deptForm.code.trim() || null,
       site_id: deptForm.site_id || null,
     })
   }
@@ -256,7 +253,7 @@ export default function SitesAndDepartments() {
       <div className="sad-tabs-section mt-6">
         <Tabs
           defaultValue="sites"
-          onValueChange={(val) => setActiveTab(val as any)}
+          onValueChange={(val) => setActiveTab(val as 'sites' | 'departments')}
           className="w-full"
         >
           <TabsList className="mb-4">
@@ -352,7 +349,6 @@ export default function SitesAndDepartments() {
                     <thead>
                       <tr>
                         <th>Department Title</th>
-                        <th>Internal Org Code</th>
                         <th>Primary Site Context</th>
                         <th className="text-right">Management</th>
                       </tr>
@@ -363,7 +359,6 @@ export default function SitesAndDepartments() {
                         return (
                           <tr key={dept.id}>
                             <td className="font-semibold">{dept.name}</td>
-                            <td className="cell-mono text-sm">{dept.code || '—'}</td>
                             <td>
                               <Badge variant="outline">
                                 {boundSite ? boundSite.name : 'Global Allocation'}
@@ -490,14 +485,7 @@ export default function SitesAndDepartments() {
                 placeholder="Logistics & Freight Planning"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Internal Tracking Ledger Code</Label>
-              <Input
-                value={deptForm.code}
-                onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value })}
-                placeholder="LOG-ZA-DBN"
-              />
-            </div>
+
             <div className="space-y-1">
               <Label>Assigned Primary Site Boundary</Label>
               <select

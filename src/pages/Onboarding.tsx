@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTenantApi } from '../hooks/useTenantApi'
@@ -24,6 +23,7 @@ const LAST_STEP = 5
 export default function Onboarding() {
   const navigate = useNavigate()
   const { apiFetch } = useTenantApi() // Safe backend connectivity for current workspace
+  const { refreshProfile } = useAuth()
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
 
@@ -66,9 +66,12 @@ export default function Onboarding() {
       toast.success('Workspace profile finalized successfully!')
 
       // Refresh the local user/tenant context to reflect the new 'active' status
+      await refreshProfile()
       navigate('/app/dashboard', { replace: true })
-    } catch (err: any) {
-      toast.error(err.message || 'Failed saving workspace layout settings.')
+    } catch (err: unknown) {
+      toast.error(
+        (err instanceof Error ? err.message : null) || 'Failed saving workspace layout settings.'
+      )
     } finally {
       setSaving(false)
     }

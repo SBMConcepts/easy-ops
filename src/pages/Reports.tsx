@@ -3,19 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { useAttendanceRecords } from '../hooks/useTenantData'
+import type { AttendanceStatus } from '../integrations/supabase/types'
 import { Download, FileSpreadsheet, Loader2, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 
-const statusColors: Record<string, string> = {
+const statusColors: Record<AttendanceStatus, string> = {
   present: 'bg-secondary/10 text-secondary border-secondary/20',
   late: 'bg-accent/10 text-accent-foreground border-accent/20',
   absent: 'bg-destructive/10 text-destructive border-destructive/20',
-  on_leave: 'bg-muted text-muted-foreground border-muted',
+  leave: 'bg-muted text-muted-foreground border-muted',
+  holiday: 'bg-muted text-muted-foreground border-muted',
 }
 
 const Reports = () => {
-  const [range] = useState({ from: undefined, to: undefined })
-  const { data: records = [], isLoading } = useAttendanceRecords(range.from, range.to) // Safe fetching parameters
+  const [range] = useState<{ from?: string; to?: string }>({})
+  const { data: records = [], isLoading } = useAttendanceRecords({
+    dateFrom: range.from,
+    dateTo: range.to,
+  })
 
   const triggerDataExport = () => {
     if (records.length === 0) return toast.error('No record logs found within date bounds')

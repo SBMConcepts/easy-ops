@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { useAuth } from '../../contexts/AuthContext'
-import { useAttendanceRecords } from '../../hooks/useTenantData' // <-- Replaced useMyAttendance
+import { useAttendanceRecords } from '../../hooks/useTenantData'
 import { Clock, CalendarDays } from 'lucide-react'
 import { DashboardLoader, AttendanceRow } from './DashboardLoader'
 import '../../styles/dashboard.css'
@@ -9,12 +8,12 @@ import '../../styles/dashboard.css'
 const EmployeeDashboard = () => {
   const { user } = useAuth()
 
-  // The Express API + Postgres RLS guarantees this only contains their own records!
+  // The Express API + Postgres RLS guarantees this only contains their own records
   const { data: records = [], isLoading } = useAttendanceRecords()
 
   if (isLoading) return <DashboardLoader />
 
-  const totalHours = records.reduce((sum, r) => sum + parseFloat(r.hours_worked ?? '0'), 0)
+  const totalHours = records.reduce((sum, r) => sum + (r.hours_worked ?? 0), 0)
   const absentDays = records.filter((r) => r.status === 'absent').length
 
   return (
@@ -61,15 +60,15 @@ const EmployeeDashboard = () => {
             <p className="attendance-empty">No shifts recorded during this payroll frame.</p>
           ) : (
             <div className="attendance-list">
-              {records.map((rec: any) => (
+              {records.map((rec) => (
                 <AttendanceRow
                   key={rec.id}
                   fullName={rec.date}
-                  metaText={rec.method?.toUpperCase()}
+                  metaText={rec.method.toUpperCase()}
                   clockIn={rec.clock_in}
                   clockOut={rec.clock_out}
                   status={rec.status}
-                  hoursWorked={rec.hours_worked}
+                  hoursWorked={rec.hours_worked != null ? String(rec.hours_worked) : null}
                 />
               ))}
             </div>

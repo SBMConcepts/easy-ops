@@ -9,13 +9,15 @@ import {
   SelectValue,
 } from '../components/ui/select'
 import { useAttendanceRecords } from '../hooks/useTenantData'
+import type { AttendanceStatus } from '../integrations/supabase/types'
 import { Clock, MapPin, Loader2 } from 'lucide-react'
 
-const statusColors: Record<string, string> = {
+const statusColors: Record<AttendanceStatus, string> = {
   present: 'bg-secondary/10 text-secondary border-secondary/20',
   late: 'bg-accent/10 text-accent-foreground border-accent/20',
   absent: 'bg-destructive/10 text-destructive border-destructive/20',
-  on_leave: 'bg-muted text-muted-foreground border-muted',
+  leave: 'bg-muted text-muted-foreground border-muted',
+  holiday: 'bg-muted text-muted-foreground border-muted',
 }
 
 const LiveAttendance = () => {
@@ -83,7 +85,7 @@ const LiveAttendance = () => {
             >
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">
-                  Employee Profile Token {rec.employee_profile_id.slice(0, 8)}
+                  Employee {rec.employee_id.slice(0, 8)}
                 </p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <MapPin className="h-3 w-3" /> Method: {rec.method.toUpperCase()}

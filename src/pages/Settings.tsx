@@ -1,10 +1,9 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { useAuth } from '../contexts/AuthContext'
 import { useAttendanceRecords } from '../hooks/useTenantData'
 import { useTenantApi } from '../hooks/useTenantApi'
+import { currentUserKeys } from '../hooks/useCurrentUser'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -65,10 +64,10 @@ export default function Settings() {
     },
     onSuccess: () => {
       toast.success('Profile updated successfully')
-      queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+      queryClient.invalidateQueries({ queryKey: currentUserKeys.all })
     },
-    onError: (error: any) => {
-      toast.error(error?.message || 'Failed to update profile')
+    onError: (error: unknown) => {
+      toast.error((error instanceof Error ? error.message : null) || 'Failed to update profile')
     },
   })
 

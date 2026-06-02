@@ -7,8 +7,7 @@ import SupervisorDashboard from './SupervisorDashboard'
 import EmployeeDashboard from './EmployeeDashboard'
 
 const DashboardRouter = () => {
-  // Read tenant metadata directly from our verified token context instead of URL strings
-  const { user, tenant, isLoading } = useAuth()
+  const { user, tenant, isLoading, isAdmin } = useAuth()
 
   if (isLoading) return <DashboardLoader />
 
@@ -17,8 +16,8 @@ const DashboardRouter = () => {
 
   // Redirect admin to onboarding if they haven't been assigned a tenant
   // or if that tenant's configuration status is not yet finalized ('active')
-  if (user?.role === 'admin' && (!user.tenant_id || !isTenantSetupComplete)) {
-    return <Navigate to="/onboarding" replace />
+  if (isAdmin && (!user?.tenant_id || !isTenantSetupComplete)) {
+    return <Navigate to="/app/onboarding" replace />
   }
 
   switch (user?.role) {

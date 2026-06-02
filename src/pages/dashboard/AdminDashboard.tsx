@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { useAttendanceRecords } from '../../hooks/useTenantData'
 import { Users, UserCheck, Clock } from 'lucide-react'
@@ -14,7 +13,7 @@ const AdminDashboard = () => {
   // Compute stats securely on the client from the flat array
   const presentCount = records.filter((r) => r.status === 'present').length
   const lateCount = records.filter((r) => r.status === 'late').length
-  const uniqueEmployees = new Set(records.map((r) => r.employee_profile_id)).size
+  const uniqueEmployees = new Set(records.map((r) => r.employee_id)).size
 
   const statCards = [
     { label: 'Active Today', value: uniqueEmployees, icon: Users, color: 'icon-primary' },
@@ -54,11 +53,11 @@ const AdminDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="attendance-list">
-            {records.slice(0, 6).map((rec: any) => (
+            {records.slice(0, 6).map((rec) => (
               <AttendanceRow
                 key={rec.id}
-                fullName={rec.profiles?.full_name || rec.employee_name || '—'}
-                metaText={`${rec.method?.toUpperCase()} · ${rec.sites?.name || rec.site_name || '—'}`}
+                fullName={rec.employee_id}
+                metaText={`${rec.method.toUpperCase()} · ${rec.site_id ?? '—'}`}
                 clockIn={rec.clock_in}
                 status={rec.status}
               />

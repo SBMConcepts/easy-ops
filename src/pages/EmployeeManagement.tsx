@@ -1,17 +1,13 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useAccessRequestApi } from '../hooks/useAccessRequestApi'
 import { useQueryClient } from '@tanstack/react-query'
+import { Button } from '../components/ui/button'
 import { toast } from 'sonner'
-
-type AccessRequest = {
-  id: string
-  status: string
-  requester_email: string
-}
+import type { AccessRequestRow } from '../integrations/supabase/types'
 
 export default function EmployeeManagement(props: {
-  requests: AccessRequest[]
-  prefillEmailForRequest: (req: AccessRequest) => string
+  requests: AccessRequestRow[]
+  prefillEmailForRequest: (req: AccessRequestRow) => string
 }) {
   const { requests, prefillEmailForRequest } = props
 
@@ -20,7 +16,7 @@ export default function EmployeeManagement(props: {
 
   const [busyRequestIds, setBusyRequestIds] = useState<Record<string, boolean>>({})
 
-  const onApprove = async (req: AccessRequest) => {
+  const onApprove = async (req: AccessRequestRow) => {
     if (req.status !== 'pending') return
 
     const ref = req.id
@@ -29,13 +25,43 @@ export default function EmployeeManagement(props: {
     setBusyRequestIds((prev) => ({ ...prev, [ref]: true }))
     try {
       await approveAndInvite({ requestId: ref, email: prefillEmail })
-
       toast.success('Access approved and invitation created.')
+      queryClient.invalidateQueries({ queryKey: ['access-requests'] })
+    } catch (e: unknown) {
+      toast.error((e as { message?: string })?.message ?? 'Failed to approve.')
+    } finally {
+      setBusyRequestIds((prev) => ({ ...prev, [ref]: false }))
+    }
+  }
 
-      // Optionally refresh list:
-      // ...existing code...
-      queryClient.invalidateQueries({ queryKey: ['workspace-employees'] })
-      // ...existing code...    }
+  return (
+    <div className="space-y-2">
+      {requests.map((req) => {
+        const disabled = req.status !== 'pending' || !!busyRequestIds[req.id]
+
+        return (
+          <div
+            key={req.id}
+            className="flex items-center justify-between gap-4"
+          >
+            <div className="flex-1">
+              <div className="font-semibold text-sm">{req.requester_email}</div>
+              <div className="text-xs text-muted-foreground">Status: {req.status}</div>
+            </div>
+
+            {req.status === 'pending' ? (
+              <Button size="sm" onClick={() => onApprove(req)} disabled={disabled}>
+                {disabled ? 'Approving…' : 'Approve & Invite'}
+              </Button>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
     } catch (e: unknown) {
       toast.error((e as { message?: string })?.message ?? 'Failed to approve.')
     } finally {

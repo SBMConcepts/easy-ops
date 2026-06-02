@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -7,38 +6,37 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import type { BillingPlan } from '../integrations/supabase/types'
 
-const PACKAGES = [
+const PACKAGES: { id: BillingPlan; name: string; price: string; features: string[] }[] = [
   {
     id: 'starter',
     name: 'Starter',
-    price: 'Free',
-    features: ['Up to 10 Employees', 'Basic Check-in'],
+    price: 'R299/mo',
+    features: ['Up to 10 Employees', 'Basic Check-in', 'QR & Manual'],
   },
   {
-    id: 'pro',
-    name: 'Professional',
-    price: '$49/mo',
-    features: ['Up to 100 Employees', 'Geofencing', 'Reports'],
+    id: 'growth',
+    name: 'Growth',
+    price: 'R799/mo',
+    features: ['Up to 100 Employees', 'Geofencing', 'Reports', 'WhatsApp Check-in'],
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
     price: 'Custom',
-    features: ['Unlimited', 'API Access', 'Custom Roles'],
+    features: ['Unlimited Employees', 'API Access', 'Custom Roles', 'Priority Support'],
   },
 ]
 
 export default function Register() {
   const navigate = useNavigate()
   const [step, setStep] = useState<1 | 2>(1)
-  const [selectedPackage, setSelectedPackage] = useState('pro')
+  const [selectedPackage, setSelectedPackage] = useState<BillingPlan>('growth')
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
     companyName: '',
-    companySlug: '',
     adminEmail: '',
-    password: '',
   })
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -46,20 +44,26 @@ export default function Register() {
     setSubmitting(true)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-      const res = await fetch(`${API_URL}/api/auth/register`, {
+      const base = import.meta.env.VITE_API_URL ?? ''
+      const res = await fetch(`${base}/api/tenants/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Pass the selected package to the backend!
-        body: JSON.stringify({ ...form, subscriptionPlan: selectedPackage }),
+        body: JSON.stringify({
+          companyName: form.companyName,
+          adminEmail: form.adminEmail,
+          plan: selectedPackage,
+        }),
       })
 
-      if (!res.ok) throw new Error(await res.text())
+      if (!res.ok) {
+        const body = await res.text()
+        throw new Error(body || 'Registration failed')
+      }
 
-      toast.success('Workspace created! Please log in to complete onboarding.')
+      toast.success('Workspace created! Check your email to complete setup.')
       navigate('/login')
-    } catch (err: any) {
-      toast.error(err.message || 'Registration failed')
+    } catch (err: unknown) {
+      toast.error((err instanceof Error ? err.message : null) || 'Registration failed')
     } finally {
       setSubmitting(false)
     }
@@ -79,7 +83,11 @@ export default function Register() {
             {PACKAGES.map((pkg) => (
               <Card
                 key={pkg.id}
-                className={`cursor-pointer transition-all ${selectedPackage === pkg.id ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'}`}
+                className={`cursor-pointer transition-all ${
+                  selectedPackage === pkg.id
+                    ? 'ring-2 ring-primary border-primary'
+                    : 'hover:border-primary/50'
+                }`}
                 onClick={() => setSelectedPackage(pkg.id)}
               >
                 <CardHeader>
@@ -108,7 +116,7 @@ export default function Register() {
         </div>
       ) : (
         <Card className="w-full max-w-md p-6">
-          <h2 className="text-xl font-bold mb-4">Create Admin Account</h2>
+          <h2 className="text-xl font-bold mb-4">Create your workspace</h2>
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <Label>Company Name</Label>
@@ -116,14 +124,6 @@ export default function Register() {
                 required
                 value={form.companyName}
                 onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Subdomain (e.g., acme)</Label>
-              <Input
-                required
-                value={form.companySlug}
-                onChange={(e) => setForm({ ...form, companySlug: e.target.value })}
               />
             </div>
             <div>
@@ -135,22 +135,16 @@ export default function Register() {
                 onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
               />
             </div>
-            <div>
-              <Label>Password</Label>
-              <Input
-                type="password"
-                required
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-              />
-            </div>
+            <p className="text-xs text-muted-foreground">
+              You will receive an email invitation to set up your password via Auth0.
+            </p>
             <div className="flex gap-2 pt-4">
               <Button type="button" variant="ghost" onClick={() => setStep(1)}>
                 Back
               </Button>
               <Button type="submit" className="flex-1" disabled={submitting}>
-                {submitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null} Create
-                Workspace
+                {submitting && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+                Create Workspace
               </Button>
             </div>
           </form>

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { useAttendanceRecords } from '../../hooks/useTenantData'
 import { BarChart3 } from 'lucide-react'
@@ -26,11 +25,11 @@ const ManagerDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="attendance-list">
-            {records.map((rec: any) => (
+            {records.map((rec) => (
               <AttendanceRow
                 key={rec.id}
-                fullName={rec.profiles?.full_name || rec.employee_name || '—'}
-                metaText={`${rec.profiles?.department || rec.department || '—'} · ${rec.sites?.name || rec.site_name || '—'}`}
+                fullName={rec.employee_id}
+                metaText={`${rec.method.toUpperCase()} · ${rec.site_id ?? '—'}`}
                 clockIn={rec.clock_in}
                 status={rec.status}
               />

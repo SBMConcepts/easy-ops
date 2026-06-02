@@ -1,18 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { useAttendanceRecords, useAttendanceMutations } from '../hooks/useTenantData'
+import type { CheckInMethod } from '../integrations/supabase/types'
 import { toast } from 'sonner'
 import { QrCode, Fingerprint, MapPin, Clock, CheckCircle2, Loader2 } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
-
-type CheckInMethod = 'qr' | 'biometric' | 'manual'
 
 const CheckIn = () => {
-  const queryClient = useQueryClient()
-
   // Use secure multi-tenant queries and mutations
   const { data: attendanceHistory, isLoading } = useAttendanceRecords()
   const { checkIn, clockOut } = useAttendanceMutations()
@@ -27,13 +22,11 @@ const CheckIn = () => {
   const handleClockIn = async () => {
     setProcessing(true)
     try {
-      // Hardcoded or dynamically pulled default site configuration for terminal
       const defaultSiteId = '00000000-0000-0000-0000-000000000000'
-      await checkIn(selectedMethod, defaultSiteId)
+      await checkIn.mutateAsync({ method: selectedMethod, site_id: defaultSiteId })
       toast.success(`Clock-in record captured via ${selectedMethod.toUpperCase()}`)
-      queryClient.invalidateQueries({ queryKey: ['attendance-records'] })
-    } catch (err: any) {
-      toast.error(err.message || 'Check-in processing failure')
+    } catch (err: unknown) {
+      toast.error((err instanceof Error ? err.message : null) || 'Check-in processing failure')
     } finally {
       setProcessing(false)
     }
@@ -43,11 +36,10 @@ const CheckIn = () => {
     if (!activeRecord?.id) return
     setProcessing(true)
     try {
-      await clockOut(activeRecord.id)
+      await clockOut.mutateAsync({ recordId: activeRecord.id })
       toast.success('Clock-out transaction validated successfully')
-      queryClient.invalidateQueries({ queryKey: ['attendance-records'] })
-    } catch (err: any) {
-      toast.error(err.message || 'Clock-out processing failure')
+    } catch (err: unknown) {
+      toast.error((err instanceof Error ? err.message : null) || 'Clock-out processing failure')
     } finally {
       setProcessing(false)
     }

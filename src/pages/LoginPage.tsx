@@ -57,7 +57,8 @@ async function createTenantAndSendOnboarding(payload: {
   adminEmail: string
   plan: string
 }) {
-  const res = await fetch('/api/tenants/create', {
+  const base = import.meta.env.VITE_API_URL ?? ''
+  const res = await fetch(`${base}/api/tenants/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -70,7 +71,8 @@ async function createTenantAndSendOnboarding(payload: {
 }
 
 async function requestWorkspaceAccess(payload: { email: string; message?: string }) {
-  const res = await fetch('/api/access-requests', {
+  const base = import.meta.env.VITE_API_URL ?? ''
+  const res = await fetch(`${base}/api/access-requests`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

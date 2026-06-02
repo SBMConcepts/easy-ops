@@ -8,7 +8,10 @@
  */
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react'
-import { useAuth } from './AuthContext'
+import { useAuth, type AuthTenant } from './AuthContext'
+
+// Re-export for consumers that import AuthTenant from TenantContext
+export type { AuthTenant }
 
 export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <>{children}</>
@@ -22,10 +25,10 @@ export const useTenant = () => {
       ? {
           id: tenant.id,
           name: tenant.name,
-          auth0_org_id: tenant.id, // The context maps natively to the validated identity mapping
+          auth0_org_id: tenant.auth0_org_id,
         }
       : null,
     isLoading,
-    resolveTenant: async () => {}, // No-op: Resolution is now entirely handled cryptographically via token context
+    resolveTenant: async () => {}, // No-op: resolution is handled via Auth0 JWT org_id claim
   }
 }

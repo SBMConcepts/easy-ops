@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, user, tenant } = useAuth()
+  const { isAuthenticated, isLoading, user, tenant, isAdmin, hasRole } = useAuth()
   const location = useLocation()
 
   // Strict root-relative paths matching the single-domain application routing tree
@@ -37,9 +37,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   //   a) The user is not an admin (employees/managers never run onboarding)
   //   b) We are already on /app/onboarding (prevents redirect loop)
   const needsOnboarding =
-    user?.role === 'admin' &&
-    tenant?.status === 'provisioning' &&
-    location.pathname !== onboardingPath
+    isAdmin && tenant?.status === 'provisioning' && location.pathname !== onboardingPath
 
   if (needsOnboarding) {
     return <Navigate to={onboardingPath} replace />
@@ -48,7 +46,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   // ── 4. Role-based access guard ───────────────────────────────────────────
   // If the route specifies allowedRoles and the user's role isn't in the list,
   // redirect to the app root. DashboardRouter will render their correct view.
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user && !allowedRoles.some((role) => hasRole(role))) {
     return <Navigate to={appPath} replace />
   }
 
