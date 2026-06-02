@@ -1,5 +1,5 @@
 import { useAuth } from '../../contexts/AuthContext'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { DashboardLoader } from './DashboardLoader'
 import AdminDashboard from './AdminDashboard'
 import ManagerDashboard from './ManagerDashboard'
@@ -7,8 +7,8 @@ import SupervisorDashboard from './SupervisorDashboard'
 import EmployeeDashboard from './EmployeeDashboard'
 
 const DashboardRouter = () => {
+  // Read tenant metadata directly from our verified token context instead of URL strings
   const { user, tenant, isLoading } = useAuth()
-  const { slug } = useParams<{ slug?: string }>()
 
   if (isLoading) return <DashboardLoader />
 
@@ -18,7 +18,7 @@ const DashboardRouter = () => {
   // Redirect admin to onboarding if they haven't been assigned a tenant
   // or if that tenant's configuration status is not yet finalized ('active')
   if (user?.role === 'admin' && (!user.tenant_id || !isTenantSetupComplete)) {
-    return <Navigate to={slug ? `/t/${slug}/app/onboarding` : '/onboarding'} replace />
+    return <Navigate to="/onboarding" replace />
   }
 
   switch (user?.role) {

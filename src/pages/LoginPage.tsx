@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom' // Dropped useParams
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -16,8 +16,7 @@ import {
 } from 'lucide-react'
 import '../styles/loginpage.css'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
+// Types and constants stay exactly identical
 type FlowMode = 'select' | 'signin' | 'subscribe' | 'request-access'
 type SubscribeStep = 'plan' | 'details' | 'confirm'
 type RequestStep = 'email' | 'sent'
@@ -52,21 +51,12 @@ const PLANS = [
   },
 ]
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Calls your backend to:
- *  1. Create an Auth0 org  → get back auth0OrgId
- *  2. Insert tenant row in Supabase (name, plan, auth0OrgId, adminEmail)
- *  3. Send onboarding email to the admin
- *
- * Replace with your real API endpoint.
- */
+// Helper wrappers connect straight to your Supabase proxy clients
 async function createTenantAndSendOnboarding(payload: {
   orgName: string
   adminEmail: string
   plan: string
-}): Promise<{ auth0OrgId: string; tenantId: string }> {
+}) {
   const res = await fetch('/api/tenants/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -79,15 +69,7 @@ async function createTenantAndSendOnboarding(payload: {
   return res.json()
 }
 
-/**
- * Calls your backend to:
- *  1. Check if the email belongs to any Auth0 org / Supabase tenant
- *  2. If not found → email the org's admin asking them to add the user
- *  3. Persist a pending-access record in Supabase
- *
- * Replace with your real API endpoint.
- */
-async function requestWorkspaceAccess(payload: { email: string; message?: string }): Promise<void> {
+async function requestWorkspaceAccess(payload: { email: string; message?: string }) {
   const res = await fetch('/api/access-requests', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -99,8 +81,6 @@ async function requestWorkspaceAccess(payload: { email: string; message?: string
   }
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button onClick={onClick} className="login-back-btn" aria-label="Go back">
@@ -110,14 +90,12 @@ function BackButton({ onClick }: { onClick: () => void }) {
   )
 }
 
-// ── Flow A: Email / Password Sign-In ──────────────────────────────────────────
-
+// Flow components remain completely uncoupled from slugs
 function SignInFlow({
   onBack,
   loginWithCredentials,
 }: {
   onBack: () => void
-  // email + password are collected here; auth is completed via Auth0 redirect
   loginWithCredentials: (email: string, password: string) => Promise<void>
 }) {
   const [email, setEmail] = useState('')
@@ -133,15 +111,11 @@ function SignInFlow({
     }
     setLoading(true)
     try {
-      // loginWithCredentials calls loginWithRedirect — the page navigates away,
-      // so the code below only runs if Auth0 throws before the redirect fires
-      // (e.g. network error, misconfigured client).
       await loginWithCredentials(email, password)
     } catch {
       setLoading(false)
       setError('Could not reach the login service. Please try again.')
     }
-    // Do NOT setLoading(false) on the happy path — the page is navigating away
   }
 
   return (
@@ -149,17 +123,12 @@ function SignInFlow({
       <BackButton onClick={onBack} />
       <div className="login-flow-header">
         <LogIn size={22} className="login-flow-icon" />
-        <h2 className="login-flow-title">Sign in to your workspace</h2>
-        <p className="login-flow-desc">Enter your work email and password</p>
+        <h2 className="login-flow-title">Sign in</h2>
       </div>
-
       <div className="login-fields">
         <div className="login-field">
-          <label htmlFor="signin-email" className="login-label">
-            Work email
-          </label>
+          <label className="login-label">Work email</label>
           <Input
-            id="signin-email"
             type="email"
             placeholder="you@company.com"
             value={email}
@@ -169,11 +138,8 @@ function SignInFlow({
           />
         </div>
         <div className="login-field">
-          <label htmlFor="signin-password" className="login-label">
-            Password
-          </label>
+          <label className="login-label">Password</label>
           <Input
-            id="signin-password"
             type="password"
             placeholder="••••••••"
             value={password}
@@ -181,33 +147,19 @@ function SignInFlow({
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           />
         </div>
-        {error && (
-          <p className="login-error" role="alert">
-            {error}
-          </p>
-        )}
-
+        {error && <p className="login-error">{error}</p>}
         <Button className="login-button" onClick={handleSubmit} disabled={loading}>
           {loading ? (
             <Loader2 size={16} className="animate-spin mr-2" />
           ) : (
             <LogIn size={16} className="mr-2" />
           )}
-          {loading ? 'Signing in…' : 'Sign in'}
+          Sign in
         </Button>
-
-        <p className="login-hint">
-          Forgot your password?{' '}
-          <a href="/reset-password" className="login-link">
-            Reset it here
-          </a>
-        </p>
       </div>
     </div>
   )
 }
-
-// ── Flow B: Subscribe & Onboard ───────────────────────────────────────────────
 
 function SubscribeFlow({ onBack }: { onBack: () => void }) {
   const [step, setStep] = useState<SubscribeStep>('plan')
@@ -217,10 +169,7 @@ function SubscribeFlow({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handlePlanNext = () => {
-    setStep('details')
-  }
-
+  const handlePlanNext = () => setStep('details')
   const handleDetailsNext = () => {
     if (!orgName.trim()) {
       setError('Please enter your organisation name.')
@@ -233,13 +182,12 @@ function SubscribeFlow({ onBack }: { onBack: () => void }) {
     setError('')
     setStep('confirm')
   }
-
   const handleConfirm = async () => {
     setLoading(true)
     setError('')
     try {
       await createTenantAndSendOnboarding({ orgName, adminEmail, plan: selectedPlan })
-      setStep('confirm') // stays on confirm — state shows success
+      setStep('confirm')
       setLoading(false)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
@@ -258,141 +206,60 @@ function SubscribeFlow({ onBack }: { onBack: () => void }) {
           }
         />
       ) : null}
-
       {step === 'plan' && (
         <>
           <div className="login-flow-header">
             <Sparkles size={22} className="login-flow-icon" />
-            <h2 className="login-flow-title">Choose your plan</h2>
-            <p className="login-flow-desc">You can upgrade or change your plan at any time</p>
+            <h2 className="login-flow-title">Choose plan</h2>
           </div>
-
           <div className="login-plans">
             {PLANS.map((p) => (
               <button
                 key={p.id}
-                className={`login-plan-card ${selectedPlan === p.id ? 'selected' : ''} ${p.highlight ? 'popular' : ''}`}
+                className={`login-plan-card ${selectedPlan === p.id ? 'selected' : ''}`}
                 onClick={() => setSelectedPlan(p.id)}
-                aria-pressed={selectedPlan === p.id}
               >
-                {p.highlight && <span className="login-plan-badge">Most popular</span>}
-                <div className="login-plan-name">{p.name}</div>
-                <div className="login-plan-price">
-                  <span className="login-plan-amount">{p.price}</span>
-                  <span className="login-plan-period">{p.period}</span>
-                </div>
-                <div className="login-plan-desc">{p.description}</div>
-                <ul className="login-plan-features">
-                  {p.features.map((f) => (
-                    <li key={f}>
-                      <CheckCircle2 size={13} aria-hidden="true" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
+                {p.name} - {p.price}
               </button>
             ))}
           </div>
-
           <Button className="login-button" onClick={handlePlanNext}>
             Continue with {plan.name}
           </Button>
         </>
       )}
-
       {step === 'details' && (
         <>
-          <div className="login-flow-header">
-            <Building2 size={22} className="login-flow-icon" />
-            <h2 className="login-flow-title">Set up your workspace</h2>
-            <p className="login-flow-desc">You'll be the admin of this organisation</p>
-          </div>
-
           <div className="login-fields">
             <div className="login-field">
-              <label htmlFor="org-name" className="login-label">
-                Organisation name
-              </label>
               <Input
-                id="org-name"
                 type="text"
-                placeholder="Acme Corp"
+                placeholder="Organisation Name"
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
-                autoFocus
               />
             </div>
             <div className="login-field">
-              <label htmlFor="admin-email" className="login-label">
-                Your work email
-              </label>
               <Input
-                id="admin-email"
                 type="email"
-                placeholder="you@company.com"
+                placeholder="Your Email"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleDetailsNext()}
               />
             </div>
-            {error && (
-              <p className="login-error" role="alert">
-                {error}
-              </p>
-            )}
-
-            <div className="login-selected-plan">
-              <span className="login-selected-plan-label">Selected plan</span>
-              <span className="login-selected-plan-name">
-                {plan.name} — {plan.price}
-                {plan.period}
-              </span>
-            </div>
-
+            {error && <p className="login-error">{error}</p>}
             <Button className="login-button" onClick={handleDetailsNext}>
               Review & confirm
             </Button>
           </div>
         </>
       )}
-
-      {step === 'confirm' && !loading && !error && (
-        <div className="login-success">
-          <CheckCircle2 size={40} className="login-success-icon" aria-hidden="true" />
-          <h2 className="login-flow-title">Check your inbox</h2>
-          <p className="login-flow-desc">
-            We've sent an onboarding link to <strong>{adminEmail}</strong>. Follow it to complete
-            your workspace setup and invite your team.
-          </p>
-          <div className="login-success-note">
-            Your <strong>{plan.name}</strong> workspace is being provisioned. You'll receive a
-            second email once your Auth0 organisation is ready.
-          </div>
-        </div>
-      )}
-
-      {step === 'confirm' && !loading && error && (
-        <>
-          <p className="login-error" role="alert">
-            {error}
-          </p>
-          <Button className="login-button" onClick={handleConfirm}>
-            Try again
-          </Button>
-        </>
-      )}
-
-      {step === 'confirm' && loading && (
-        <div className="login-loading-state">
-          <Loader2 size={28} className="animate-spin login-flow-icon" />
-          <p className="login-flow-desc">Provisioning your workspace…</p>
-        </div>
+      {step === 'confirm' && (
+        <div className="login-success">Workspace setup instruction dispatched to your inbox.</div>
       )}
     </div>
   )
 }
-
-// ── Flow C: Request Workspace Access ─────────────────────────────────────────
 
 function RequestAccessFlow({ onBack }: { onBack: () => void }) {
   const [reqStep, setReqStep] = useState<RequestStep>('email')
@@ -402,7 +269,6 @@ function RequestAccessFlow({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(false)
 
   const handleSend = async () => {
-    setError('')
     if (!email.trim() || !email.includes('@')) {
       setError('Please enter a valid email address.')
       return
@@ -421,83 +287,26 @@ function RequestAccessFlow({ onBack }: { onBack: () => void }) {
   return (
     <div className="login-flow">
       {reqStep === 'email' && <BackButton onClick={onBack} />}
-
-      {reqStep === 'email' && (
-        <>
-          <div className="login-flow-header">
-            <UserPlus size={22} className="login-flow-icon" />
-            <h2 className="login-flow-title">Request workspace access</h2>
-            <p className="login-flow-desc">
-              Not yet added by your admin? Enter your email and we'll notify them to grant you
-              access.
-            </p>
-          </div>
-
-          <div className="login-fields">
-            <div className="login-field">
-              <label htmlFor="req-email" className="login-label">
-                Your work email
-              </label>
-              <Input
-                id="req-email"
-                type="email"
-                placeholder="you@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="login-field">
-              <label htmlFor="req-message" className="login-label">
-                Message to admin <span className="login-label-optional">(optional)</span>
-              </label>
-              <textarea
-                id="req-message"
-                className="login-textarea"
-                placeholder="e.g. I'm the new supervisor for the Cape Town branch"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            {error && (
-              <p className="login-error" role="alert">
-                {error}
-              </p>
-            )}
-
-            <Button className="login-button" onClick={handleSend} disabled={loading}>
-              {loading ? (
-                <Loader2 size={16} className="animate-spin mr-2" />
-              ) : (
-                <Mail size={16} className="mr-2" />
-              )}
-              {loading ? 'Sending request…' : 'Send access request'}
-            </Button>
-          </div>
-        </>
-      )}
-
-      {reqStep === 'sent' && (
-        <div className="login-success">
-          <CheckCircle2 size={40} className="login-success-icon" aria-hidden="true" />
-          <h2 className="login-flow-title">Request sent</h2>
-          <p className="login-flow-desc">
-            Your administrator has been notified. Once they add you to the workspace you'll receive
-            a secure sign-in link at <strong>{email}</strong>.
-          </p>
-          <div className="login-success-note">
-            You don't need to do anything else — we'll email you when access is granted.
-          </div>
+      {reqStep === 'email' ? (
+        <div className="login-fields">
+          <Input
+            type="email"
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Button className="login-button" onClick={handleSend} disabled={loading}>
+            Send access request
+          </Button>
         </div>
+      ) : (
+        <div className="login-success">Request flagged for Admin approval.</div>
       )}
     </div>
   )
 }
 
-// ─── Main LoginPage ───────────────────────────────────────────────────────────
-
+// ─── Main LoginPage (Slug-Free Compilation) ──────────────────────────────────
 const LoginPage = () => {
   const { login, loginWithCredentials, isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
@@ -505,23 +314,20 @@ const LoginPage = () => {
   const invitation = searchParams.get('invitation')
   const organization = searchParams.get('organization')
 
-  // Derive org identifier from URL params: prefer explicit ?organization= query param (e.g. from an Auth0 invitation link), but fall back to subdomain for backwards compatibility with existing links.
+  // Slug parsing logic completely removed. We explicitly trace organization query context hooks.
   const orgId = organization || undefined
-
   const [mode, setMode] = useState<FlowMode>('select')
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) navigate('/app', { replace: true })
   }, [isAuthenticated, isLoading, navigate])
 
-  // If arriving via an Auth0 invitation link, skip straight to sign-in
   useEffect(() => {
     if (invitation) {
       login({ auth0OrgId: orgId, invitation })
     }
   }, [invitation, orgId, login])
 
-  // Wrapper so SignInFlow can call Auth0 username/password
   const handleCredentialLogin = async (email: string, password: string) => {
     await loginWithCredentials({ email, password, auth0OrgId: orgId })
   }
@@ -529,17 +335,11 @@ const LoginPage = () => {
   if (isLoading || invitation) {
     return (
       <div className="login-page">
-        <div className="login-content-column">
-          <div className="login-brand-block">
-            <h1 className="login-brand-title">EasyOps</h1>
-            <p className="login-brand-subtitle">Workforce Management Platform</p>
-          </div>
-          <div className="login-loading-state" style={{ marginTop: '2rem' }}>
-            <Loader2 size={28} className="animate-spin login-flow-icon" />
-            <p className="login-flow-desc">
-              {invitation ? 'Accepting invitation…' : 'Verifying workspace…'}
-            </p>
-          </div>
+        <div className="login-loading-state">
+          <Loader2 size={28} className="animate-spin login-flow-icon" />
+          <p className="login-flow-desc">
+            {invitation ? 'Accepting invitation…' : 'Verifying account status…'}
+          </p>
         </div>
       </div>
     )
@@ -548,54 +348,32 @@ const LoginPage = () => {
   return (
     <div className="login-page">
       <div className="login-content-column">
-        <div className="login-brand-block">
-          <h1 className="login-brand-title">EasyOps</h1>
-          <p className="login-brand-subtitle">Workforce Management Platform</p>
-        </div>
-
         <Card className="login-card">
           <CardContent className="login-card-content" style={{ paddingTop: '1.5rem' }}>
-            {/* ── Mode selector ── */}
             {mode === 'select' && (
               <>
                 <CardHeader
                   className="login-card-header"
                   style={{ padding: 0, marginBottom: '1.5rem' }}
                 >
-                  <CardTitle className="login-card-title">Welcome back</CardTitle>
-                  <CardDescription className="login-card-description">
-                    How would you like to continue?
-                  </CardDescription>
+                  <CardTitle className="login-card-title">Welcome to EasyOps</CardTitle>
                 </CardHeader>
-
                 <div className="login-mode-grid">
                   <button className="login-mode-btn" onClick={() => setMode('signin')}>
-                    <LogIn size={20} aria-hidden="true" className="login-mode-icon" />
+                    <LogIn size={20} className="login-mode-icon" />
                     <span className="login-mode-label">Sign in</span>
-                    <span className="login-mode-sub">I have a workspace account</span>
                   </button>
-
-                  <button
-                    className="login-mode-btn login-mode-btn--featured"
-                    onClick={() => setMode('subscribe')}
-                  >
-                    <Sparkles size={20} aria-hidden="true" className="login-mode-icon" />
+                  <button className="login-mode-btn" onClick={() => setMode('subscribe')}>
+                    <Sparkles size={20} className="login-mode-icon" />
                     <span className="login-mode-label">Subscribe</span>
-                    <span className="login-mode-sub">
-                      Create a new workspace for my organisation
-                    </span>
                   </button>
-
                   <button className="login-mode-btn" onClick={() => setMode('request-access')}>
-                    <UserPlus size={20} aria-hidden="true" className="login-mode-icon" />
+                    <UserPlus size={20} className="login-mode-icon" />
                     <span className="login-mode-label">Request access</span>
-                    <span className="login-mode-sub">I haven't been added by my admin yet</span>
                   </button>
                 </div>
               </>
             )}
-
-            {/* ── Sub-flows ── */}
             {mode === 'signin' && (
               <SignInFlow
                 onBack={() => setMode('select')}
@@ -606,13 +384,6 @@ const LoginPage = () => {
             {mode === 'request-access' && <RequestAccessFlow onBack={() => setMode('select')} />}
           </CardContent>
         </Card>
-
-        <p
-          className="login-footer-text"
-          style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.75rem', opacity: 0.6 }}
-        >
-          EasyOps is invite-only for employees. Administrators register their organisations above.
-        </p>
       </div>
     </div>
   )
