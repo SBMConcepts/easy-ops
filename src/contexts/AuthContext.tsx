@@ -177,7 +177,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user: auth0User,
   } = useAuth0()
 
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUser] = useState<AuthUser>({
+    id: '',
+    auth0_user_id: '',
+    email: '',
+    full_name: '',
+    avatar_url: null,
+    status: 'active',
+    tenant_id: '',
+    role: 'employee',
+    membership_status: 'active',
+  })
   const [tenant, setTenant] = useState<AuthTenant | null>(null)
   const [isProfileLoading, setIsProfileLoading] = useState(false)
   const [profileError, setProfileError] = useState<Error | null>(null)
@@ -286,8 +296,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (isAuthenticated) {
       void syncProfileAndTenant()
     } else {
-      setUser(null)
-      setTenant(null)
+      setUser({
+        id: '',
+        auth0_user_id: '',
+        email: '',
+        full_name: '',
+        avatar_url: null,
+        status: 'active',
+        tenant_id: '',
+        role: 'employee',
+        membership_status: 'active',
+      })
+      setTenant({
+        id: '',
+        name: 'Workspace',
+        auth0_org_id: '',
+        status: 'active',
+        logo_url: null,
+        country: 'South Africa',
+        industry: null,
+        plan: null,
+        billing_status: null,
+        seat_cap: null,
+        current_period_end: null,
+      })
       setProfileError(null)
     }
   }, [isAuthenticated, syncProfileAndTenant])
@@ -342,8 +374,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback((): void => {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } })
-    setUser(null)
-    setTenant(null)
+    setUser({
+      id: '',
+      auth0_user_id: '',
+      email: '',
+      full_name: '',
+      avatar_url: null,
+      status: 'active',
+      tenant_id: '',
+      role: 'employee',
+      membership_status: 'active',
+    })
+    setTenant({
+      id: '',
+      name: 'Workspace',
+      auth0_org_id: '',
+      status: 'active',
+      logo_url: null,
+      country: 'South Africa',
+      industry: null,
+      plan: null,
+      billing_status: null,
+      seat_cap: null,
+      current_period_end: null,
+    })
     setProfileError(null)
   }, [auth0Logout])
 
@@ -351,7 +405,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Role helpers — memoised so downstream components don't re-render when
   // unrelated state changes (e.g. profileLoading toggling).
   // ==========================================================================
-  const userRole = user?.role
+  const userRole = user.role
 
   const hasRole = useCallback((role: TenantRole): boolean => userRole === role, [userRole])
 
@@ -364,7 +418,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   )
 
   // Stable boolean flags — recalculated only when role or membership changes
-  const userMembershipStatus = user?.membership_status
+  const userMembershipStatus = user.membership_status
 
   const isAdmin = useMemo(() => userRole === 'admin', [userRole])
   const isManager = useMemo(() => hasMinRole('manager'), [hasMinRole])
