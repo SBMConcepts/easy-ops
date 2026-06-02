@@ -127,7 +127,7 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
               </div>
               <h2 className="demo-modal__title">Request a Demo</h2>
               <p className="demo-modal__subtitle">
-                See how EazyOps simplifies workforce management for your business. Fill in your
+                See how EasyOps simplifies workforce management for your business. Fill in your
                 details and we'll be in touch.
               </p>
             </div>

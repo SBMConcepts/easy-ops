@@ -1,5 +1,5 @@
-"use client";
-import "../styles/footer.css";
+'use client'
+import '../styles/footer.css'
 export default function Footer() {
   return (
     <footer className="footer">
@@ -10,8 +10,8 @@ export default function Footer() {
             <span className="footer__logo-ops">Ops</span>
           </div>
           <p className="footer__tagline">
-            Simplifying workforce management, attendance tracking, payroll, and
-            compliance for businesses across South Africa.
+            Simplifying workforce management, attendance tracking, payroll, and compliance for
+            businesses across South Africa.
           </p>
         </div>
 
@@ -72,9 +72,9 @@ export default function Footer() {
 
       <div className="footer__bottom">
         <p className="footer__copyright">
-          © 2026 EazyOps. All rights reserved. Built for South Africa 🇿🇦
+          © 2026 EasyOps. All rights reserved. Built for South Africa 🇿🇦
         </p>
       </div>
     </footer>
-  );
+  )
 }

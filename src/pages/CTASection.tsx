@@ -22,7 +22,7 @@ const CTASection = () => {
               <p className="cta-heading">Ready to Transform Your Workforce Management?</p>
 
               <p className="cta-supporting-text">
-                Join businesses across South Africa that trust EazyOps to streamline operations,
+                Join businesses across South Africa that trust EasyOps to streamline operations,
                 ensure compliance, and keep their teams happy.
               </p>
             </div>

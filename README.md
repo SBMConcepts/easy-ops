@@ -1,4 +1,4 @@
-# EazyOps — Workforce Management Platform
+# EasyOps — Workforce Management Platform
 
 > Simplifying attendance tracking, payroll integration, and BCEA compliance for businesses across South Africa.
 
@@ -6,7 +6,7 @@
 
 ## Table of Contents
 
-- [EazyOps — Workforce Management Platform](#eazyops--workforce-management-platform)
+- [EasyOps — Workforce Management Platform](#easyops--workforce-management-platform)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Tech Stack](#tech-stack)
@@ -131,7 +131,7 @@ Centred call-to-action band with:
 
 Dark-themed footer (`#0f2340`) with:
 
-- EazyOps logo
+- EasyOps logo
 - Tagline
 - Two navigation columns: Product and Company
 - Copyright bar with South African flag emoji
@@ -193,8 +193,8 @@ CSS breakpoints follow a `min-width` mobile-first pattern:
 ### Installation
 
 ```bash
-git clone https://github.com/your-org/eazyops-website.git
-cd eazyops-website
+git clone https://github.com/your-org/EasyOps-website.git
+cd EasyOps-website
 npm install
 ```
 

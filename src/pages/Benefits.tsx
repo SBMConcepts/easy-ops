@@ -1,12 +1,12 @@
-"use client";
-import { CheckIcon } from "lucide-react";
-import "../styles/benefits.css";
+'use client'
+import { CheckIcon } from 'lucide-react'
+import '../styles/benefits.css'
 
 export default function BenefitsSections() {
   return (
     <div className="benefits-sections" id="benefits">
       <div className="benefits-heading-wrapper">
-        <div className="benefits-subtitle">Why EazyOps</div>
+        <div className="benefits-subtitle">Why EasyOps</div>
         <div className="benefits-title">
           The Leading Platform for Workforce Operations in South Africa.
         </div>
@@ -16,9 +16,8 @@ export default function BenefitsSections() {
         <div className="benefits-content">
           <div className="benefits-text-and-supporting">
             <p className="benefits-text-supporting">
-              Our vision is to help businesses operate efficiently while
-              protecting employee rights through full compliance with BCEA and
-              IRA regulations.
+              Our vision is to help businesses operate efficiently while protecting employee rights
+              through full compliance with BCEA and IRA regulations.
             </p>
           </div>
 
@@ -27,36 +26,28 @@ export default function BenefitsSections() {
               <div className="benefits-check-item-text">
                 <CheckIcon className="benefits-check-icon" />
                 <div className="benefits-text-wrap">
-                  <p className="benefits-text-2">
-                    Eliminate time fraud and buddy-clocking
-                  </p>
+                  <p className="benefits-text-2">Eliminate time fraud and buddy-clocking</p>
                 </div>
               </div>
 
               <div className="benefits-check-item-text">
                 <CheckIcon className="benefits-check-icon" />
                 <div className="benefits-text-wrap">
-                  <p className="benefits-text-2">
-                    Real-time dashboards for multiple branches
-                  </p>
+                  <p className="benefits-text-2">Real-time dashboards for multiple branches</p>
                 </div>
               </div>
 
               <div className="benefits-check-item-text">
                 <CheckIcon className="benefits-check-icon" />
                 <div className="benefits-text-wrap">
-                  <p className="benefits-text-2">
-                    Exportable HR and attendance reports
-                  </p>
+                  <p className="benefits-text-2">Exportable HR and attendance reports</p>
                 </div>
               </div>
 
               <div className="benefits-check-item-text">
                 <CheckIcon className="benefits-check-icon" />
                 <div className="benefits-text-wrap">
-                  <div className="benefits-text-2">
-                    Cloud-based with 99.9% uptime
-                  </div>
+                  <div className="benefits-text-2">Cloud-based with 99.9% uptime</div>
                 </div>
               </div>
             </div>
@@ -65,36 +56,28 @@ export default function BenefitsSections() {
               <div className="benefits-check-item-text">
                 <CheckIcon className="benefits-check-icon" />
                 <div className="benefits-text-wrap">
-                  <p className="benefits-text-2">
-                    Automatic overtime and late arrival tracking
-                  </p>
+                  <p className="benefits-text-2">Automatic overtime and late arrival tracking</p>
                 </div>
               </div>
 
               <div className="benefits-check-item-text">
                 <CheckIcon className="benefits-check-icon" />
                 <div className="benefits-text-wrap">
-                  <p className="benefits-text-2">
-                    BCEA &amp; IRA labour law compliance
-                  </p>
+                  <p className="benefits-text-2">BCEA &amp; IRA labour law compliance</p>
                 </div>
               </div>
 
               <div className="benefits-check-item-text">
                 <CheckIcon className="benefits-check-icon" />
                 <div className="benefits-text-wrap">
-                  <p className="benefits-text-2">
-                    WhatsApp integration — no extra apps
-                  </p>
+                  <p className="benefits-text-2">WhatsApp integration — no extra apps</p>
                 </div>
               </div>
 
               <div className="benefits-check-item-text">
                 <CheckIcon className="benefits-check-icon" />
                 <div className="benefits-text-wrap">
-                  <p className="benefits-text-2">
-                    Scales from SME to enterprise
-                  </p>
+                  <p className="benefits-text-2">Scales from SME to enterprise</p>
                 </div>
               </div>
             </div>
@@ -110,25 +93,19 @@ export default function BenefitsSections() {
             <div className="investment-summary-check-items">
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-1">
-                    Total Project Cost
-                  </div>
+                  <div className="investment-summary-feature-1">Total Project Cost</div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-1">
-                    Payment Structure
-                  </div>
+                  <div className="investment-summary-feature-1">Payment Structure</div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-1">
-                    Project Duration
-                  </div>
+                  <div className="investment-summary-feature-1">Project Duration</div>
                 </div>
               </div>
 
@@ -142,45 +119,36 @@ export default function BenefitsSections() {
             <div className="investment-summary-check-items">
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-2">
-                    Custom Quote
-                  </div>
+                  <div className="investment-summary-feature-2">Custom Quote</div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-2">
-                    Milestone-Based
-                  </div>
+                  <div className="investment-summary-feature-2">Milestone-Based</div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-2">
-                    Tailored Timeline
-                  </div>
+                  <div className="investment-summary-feature-2">Tailored Timeline</div>
                 </div>
               </div>
 
               <div className="investment-summary-check-item-text">
                 <div className="investment-summary-text-wrap">
-                  <div className="investment-summary-feature-2">
-                    Dedicated Account Manager
-                  </div>
+                  <div className="investment-summary-feature-2">Dedicated Account Manager</div>
                 </div>
               </div>
             </div>
           </div>
 
           <p className="investment-summary-supporting-text">
-            We bring partners of experience delivering similar projects,
-            combining technical excellence with deep understanding of South
-            African technology requirements.
+            We bring partners of experience delivering similar projects, combining technical
+            excellence with deep understanding of South African technology requirements.
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }
