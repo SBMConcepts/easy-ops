@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useTenantApi } from '../hooks/useTenantApi'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -185,10 +184,10 @@ export default function SitesAndDepartments() {
 
     saveSiteMutation.mutate({
       name: siteForm.name.trim(),
-      address: siteForm.address.trim() || null,
+      address: siteForm.address.trim(),
       latitude: isNaN(lat) ? null : lat,
       longitude: isNaN(lng) ? null : lng,
-      geofence_radius_m: isNaN(radius) ? null : radius,
+      geofence_radius_m: radius,
     })
   }
 

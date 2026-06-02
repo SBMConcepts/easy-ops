@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { supabasePublic } from '../integrations/supabase/client'
-import type { Database } from '../integrations/supabase/types'
+import type { BillingPlan, Database } from '../integrations/supabase/types'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -30,17 +30,19 @@ const schema = z.object({
 })
 
 const PLANS: Record<string, string> = {
-  Starter: 'Starter — R499/mo',
-  Growth: 'Growth — R699/mo',
-  Pro: 'Pro — R849/mo',
-  Enterprise: 'Enterprise — Custom',
+  starter: 'Starter — R499/mo',
+  growth: 'Growth — R699/mo',
+  pro: 'Pro — R849/mo',
+  enterprise: 'Enterprise — Custom',
 }
+
+const VALID_PLANS: BillingPlan[] = ['starter', 'growth', 'enterprise']
 
 const GetStarted = () => {
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const { toast } = useToast()
-  const planFromUrl = params.get('plan') || 'Growth'
+  const planFromUrl = params.get('plan') || 'growth'
 
   const [form, setForm] = useState({
     full_name: '',
@@ -48,7 +50,7 @@ const GetStarted = () => {
     phone: '',
     company_name: '',
     employee_count: '',
-    selected_plan: PLANS[planFromUrl] ? planFromUrl : 'Growth',
+    selected_plan: PLANS[planFromUrl] ? planFromUrl : 'growth',
     country: 'South Africa',
     message: '',
   })
@@ -71,18 +73,20 @@ const GetStarted = () => {
     }
     setErrors({})
     setSubmitting(true)
-    const payload: Database['public']['Tables']['easy_ops_sales_leads']['Insert'] = {
+    const payload: Database['public']['Tables']['sales_leads']['Insert'] = {
       full_name: parsed.data.full_name,
-      lead_email: parsed.data.work_email,
-      lead_phone: parsed.data.phone || '',
+      work_email: parsed.data.work_email || '',
+      phone: parsed.data.phone || '',
       company_name: parsed.data.company_name,
       employee_count: parsed.data.employee_count,
-      selected_plan: parsed.data.selected_plan,
+      selected_plan: VALID_PLANS.includes(parsed.data.selected_plan as BillingPlan)
+        ? (parsed.data.selected_plan as BillingPlan)
+        : null,
       country: parsed.data.country || '',
       message: parsed.data.message || '',
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await supabasePublic.from('easy_ops_sales_leads').insert(payload as any)
+    const { error } = await supabasePublic.from('sales_leads').insert(payload as any)
     setSubmitting(false)
     if (error) {
       toast({ title: 'Submission failed', description: error.message, variant: 'destructive' })
