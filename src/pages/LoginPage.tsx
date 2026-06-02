@@ -500,15 +500,13 @@ function RequestAccessFlow({ onBack }: { onBack: () => void }) {
 
 const LoginPage = () => {
   const { login, loginWithCredentials, isAuthenticated, isLoading } = useAuth()
-  const { slug } = useParams<{ slug?: string }>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const invitation = searchParams.get('invitation')
   const organization = searchParams.get('organization')
 
-  // Derive org identifier from URL params: prefer explicit ?organization= query param,
-  // then fall back to the workspace slug which Auth0 accepts as an org name.
-  const orgId = organization || slug || undefined
+  // Derive org identifier from URL params: prefer explicit ?organization= query param (e.g. from an Auth0 invitation link), but fall back to subdomain for backwards compatibility with existing links.
+  const orgId = organization || undefined
 
   const [mode, setMode] = useState<FlowMode>('select')
 

@@ -3,8 +3,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://your-project-ref.supabase.co'
-const SUPABASE_ANON_KEY = 'your-public-anon-key' // Safe to expose publicly on client bundles
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string // Safe to expose publicly on client bundles
 
 const DatabaseContext = createContext<SupabaseClient | null>(null)
 
@@ -13,11 +13,19 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [supabaseClient, setSupabaseClient] = useState<SupabaseClient | null>(null)
 
   useEffect(() => {
+    // 1. Wait until Auth0 finishes its loading state
     if (isLoading) return
+
+    // 2. SAFETY CHECK: If the URL still contains auth params, wait for the Auth0 SDK
+    // to finish swapping the code for a token and clearing the address bar.
+    const hasAuthParams =
+      window.location.search.includes('code=') && window.location.search.includes('state=')
+    if (hasAuthParams) {
+      return
+    }
 
     const buildKeylessClient = async () => {
       if (!isAuthenticated) {
-        // Fallback for public checkout / registration pages
         setSupabaseClient(createClient(SUPABASE_URL, SUPABASE_ANON_KEY))
         return
       }
