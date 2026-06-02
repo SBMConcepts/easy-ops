@@ -40,10 +40,7 @@ export default function EmployeeManagement(props: {
         const disabled = req.status !== 'pending' || !!busyRequestIds[req.id]
 
         return (
-          <div
-            key={req.id}
-            className="flex items-center justify-between gap-4"
-          >
+          <div key={req.id} className="flex items-center justify-between gap-4">
             <div className="flex-1">
               <div className="font-semibold text-sm">{req.requester_email}</div>
               <div className="text-xs text-muted-foreground">Status: {req.status}</div>
@@ -55,46 +52,6 @@ export default function EmployeeManagement(props: {
               </Button>
             ) : (
               <span className="text-muted-foreground">—</span>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-    } catch (e: unknown) {
-      toast.error((e as { message?: string })?.message ?? 'Failed to approve.')
-    } finally {
-      setBusyRequestIds((prev) => ({ ...prev, [ref]: false }))
-    }
-  }
-
-  return (
-    <div>
-      {requests.map((req) => {
-        const disabled = req.status !== 'pending' || !!busyRequestIds[req.id]
-
-        return (
-          <div
-            key={req.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 10,
-            }}
-          >
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600 }}>{req.requester_email}</div>
-              <div style={{ fontSize: 12, opacity: 0.7 }}>Status: {req.status}</div>
-            </div>
-
-            {req.status === 'pending' ? (
-              <button onClick={() => onApprove(req)} disabled={disabled}>
-                {disabled ? 'Approving…' : 'Approve & Invite'}
-              </button>
-            ) : (
-              <span>—</span>
             )}
           </div>
         )

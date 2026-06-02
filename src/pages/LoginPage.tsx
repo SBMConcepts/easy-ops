@@ -4,16 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
-import {
-  LogIn,
-  Loader2,
-  Mail,
-  Building2,
-  UserPlus,
-  ChevronLeft,
-  CheckCircle2,
-  Sparkles,
-} from 'lucide-react'
+import { LogIn, Loader2, UserPlus, ChevronLeft, Sparkles } from 'lucide-react'
 import '../styles/loginpage.css'
 
 // Types and constants stay exactly identical
