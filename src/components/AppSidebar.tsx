@@ -36,7 +36,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    url: '/app/dashboard',
+    url: '/app',
     icon: LayoutDashboard,
     roles: ['admin', 'manager', 'supervisor', 'employee'],
   },
@@ -101,7 +101,7 @@ const AppSidebar = () => {
       <SidebarHeader className="sidebar-header">
         <div
           className="sidebar-brand"
-          onClick={() => navigate('/app/dashboard')}
+          onClick={() => navigate('/app')}
           style={{ cursor: 'pointer' }}
         >
           <span className="sidebar-brand-name">{orgName}</span>

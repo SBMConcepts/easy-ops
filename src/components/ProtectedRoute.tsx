@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   // Strict root-relative paths matching the single-domain application routing tree
   const loginPath = '/login'
   const onboardingPath = '/app/onboarding'
-  const appPath = '/app/dashboard'
+  const appPath = '/app'
 
   // ── 1. Loading guard ─────────────────────────────────────────────────────
   // While AuthContext is resolving the Auth0 session + Supabase profile, we

@@ -67,7 +67,7 @@ export default function Onboarding() {
 
       // Refresh the local user/tenant context to reflect the new 'active' status
       await refreshProfile()
-      navigate('/app/dashboard', { replace: true })
+      navigate('/app', { replace: true })
     } catch (err: unknown) {
       toast.error(
         (err instanceof Error ? err.message : null) || 'Failed saving workspace layout settings.'
