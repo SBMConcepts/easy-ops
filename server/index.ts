@@ -1,11 +1,10 @@
 import 'dotenv/config'
-import express, { NextFunction, Request, Response } from 'express'
+import express, { Request, Response } from 'express'
 import cors from 'cors'
-import registerRouter from './routes/register.js'
-import attendanceRouter from './routes/attendance.js'
-import auth0SyncRouter from './routes/auth0-sync.js'
+
+// ── Only import the surviving administrative & lookup routes ──
+import createRouter from './routes/tenants/create.js'
 import employeesRouter from './routes/employees.js'
-import userRouter from './routes/user.js'
 import accessRequestsRouter from './routes/access-requests.js'
 import tenantLookupRouter from './routes/tenant-lookup.js'
 
@@ -22,15 +21,14 @@ app.use(
 app.use(express.json())
 
 // ── Routes ─────────────────────────────────────────────────────────────────
-app.use('/api/auth/register', registerRouter)
-app.use('/api/auth/sync', auth0SyncRouter)
 
-// Public — resolves a tenant slug before auth (used by TenantContext)
+// 1. Public & Provisioning Endpoints
+// Note: createRouter defines its own full path '/api/tenants/create' internally
+app.use(createRouter)
 app.use('/api/tenant-lookup', tenantLookupRouter)
 
-app.use('/api/user', userRouter)
+// 2. Privileged Administrative Actions (Requires Auth0 JWT & Manager+ Roles)
 app.use('/api/employees', employeesRouter)
-app.use('/api/attendance', attendanceRouter)
 app.use('/api/access-requests', accessRequestsRouter)
 
 // ── Health Check ───────────────────────────────────────────────────────────
@@ -42,11 +40,6 @@ app.get('/api/health', (_req: Request, res: Response) => {
   })
 })
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Unhandled API Error:', err)
-  res.status(500).json({ error: 'Internal Server Error' })
-})
-
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+  console.log(`🚀 EasyOps Secure API Server running on port ${PORT}`)
 })

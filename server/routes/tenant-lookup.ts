@@ -1,53 +1,36 @@
-import { Router } from 'express'
-import type { Request, Response } from 'express'
+import { Router, Request, Response } from 'express'
 import { getPool } from '../lib/db.js'
 
 const router = Router()
 
 /**
  * GET /api/tenant-lookup?org_id=org_xxxxx
- *
- * Public endpoint — no auth required.
- * Looks up a tenant by its Auth0 org_id.  The frontend can call this
- * after receiving the JWT (which contains org_id) to fetch supplemental
- * tenant data such as branding.  If you need to validate that a workspace
- * slug exists before login, pass ?slug=<slug> instead.
+ * Public endpoint — no auth required. Looks up a tenant's branding/status by its Auth0 org_id.
  */
 router.get('/', async (req: Request, res: Response) => {
   const orgId = (req.query.org_id as string | undefined)?.trim()
-  const slug = (req.query.slug as string | undefined)?.toLowerCase().trim()
 
-  if (!orgId && !slug) {
-    res.status(400).json({ error: 'org_id or slug query parameter is required' })
-    return
+  if (!orgId) {
+    return res.status(400).json({ error: 'org_id query parameter is required' })
   }
 
   const pool = getPool()
   try {
-    const result = orgId
-      ? await pool.query(
-          `SELECT id, name, slug, auth0_org_id, logo_url, status
-           FROM public.tenants
-           WHERE auth0_org_id = $1
-           LIMIT 1`,
-          [orgId]
-        )
-      : await pool.query(
-          `SELECT id, name, slug, auth0_org_id, logo_url, status
-           FROM public.tenants
-           WHERE slug = $1
-           LIMIT 1`,
-          [slug]
-        )
+    const result = await pool.query(
+      `SELECT id, name, auth0_org_id, logo_url, status
+       FROM public.tenants
+       WHERE auth0_org_id = $1
+       LIMIT 1`,
+      [orgId]
+    )
 
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: 'Workspace not found' })
-      return
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Workspace not found.' })
     }
 
     res.json(result.rows[0])
-  } catch (err) {
-    console.error('Error in tenant-lookup:', err)
+  } catch (error: unknown) {
+    console.error('Tenant lookup error:', (error as Error).message)
     res.status(500).json({ error: 'Internal server error' })
   }
 })
