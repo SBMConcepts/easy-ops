@@ -85,7 +85,7 @@ export function useTenantApi() {
         headers['Authorization'] = `Bearer ${token}`
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/${path}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/${path}`, {
         ...init,
         headers,
       })

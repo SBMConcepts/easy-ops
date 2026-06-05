@@ -217,7 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const token = await getAccessTokenSilently()
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/user/me`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/user/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -261,7 +261,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         avatar_url: (d.avatar_url as string | null) ?? null,
         status: (d.user_status as UserStatus) ?? 'active',
         tenant_id: String(d.tenant_id),
-        role: (d.role as TenantRole) ?? 'employee',
+        role: (d.role as TenantRole) ?? 'admin', // default to admin if no role found — safer for dev/testing, less safe for prod
         membership_status: (d.membership_status as MembershipStatus) ?? 'active',
       })
 
