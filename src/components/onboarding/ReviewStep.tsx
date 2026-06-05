@@ -1,4 +1,4 @@
-import { Card, CardContent } from '../ui/card'
+import { Card, CardContent } from '../../components/ui/card'
 import {
   Building2,
   MapPin,
@@ -9,12 +9,12 @@ import {
   MessageCircle,
   PenLine,
   Scale,
-  CheckCircle2,
-  XCircle,
+  ShieldCheck,
 } from 'lucide-react'
 import type { CompanyData } from './CompanyStep'
 import type { SiteData } from './SitesStep'
 import type { DepartmentData } from './DepartmentsStep'
+import type { RoleData } from './RolesStep'
 import type { ShiftData, WorkRules } from './ShiftsStep'
 import type { CheckInSettings } from './CheckInMethodsStep'
 
@@ -25,6 +25,7 @@ interface Props {
   company: CompanyData
   sites: SiteData[]
   departments: DepartmentData[]
+  roles: RoleData[]
   shifts: ShiftData[]
   checkInMethods: CheckInSettings
   workRules: WorkRules
@@ -44,95 +45,93 @@ const METHOD_LABELS: Record<string, string> = {
   manualEnabled: 'Manual Entry',
 }
 
-const ReviewStep = ({ company, sites, departments, shifts, checkInMethods, workRules }: Props) => {
+const ReviewStep = ({
+  company,
+  sites,
+  departments,
+  roles,
+  shifts,
+  checkInMethods,
+  workRules,
+}: Props) => {
   return (
-    <div className="review-step space-y-4">
-      {/* Company Summary */}
-      <Card className="review-card shadow-sm border-border">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-2 text-primary">
-            <Building2 className="h-5 w-5" />
-            <h3 className="font-semibold text-lg">Organization</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <p>
-              <span className="text-muted-foreground">Name:</span> {company.name || 'Not provided'}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Industry:</span>{' '}
-              {company.industry || 'Not provided'}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Country:</span>{' '}
-              {company.country || 'Not provided'}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="review-step space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-xl font-bold">Review Configuration</h2>
+        <p className="text-sm text-muted-foreground">Verify your structural workspace setup</p>
+      </div>
 
-      {/* Operational Scope */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="review-card shadow-sm border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2 text-primary">
-              <MapPin className="h-5 w-5" />
-              <h3 className="font-semibold text-lg">Sites</h3>
+        {/* Company Overview */}
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2">
+              <Building2 className="h-4 w-4" /> Company Details
             </div>
-            <p className="text-sm font-medium">{sites.length} Active Sites</p>
+            <div className="text-sm space-y-1">
+              <p>
+                <span className="text-muted-foreground">Name:</span> {company.name || '—'}
+              </p>
+              <p>
+                <span className="text-muted-foreground">Industry:</span> {company.industry || '—'}
+              </p>
+              <p>
+                <span className="text-muted-foreground">Country:</span> {company.country || '—'}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="review-card shadow-sm border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2 text-primary">
-              <Users className="h-5 w-5" />
-              <h3 className="font-semibold text-lg">Departments</h3>
+        {/* Operational Scope */}
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2">
+              <Scale className="h-4 w-4" /> Operational Scope
             </div>
-            <p className="text-sm font-medium">{departments.length} Monitored Departments</p>
+            <div className="text-sm space-y-1">
+              <p>
+                <span className="text-muted-foreground">Locations:</span> {sites.length} Active
+                Sites
+              </p>
+              <p>
+                <span className="text-muted-foreground">Departments:</span> {departments.length}{' '}
+                Divisions
+              </p>
+              <p>
+                <span className="text-muted-foreground">Roles:</span> {roles.length} Custom Profiles
+              </p>
+              <p>
+                <span className="text-muted-foreground">Shifts:</span> {shifts.length} Schedules
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Policies & Rules */}
-      <Card className="review-card shadow-sm border-border">
+      {/* Check-In Methods */}
+      <Card>
         <CardContent className="p-4 space-y-4">
-          <div className="flex items-center gap-2 text-primary">
-            <Scale className="h-5 w-5" />
-            <h3 className="font-semibold text-lg">Compliance & Tracking Rules</h3>
+          <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2">
+            <MapPin className="h-4 w-4" /> Clock-in Validation Methods
           </div>
-
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="space-y-1">
-              <p className="text-muted-foreground">Weekly Limit:</p>
-              <p className="font-medium">{workRules.weeklyHoursLimit} Hours</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-muted-foreground">Overtime Multiplier:</p>
-              <p className="font-medium">{workRules.overtimeRate}x</p>
-            </div>
-          </div>
-
-          <div className="border-t border-border pt-4 mt-4">
-            <p className="text-sm font-semibold mb-3">Allowed Check-In Terminals</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {['qrEnabled', 'biometricEnabled', 'whatsappEnabled', 'manualEnabled'].map((key) => {
-                const enabled = checkInMethods.methods[
-                  key as keyof typeof checkInMethods.methods
-                ] as boolean
-                const Icon = METHOD_ICONS[key]
-                return (
-                  <div
-                    key={key}
-                    className={`flex flex-col items-center p-3 rounded-lg border ${enabled ? 'bg-secondary/10 border-secondary' : 'bg-muted/30 border-transparent opacity-50'}`}
-                  >
-                    <Icon
-                      className={`h-6 w-6 mb-1 ${enabled ? 'text-secondary' : 'text-muted-foreground'}`}
-                    />
-                    <span className="text-xs font-medium text-center">{METHOD_LABELS[key]}</span>
-                  </div>
-                )
-              })}
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {['qrEnabled', 'biometricEnabled', 'whatsappEnabled', 'manualEnabled'].map((key) => {
+              const enabled = checkInMethods.methods[
+                key as keyof typeof checkInMethods.methods
+              ] as boolean
+              const Icon = METHOD_ICONS[key]
+              return (
+                <div
+                  key={key}
+                  className={`flex flex-col items-center p-3 rounded-lg border ${enabled ? 'bg-secondary/10 border-secondary' : 'bg-muted/30 border-transparent opacity-50'}`}
+                >
+                  <Icon
+                    className={`h-6 w-6 mb-1 ${enabled ? 'text-secondary' : 'text-muted-foreground'}`}
+                  />
+                  <span className="text-xs font-medium text-center">{METHOD_LABELS[key]}</span>
+                </div>
+              )
+            })}
           </div>
 
           {checkInMethods.methods.geofencingEnabled && (

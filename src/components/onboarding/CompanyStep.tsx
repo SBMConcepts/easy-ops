@@ -1,71 +1,20 @@
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select'
+import { Card, CardContent } from '../../components/ui/card'
 import '../../styles/form.css'
 import '../../styles/companystep.css'
-import { Card, CardContent } from '../ui/card'
-
-const INDUSTRIES = [
-  'Agriculture',
-  'Automotive',
-  'Banking',
-  'Construction',
-  'Cleaning Services',
-  'Consulting',
-  'Education',
-  'Energy',
-  'Entertainment',
-  'Financial Services',
-  'Government',
-
-  'Healthcare',
-  'Hospitality',
-  'Information Technology',
-  'Legal Services',
-
-  'Logistics',
-
-  'Manufacturing',
-  'Media',
-
-  'Mining',
-  'Pharmaceuticals',
-  'Real Estate',
-
-  'Retail',
-
-  'Security',
-  'Sport and Recreation',
-  'Telecommunications',
-  'Tourism',
-
-  'Transport',
-
-  'Warehousing',
-  'Technology',
-  'Other',
-] as const
-
-const COUNTRIES = [
-  'Botswana',
-  'Ghana',
-  'Kenya',
-  'Mozambique',
-  'Namibia',
-  'Nigeria',
-  'South Africa',
-  'Zambia',
-  'Zimbabwe',
-  'Other',
-] as const
-
-type Industry = (typeof INDUSTRIES)[number]
-type Country = (typeof COUNTRIES)[number]
 
 export interface CompanyData {
   name: string
-  industry: Industry | ''
-  country: Country | ''
+  industry: string
+  country: string
 }
 
 interface Props {
@@ -73,65 +22,74 @@ interface Props {
   onChange: (data: CompanyData) => void
 }
 
+const INDUSTRIES = [
+  'Agriculture',
+  'Construction',
+  'Healthcare',
+  'Logistics',
+  'Manufacturing',
+  'Retail',
+  'Security',
+  'Technology',
+  'Other',
+] as const
+const COUNTRIES = [
+  'Botswana',
+  'Ghana',
+  'Kenya',
+  'Namibia',
+  'Nigeria',
+  'South Africa',
+  'Other',
+] as const
+
 const CompanyStep = ({ data, onChange }: Props) => {
-  const update = <K extends keyof CompanyData>(key: K, value: CompanyData[K]) =>
-    onChange({ ...data, [key]: value })
+  const update = (field: keyof CompanyData, value: string) => onChange({ ...data, [field]: value })
+
   return (
     <Card className="company-card">
       <CardContent className="company-card__content">
-        <div className="company-card__row">
-          <div className="form-field">
-            <Label htmlFor="company-name" className="company-card__label form-label--required">
-              Company Name *
-            </Label>
-            <Input
-              id="company-name"
-              placeholder="e.g. Acme Holdings (Pty) Ltd"
-              value={data.name}
-              onChange={(e) => onChange({ ...data, name: e.target.value })}
-              className="form-input"
-            />
-          </div>
+        <h2 className="text-xl font-bold mb-4">Company Profile</h2>
+        <div className="form-field mb-4">
+          <Label className="form-label--required">Legal Name</Label>
+          <Input
+            className="form-input"
+            value={data.name}
+            onChange={(e) => update('name', e.target.value)}
+          />
         </div>
-
-        <div className="company-card__row">
-          <div className="form-field">
-            <Label className="company-card__label form-label--required">Industry</Label>
-            <Select value={data.industry} onValueChange={(v) => update('industry', v as Industry)}>
-              <SelectTrigger className="form-select-trigger">
-                <SelectValue placeholder="Select your industry" />
-              </SelectTrigger>
-              <SelectContent className="form-select-content">
-                {INDUSTRIES.map((i) => (
-                  <SelectItem key={i} value={i} className="form-select-item">
-                    {i}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="form-field mb-4">
+          <Label className="form-label--required">Industry</Label>
+          <Select value={data.industry} onValueChange={(v) => update('industry', v || '')}>
+            <SelectTrigger className="form-select-trigger">
+              <SelectValue placeholder="Select industry" />
+            </SelectTrigger>
+            <SelectContent>
+              {INDUSTRIES.map((i) => (
+                <SelectItem key={i} value={i}>
+                  {i}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-        <div className="company-card__row">
-          <div className="form-field">
-            <Label className="company-card__label form-label--required">Country</Label>
-            <Select value={data.country} onValueChange={(v) => update('country', v as Country)}>
-              <SelectTrigger className="form-select-trigger">
-                <SelectValue placeholder="Select country" />
-              </SelectTrigger>
-              <SelectContent className="form-select-content">
-                {COUNTRIES.map((c) => (
-                  <SelectItem key={c} value={c} className="form-select-item">
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="form-field">
+          <Label className="form-label--required">Country</Label>
+          <Select value={data.country} onValueChange={(v) => update('country', v || '')}>
+            <SelectTrigger className="form-select-trigger">
+              <SelectValue placeholder="Select country" />
+            </SelectTrigger>
+            <SelectContent>
+              {COUNTRIES.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </CardContent>
     </Card>
   )
 }
-
 export default CompanyStep

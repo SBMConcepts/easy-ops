@@ -1,18 +1,20 @@
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-import { Card, CardContent } from '../ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import { Button } from '../ui/button'
-import { Plus, Trash2, ShieldCheck } from 'lucide-react'
-
-import '../../styles/form.css'
-import '../../styles/rolesstep.css'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Card, CardContent } from '../../components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select'
+import { Button } from '../../components/ui/button'
+import { Plus, Trash2 } from 'lucide-react'
 
 export interface RoleData {
   name: string
   base_role: 'admin' | 'manager' | 'supervisor' | 'employee'
 }
-
 interface Props {
   data: RoleData[]
   onChange: (data: RoleData[]) => void
@@ -25,108 +27,62 @@ const BASE_ROLES = [
   { value: 'employee', label: 'Employee', desc: 'Self-service only' },
 ] as const
 
-type BaseRole = (typeof BASE_ROLES)[number]['value']
-
-const EMPTY_ROLE: RoleData = {
-  name: '',
-  base_role: 'admin',
-}
-
 const RolesStep = ({ data, onChange }: Props) => {
-  const add = () => onChange([...data, { ...EMPTY_ROLE }])
-
-  const remove = (i: number) => onChange(data.filter((_, idx) => idx !== i))
-
   const update = (i: number, field: keyof RoleData, value: string) => {
     const updated = [...data]
-    updated[i] = { ...updated[i], [field]: value } as RoleData
+    updated[i] = { ...updated[i], [field]: value }
     onChange(updated)
   }
 
-  const resolvedRole = (base_role: BaseRole) => BASE_ROLES.find((br) => br.value === base_role)
-
   return (
-    <div className="roles-step">
-      <p className="roles-step__desc">
-        Define organisation-specific role titles. Each maps to a system permission level.
-      </p>
-
-      <div className="roles-step__list">
-        {data.map((role, i) => {
-          const resolved = resolvedRole(role.base_role)
-          return (
-            <Card key={i} className="role-card">
-              <CardContent className="role-card__content">
-                <div className="role-card__header">
-                  <span className="role-card__label">
-                    <ShieldCheck className="role-card__icon" />
-                    Role {i + 1}
-                    {role.name && <span className="role-card__name-preview">— {role.name}</span>}
-                  </span>
-                  {data.length > 1 && (
-                    <button
-                      className="role-card__remove"
-                      onClick={() => remove(i)}
-                      aria-label={`Remove role ${i + 1}`}
-                    >
-                      <Trash2 className="role-card__remove-icon" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="role-card__row">
-                  <div className="form-field">
-                    <Label className="form-label form-label--required">Custom Title</Label>
-                    <Input
-                      className="form-input"
-                      placeholder="e.g. Site Foreman"
-                      value={role.name}
-                      onChange={(e) => update(i, 'name', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-field">
-                    <Label className="form-label">Permission Level</Label>
-                    <Select
-                      value={role.base_role}
-                      onValueChange={(v) => update(i, 'base_role', v as BaseRole)}
-                    >
-                      <SelectTrigger className="form-select-trigger">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="form-select-content">
-                        {BASE_ROLES.map((br) => (
-                          <SelectItem key={br.value} value={br.value} className="form-select-item">
-                            <span className="role-select-option">
-                              <span className="role-select-option__label">{br.label}</span>
-                              <span className="role-select-option__desc">{br.desc}</span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {resolved && (
-                  <div className={`role-badge role-badge--${role.base_role}`}>
-                    <span className="role-badge__dot" />
-                    {resolved.label}
-                    <span className="role-badge__sep">·</span>
-                    {resolved.desc}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )
-        })}
+    <div>
+      <h2 className="text-xl font-bold mb-4">Custom Roles</h2>
+      <div className="space-y-4">
+        {data.map((role, i) => (
+          <Card key={i} className="relative">
+            <CardContent className="p-4 grid grid-cols-2 gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 text-destructive"
+                onClick={() => onChange(data.filter((_, idx) => idx !== i))}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <div className="form-field">
+                <Label>Role Name (e.g. Shift Lead)</Label>
+                <Input value={role.name} onChange={(e) => update(i, 'name', e.target.value)} />
+              </div>
+              <div className="form-field">
+                <Label>Base Permission Tier</Label>
+                <Select
+                  value={role.base_role}
+                  onValueChange={(v) => update(i, 'base_role', v as RoleData['base_role'])}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BASE_ROLES.map((br) => (
+                      <SelectItem key={br.value} value={br.value}>
+                        {br.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-
-      <Button variant="outline" onClick={add} className="roles-step__add-btn">
-        <Plus className="h-4 w-4 mr-2" /> Add Role
+      <Button
+        variant="outline"
+        onClick={() => onChange([...data, { name: '', base_role: 'employee' }])}
+        className="mt-4 w-full"
+      >
+        <Plus className="h-4 w-4 mr-2" /> Add Custom Role
       </Button>
     </div>
   )
 }
-
 export default RolesStep

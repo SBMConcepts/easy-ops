@@ -1,47 +1,83 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { useAttendanceRecords, useAttendanceMutations } from '../hooks/useTenantData'
-import type { CheckInMethod } from '../integrations/supabase/types'
+import { useAttendanceRecords, attendanceKeys } from '../hooks/useTenantData'
+import { useDB } from '../contexts/DatabaseContext'
+import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'sonner'
 import { QrCode, Fingerprint, MapPin, Clock, CheckCircle2, Loader2 } from 'lucide-react'
+import { useCurrentUser } from '../hooks/useCurrentUser'
 
 const CheckIn = () => {
-  // Use secure multi-tenant queries and mutations
+  const supabase = useDB()
+  const { user } = useAuth()
+  const { profile: currentUser } = useCurrentUser()
+  const queryClient = useQueryClient()
+
   const { data: attendanceHistory, isLoading } = useAttendanceRecords()
-  const { checkIn, clockOut } = useAttendanceMutations()
+  const [selectedMethod, setSelectedMethod] = useState<'qr' | 'biometric' | 'manual'>('qr')
 
-  const [selectedMethod, setSelectedMethod] = useState<CheckInMethod>('qr')
-  const [processing, setProcessing] = useState(false)
+  // Direct Supabase Mutations replacing the old Express API calls
+  const checkIn = useMutation({
+    mutationFn: async ({
+      method,
+      site_id,
+    }: {
+      method: 'qr' | 'biometric' | 'manual'
+      site_id: string
+    }) => {
+      if (!currentUser?.profile_id || !currentUser?.tenant_id) {
+        throw new Error('User profile not loaded')
+      }
+      const { error } = await supabase.from('attendance_records').insert({
+        employee_id: currentUser.profile_id,
+        tenant_id: currentUser.tenant_id,
+        method,
+        site_id,
+        status: 'present',
+        clock_in: new Date().toISOString(),
+      })
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: attendanceKeys.lists() }),
+  })
 
-  // Ascertain current shift clock-in state using structural evaluation from history
+  const clockOut = useMutation({
+    mutationFn: async ({ recordId }: { recordId: string }) => {
+      const { error } = await supabase
+        .from('attendance_records')
+        .update({ clock_out: new Date().toISOString() })
+        .eq('id', recordId)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: attendanceKeys.lists() }),
+  })
+
+  // Ascertain current shift clock-in state using structural evaluation from history[cite: 18]
   const activeRecord = attendanceHistory?.find((r) => r.clock_in && !r.clock_out)
   const isClockedIn = !!activeRecord
+  const processing = checkIn.isPending || clockOut.isPending
 
   const handleClockIn = async () => {
-    setProcessing(true)
     try {
       const defaultSiteId = '00000000-0000-0000-0000-000000000000'
       await checkIn.mutateAsync({ method: selectedMethod, site_id: defaultSiteId })
       toast.success(`Clock-in record captured via ${selectedMethod.toUpperCase()}`)
-    } catch (err: unknown) {
-      toast.error((err instanceof Error ? err.message : null) || 'Check-in processing failure')
-    } finally {
-      setProcessing(false)
+    } catch (err: any) {
+      toast.error(err.message || 'Check-in processing failure')
     }
   }
 
   const handleClockOut = async () => {
     if (!activeRecord?.id) return
-    setProcessing(true)
     try {
       await clockOut.mutateAsync({ recordId: activeRecord.id })
       toast.success('Clock-out transaction validated successfully')
-    } catch (err: unknown) {
-      toast.error((err instanceof Error ? err.message : null) || 'Clock-out processing failure')
-    } finally {
-      setProcessing(false)
+    } catch (err: any) {
+      toast.error(err.message || 'Clock-out processing failure')
     }
   }
 
@@ -51,13 +87,13 @@ const CheckIn = () => {
       id: 'biometric' as const,
       label: 'Biometric',
       icon: Fingerprint,
-      desc: 'On-device fingerprint verification',
+      desc: 'On-device verification',
     },
     {
       id: 'manual' as const,
       label: 'Manual Check',
       icon: MapPin,
-      desc: 'GPS geolocation fallback verification',
+      desc: 'GPS geolocation fallback',
     },
   ]
 
@@ -124,8 +160,7 @@ const CheckIn = () => {
                 onClick={handleClockOut}
                 disabled={processing}
               >
-                <Clock className="h-5 w-5 mr-2" />
-                Clock Out of Shift
+                <Clock className="h-5 w-5 mr-2" /> Clock Out of Shift
               </Button>
             ) : (
               <Button
@@ -134,8 +169,7 @@ const CheckIn = () => {
                 onClick={handleClockIn}
                 disabled={processing}
               >
-                <CheckCircle2 className="h-5 w-5 mr-2" />
-                Clock In for Duty
+                <CheckCircle2 className="h-5 w-5 mr-2" /> Clock In for Duty
               </Button>
             )}
           </div>

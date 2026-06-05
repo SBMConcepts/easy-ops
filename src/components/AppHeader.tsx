@@ -18,9 +18,8 @@ const AppHeader = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogout = async () => {
-    await logout()
-    navigate('/login')
+  const handleLogout = () => {
+    logout() // Auth0 logout handles the redirect automatically
   }
 
   return (
@@ -35,8 +34,14 @@ const AppHeader = () => {
             <User className="h-4 w-4 icon-muted" style={{ color: 'var(--muted-foreground)' }} />
             <span className="app-header-username">{user.full_name || 'User Profile'}</span>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout} title="Log Out">
-            <LogOut className="h-4 w-4 text-muted-foreground" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            className="app-header-logout"
+            title="Sign out"
+          >
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
       )}

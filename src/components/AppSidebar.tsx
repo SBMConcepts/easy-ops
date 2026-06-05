@@ -1,7 +1,7 @@
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import type { UserRole } from '../contexts/AuthContext'
+import type { TenantRole } from '../contexts/AuthContext'
 import {
   Sidebar,
   SidebarContent,
@@ -14,23 +14,14 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from './ui/sidebar'
-import {
-  LayoutDashboard,
-  QrCode,
-  Users,
-  Settings,
-  Shield,
-  Building,
-  BarChart3,
-  UserCheck,
-} from 'lucide-react'
+import { LayoutDashboard, QrCode, Users, Settings, Shield, Building, BarChart3 } from 'lucide-react'
 import '../styles/appshell.css'
 
 interface NavItem {
   title: string
   url: string
   icon: React.ElementType
-  roles: UserRole[]
+  roles: TenantRole[]
 }
 
 const navItems: NavItem[] = [
@@ -49,55 +40,32 @@ const navItems: NavItem[] = [
   {
     title: 'Live Attendance',
     url: '/app/live-attendance',
-    icon: UserCheck,
+    icon: BarChart3,
     roles: ['admin', 'manager', 'supervisor'],
   },
-  {
-    title: 'Employees',
-    url: '/app/employees',
-    icon: Users,
-    roles: ['admin', 'manager'],
-  },
+  { title: 'Staff Directory', url: '/app/employees', icon: Users, roles: ['admin', 'manager'] },
   {
     title: 'Sites & Depts',
     url: '/app/sites',
     icon: Building,
     roles: ['admin', 'manager', 'supervisor'],
   },
-  {
-    title: 'Compliance',
-    url: '/app/compliance',
-    icon: Shield,
-    roles: ['admin', 'manager'],
-  },
-  {
-    title: 'Reports',
-    url: '/app/reports',
-    icon: BarChart3,
-    roles: ['admin', 'manager', 'supervisor', 'employee'],
-  },
-  {
-    title: 'Settings',
-    url: '/app/settings',
-    icon: Settings,
-    roles: ['admin', 'manager', 'supervisor', 'employee'],
-  },
+  { title: 'Compliance', url: '/app/compliance', icon: Shield, roles: ['admin', 'manager'] },
+  { title: 'Settings', url: '/app/settings', icon: Settings, roles: ['admin'] },
 ]
 
 const AppSidebar = () => {
+  const { user, tenant } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, tenant } = useAuth()
 
-  const orgName = tenant?.name
+  const orgName = tenant?.name || 'Workspace'
 
-  const filteredItems = navItems.filter((item) => {
-    if (!user) return false
-    return item.roles.includes(user.role)
-  })
+  // Filter navigation items based on the user's role
+  const filteredItems = navItems.filter((item) => user && item.roles.includes(user.role))
 
   return (
-    <Sidebar>
+    <Sidebar className="app-sidebar">
       <SidebarHeader className="sidebar-header">
         <div
           className="sidebar-brand"

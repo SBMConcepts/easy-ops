@@ -9,10 +9,9 @@ import {
   SelectValue,
 } from '../components/ui/select'
 import { useAttendanceRecords } from '../hooks/useTenantData'
-import type { AttendanceStatus } from '../integrations/supabase/types'
 import { Clock, MapPin, Loader2 } from 'lucide-react'
 
-const statusColors: Record<AttendanceStatus, string> = {
+const statusColors: Record<string, string> = {
   present: 'bg-secondary/10 text-secondary border-secondary/20',
   late: 'bg-accent/10 text-accent-foreground border-accent/20',
   absent: 'bg-destructive/10 text-destructive border-destructive/20',
@@ -23,10 +22,10 @@ const statusColors: Record<AttendanceStatus, string> = {
 const LiveAttendance = () => {
   const [siteFilter, setSiteFilter] = useState('all')
 
-  // Directly binds backend dataset scoped safely via headers
+  // Safely scoped directly via database RLS[cite: 21]
   const { data: records = [], isLoading } = useAttendanceRecords()
 
-  // Collect distinct operational locations present in real-time records
+  // Collect distinct operational locations present in real-time records[cite: 21]
   const uniqueSites = Array.from(new Map(records.map((r) => [r.site_id, r])).values())
   const filteredRecords =
     siteFilter === 'all' ? records : records.filter((r) => r.site_id === siteFilter)
@@ -60,7 +59,7 @@ const LiveAttendance = () => {
               <SelectItem value="all">All Locations</SelectItem>
               {uniqueSites.map((r) => (
                 <SelectItem key={r.site_id} value={r.site_id}>
-                  Location Space {r.site_id.slice(0, 5)}
+                  Location Space {r.sites?.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -85,7 +84,7 @@ const LiveAttendance = () => {
             >
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">
-                  Employee {rec.employee_id.slice(0, 8)}
+                  Employee {rec.employee_id?.slice(0, 8)}
                 </p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <MapPin className="h-3 w-3" /> Method: {rec.method.toUpperCase()}

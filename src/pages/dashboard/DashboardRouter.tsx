@@ -1,5 +1,5 @@
-import { useAuth } from '../../contexts/AuthContext'
 import { Navigate } from 'react-router-dom'
+import { useAuth, useAuthRole } from '../../contexts/AuthContext'
 import { DashboardLoader } from './DashboardLoader'
 import AdminDashboard from './AdminDashboard'
 import ManagerDashboard from './ManagerDashboard'
@@ -7,16 +7,17 @@ import SupervisorDashboard from './SupervisorDashboard'
 import EmployeeDashboard from './EmployeeDashboard'
 
 const DashboardRouter = () => {
-  const { user, tenant, isLoading, isAdmin } = useAuth()
+  const { user, tenant, isLoading } = useAuth()
+  const { isAdmin } = useAuthRole()
 
   if (isLoading) return <DashboardLoader />
 
-  // A tenant is fully onboarded and ready when its status is marked 'active'
+  // A tenant is fully onboarded and ready when its status is marked 'active'[cite: 17]
   const isTenantSetupComplete = tenant?.status === 'active'
 
   // Redirect admin to onboarding if they haven't been assigned a tenant
-  // or if that tenant's configuration status is not yet finalized ('active')
-  if (isAdmin && (!user?.tenant_id || !isTenantSetupComplete)) {
+  // or if that tenant's configuration status is not yet finalized ('active')[cite: 17]
+  if (isAdmin && (!user?.auth0_user_id || !isTenantSetupComplete)) {
     return <Navigate to="/app/onboarding" replace />
   }
 
