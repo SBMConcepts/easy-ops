@@ -1,7 +1,8 @@
-/* eslint-disable react-refresh/only-export-components */
 import React from 'react'
 import { Badge } from '../../components/ui/badge'
-import type { AttendanceStatus } from '../../integrations/supabase/types'
+import type { Database } from '../../integrations/supabase/types'
+
+type AttendanceStatus = Database['public']['Enums']['attendance_status']
 
 export const STATUS_COLORS: Record<AttendanceStatus, string> = {
   present: 'bg-secondary/10 text-secondary border-secondary/20',
@@ -12,8 +13,8 @@ export const STATUS_COLORS: Record<AttendanceStatus, string> = {
 }
 
 export const DashboardLoader = () => (
-  <div className="dashboard-loader">
-    <div className="dashboard-spinner" />
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
   </div>
 )
 
@@ -38,18 +39,18 @@ export const AttendanceRow: React.FC<AttendanceItemProps> = ({
     new Date(isoString).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className="attendance-row">
-      <div className="attendance-row-left">
-        <p className="attendance-name">{fullName || '—'}</p>
-        <p className="attendance-meta">{metaText}</p>
+    <div className="flex justify-between items-center py-3 border-b border-border last:border-0 hover:bg-muted/5 transition-colors px-2 rounded-md">
+      <div className="space-y-1">
+        <p className="font-medium text-sm text-foreground">{fullName || '—'}</p>
+        <p className="text-xs text-muted-foreground">{metaText}</p>
       </div>
-      <div className="attendance-row-right">
-        <span className="attendance-time">
+      <div className="flex items-center gap-4">
+        <span className="text-xs font-mono text-muted-foreground">
           {clockIn ? formatTime(clockIn) : '—'}
           {clockOut !== undefined && ` — ${clockOut ? formatTime(clockOut) : '...'}`}
         </span>
-        {hoursWorked && <span className="attendance-hours">{hoursWorked}h</span>}
-        <Badge variant="outline" className={STATUS_COLORS[status] || ''}>
+        {hoursWorked && <span className="text-xs font-medium text-foreground">{hoursWorked}h</span>}
+        <Badge variant="outline" className={`capitalize text-xs ${STATUS_COLORS[status] || ''}`}>
           {status}
         </Badge>
       </div>

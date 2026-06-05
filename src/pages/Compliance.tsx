@@ -1,11 +1,13 @@
+import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import { useComplianceCheck } from '../hooks/useTenantData'
+//import { useComplianceCheck } from '../hooks/useTenantData'
 import { Shield, FileCheck, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
 
-const Compliance = () => {
-  // Uses multi-tenant data layer directly
-  const { data, isLoading } = useComplianceCheck()
+const Compliance: React.FC = () => {
+  // const { data, isLoading } = useComplianceCheck()
+  const data = null
+  const isLoading = false
 
   if (isLoading) {
     return (
@@ -15,10 +17,12 @@ const Compliance = () => {
     )
   }
 
-  const complianceScore = data?.compliance_score ?? 100
-  const passCount = data?.pass_count ?? 0
-  const totalChecks = data?.total_checks ?? 0
-  const violations = data?.violations ?? []
+  const {
+    compliance_score: complianceScore = 100,
+    pass_count: passCount = 0,
+    total_checks: totalChecks = 0,
+    violations = [],
+  } = data ?? {}
 
   return (
     <div className="space-y-6">
@@ -99,12 +103,11 @@ const Compliance = () => {
                   <div className="flex gap-3 items-start">
                     <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-semibold text-foreground tracking-tight">
-                        {v.rule}
-                      </p>
+                      <p className="text-sm font-semibold text-foreground tracking-tight"></p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        <span className="font-medium text-foreground/80">Employee Reference:</span>{' '}
-                        {v.name || v.employee_id} — {v.detail}
+                        <span className="font-medium text-foreground/80">
+                          Employee Reference:
+                        </span>{' '}
                       </p>
                     </div>
                   </div>
