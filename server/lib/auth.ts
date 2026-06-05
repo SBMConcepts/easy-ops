@@ -3,7 +3,7 @@ import type { Request } from 'express'
 
 export interface AuthContext {
   auth0UserId: string
-  orgId: string
+  orgId: string | ''
   role: 'admin' | 'manager' | 'supervisor' | 'employee'
 }
 
@@ -28,8 +28,8 @@ export async function verifyAuth0Token(req: Request): Promise<AuthContext | null
     const auth0UserId = payload.sub
 
     // Extract the injected multitenant claims
-    const orgId = payload[`${CLAIM_NAMESPACE}org_id`] as string | undefined
-    const role = payload[`${CLAIM_NAMESPACE}role`] as AuthContext['role'] | undefined
+    const orgId = payload[`${CLAIM_NAMESPACE}org_id`] as string
+    const role = payload[`${CLAIM_NAMESPACE}role`] as AuthContext['role']
 
     if (!auth0UserId) {
       console.error('JWT verification failed: Missing required subject claim.')
@@ -40,7 +40,7 @@ export async function verifyAuth0Token(req: Request): Promise<AuthContext | null
     return {
       auth0UserId,
       orgId: orgId || '', // Allows empty string if accessing a public/creation route
-      role: role || 'employee',
+      role: role || 'employee', // Default to lowest role if not present
     }
   } catch (error) {
     console.error('Token cryptographic verification failed:', error)
