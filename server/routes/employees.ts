@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Router, Request, Response } from 'express'
-import { verifyAuth0Token } from '../lib/auth.js'
+import { verifyAuth0Token, AppRole } from '../lib/auth.js'
 import { withTenantContext } from '../lib/db.js'
 import { hasRequiredRole } from '../lib/rbac.js'
 import { ManagementClient } from 'auth0'
@@ -16,7 +16,7 @@ const auth0 = new ManagementClient({
 interface InviteStaffPayload {
   email?: string
   full_name?: string
-  role?: 'manager' | 'supervisor' | 'employee'
+  role?: AppRole
   departmentId?: string | null
   siteId?: string | null
 }
@@ -24,29 +24,19 @@ interface InviteStaffPayload {
 router.post('/api/employees/invite', async (req: Request, res: Response): Promise<any> => {
   try {
     const authCtx = await verifyAuth0Token(req)
-    if (!authCtx || !authCtx.orgId) {
-      return res
-        .status(401)
-        .json({ error: 'Unauthorized security identity verification parameters.' })
-    }
-
-    if (!hasRequiredRole(authCtx, 'manager')) {
-      return res
-        .status(403)
-        .json({ error: 'Forbidden: Requesting context profile role tier cannot invite staff.' })
-    }
+    if (!authCtx || !authCtx.orgId) return res.status(401).json({ error: 'Unauthorized.' })
+    if (!hasRequiredRole(authCtx, 'manager')) return res.status(403).json({ error: 'Forbidden.' })
 
     const { email, full_name, role, departmentId, siteId } = req.body as InviteStaffPayload
 
     if (!email || !full_name || !role) {
-      return res.status(400).json({ error: 'Missing required fields: email, full_name, role' })
+      return res.status(400).json({ error: 'Missing required fields' })
     }
 
-    // 1. Structure profile bindings utilizing stateless contextual orgId tokens directly
     const localProvisionResult = await withTenantContext(authCtx, async (client) => {
       const userRes = await client.query(
         `INSERT INTO public.users (id, email, full_name, status)
-         VALUES ('pending|' || $1, $1, $2, 'invited')
+         VALUES ('pending|' || $1, $1, $2, 'invited'::public.user_status)
          ON CONFLICT (email) DO UPDATE SET full_name = EXCLUDED.full_name
          RETURNING id`,
         [email.trim().toLowerCase(), full_name.trim()]
@@ -74,28 +64,17 @@ router.post('/api/employees/invite', async (req: Request, res: Response): Promis
       return { id: newUserId }
     })
 
-    // 2. Dispatch onboarding links through Auth0's identity network bound strictly to the active organization
     await auth0.organizations.invitations.create(authCtx.orgId, {
       inviter: { name: authCtx.auth0UserId },
       invitee: { email: email.trim().toLowerCase() },
       client_id: process.env.AUTH0_CLIENT_ID!,
       send_invitation_email: true,
-      app_metadata: {
-        orgId: authCtx.orgId,
-        role: role,
-      },
+      app_metadata: { orgId: authCtx.orgId, role: role },
     })
 
-    return res.status(201).json({
-      success: true,
-      employeeId: localProvisionResult.id,
-      message: 'Staff records successfully structured and user invitation pipeline triggered.',
-    })
+    return res.status(201).json({ success: true, employeeId: localProvisionResult.id })
   } catch (error: any) {
-    console.error('Error executing infrastructure provisioning workflow loop:', error)
-    return res
-      .status(500)
-      .json({ error: error.message || 'Internal infrastructure operations failure.' })
+    return res.status(500).json({ error: error.message })
   }
 })
 

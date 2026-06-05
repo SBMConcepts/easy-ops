@@ -1,13 +1,15 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import type { Request } from 'express'
+import type { Database } from '../types/supabase.js'
+
+export type AppRole = Database['public']['Enums']['tenant_role']
 
 export interface AuthContext {
   auth0UserId: string
-  orgId: string | ''
-  role: 'admin' | 'manager' | 'supervisor' | 'employee'
+  orgId: string
+  role: AppRole
 }
 
-// Ensure this matches the exact namespace from your Auth0 Action
 const CLAIM_NAMESPACE = 'https://easy-ops-za.vercel.app/'
 
 export async function verifyAuth0Token(req: Request): Promise<AuthContext | null> {
@@ -24,26 +26,19 @@ export async function verifyAuth0Token(req: Request): Promise<AuthContext | null
     const jwks = createRemoteJWKSet(new URL(`https://${domain}/.well-known/jwks.json`))
     const { payload } = await jwtVerify(token, jwks, { audience, issuer: `https://${domain}/` })
 
-    // Extract the immutable native Auth0 Subject
     const auth0UserId = payload.sub
+    const orgId = payload[`${CLAIM_NAMESPACE}org_id`] as string | undefined
+    const role = payload[`${CLAIM_NAMESPACE}role`] as AppRole | undefined
 
-    // Extract the injected multitenant claims
-    const orgId = payload[`${CLAIM_NAMESPACE}org_id`] as string
-    const role = payload[`${CLAIM_NAMESPACE}role`] as AuthContext['role']
+    if (!auth0UserId) return null
 
-    if (!auth0UserId) {
-      console.error('JWT verification failed: Missing required subject claim.')
-      return null
-    }
-
-    // Return the clean, stateless context
     return {
       auth0UserId,
-      orgId: orgId || '', // Allows empty string if accessing a public/creation route
-      role: role || 'employee', // Default to lowest role if not present
+      orgId: orgId || '',
+      role: role || 'employee',
     }
   } catch (error) {
-    console.error('Token cryptographic verification failed:', error)
+    console.error('Token verification failed:', error)
     return null
   }
 }

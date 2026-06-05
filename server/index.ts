@@ -2,8 +2,7 @@ import 'dotenv/config'
 import express, { Request, Response } from 'express'
 import cors from 'cors'
 
-// ── Only import the surviving administrative & lookup routes ──
-import createRouter from './routes/tenants/create.js'
+import createRouter from './routes/create.js'
 import employeesRouter from './routes/employees.js'
 import accessRequestsRouter from './routes/access-requests.js'
 import tenantLookupRouter from './routes/tenant-lookup.js'
@@ -14,24 +13,21 @@ const PORT = Number(process.env.API_PORT ?? 3001)
 app.use(
   cors({
     origin: process.env.VITE_APP_URL ?? 'http://localhost:5173',
-    allowedHeaders: ['Authorization', 'Content-Type'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'x-api-key'],
   })
 )
 
 app.use(express.json())
 
-// ── Routes ─────────────────────────────────────────────────────────────────
-
-// 1. Public & Provisioning Endpoints
-// Note: createRouter defines its own full path '/api/tenants/create' internally
+// 1. Public Endpoints
 app.use(createRouter)
-app.use('/api/tenant-lookup', tenantLookupRouter)
+app.use(tenantLookupRouter)
 
-// 2. Privileged Administrative Actions (Requires Auth0 JWT & Manager+ Roles)
-app.use('/api/employees', employeesRouter)
-app.use('/api/access-requests', accessRequestsRouter)
+// 2. Privileged Administrative Actions
+app.use(employeesRouter)
+app.use(accessRequestsRouter)
 
-// ── Health Check ───────────────────────────────────────────────────────────
+// Health Check
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
@@ -41,5 +37,5 @@ app.get('/api/health', (_req: Request, res: Response) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`🚀 EasyOps Secure API Server running on port ${PORT}`)
+  console.log(`🚀 EasyOps API Server running on port ${PORT}`)
 })
