@@ -1,789 +1,1018 @@
-// =============================================================================
-// integrations/supabase/types.ts
-// Auto-generated from post-migration schema
-// Reflects: remote schema + schema_audit_and_migration.sql
-// DO NOT EDIT MANUALLY — regenerate from schema when tables change.
-// =============================================================================
-
-// ---------------------------------------------------------------------------
-// Enums
-// ---------------------------------------------------------------------------
-
-export type AccessRequestStatus = 'pending' | 'approved' | 'rejected' | 'expired'
-
-export type AttendanceStatus = 'present' | 'late' | 'absent' | 'leave' | 'holiday'
-
-export type BillingPlan = 'starter' | 'growth' | 'pro' | 'enterprise'
-
-export type BillingStatus = 'trialing' | 'active' | 'past_due' | 'canceled'
-
-export type CheckInMethod = 'qr' | 'biometric' | 'whatsapp' | 'manual' | 'geofence'
-
-/** Lead lifecycle status — replaces the untyped text column from base schema. */
-export type LeadStatus =
-  | 'new'
-  | 'contacted'
-  | 'qualified'
-  | 'demo_scheduled'
-  | 'proposal_sent'
-  | 'won'
-  | 'lost'
-  | 'unresponsive'
-
-export type MembershipStatus = 'invited' | 'active' | 'suspended' | 'offboarded'
-
-export type TenantRole = 'admin' | 'manager' | 'supervisor' | 'employee'
-
-export type TenantStatus = 'provisioning' | 'active' | 'suspended' | 'offboarding' | 'archived'
-
-export type UserStatus = 'active' | 'suspended' | 'deleted'
-
-// ---------------------------------------------------------------------------
-// Tables — Row, Insert, Update
-// Each table exposes three shapes:
-//   Row    — what you receive from SELECT
-//   Insert — what you supply on INSERT (generated/defaulted columns optional)
-//   Update — what you supply on UPDATE (all columns optional)
-// ---------------------------------------------------------------------------
-
-// ── access_requests ─────────────────────────────────────────────────────────
-
-export interface AccessRequestRow {
-  id: string
-  requester_email: string
-  requester_name: string | null
-  target_tenant_id: string | null
-  /** Generated always from requester_email. Never writable. */
-  email_domain: string
-  message: string | null
-  status: AccessRequestStatus
-  decided_by: string | null
-  decided_at: string | null
-  created_at: string
-}
-
-export interface AccessRequestInsert {
-  id?: string
-  requester_email: string
-  requester_name?: string | null
-  target_tenant_id?: string | null
-  message?: string | null
-  status?: AccessRequestStatus
-  decided_by?: string | null
-  decided_at?: string | null
-  created_at?: string
-  // email_domain is GENERATED ALWAYS — omit on insert
-}
-
-export interface AccessRequestUpdate {
-  requester_email?: string
-  requester_name?: string | null
-  target_tenant_id?: string | null
-  message?: string | null
-  status?: AccessRequestStatus
-  decided_by?: string | null
-  decided_at?: string | null
-  // email_domain is GENERATED ALWAYS — omit on update
-}
-
-// ── attendance_records ───────────────────────────────────────────────────────
-
-export interface AttendanceRecordRow {
-  id: string
-  tenant_id: string
-  employee_id: string
-  site_id: string
-  date: string
-  clock_in: string | null
-  clock_out: string | null
-  method: CheckInMethod
-  status: AttendanceStatus
-  latitude: number | null
-  longitude: number | null
-  verified: boolean
-  verified_by: string | null
-  /** Auto-computed from (clock_out - clock_in). Do not write directly. */
-  hours_worked: number | null
-  /** Auto-computed as MAX(0, hours_worked - 8). Do not write directly. */
-  overtime: number | null
-  notes: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface AttendanceRecordInsert {
-  id?: string
-  tenant_id: string
-  employee_id: string
-  site_id?: string
-  date?: string
-  clock_in?: string | null
-  clock_out?: string | null
-  method?: CheckInMethod
-  status?: AttendanceStatus
-  latitude?: number | null
-  longitude?: number | null
-  verified?: boolean
-  verified_by?: string | null
-  /** Computed by trigger — supplying a value will be overwritten. */
-  hours_worked?: number | null
-  /** Computed by trigger — supplying a value will be overwritten. */
-  overtime?: number | null
-  notes?: string | null
-  created_at?: string
-  updated_at?: string
-}
-
-export interface AttendanceRecordUpdate {
-  tenant_id?: string
-  employee_id?: string
-  site_id?: string
-  date?: string
-  clock_in?: string | null
-  clock_out?: string | null
-  method?: CheckInMethod
-  status?: AttendanceStatus
-  latitude?: number | null
-  longitude?: number | null
-  verified?: boolean
-  verified_by?: string | null
-  notes?: string | null
-  updated_at?: string
-  // hours_worked and overtime are trigger-managed — omit on update
-}
-
-// ── audit_log ────────────────────────────────────────────────────────────────
-
-export interface AuditLogRow {
-  id: string
-  tenant_id: string | null
-  user_id: string | null
-  action: string
-  target_table: string | null
-  target_id: string | null
-  details: Record<string, unknown>
-  created_at: string
-}
-
-export interface AuditLogInsert {
-  id?: string
-  tenant_id?: string | null
-  user_id?: string | null
-  action: string
-  target_table?: string | null
-  target_id?: string | null
-  details?: Record<string, unknown>
-  created_at?: string
-}
-
-// audit_log is append-only — no Update type intentionally.
-
-// ── department_sites (junction — added by migration §7) ─────────────────────
-
-export interface DepartmentSiteRow {
-  department_id: string
-  site_id: string
-  tenant_id: string
-  created_at: string
-}
-
-export interface DepartmentSiteInsert {
-  department_id: string
-  site_id: string
-  tenant_id: string
-  created_at?: string
-}
-
-// Junction rows are replaced, not updated — no Update type intentionally.
-
-// ── departments ──────────────────────────────────────────────────────────────
-
-export interface DepartmentRow {
-  id: string
-  tenant_id: string
-  name: string
-  /**
-   * Legacy shortcut: the department's primary site.
-   * Full many-to-many assignments live in department_sites.
-   * Not the authoritative source for site membership.
-   */
-  site_id: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface DepartmentInsert {
-  id?: string
-  tenant_id: string
-  name?: string
-  site_id?: string | null
-  created_at?: string
-  updated_at?: string
-}
-
-export interface DepartmentUpdate {
-  name?: string
-  site_id?: string | null
-  updated_at?: string
-}
-
-// ── employee_profiles ────────────────────────────────────────────────────────
-
-export interface EmployeeProfileRow {
-  /** Primary key — references memberships.id */
-  membership_id: string
-  /**
-   * Denormalised write-through projection of memberships.tenant_id.
-   * Overwritten on every INSERT/UPDATE by trigger — do not set manually.
-   */
-  tenant_id: string
-  site_id: string | null
-  department_id: string | null
-  job_title: string | null
-  id_number: string | null
-  date_of_birth: string | null
-  start_date: string | null
-  phone: string | null
-  address: string | null
-  emergency_contact_name: string | null
-  emergency_contact_phone: string | null
-  bio: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface EmployeeProfileInsert {
-  membership_id: string
-  /** Trigger-managed — supplying a value will be overwritten from memberships. */
-  tenant_id?: string
-  site_id?: string | null
-  department_id?: string | null
-  job_title?: string | null
-  id_number?: string | null
-  date_of_birth?: string | null
-  start_date?: string | null
-  phone?: string | null
-  address?: string | null
-  emergency_contact_name?: string | null
-  emergency_contact_phone?: string | null
-  bio?: string | null
-  created_at?: string
-  updated_at?: string
-}
-
-export interface EmployeeProfileUpdate {
-  site_id?: string | null
-  department_id?: string | null
-  job_title?: string | null
-  id_number?: string | null
-  date_of_birth?: string | null
-  start_date?: string | null
-  phone?: string | null
-  address?: string | null
-  emergency_contact_name?: string | null
-  emergency_contact_phone?: string | null
-  bio?: string | null
-  updated_at?: string
-  // tenant_id and membership_id are immutable after insert
-}
-
-// ── memberships ──────────────────────────────────────────────────────────────
-
-export interface MembershipRow {
-  id: string
-  tenant_id: string
-  user_id: string
-  role: TenantRole
-  status: MembershipStatus
-  invited_by: string
-  joined_at: string
-  created_at: string
-  updated_at: string
-}
-
-export interface MembershipInsert {
-  id?: string
-  tenant_id: string
-  user_id: string
-  role?: TenantRole
-  status?: MembershipStatus
-  invited_by: string
-  joined_at: string
-  created_at?: string
-  updated_at?: string
-}
-
-export interface MembershipUpdate {
-  role?: TenantRole
-  status?: MembershipStatus
-  updated_at?: string
-  // tenant_id and user_id are immutable — changing them requires a new row
-}
-
-// ── organisation_roles ───────────────────────────────────────────────────────
-
-export interface OrganisationRoleRow {
-  id: string
-  tenant_id: string
-  name: string
-  base_role: TenantRole
-  created_at: string
-  /** Added by migration §3f — was missing from base schema. */
-  updated_at: string
-}
-
-export interface OrganisationRoleInsert {
-  id?: string
-  tenant_id: string
-  name: string
-  base_role: TenantRole
-  created_at?: string
-  updated_at?: string
-}
-
-export interface OrganisationRoleUpdate {
-  name?: string
-  base_role?: TenantRole
-  updated_at?: string
-}
-
-// ── sales_leads ──────────────────────────────────────────────────────────────
-
-export interface SalesLeadRow {
-  id: string
-  full_name: string
-  work_email: string
-  phone: string | null
-  company_name: string
-  employee_count: string | null
-  /** Constrained to BillingPlan values or null. */
-  selected_plan: BillingPlan | null
-  country: string | null
-  message: string | null
-  /** Typed enum — replaces unvalidated text column from base schema. */
-  status: LeadStatus
-  created_at: string
-  updated_at: string
-}
-
-export interface SalesLeadInsert {
-  id?: string
-  full_name: string
-  work_email: string
-  phone?: string | null
-  company_name: string
-  employee_count?: string | null
-  selected_plan?: BillingPlan | null
-  country?: string | null
-  message?: string | null
-  status?: LeadStatus
-  created_at?: string
-  updated_at?: string
-}
-
-export interface SalesLeadUpdate {
-  full_name?: string
-  work_email?: string
-  phone?: string | null
-  company_name?: string
-  employee_count?: string | null
-  selected_plan?: BillingPlan | null
-  country?: string | null
-  message?: string | null
-  status?: LeadStatus
-  updated_at?: string
-}
-
-// ── shifts ───────────────────────────────────────────────────────────────────
-
-export interface ShiftRow {
-  id: string
-  tenant_id: string
-  site_id: string
-  name: string
-  /** Stored as HH:MM:SS — use a time string or parse as needed. */
-  start_time: string
-  end_time: string
-  grace_period_minutes: number
-  created_at: string
-}
-
-export interface ShiftInsert {
-  id?: string
-  tenant_id: string
-  site_id: string
-  name?: string
-  start_time: string
-  end_time: string
-  grace_period_minutes?: number
-  created_at?: string
-}
-
-export interface ShiftUpdate {
-  site_id?: string
-  name?: string
-  start_time?: string
-  end_time?: string
-  grace_period_minutes?: number
-}
-
-// ── sites ────────────────────────────────────────────────────────────────────
-
-export interface SiteRow {
-  id: string
-  tenant_id: string
-  name: string
-  address: string
-  latitude: number | null
-  longitude: number | null
-  geofence_radius_m: number
-  created_at: string
-  updated_at: string
-}
-
-export interface SiteInsert {
-  id?: string
-  tenant_id: string
-  name?: string
-  address?: string
-  latitude?: number | null
-  longitude?: number | null
-  geofence_radius_m?: number
-  created_at?: string
-  updated_at?: string
-}
-
-export interface SiteUpdate {
-  name?: string
-  address?: string
-  latitude?: number | null
-  longitude?: number | null
-  geofence_radius_m?: number
-  updated_at?: string
-}
-
-// ── subscriptions ────────────────────────────────────────────────────────────
-
-export interface SubscriptionRow {
-  id: string
-  tenant_id: string
-  plan: BillingPlan
-  status: BillingStatus
-  seat_cap: number
-  /** Sensitive — accessible only to tenant admins via RLS (subs_admin_read). */
-  stripe_customer_id: string | null
-  /** Sensitive — accessible only to tenant admins via RLS (subs_admin_read). */
-  stripe_subscription_id: string | null
-  current_period_end: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface SubscriptionInsert {
-  id?: string
-  tenant_id: string
-  plan?: BillingPlan
-  status?: BillingStatus
-  seat_cap?: number
-  stripe_customer_id?: string | null
-  stripe_subscription_id?: string | null
-  current_period_end?: string | null
-  created_at?: string
-  updated_at?: string
-}
-
-export interface SubscriptionUpdate {
-  plan?: BillingPlan
-  status?: BillingStatus
-  seat_cap?: number
-  stripe_customer_id?: string | null
-  stripe_subscription_id?: string | null
-  current_period_end?: string | null
-  updated_at?: string
-}
-
-// ── tenants ──────────────────────────────────────────────────────────────────
-
-export interface TenantRow {
-  id: string
-  /** Auth0 Organisation ID (format: org_xxxx). Unique. JWT bridge. */
-  auth0_org_id: string
-  name: string
-  status: TenantStatus
-  industry: string | null
-  country: string
-  logo_url: string | null
-  settings: Record<string, unknown>
-  created_at: string
-  // plan column removed — reads go through tenant_active_plan view
-}
-
-export interface TenantInsert {
-  id?: string
-  auth0_org_id: string
-  name: string
-  status?: TenantStatus
-  industry?: string | null
-  country?: string
-  logo_url?: string | null
-  settings?: Record<string, unknown>
-  created_at?: string
-}
-
-export interface TenantUpdate {
-  name?: string
-  status?: TenantStatus
-  industry?: string | null
-  country?: string
-  logo_url?: string | null
-  settings?: Record<string, unknown>
-  // auth0_org_id is immutable after provisioning
-}
-
-// ── users ────────────────────────────────────────────────────────────────────
-
-export interface UserRow {
-  /** Auth0 sub claim — text PK (format: provider|id). */
-  id: string
-  email: string
-  full_name: string
-  avatar_url: string | null
-  status: UserStatus
-  /** Auth0 sub claim mirror. Unique. */
-  auth0_user_id: string
-  /**
-   * @deprecated Auth0 is the identity provider.
-   * Will be NULL for all Auth0 users and removed in a future migration.
-   */
-  password_hash: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface UserInsert {
-  id: string
-  email: string
-  full_name?: string
-  avatar_url?: string | null
-  status?: UserStatus
-  auth0_user_id: string
-  password_hash?: string | null
-  created_at?: string
-  updated_at?: string
-}
-
-export interface UserUpdate {
-  full_name?: string
-  avatar_url?: string | null
-  status?: UserStatus
-  updated_at?: string
-  // id, email, auth0_user_id are immutable
-  // password_hash: do not write — deprecated
-}
-
-// ---------------------------------------------------------------------------
-// Views
-// ---------------------------------------------------------------------------
-
-/**
- * tenant_active_plan
- * Current billing plan for a tenant — no Stripe IDs, safe for all members.
- * Derived from tenants JOIN subscriptions WHERE status IN ('active','trialing').
- */
-export interface TenantActivePlanView {
-  tenant_id: string
-  tenant_name: string
-  auth0_org_id: string
-  plan: BillingPlan | null
-  billing_status: BillingStatus | null
-  seat_cap: number | null
-  current_period_end: string | null
-}
-
-/**
- * tenant_subscription_summary
- * Stripe-ID-free subscription summary.
- * Safe to expose to all tenant members via application queries.
- */
-export interface TenantSubscriptionSummaryView {
-  tenant_id: string
-  plan: BillingPlan
-  status: BillingStatus
-  seat_cap: number
-  current_period_end: string | null
-}
-
-// ---------------------------------------------------------------------------
-// Supabase Database type — wire everything together for the typed client
-// ---------------------------------------------------------------------------
-
-export interface Database {
+type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: '14.5'
+  }
   public: {
     Tables: {
       access_requests: {
-        Row: AccessRequestRow
-        Insert: AccessRequestInsert
-        Update: AccessRequestUpdate
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          email_domain: string | null
+          id: string
+          message: string | null
+          requester_email: string
+          requester_name: string | null
+          status: Database['public']['Enums']['access_request_status']
+          target_tenant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email_domain?: string | null
+          id?: string
+          message?: string | null
+          requester_email: string
+          requester_name?: string | null
+          status?: Database['public']['Enums']['access_request_status']
+          target_tenant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email_domain?: string | null
+          id?: string
+          message?: string | null
+          requester_email?: string
+          requester_name?: string | null
+          status?: Database['public']['Enums']['access_request_status']
+          target_tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'access_requests_decided_by_fkey'
+            columns: ['decided_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'access_requests_target_tenant_id_fkey'
+            columns: ['target_tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'access_requests_target_tenant_id_fkey'
+            columns: ['target_tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
       }
       attendance_records: {
-        Row: AttendanceRecordRow
-        Insert: AttendanceRecordInsert
-        Update: AttendanceRecordUpdate
+        Row: {
+          clock_in: string | null
+          clock_out: string | null
+          created_at: string
+          date: string
+          employee_id: string
+          hours_worked: number | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          method: Database['public']['Enums']['check_in_method']
+          notes: string | null
+          overtime: number | null
+          site_id: string | null
+          status: Database['public']['Enums']['attendance_status']
+          tenant_id: string
+          updated_at: string
+          verified: boolean
+          verified_by: string | null
+        }
+        Insert: {
+          clock_in?: string | null
+          clock_out?: string | null
+          created_at?: string
+          date?: string
+          employee_id: string
+          hours_worked?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          method?: Database['public']['Enums']['check_in_method']
+          notes?: string | null
+          overtime?: number | null
+          site_id?: string | null
+          status?: Database['public']['Enums']['attendance_status']
+          tenant_id: string
+          updated_at?: string
+          verified?: boolean
+          verified_by?: string | null
+        }
+        Update: {
+          clock_in?: string | null
+          clock_out?: string | null
+          created_at?: string
+          date?: string
+          employee_id?: string
+          hours_worked?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          method?: Database['public']['Enums']['check_in_method']
+          notes?: string | null
+          overtime?: number | null
+          site_id?: string | null
+          status?: Database['public']['Enums']['attendance_status']
+          tenant_id?: string
+          updated_at?: string
+          verified?: boolean
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'attendance_records_employee_id_fkey'
+            columns: ['employee_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'attendance_records_site_id_fkey'
+            columns: ['site_id']
+            isOneToOne: false
+            referencedRelation: 'sites'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'attendance_records_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'attendance_records_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'attendance_records_verified_by_fkey'
+            columns: ['verified_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
       }
       audit_log: {
-        Row: AuditLogRow
-        Insert: AuditLogInsert
-        Update: never
+        Row: {
+          action: string
+          created_at: string
+          details: Json
+          id: string
+          target_id: string | null
+          target_table: string | null
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'audit_log_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'audit_log_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'audit_log_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
       }
       department_sites: {
-        Row: DepartmentSiteRow
-        Insert: DepartmentSiteInsert
-        Update: never
+        Row: {
+          created_at: string
+          department_id: string
+          site_id: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          site_id: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          site_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'department_sites_department_id_fkey'
+            columns: ['department_id']
+            isOneToOne: false
+            referencedRelation: 'departments'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'department_sites_site_id_fkey'
+            columns: ['site_id']
+            isOneToOne: false
+            referencedRelation: 'sites'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'department_sites_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'department_sites_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
       }
       departments: {
-        Row: DepartmentRow
-        Insert: DepartmentInsert
-        Update: DepartmentUpdate
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          site_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          site_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          site_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'departments_site_id_fkey'
+            columns: ['site_id']
+            isOneToOne: false
+            referencedRelation: 'sites'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'departments_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'departments_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
       }
       employee_profiles: {
-        Row: EmployeeProfileRow
-        Insert: EmployeeProfileInsert
-        Update: EmployeeProfileUpdate
+        Row: {
+          address: string | null
+          bio: string | null
+          created_at: string
+          date_of_birth: string | null
+          department_id: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          id_number: string | null
+          job_title: string | null
+          membership_id: string
+          phone: string | null
+          site_id: string | null
+          start_date: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          bio?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department_id?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id_number?: string | null
+          job_title?: string | null
+          membership_id: string
+          phone?: string | null
+          site_id?: string | null
+          start_date?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          bio?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department_id?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id_number?: string | null
+          job_title?: string | null
+          membership_id?: string
+          phone?: string | null
+          site_id?: string | null
+          start_date?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'employee_profiles_department_id_fkey'
+            columns: ['department_id']
+            isOneToOne: false
+            referencedRelation: 'departments'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'employee_profiles_membership_id_fkey'
+            columns: ['membership_id']
+            isOneToOne: true
+            referencedRelation: 'memberships'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'employee_profiles_site_id_fkey'
+            columns: ['site_id']
+            isOneToOne: false
+            referencedRelation: 'sites'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'employee_profiles_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'employee_profiles_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
       }
       memberships: {
-        Row: MembershipRow
-        Insert: MembershipInsert
-        Update: MembershipUpdate
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string
+          joined_at: string
+          role: Database['public']['Enums']['tenant_role']
+          status: Database['public']['Enums']['membership_status']
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by: string
+          joined_at: string
+          role?: Database['public']['Enums']['tenant_role']
+          status?: Database['public']['Enums']['membership_status']
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string
+          joined_at?: string
+          role?: Database['public']['Enums']['tenant_role']
+          status?: Database['public']['Enums']['membership_status']
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'memberships_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'memberships_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'memberships_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
       }
       organisation_roles: {
-        Row: OrganisationRoleRow
-        Insert: OrganisationRoleInsert
-        Update: OrganisationRoleUpdate
+        Row: {
+          base_role: Database['public']['Enums']['tenant_role']
+          created_at: string
+          id: string
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          base_role: Database['public']['Enums']['tenant_role']
+          created_at?: string
+          id?: string
+          name?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          base_role?: Database['public']['Enums']['tenant_role']
+          created_at?: string
+          id?: string
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organisation_roles_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'organisation_roles_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
       }
       sales_leads: {
-        Row: SalesLeadRow
-        Insert: SalesLeadInsert
-        Update: SalesLeadUpdate
+        Row: {
+          company_name: string
+          country: string | null
+          created_at: string
+          employee_count: string | null
+          full_name: string
+          id: string
+          message: string | null
+          phone: string | null
+          selected_plan: string | null
+          status: Database['public']['Enums']['lead_status']
+          updated_at: string
+          work_email: string
+        }
+        Insert: {
+          company_name: string
+          country?: string | null
+          created_at?: string
+          employee_count?: string | null
+          full_name: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          selected_plan?: string | null
+          status?: Database['public']['Enums']['lead_status']
+          updated_at?: string
+          work_email: string
+        }
+        Update: {
+          company_name?: string
+          country?: string | null
+          created_at?: string
+          employee_count?: string | null
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          selected_plan?: string | null
+          status?: Database['public']['Enums']['lead_status']
+          updated_at?: string
+          work_email?: string
+        }
+        Relationships: []
       }
       shifts: {
-        Row: ShiftRow
-        Insert: ShiftInsert
-        Update: ShiftUpdate
+        Row: {
+          created_at: string
+          end_time: string
+          grace_period_minutes: number
+          id: string
+          name: string
+          site_id: string
+          start_time: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          grace_period_minutes?: number
+          id?: string
+          name?: string
+          site_id: string
+          start_time: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          grace_period_minutes?: number
+          id?: string
+          name?: string
+          site_id?: string
+          start_time?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'shifts_site_id_fkey'
+            columns: ['site_id']
+            isOneToOne: false
+            referencedRelation: 'sites'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'shifts_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'shifts_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
       }
       sites: {
-        Row: SiteRow
-        Insert: SiteInsert
-        Update: SiteUpdate
+        Row: {
+          address: string
+          created_at: string
+          geofence_radius_m: number
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string
+          created_at?: string
+          geofence_radius_m?: number
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          geofence_radius_m?: number
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       subscriptions: {
-        Row: SubscriptionRow
-        Insert: SubscriptionInsert
-        Update: SubscriptionUpdate
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plan: Database['public']['Enums']['billing_plan']
+          seat_cap: number
+          status: Database['public']['Enums']['billing_status']
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: Database['public']['Enums']['billing_plan']
+          seat_cap?: number
+          status?: Database['public']['Enums']['billing_status']
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: Database['public']['Enums']['billing_plan']
+          seat_cap?: number
+          status?: Database['public']['Enums']['billing_status']
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'subscriptions_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: true
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'subscriptions_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: true
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
       }
       tenants: {
-        Row: TenantRow
-        Insert: TenantInsert
-        Update: TenantUpdate
+        Row: {
+          auth0_org_id: string
+          country: string
+          created_at: string
+          id: string
+          industry: string | null
+          logo_url: string | null
+          name: string
+          settings: Json
+          slug: string
+          status: Database['public']['Enums']['tenant_status']
+        }
+        Insert: {
+          auth0_org_id: string
+          country?: string
+          created_at?: string
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name: string
+          settings?: Json
+          slug: string
+          status?: Database['public']['Enums']['tenant_status']
+        }
+        Update: {
+          auth0_org_id?: string
+          country?: string
+          created_at?: string
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name?: string
+          settings?: Json
+          slug?: string
+          status?: Database['public']['Enums']['tenant_status']
+        }
+        Relationships: []
       }
       users: {
-        Row: UserRow
-        Insert: UserInsert
-        Update: UserUpdate
+        Row: {
+          auth0_user_id: string
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          password_hash: string | null
+          status: Database['public']['Enums']['user_status']
+          updated_at: string
+        }
+        Insert: {
+          auth0_user_id?: string
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string
+          id: string
+          password_hash?: string | null
+          status?: Database['public']['Enums']['user_status']
+          updated_at?: string
+        }
+        Update: {
+          auth0_user_id?: string
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          password_hash?: string | null
+          status?: Database['public']['Enums']['user_status']
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
       tenant_active_plan: {
-        Row: TenantActivePlanView
+        Row: {
+          auth0_org_id: string | null
+          billing_status: Database['public']['Enums']['billing_status'] | null
+          current_period_end: string | null
+          plan: Database['public']['Enums']['billing_plan'] | null
+          seat_cap: number | null
+          tenant_id: string | null
+          tenant_name: string | null
+        }
+        Relationships: []
       }
       tenant_subscription_summary: {
-        Row: TenantSubscriptionSummaryView
+        Row: {
+          current_period_end: string | null
+          plan: Database['public']['Enums']['billing_plan'] | null
+          seat_cap: number | null
+          status: Database['public']['Enums']['billing_status'] | null
+          tenant_id: string | null
+        }
+        Insert: {
+          current_period_end?: string | null
+          plan?: Database['public']['Enums']['billing_plan'] | null
+          seat_cap?: number | null
+          status?: Database['public']['Enums']['billing_status'] | null
+          tenant_id?: string | null
+        }
+        Update: {
+          current_period_end?: string | null
+          plan?: Database['public']['Enums']['billing_plan'] | null
+          seat_cap?: number | null
+          status?: Database['public']['Enums']['billing_status'] | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'subscriptions_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: true
+            referencedRelation: 'tenant_active_plan'
+            referencedColumns: ['tenant_id']
+          },
+          {
+            foreignKeyName: 'subscriptions_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: true
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+    }
+    Functions: {
+      approve_access_request_and_invite: {
+        Args: {
+          p_default_role?: Database['public']['Enums']['tenant_role']
+          p_request_id: string
+        }
+        Returns: undefined
+      }
+      check_user_password: {
+        Args: { p_email: string; p_password: string }
+        Returns: boolean
+      }
+      current_tenant_id: { Args: never; Returns: string }
+      current_user_id: { Args: never; Returns: string }
+      has_tenant_role: {
+        Args: { _role: Database['public']['Enums']['tenant_role'] }
+        Returns: boolean
       }
     }
     Enums: {
-      access_request_status: AccessRequestStatus
-      attendance_status: AttendanceStatus
-      billing_plan: BillingPlan
-      billing_status: BillingStatus
-      check_in_method: CheckInMethod
-      lead_status: LeadStatus
-      membership_status: MembershipStatus
-      tenant_role: TenantRole
-      tenant_status: TenantStatus
-      user_status: UserStatus
+      access_request_status: 'pending' | 'approved' | 'rejected' | 'expired'
+      attendance_status: 'present' | 'late' | 'absent' | 'leave' | 'holiday'
+      billing_plan: 'starter' | 'growth' | 'pro' | 'enterprise'
+      billing_status: 'trialing' | 'active' | 'past_due' | 'canceled'
+      check_in_method: 'qr' | 'biometric' | 'whatsapp' | 'manual' | 'geofence'
+      lead_status:
+        | 'new'
+        | 'contacted'
+        | 'qualified'
+        | 'demo_scheduled'
+        | 'proposal_sent'
+        | 'won'
+        | 'lost'
+        | 'unresponsive'
+      membership_status: 'invited' | 'active' | 'suspended' | 'offboarded'
+      tenant_role: 'admin' | 'manager' | 'supervisor' | 'employee'
+      tenant_status: 'provisioning' | 'active' | 'suspended' | 'offboarding' | 'archived'
+      user_status: 'active' | 'suspended' | 'deleted'
     }
-    Functions: {
-      current_tenant_id: {
-        Args: Record<string, never>
-        Returns: string
-      }
-      current_user_id: {
-        Args: Record<string, never>
-        Returns: string
-      }
-      has_tenant_role: {
-        Args: { _role: TenantRole }
-        Returns: boolean
-      }
-      approve_access_request_and_invite: {
-        Args: {
-          p_request_id: string
-          p_default_role?: TenantRole
-        }
-        Returns: void
-      }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
 
-// ---------------------------------------------------------------------------
-// Convenience aliases — use these in component and hook files
-// ---------------------------------------------------------------------------
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
-export type Tables<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Row']
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
-export type TablesInsert<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Insert']
-
-export type TablesUpdate<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Update']
-
-export type Views<T extends keyof Database['public']['Views']> =
-  Database['public']['Views'][T]['Row']
-
-export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T]
-
-// ---------------------------------------------------------------------------
-// Joined / composite types — common query result shapes
-// ---------------------------------------------------------------------------
-
-/** Membership row with the user's display fields resolved. */
-export interface MembershipWithUser extends MembershipRow {
-  user: Pick<UserRow, 'id' | 'email' | 'full_name' | 'avatar_url' | 'status'>
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-/** Membership row with the employee profile attached (nullable — not all members have profiles). */
-export interface MembershipWithProfile extends MembershipRow {
-  employee_profile: EmployeeProfileRow | null
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
-/** Full member record — membership + user + profile in one shape. */
-export interface FullMemberRecord extends MembershipRow {
-  user: Pick<UserRow, 'id' | 'email' | 'full_name' | 'avatar_url' | 'status'>
-  employee_profile: EmployeeProfileRow | null
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
-/** Department with its sites resolved from the junction table. */
-export interface DepartmentWithSites extends DepartmentRow {
-  department_sites: DepartmentSiteRow[]
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never
 
-/** Attendance record with the employee's display name resolved. */
-export interface AttendanceRecordWithEmployee extends AttendanceRecordRow {
-  employee: Pick<UserRow, 'id' | 'full_name' | 'avatar_url'>
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never
 
-/** Shift with its parent site resolved. */
-export interface ShiftWithSite extends ShiftRow {
-  site: Pick<SiteRow, 'id' | 'name' | 'address'>
-}
+export const Constants = {
+  public: {
+    Enums: {
+      access_request_status: ['pending', 'approved', 'rejected', 'expired'],
+      attendance_status: ['present', 'late', 'absent', 'leave', 'holiday'],
+      billing_plan: ['starter', 'growth', 'pro', 'enterprise'],
+      billing_status: ['trialing', 'active', 'past_due', 'canceled'],
+      check_in_method: ['qr', 'biometric', 'whatsapp', 'manual', 'geofence'],
+      lead_status: [
+        'new',
+        'contacted',
+        'qualified',
+        'demo_scheduled',
+        'proposal_sent',
+        'won',
+        'lost',
+        'unresponsive',
+      ],
+      membership_status: ['invited', 'active', 'suspended', 'offboarded'],
+      tenant_role: ['admin', 'manager', 'supervisor', 'employee'],
+      tenant_status: ['provisioning', 'active', 'suspended', 'offboarding', 'archived'],
+      user_status: ['active', 'suspended', 'deleted'],
+    },
+  },
+} as const

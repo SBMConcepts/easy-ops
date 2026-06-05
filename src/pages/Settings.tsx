@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useState, useMemo } from 'react'
 import { z } from 'zod'
 import { useAuth } from '../contexts/AuthContext'
 import { useAttendanceRecords } from '../hooks/useTenantData'
@@ -34,30 +35,28 @@ export default function Settings() {
   // Use the updated hook for current employee attendance logs
   const { data: myAttendance = [], isLoading: loadingAttendance } = useAttendanceRecords()
 
-  const [form, setForm] = useState<ProfileForm>({
-    full_name: '',
-    phone: '',
-    address: '',
-    job_title: '',
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const defaultForm = useMemo(
+    () => ({
+      full_name: user?.full_name || '',
+      phone: '',
+      address: '',
+      job_title: '',
+    }),
+    [user]
+  )
 
-  // Hydrate form data when user context updates
+  const [form, setForm] = useState(defaultForm)
+  const [errors, setErrors] = useState<Partial<Record<keyof ProfileForm, string>>>({})
+
+  // Sync form when user context changes (e.g. after a save or re-auth)
   useEffect(() => {
-    if (user) {
-      setForm({
-        full_name: user.full_name || '',
-        phone: '', // Map custom properties returned by your profile payload here if available
-        address: '',
-        job_title: '',
-      })
-    }
-  }, [user])
+    setForm(defaultForm)
+  }, [defaultForm])
 
   // Mutation to handle secure profile save via Express API
   const updateProfileMutation = useMutation({
     mutationFn: async (updatedData: ProfileForm) => {
-      return apiFetch('user/me', {
+      return apiFetch('userinfo', {
         method: 'PUT',
         body: JSON.stringify(updatedData),
       })
@@ -75,9 +74,10 @@ export default function Settings() {
     e.preventDefault()
     const result = profileSchema.safeParse(form)
     if (!result.success) {
-      const fieldErrors: Record<string, string> = {}
+      const fieldErrors: Partial<Record<keyof ProfileForm, string>> = {}
       result.error.errors.forEach((err) => {
-        if (err.path[0]) fieldErrors[err.path[0] as string] = err.message
+        const field = err.path[0] as keyof ProfileForm
+        fieldErrors[field] = err.message
       })
       setErrors(fieldErrors)
       return
@@ -257,4 +257,7 @@ export default function Settings() {
       </div>
     </div>
   )
+}
+function setErrors(fieldErrors: Record<string, string>) {
+  throw new Error('Function not implemented.')
 }

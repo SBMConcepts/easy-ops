@@ -2,14 +2,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTenantApi } from './useTenantApi'
-import type {
-  TenantRole,
-  MembershipStatus,
-  UserStatus,
-  BillingPlan,
-  BillingStatus,
-  TenantStatus,
-} from '../integrations/supabase/types'
+
+import type { Database } from '../integrations/supabase/types'
+
+type TenantRole = Database['public']['Enums']['tenant_role']
+type MembershipStatus = Database['public']['Enums']['membership_status']
+type UserStatus = Database['public']['Enums']['user_status']
+type BillingPlan = Database['public']['Enums']['billing_plan']
+type BillingStatus = Database['public']['Enums']['billing_status']
+type TenantStatus = Database['public']['Enums']['tenant_status']
 
 // =============================================================================
 // useCurrentUser
@@ -81,7 +82,7 @@ export function useCurrentUser() {
 
   const query = useQuery({
     queryKey: currentUserKeys.profile(authUser?.id ?? auth0User?.sub),
-    queryFn: () => apiFetch<CurrentUserProfile>('user/me'),
+    queryFn: () => apiFetch<CurrentUserProfile>('userinfo'),
     // Only run when AuthContext has confirmed identity — avoids a 401 flash on mount
     enabled: isAuthenticated && !!(authUser?.id ?? auth0User?.sub),
     // 5 minutes: profile data is slow-changing; role/plan changes trigger
