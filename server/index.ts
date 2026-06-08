@@ -13,7 +13,7 @@ const PORT = Number(process.env.API_PORT ?? 3001)
 app.use(
   cors({
     origin: process.env.VITE_APP_URL ?? 'http://localhost:5173',
-    allowedHeaders: ['Authorization', 'Content-Type', 'x-api-key'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
   })
 )
 

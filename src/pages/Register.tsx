@@ -50,7 +50,7 @@ export default function Register() {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
       const response = await fetch(`${baseUrl}/tenants/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Accept: '*/*' },
         body: JSON.stringify({
           orgName: form.companyName,
           adminEmail: form.adminEmail,

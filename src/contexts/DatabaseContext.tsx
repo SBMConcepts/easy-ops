@@ -42,6 +42,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             global: {
               headers: {
                 Authorization: `Bearer ${token}`,
+                Accept: '*/*',
               },
             },
           })
