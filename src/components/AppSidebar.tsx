@@ -69,7 +69,7 @@ const AppSidebar = () => {
       <SidebarHeader className="sidebar-header">
         <div
           className="sidebar-brand"
-          onClick={() => navigate('/app/dashboard')}
+          onClick={() => navigate('/app')}
           style={{ cursor: 'pointer' }}
         >
           <span className="sidebar-brand-name">{orgName}</span>
