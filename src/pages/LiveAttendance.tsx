@@ -59,7 +59,7 @@ const LiveAttendance = () => {
               <SelectItem value="all">All Locations</SelectItem>
               {uniqueSites.map((r) => (
                 <SelectItem key={r.site_id} value={r.site_id}>
-                  Location Space {r.sites?.name}
+                  Location Space {r.site_id?.slice(0, 8)}
                 </SelectItem>
               ))}
             </SelectContent>
