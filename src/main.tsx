@@ -13,8 +13,9 @@ createRoot(document.getElementById('root')!).render(
     domain={AUTH0_DOMAIN}
     clientId={AUTH0_CLIENT_ID}
     authorizationParams={{
-      redirect_uri: `${import.meta.env.VITE_AUTH0_DOMAIN}/dashboard`,
+      redirect_uri: 'https://easy-ops-za.vercel.app/callback',
       audience: AUTH0_AUDIENCE,
+      scope: 'openid profile email',
     }}
   >
     <DatabaseProvider>

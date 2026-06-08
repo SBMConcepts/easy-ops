@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
 
   const loginPath = '/login'
   const onboardingPath = '/app/onboarding'
-  const appPath = '/app'
+  const appPath = '/app/dashboard'
 
   if (isLoading) return null
 

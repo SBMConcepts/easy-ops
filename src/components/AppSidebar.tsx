@@ -27,7 +27,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    url: '/app',
+    url: '/app/dashboard',
     icon: LayoutDashboard,
     roles: ['admin', 'manager', 'supervisor', 'employee'],
   },
@@ -59,7 +59,7 @@ const AppSidebar = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const orgName = tenant?.name || 'Workspace'
+  const orgName = tenant?.name || tenant?.id || 'Your Organization'
 
   // Filter navigation items based on the user's role
   const filteredItems = navItems.filter((item) => user && item.roles.includes(user.role))
@@ -69,7 +69,7 @@ const AppSidebar = () => {
       <SidebarHeader className="sidebar-header">
         <div
           className="sidebar-brand"
-          onClick={() => navigate('/app')}
+          onClick={() => navigate('/app/dashboard')}
           style={{ cursor: 'pointer' }}
         >
           <span className="sidebar-brand-name">{orgName}</span>

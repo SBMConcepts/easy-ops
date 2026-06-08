@@ -32,7 +32,7 @@ const AppHeader = () => {
           <Badge className={roleBadgeColors[user.role]}>{user.role}</Badge>
           <div className="app-header-user">
             <User className="h-4 w-4 icon-muted" style={{ color: 'var(--muted-foreground)' }} />
-            <span className="app-header-username">{user.full_name || 'User Profile'}</span>
+            <span className="app-header-username">{user?.full_name || user?.email}</span>
           </div>
           <Button
             variant="ghost"

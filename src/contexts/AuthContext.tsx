@@ -134,7 +134,11 @@ export const useAuthRole = () => {
   return {
     hasMinRole,
     isAdmin: user?.role === 'admin',
-    isManager: user?.role === 'manager' || user?.role === 'admin',
+    isManager:
+      user?.role === 'manager' ||
+      user?.role === 'admin' ||
+      user?.role === 'supervisor' ||
+      user?.role === 'employee',
     isSupervisor: hasMinRole('supervisor'),
   }
 }

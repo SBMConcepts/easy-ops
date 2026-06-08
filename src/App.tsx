@@ -69,9 +69,13 @@ const WorkspaceShell = () => {
         <Route
           path="employees"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
               <EmployeeManagement
-                requests={[]}
+                requests={
+                  [
+                    /* Placeholder for time off requests data */
+                  ]
+                }
                 prefillEmailForRequest={function (req: {
                   id: string
                   status: string
@@ -86,7 +90,7 @@ const WorkspaceShell = () => {
         <Route
           path="live-attendance"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
               <LiveAttendance />
             </ProtectedRoute>
           }
@@ -94,7 +98,7 @@ const WorkspaceShell = () => {
         <Route
           path="compliance"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
               <Compliance />
             </ProtectedRoute>
           }
@@ -102,7 +106,7 @@ const WorkspaceShell = () => {
         <Route
           path="sites"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
               <SitesAndDepartments />
             </ProtectedRoute>
           }
@@ -110,7 +114,7 @@ const WorkspaceShell = () => {
         <Route
           path="payroll"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
               <ComingSoon title="Payroll Export" />
             </ProtectedRoute>
           }

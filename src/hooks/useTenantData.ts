@@ -87,9 +87,9 @@ export function useAttendanceRecords() {
         .order('clock_in', { ascending: false })
 
       // For extra safety, if it's just an employee, we can explicitly filter the client side query too
-      if (user?.role === 'employee') {
+      if (user?.role) {
         // Fetch their specific profile ID first (or rely purely on RLS)
-        query = query.eq('id', user.id)
+        query = query.eq('id', user?.auth0_user_id)
       }
 
       const { data, error } = await query

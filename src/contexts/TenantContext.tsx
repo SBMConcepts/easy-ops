@@ -21,13 +21,13 @@ export const useTenant = () => {
     tenant: tenant
       ? {
           id: tenant.id,
-          name: tenant.name,
+          name: tenant.name || tenant.id,
           auth0_org_id: tenant.auth0_org_id,
           logo_url: tenant.logo_url || null,
           status: tenant.status || null,
           settings: tenant.settings || null,
         }
-      : null,
+      : (null as AuthTenant | null),
     isLoading,
     resolveTenant: async () => {}, // No-op: handled automatically by AuthContext JWT
   }
