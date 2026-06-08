@@ -1,17 +1,15 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../server/types/supabase' // Adjust path to your supabase.ts
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '../../server/types/supabase'
+import { createSupabaseClient, supabasePublic } from '../integrations/supabase/client'
 
 // Strongly typed Supabase Client
 export type TypedSupabaseClient = SupabaseClient<Database>
 
-// Module-level anon client — valid from first render, never null or undefined
-const anonClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
+// Canonical anon singleton — valid from first render, never null or undefined
+const anonClient = supabasePublic as TypedSupabaseClient
 
 const DatabaseContext = createContext<TypedSupabaseClient>(anonClient)
 
@@ -37,16 +35,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         const token = await getAccessTokenSilently()
 
-        setAuthenticatedClient(
-          createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            global: {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: '*/*',
-              },
-            },
-          })
-        )
+        setAuthenticatedClient(createSupabaseClient(token) as TypedSupabaseClient)
       } catch (err) {
         console.error('Failed to upgrade to authenticated database client:', err)
         // Keep existing client active as a safe fallback
