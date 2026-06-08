@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react'
 import { Badge } from '../../components/ui/badge'
 import type { Database } from '../../integrations/supabase/types'
@@ -13,7 +14,7 @@ export const STATUS_COLORS: Record<AttendanceStatus, string> = {
 }
 
 export const DashboardLoader = () => (
-  <div className="flex items-center justify-center min-h-[400px]">
+  <div className="flex items-center justify-center min-h-100">
     <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
   </div>
 )
