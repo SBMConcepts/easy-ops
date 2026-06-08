@@ -6,6 +6,8 @@ import createRouter from './routes/create.js'
 import employeesRouter from './routes/employees.js'
 import accessRequestsRouter from './routes/access-requests.js'
 import tenantLookupRouter from './routes/tenant-lookup.js'
+import userinfoRouter from './routes/userinfo.js'
+import authSyncRouter from './routes/auth-sync.js'
 
 const app = express()
 const PORT = Number(process.env.API_PORT ?? 3001)
@@ -23,7 +25,13 @@ app.use(express.json())
 app.use(createRouter)
 app.use(tenantLookupRouter)
 
-// 2. Privileged Administrative Actions
+// 2. Identity Provider Webhooks (shared-secret authenticated)
+app.use(authSyncRouter)
+
+// 3. Authenticated User Endpoints (JWT authenticated)
+app.use(userinfoRouter)
+
+// 4. Privileged Administrative Actions
 app.use(employeesRouter)
 app.use(accessRequestsRouter)
 

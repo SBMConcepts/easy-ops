@@ -10,7 +10,7 @@ export interface AuthContext {
   role: AppRole
 }
 
-const CLAIM_NAMESPACE = 'https://easy-ops-za.vercel.app/'
+const CLAIM_NAMESPACE = process.env.AUTH0_CLAIM_NS ?? 'https://easy-ops-za.vercel.app/'
 
 export async function verifyAuth0Token(req: Request): Promise<AuthContext | null> {
   const header = req.headers.authorization

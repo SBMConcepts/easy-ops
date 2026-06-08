@@ -119,7 +119,14 @@ const WorkspaceShell = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="settings" element={<Settings />} />
+        <Route
+          path="settings"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       <Route path="*" element={<NotFound />} />

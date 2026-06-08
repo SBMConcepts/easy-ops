@@ -4,6 +4,8 @@ import type { AuthContext } from './auth.js'
 
 const { Pool } = pg
 
+const CLAIM_NAMESPACE = process.env.AUTH0_CLAIM_NS ?? 'https://easy-ops-za.vercel.app/'
+
 let _pool: InstanceType<typeof Pool> | null = null
 
 export function getPool(): InstanceType<typeof Pool> {
@@ -34,8 +36,8 @@ export async function withTenantContext<T>(
 
     const simulatedJwtClaims = {
       sub: ctx.auth0UserId,
-      'https://easy-ops-za.vercel.app/org_id': ctx.orgId,
-      'https://easy-ops-za.vercel.app/role': ctx.role,
+      [`${CLAIM_NAMESPACE}org_id`]: ctx.orgId,
+      [`${CLAIM_NAMESPACE}role`]: ctx.role,
     }
 
     await client.query(`SELECT set_config('request.jwt.claims', $1, true)`, [

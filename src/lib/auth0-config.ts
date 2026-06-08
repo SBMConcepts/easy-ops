@@ -20,6 +20,9 @@ export const AUTH0_AUDIENCE = import.meta.env.VITE_AUTH0_AUDIENCE || ''
 
 /**
  * Must match the exact domain namespace used in your Auth0 post-login Action
- * when applying custom claims (e.g., api.idToken.setCustomClaim(ns + 'role', ...))
+ * when applying custom claims (e.g., api.idToken.setCustomClaim(ns + 'role', ...)).
+ * Override per environment with VITE_AUTH0_CLAIM_NS; defaults to the namespace
+ * hard-coded in the Auth0 Actions and the Express backend.
  */
-export const AUTH0_CLAIM_NS = `${import.meta.env.VITE_AUTH0_DOMAIN}/` // <-- Trailing slash is important for namespacing claims
+export const AUTH0_CLAIM_NS =
+  import.meta.env.VITE_AUTH0_CLAIM_NS || 'https://easy-ops-za.vercel.app/'

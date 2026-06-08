@@ -16,7 +16,7 @@ type TenantStatus = Database['public']['Enums']['tenant_status']
 // useCurrentUser
 //
 // Fetches and caches the authenticated user's full profile from the Express
-// backend (/api/user/me). This is the canonical source for profile data in
+// backend (/api/userinfo). This is the canonical source for profile data in
 // components that need it outside the AuthContext (e.g. settings pages,
 // profile editors, admin panels that display the current operator).
 //
@@ -31,7 +31,7 @@ type TenantStatus = Database['public']['Enums']['tenant_status']
 // =============================================================================
 
 // ── Response contract ─────────────────────────────────────────────────────────
-// Documents the exact shape /api/user/me must return.
+// Documents the exact shape /api/userinfo must return.
 // Keep this in sync with the Express route response serialiser.
 
 export interface CurrentUserProfile {

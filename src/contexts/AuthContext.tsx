@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useAuth0, User } from '@auth0/auth0-react'
-import { useDB } from './DatabaseContext'
+import { useAuth0 } from '@auth0/auth0-react'
 import type { Database } from '../integrations/supabase/types'
-import { useCurrentUser } from '../hooks/useCurrentUser'
+import { useTenantApi } from '../hooks/useTenantApi'
+import type { CurrentUserProfile } from '../hooks/useCurrentUser'
+import { AUTH0_CLAIM_NS } from '../lib/auth0-config'
 
 export type TenantRole = Database['public']['Enums']['tenant_role']
 export type AuthTenant = Database['public']['Tables']['tenants']['Row']
@@ -27,8 +28,6 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 })
 
-const CLAIM_NAMESPACE = 'https://easy-ops-za.vercel.app/'
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
     isAuthenticated,
@@ -39,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getIdTokenClaims,
   } = useAuth0()
 
-  const supabase = useDB()
+  const { apiFetch } = useTenantApi()
 
   const [user, setUser] = useState<AuthUser | null>(null)
   const [tenant, setTenant] = useState<AuthTenant | null>(null)
@@ -50,37 +49,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const fetchIdentity = async () => {
       if (!isAuthenticated || !auth0User?.sub) {
+        setUser(null)
+        setTenant(null)
         setIsProfileLoading(false)
         return
       }
 
+      setIsProfileLoading(true)
+
       try {
+        // Role is sourced from the Auth0 JWT custom claim (authoritative for guards).
         const claims = await getIdTokenClaims()
-        const orgId = claims?.[`${CLAIM_NAMESPACE}org_id`] as string
-        const role = (claims?.[`${CLAIM_NAMESPACE}role`] as TenantRole) || 'employee'
+        const role = (claims?.[`${AUTH0_CLAIM_NS}role`] as TenantRole) || 'employee'
 
-        if (!orgId) {
-          setIsProfileLoading(false)
-          return
-        }
+        // Enriched user + tenant come from the Express backend, which reads
+        // Supabase with the verified token. This is the single source of truth
+        // for identity/organisation data across the workspace shell.
+        const profile = await apiFetch<CurrentUserProfile>('userinfo')
 
-        // Fetch User and Tenant concurrently using RLS
-        const [userRes, tenantRes] = await Promise.all([
-          supabase.from('users').select('*').eq('auth0_user_id', auth0User.sub),
-          supabase.from('tenants').select('*').eq('auth0_org_id', orgId),
-        ])
+        setUser({
+          id: profile.profile_id,
+          auth0_user_id: profile.auth0_user_id,
+          email: profile.email,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          status: profile.user_status,
+          created_at: '',
+          updated_at: '',
+          role,
+        } as AuthUser)
 
-        if (userRes.data) setUser({ ...userRes.data[0], role })
-        if (tenantRes.data) setTenant(tenantRes.data[0])
+        setTenant({
+          id: profile.tenant_id,
+          name: profile.tenant_name,
+          auth0_org_id: profile.tenant_auth0_org,
+          status: profile.tenant_status,
+          logo_url: profile.tenant_logo,
+          country: profile.tenant_country,
+          industry: profile.tenant_industry,
+          slug: '',
+          settings: {},
+          created_at: '',
+          updated_at: '',
+        } as AuthTenant)
       } catch (err) {
-        console.error('Failed to sync profile context:', err)
+        console.error('Failed to load profile context:', err)
+        setUser(null)
+        setTenant(null)
       } finally {
         setIsProfileLoading(false)
       }
     }
 
     void fetchIdentity()
-  }, [auth0Loading, isAuthenticated, auth0User, supabase, getIdTokenClaims])
+  }, [auth0Loading, isAuthenticated, auth0User, apiFetch, getIdTokenClaims])
 
   const login = useCallback(
     async (options?: { auth0OrgId?: string; invitation?: string }) => {
@@ -137,11 +159,7 @@ export const useAuthRole = () => {
   return {
     hasMinRole,
     isAdmin: user?.role === 'admin',
-    isManager:
-      user?.role === 'manager' ||
-      user?.role === 'admin' ||
-      user?.role === 'supervisor' ||
-      user?.role === 'employee',
+    isManager: hasMinRole('manager'),
     isSupervisor: hasMinRole('supervisor'),
   }
 }
