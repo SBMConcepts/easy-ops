@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')!).render(
     domain={AUTH0_DOMAIN}
     clientId={AUTH0_CLIENT_ID}
     authorizationParams={{
-      redirect_uri: 'https://easy-ops-za.vercel.app/callback',
+      redirect_uri: `${window.location.origin}/dashboard`,
       audience: AUTH0_AUDIENCE,
       scope: 'openid profile email',
     }}

@@ -1,15 +1,16 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
+import { useAuth0, User } from '@auth0/auth0-react'
 import { useDB } from './DatabaseContext'
 import type { Database } from '../integrations/supabase/types'
+import { useCurrentUser } from '../hooks/useCurrentUser'
 
 export type TenantRole = Database['public']['Enums']['tenant_role']
 export type AuthTenant = Database['public']['Tables']['tenants']['Row']
 export type AuthUser = Database['public']['Tables']['users']['Row'] & { role: TenantRole }
 
 interface AuthContextType {
-  user: AuthUser | null
+  user: AuthUser
   tenant: AuthTenant | null
   isAuthenticated: boolean
   isLoading: boolean
@@ -18,7 +19,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: null,
+  user: { id: '', auth0_user_id: '', full_name: '', email: '', role: 'employee' } as AuthUser,
   tenant: null,
   isAuthenticated: false,
   isLoading: true,
@@ -100,7 +101,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider
       value={{
-        user: user || null,
+        user:
+          user ||
+          ({ id: '', auth0_user_id: '', full_name: '', email: '', role: 'employee' } as AuthUser),
         tenant: tenant || null,
         isAuthenticated,
         isLoading: auth0Loading || isProfileLoading,
