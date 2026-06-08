@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
     if (!apiKey || apiKey !== Deno.env.get('AUTH0_SYNC_SECRET')) {
       return new Response(JSON.stringify({ error: 'Unauthorized sync token.' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
       })
     }
 
@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     if (!auth0UserId || !email) {
       return new Response(JSON.stringify({ error: 'Missing core profile payload bindings.' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
       })
     }
 
@@ -44,13 +44,13 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true, user: data }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'An unknown error occurred'
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   }
 })

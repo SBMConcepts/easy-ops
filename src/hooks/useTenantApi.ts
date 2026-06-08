@@ -20,7 +20,7 @@ interface ApiFetchOptions extends RequestInit {
 
 export function useTenantApi() {
   const { getAccessTokenSilently } = useAuth0()
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+  const baseUrl = `${import.meta.env.VITE_API_URL}/api`
 
   const apiFetch = useCallback(
     async <T = unknown>(path: string, options: ApiFetchOptions = {}): Promise<T> => {
@@ -29,6 +29,7 @@ export function useTenantApi() {
 
       if (!reqHeaders.has('Content-Type') && !(rest.body instanceof FormData)) {
         reqHeaders.set('Content-Type', 'application/json')
+        reqHeaders.set('Accept', '*/*')
       }
 
       if (requireAuth) {

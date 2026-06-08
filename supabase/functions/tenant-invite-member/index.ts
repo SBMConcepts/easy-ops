@@ -4,7 +4,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 async function getAuth0ManagementToken() {
   const res = await fetch(`https://${Deno.env.get('AUTH0_DOMAIN')}/oauth/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', accept: '*/*' },
     body: JSON.stringify({
       client_id: Deno.env.get('AUTH0_MANAGEMENT_CLIENT_ID'),
       client_secret: Deno.env.get('AUTH0_MANAGEMENT_CLIENT_SECRET'),
@@ -17,7 +17,8 @@ async function getAuth0ManagementToken() {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method === 'OPTIONS')
+    return new Response('ok', { headers: { ...corsHeaders, accept: '*/*' } })
 
   try {
     const { email, fullName, role, orgId } = await req.json()
@@ -28,7 +29,11 @@ Deno.serve(async (req) => {
       `https://${Deno.env.get('AUTH0_DOMAIN')}/api/v2/organizations/${orgId}/invitations`,
       {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          accept: '*/*',
+        },
         body: JSON.stringify({
           inviter: { name: 'EasyOps System Cloud' },
           invitee: { email },
@@ -54,13 +59,13 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true, userId: user?.[0]?.id }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'An unknown error occurred'
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   }
 })

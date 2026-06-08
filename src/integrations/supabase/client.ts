@@ -12,7 +12,7 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 export function createSupabaseClient(accessToken?: string) {
   const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: {
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}`, accept: '*/*' } : {},
     },
     auth: {
       // Let Auth0 own the session — don't let Supabase try to manage it.

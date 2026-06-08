@@ -2,7 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method === 'OPTIONS')
+    return new Response('ok', { headers: { ...corsHeaders, accept: '*/*' } })
 
   try {
     const { orgName, adminEmail, plan } = await req.json()
@@ -28,13 +29,13 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true, tenantId: tenant?.[0]?.id }), {
       status: 201,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'An unknown error occurred'
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   }
 })

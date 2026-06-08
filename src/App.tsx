@@ -69,7 +69,7 @@ const WorkspaceShell = () => {
         <Route
           path="employees"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
               <EmployeeManagement
                 requests={[]}
                 prefillEmailForRequest={function (req: {
@@ -94,7 +94,7 @@ const WorkspaceShell = () => {
         <Route
           path="compliance"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
               <Compliance />
             </ProtectedRoute>
           }

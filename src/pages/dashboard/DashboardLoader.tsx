@@ -21,7 +21,7 @@ export const DashboardLoader = () => (
 
 interface AttendanceItemProps {
   fullName?: string
-  metaText: string
+  metaText: string // e.g. "Clock-in · Site Name"
   clockIn?: string | null
   clockOut?: string | null
   status: AttendanceStatus

@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
       })
     }
 
@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Invalid startDate format. Expected YYYY-MM-DD' }),
         {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
         }
       )
     }
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Invalid endDate format. Expected YYYY-MM-DD' }),
         {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
         }
       )
     }
@@ -68,19 +68,20 @@ Deno.serve(async (req) => {
           ...corsHeaders,
           'Content-Type': 'text/csv',
           'Content-Disposition': `attachment; filename="attendance_report_${startDate || 'export'}.csv"`,
+          accept: '*/*',
         },
       })
     }
 
     return new Response(JSON.stringify({ records: data }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'An unknown error occurred'
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   }
 })

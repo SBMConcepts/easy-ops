@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')!).render(
     domain={AUTH0_DOMAIN}
     clientId={AUTH0_CLIENT_ID}
     authorizationParams={{
-      redirect_uri: `${window.location.origin}/app`,
+      redirect_uri: `${import.meta.env.VITE_AUTH0_DOMAIN}/dashboard`,
       audience: AUTH0_AUDIENCE,
     }}
   >

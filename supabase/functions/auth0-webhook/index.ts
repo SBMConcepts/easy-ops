@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
     if (!signature) {
       return new Response(JSON.stringify({ error: 'Missing webhook identity signature.' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
       })
     }
 
@@ -29,13 +29,13 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'An unknown error occurred'
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', accept: '*/*' },
     })
   }
 })

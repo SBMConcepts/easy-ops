@@ -57,7 +57,7 @@ export function useMembers() {
         .order('full_name')
 
       if (error) throw error
-      return data
+      return data as EmployeeProfileRow[]
     },
   })
 }
@@ -82,6 +82,7 @@ export function useAttendanceRecords() {
           sites(name)
         `
         )
+
         .order('date', { ascending: false })
         .order('clock_in', { ascending: false })
 
@@ -93,7 +94,7 @@ export function useAttendanceRecords() {
 
       const { data, error } = await query
       if (error) throw error
-      return data
+      return data as AttendanceRow[]
     },
     enabled: !!user,
   })
