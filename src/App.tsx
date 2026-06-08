@@ -6,7 +6,6 @@ import { TooltipProvider } from './components/ui/tooltip'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
-import { DatabaseProvider } from './contexts/DatabaseContext'
 import CheckIn from './pages/CheckIn'
 import ComingSoon from './pages/ComingSoon'
 import Compliance from './pages/Compliance'
@@ -127,22 +126,20 @@ const WorkspaceShell = () => {
 // ── App Root ──────────────────────────────────────────────────────────────────
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <DatabaseProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* All secure workspace views live under /app instead of /t/:slug */}
-              <Route path="/app/*" element={<WorkspaceShell />} />
+    <AuthProvider>
+      <TooltipProvider>
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* All secure workspace views live under /app instead of /t/:slug */}
+            <Route path="/app/*" element={<WorkspaceShell />} />
 
-              {/* Root-level marketing/public pages */}
-              <Route path="/*" element={<MarketingRoutes />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </DatabaseProvider>
+            {/* Root-level marketing/public pages */}
+            <Route path="/*" element={<MarketingRoutes />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 )
 
