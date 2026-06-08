@@ -5,15 +5,45 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const url = new URL(req.url)
     const startDate = url.searchParams.get('startDate')
     const endDate = url.searchParams.get('endDate')
     const format = url.searchParams.get('format') || 'json'
 
+    // Validate date strings before passing to query filters to prevent
+    // undefined/null values from being serialised as the string "undefined" in the URL
+    const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+    if (startDate !== null && !ISO_DATE.test(startDate)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid startDate format. Expected YYYY-MM-DD' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+    if (endDate !== null && !ISO_DATE.test(endDate)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid endDate format. Expected YYYY-MM-DD' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      { global: { headers: { Authorization: authHeader } } }
     )
 
     let query = supabase

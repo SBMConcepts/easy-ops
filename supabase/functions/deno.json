@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["deno.ns", "dom", "dom.iterable", "ES2020"],
+    "lib": ["deno.ns", "dom", "dom.iterable", "ES2020", "ESNext", "deno.window"],
     "strict": true
   },
   "imports": {

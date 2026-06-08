@@ -20,6 +20,13 @@
 import { createClient } from '@supabase/supabase-js'
 import { corsHeaders } from '../_shared/cors.ts'
 
+declare const Deno: {
+  serve: (handler: (req: Request) => Response | Promise<Response>) => void
+  env: {
+    get: (key: string) => string | undefined
+  }
+}
+
 // ── Auth0 Management API helpers ─────────────────────────────────────────────
 
 async function getAuth0MgmtToken(
@@ -161,6 +168,7 @@ Deno.serve(async (req: Request) => {
   let auth0OrgId: string | null = null
   let auth0UserId: string | null = null
   let mgmtToken: string | null = null
+  let auth0Domain: string | undefined
 
   try {
     const body = await req.json().catch(() => null)
@@ -193,7 +201,7 @@ Deno.serve(async (req: Request) => {
     // ── Env vars ──────────────────────────────────────────────────────────
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const auth0Domain = Deno.env.get('AUTH0_DOMAIN')
+    auth0Domain = Deno.env.get('AUTH0_DOMAIN')
     const auth0ClientId = Deno.env.get('AUTH0_MGMT_CLIENT_ID')
     const auth0ClientSecret = Deno.env.get('AUTH0_MGMT_CLIENT_SECRET')
 

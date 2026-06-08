@@ -5,6 +5,12 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
+declare const Deno: {
+  serve: (handler: (req: Request) => Response | Promise<Response>) => void
+  env: {
+    get: (key: string) => string | undefined
+  }
+}
 interface InvitePayload {
   email: string
   full_name: string

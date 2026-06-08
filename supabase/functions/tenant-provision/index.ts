@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
 
     if (error) throw error
 
-    return new Response(JSON.stringify({ success: true, tenantId: tenant.id }), {
+    return new Response(JSON.stringify({ success: true, tenantId: tenant?.[0]?.id }), {
       status: 201,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

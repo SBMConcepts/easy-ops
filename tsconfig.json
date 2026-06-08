@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable", "ESNext"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -14,7 +14,7 @@
     "jsx": "react-jsx",
     "strict": true,
     "rootDir": ".",
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node", "@supabase/supabase-js"]
   },
   "include": ["src", "vite.config.ts"], //
   "exclude": ["supabase", "node_modules", "dist"]
