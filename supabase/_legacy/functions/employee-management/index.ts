@@ -45,12 +45,12 @@ Deno.serve(async (req: Request) => {
 
     // ── Resolve caller role + organisation in parallel ───────────────────
     const [roleRes, profileRes] = await Promise.all([
-      supabaseAdmin.from('user_roles').select('organisation_roles').eq('user_id', user.id).single(),
-      supabaseAdmin.from('profiles').select('organisation_id').eq('id', user.id).single(),
+      supabaseAdmin.from('user_roles').select('organisation_roles').eq('user_id', user.id),
+      supabaseAdmin.from('profiles').select('organisation_id').eq('id', user.id),
     ])
 
-    const callerRole = roleRes.data?.organisation_roles
-    const organisationId = profileRes.data?.organisation_id
+    const callerRole = roleRes.data?.[0]?.organisation_roles
+    const organisationId = profileRes.data?.[0]?.organisation_id
 
     if (!organisationId) {
       return jsonResponse(
@@ -142,7 +142,6 @@ Deno.serve(async (req: Request) => {
       .select('id')
       .eq('id', user_id)
       .eq('organisation_id', organisationId)
-      .single()
 
     if (!targetProfile) {
       return jsonResponse({ error: 'Employee not found in your organisation' }, 404)

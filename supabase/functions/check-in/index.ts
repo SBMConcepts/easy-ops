@@ -36,7 +36,6 @@ Deno.serve(async (req) => {
         metadata: { lat: latitude, lng: longitude },
       })
       .select()
-      .single()
 
     if (error) throw error
 

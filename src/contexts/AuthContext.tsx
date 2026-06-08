@@ -65,12 +65,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Fetch User and Tenant concurrently using RLS
         const [userRes, tenantRes] = await Promise.all([
-          supabase.from('users').select('*').eq('auth0_user_id', auth0User.sub).single(),
-          supabase.from('tenants').select('*').eq('auth0_org_id', orgId).single(),
+          supabase.from('users').select('*').eq('auth0_user_id', auth0User.sub),
+          supabase.from('tenants').select('*').eq('auth0_org_id', orgId),
         ])
 
-        if (userRes.data) setUser({ ...userRes.data, role })
-        if (tenantRes.data) setTenant(tenantRes.data)
+        if (userRes.data) setUser({ ...userRes.data[0], role })
+        if (tenantRes.data) setTenant(tenantRes.data[0])
       } catch (err) {
         console.error('Failed to sync profile context:', err)
       } finally {

@@ -23,7 +23,6 @@ Deno.serve(async (req) => {
         settings: { features: ['attendance', 'scheduling'] },
       })
       .select()
-      .single()
 
     if (error) throw error
 

@@ -50,10 +50,9 @@ Deno.serve(async (req) => {
       .from('users')
       .insert({ email, full_name: fullName })
       .select()
-      .single()
     if (userErr) throw userErr
 
-    return new Response(JSON.stringify({ success: true, userId: user.id }), {
+    return new Response(JSON.stringify({ success: true, userId: user?.[0]?.id }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

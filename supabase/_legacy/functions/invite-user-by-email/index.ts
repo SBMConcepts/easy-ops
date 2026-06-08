@@ -57,8 +57,7 @@ Deno.serve(async (req) => {
       .from('profiles')
       .select('organisation_id')
       .eq('id', user.id)
-      .single()
-    const organisation_id = callerProfile?.organisation_id ?? null
+    const organisation_id = callerProfile?.[0]?.organisation_id ?? null
 
     const body = (await req.json()) as InvitePayload
     const email = (body.email || '').trim().toLowerCase()

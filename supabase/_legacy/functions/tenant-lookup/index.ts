@@ -41,9 +41,8 @@ Deno.serve(async (req: Request) => {
     .from('organisations')
     .select('id, name, auth0_org_id')
     .eq('slug', slug)
-    .single()
 
-  if (error || !data) {
+  if (error || !data || data.length === 0) {
     return new Response(JSON.stringify({ error: 'Tenant not found' }), {
       status: 404,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -52,9 +51,9 @@ Deno.serve(async (req: Request) => {
 
   return new Response(
     JSON.stringify({
-      id: data.id,
-      name: data.name,
-      auth0_org_id: data.auth0_org_id,
+      id: data?.[0]?.id,
+      name: data?.[0]?.name,
+      auth0_org_id: data?.[0]?.auth0_org_id,
       slug,
     }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

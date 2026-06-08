@@ -47,7 +47,6 @@ Deno.serve(async (req) => {
       })
       .eq('id', activeRecord.id)
       .select()
-      .single()
 
     if (updateError) throw updateError
 

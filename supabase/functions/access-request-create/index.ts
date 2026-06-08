@@ -30,7 +30,6 @@ Deno.serve(async (req) => {
         status: 'pending',
       })
       .select()
-      .single()
 
     if (error) throw error
 

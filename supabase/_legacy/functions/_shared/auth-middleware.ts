@@ -98,8 +98,7 @@ export async function resolveAuthContext(req: Request): Promise<AuthContext> {
       .from('organisations')
       .select('id')
       .eq('auth0_org_id', auth0OrgId)
-      .single()
-    organisationId = org?.id ?? null
+    organisationId = org?.[0]?.id ?? null
   }
 
   if (!organisationId) {
@@ -108,8 +107,7 @@ export async function resolveAuthContext(req: Request): Promise<AuthContext> {
       .from('profiles')
       .select('organisation_id')
       .eq('id', user.id)
-      .single()
-    organisationId = profile?.organisation_id ?? null
+    organisationId = profile?.[0]?.organisation_id ?? null
   }
 
   if (!organisationId) {
@@ -121,8 +119,7 @@ export async function resolveAuthContext(req: Request): Promise<AuthContext> {
     .from('user_roles')
     .select('organisation_roles')
     .eq('user_id', user.id)
-    .single()
-  const role: AppRole = (roleRow?.organisation_roles as AppRole) ?? 'employee'
+  const role: AppRole = (roleRow?.[0]?.organisation_roles as AppRole) ?? 'employee'
 
   return { userId: user.id, organisationId, auth0OrgId, role, adminClient }
 }

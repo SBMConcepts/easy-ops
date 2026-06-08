@@ -243,9 +243,8 @@ Deno.serve(async (req: Request) => {
         created_by: auth0UserId,
       })
       .select('id')
-      .single()
 
-    if (orgErr || !org) {
+    if (orgErr || !org || org.length === 0) {
       await cleanupAuth0(auth0Domain, mgmtToken, auth0OrgId, auth0UserId)
       return jsonResponse(
         { error: 'Failed to create organisation record', details: orgErr?.message },
@@ -253,7 +252,7 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const orgId: string = org.id
+    const orgId: string = org?.[0]?.id
 
     // Insert admin profile
     const { error: profileErr } = await supabase.from('profiles').insert({

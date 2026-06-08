@@ -39,7 +39,6 @@ Deno.serve(async (req) => {
         { onConflict: 'auth0_user_id' }
       )
       .select()
-      .single()
 
     if (error) throw error
 
