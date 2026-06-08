@@ -10,7 +10,7 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 // Strongly typed Supabase Client
 export type TypedSupabaseClient = SupabaseClient<Database>
 
-const DatabaseContext = createContext<TypedSupabaseClient | null>(null)
+const DatabaseContext = createContext<TypedSupabaseClient | null | undefined>(undefined)
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0()
@@ -54,6 +54,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export const useDB = () => {
   const context = useContext(DatabaseContext)
-  if (!context) throw new Error('useDB must be used within a DatabaseProvider')
-  return context
+  if (context === undefined) throw new Error('useDB must be used within a DatabaseProvider')
+  return context // null while the client is still initialising
 }
