@@ -34,7 +34,6 @@ export function useSites() {
       return data as SiteRow[]
     },
     staleTime: 1000 * 60 * 10,
-    enabled: !!supabase,
   })
 }
 
@@ -60,7 +59,6 @@ export function useMembers() {
       if (error) throw error
       return data
     },
-    enabled: !!supabase,
   })
 }
 
@@ -97,6 +95,6 @@ export function useAttendanceRecords() {
       if (error) throw error
       return data
     },
-    enabled: !!supabase && !!user,
+    enabled: !!user,
   })
 }

@@ -10,12 +10,19 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 // Strongly typed Supabase Client
 export type TypedSupabaseClient = SupabaseClient<Database>
 
-const DatabaseContext = createContext<TypedSupabaseClient | null | undefined>(undefined)
+// Module-level anon client — valid from first render, never null or undefined
+const anonClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+const DatabaseContext = createContext<TypedSupabaseClient>(anonClient)
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0()
-  const [supabaseClient, setSupabaseClient] = useState<TypedSupabaseClient | null>(null)
+  const [authenticatedClient, setAuthenticatedClient] = useState<TypedSupabaseClient | null>(null)
 
+  // Derive the active client: fall back to anon whenever the user is not signed in
+  const supabaseClient = isAuthenticated && authenticatedClient ? authenticatedClient : anonClient
+
+  // Upgrade to an authenticated client once Auth0 is ready and the user is signed in
   useEffect(() => {
     if (isLoading) return
 
@@ -24,36 +31,31 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       window.location.search.includes('code=') && window.location.search.includes('state=')
     if (hasAuthParams) return
 
-    const buildKeylessClient = async () => {
-      if (!isAuthenticated) {
-        setSupabaseClient(createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY))
-        return
-      }
+    if (!isAuthenticated) return
 
+    const upgradeToAuthenticatedClient = async () => {
       try {
         const token = await getAccessTokenSilently()
 
-        const client = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-          global: {
-            headers: {
-              Authorization: `Bearer ${token}`,
+        setAuthenticatedClient(
+          createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            global: {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             },
-          },
-        })
-        setSupabaseClient(client)
+          })
+        )
       } catch (err) {
-        console.error('Failed to instantiate secure database layer:', err)
+        console.error('Failed to upgrade to authenticated database client:', err)
+        // Keep existing client active as a safe fallback
       }
     }
 
-    void buildKeylessClient()
+    void upgradeToAuthenticatedClient()
   }, [getAccessTokenSilently, isAuthenticated, isLoading])
 
   return <DatabaseContext.Provider value={supabaseClient}>{children}</DatabaseContext.Provider>
 }
 
-export const useDB = () => {
-  const context = useContext(DatabaseContext)
-  if (context === undefined) throw new Error('useDB must be used within a DatabaseProvider')
-  return context // null while the client is still initialising
-}
+export const useDB = (): TypedSupabaseClient => useContext(DatabaseContext)

@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isProfileLoading, setIsProfileLoading] = useState(true)
 
   useEffect(() => {
-    if (auth0Loading || !supabase) return
+    if (auth0Loading) return
 
     const fetchIdentity = async () => {
       if (!isAuthenticated || !auth0User?.sub) {
