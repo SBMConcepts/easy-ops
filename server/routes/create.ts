@@ -118,6 +118,7 @@ router.post('/api/tenants/create', async (req: Request, res: Response): Promise<
       send_invitation_email: true,
       ttl_sec: 60 * 60 * 72,
       app_metadata: {
+        role: 'admin',
         tenantId,
         auth0OrgId,
         plan: normalizedPlan,

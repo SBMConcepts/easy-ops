@@ -22,7 +22,7 @@ export function useTenantApi() {
   const { getAccessTokenSilently } = useAuth0()
   // Fall back to a same-origin relative '/api' so the Vite dev proxy (and a
   // same-origin production deployment) work without VITE_API_URL being set.
-  const baseUrl = `${import.meta.env.VITE_API_URL ?? ''}/api`
+  const baseUrl = `${import.meta.env.VITE_API_URL ?? ''}`
 
   const apiFetch = useCallback(
     async <T = unknown>(path: string, options: ApiFetchOptions = {}): Promise<T> => {
