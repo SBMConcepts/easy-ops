@@ -47,7 +47,10 @@ export default function Register() {
     setSubmitting(true)
 
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+      // Mirror useTenantApi: VITE_API_URL is the server ORIGIN; the '/api'
+      // prefix is appended here. Empty in local dev → same-origin '/api' via the
+      // Vite proxy. Server route is POST /api/tenants/create.
+      const baseUrl = `${import.meta.env.VITE_API_URL ?? ''}/api`
       const response = await fetch(`${baseUrl}/tenants/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: '*/*' },
