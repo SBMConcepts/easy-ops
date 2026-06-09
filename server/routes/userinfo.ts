@@ -47,7 +47,7 @@ const PROFILE_SELECT = `
 
 async function loadProfile(client: PoolClient, auth0UserId: string, orgId: string) {
   const result = await client.query(PROFILE_SELECT, [auth0UserId, orgId])
-  return result.rows[0] ?? null
+  return result.rows[0] || null
 }
 
 // Disambiguate why a profile failed to load so the caller (and logs) can tell

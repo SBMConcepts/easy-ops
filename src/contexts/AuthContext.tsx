@@ -12,7 +12,7 @@ export type AuthUser = Database['public']['Tables']['users']['Row'] & { role: Te
 
 interface AuthContextType {
   user: AuthUser
-  tenant: AuthTenant | null
+  tenant: AuthTenant
   isAuthenticated: boolean
   isLoading: boolean
   login: (options?: { auth0OrgId?: string; invitation?: string }) => Promise<void>
@@ -21,8 +21,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: { id: '', auth0_user_id: '', full_name: '', email: '', role: 'employee' } as AuthUser,
-  tenant: null,
-  isAuthenticated: false,
+  tenant: {} as AuthTenant,
+  isAuthenticated: true,
   isLoading: true,
   login: async () => {},
   logout: () => {},
@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         // Role is sourced from the Auth0 JWT custom claim (authoritative for guards).
         const claims = await getIdTokenClaims()
-        const role = (claims?.[`${AUTH0_CLAIM_NS}role`] as TenantRole) || 'employee'
+        const role = claims?.[`${AUTH0_CLAIM_NS}role`] as TenantRole
 
         // Enriched user + tenant come from the Express backend, which reads
         // Supabase with the verified token. This is the single source of truth
@@ -126,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user:
           user ||
           ({ id: '', auth0_user_id: '', full_name: '', email: '', role: 'employee' } as AuthUser),
-        tenant: tenant || null,
+        tenant: tenant || ({} as AuthTenant),
         isAuthenticated,
         isLoading: auth0Loading || isProfileLoading,
         login,

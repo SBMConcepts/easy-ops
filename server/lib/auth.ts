@@ -27,15 +27,15 @@ export async function verifyAuth0Token(req: Request): Promise<AuthContext | null
     const { payload } = await jwtVerify(token, jwks, { audience, issuer: `https://${domain}/` })
 
     const auth0UserId = payload.sub
-    const orgId = payload[`${CLAIM_NAMESPACE}org_id`] as string | undefined
-    const role = payload[`${CLAIM_NAMESPACE}role`] as AppRole | undefined
+    const orgId = payload[`${CLAIM_NAMESPACE}org_id`] as string
+    const role = payload[`${CLAIM_NAMESPACE}role`] as AppRole
 
     if (!auth0UserId) return null
 
     return {
       auth0UserId,
       orgId: orgId || '',
-      role: role || 'employee',
+      role: role,
     }
   } catch (error) {
     console.error('Token verification failed:', error)

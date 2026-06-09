@@ -70,7 +70,7 @@ router.post('/api/employees/invite', async (req: Request, res: Response): Promis
            full_name = EXCLUDED.full_name,
            department_id = EXCLUDED.department_id,
            site_id = EXCLUDED.site_id`,
-        [tenantUuid, newUserId, full_name.trim(), departmentId || null, siteId || null]
+        [tenantUuid, newUserId, full_name.trim(), departmentId, siteId]
       )
 
       return { id: newUserId }
