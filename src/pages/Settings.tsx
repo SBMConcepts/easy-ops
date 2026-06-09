@@ -56,7 +56,7 @@ export default function Settings() {
   // Mutation to handle secure profile save via Express API
   const updateProfileMutation = useMutation({
     mutationFn: async (updatedData: ProfileForm) => {
-      return apiFetch('userinfo', {
+      return apiFetch('/userinfo', {
         method: 'PUT',
         body: JSON.stringify(updatedData),
       })

@@ -50,8 +50,29 @@ async function loadProfile(client: PoolClient, auth0UserId: string, orgId: strin
   return result.rows[0] ?? null
 }
 
+// Disambiguate why a profile failed to load so the caller (and logs) can tell
+// "user not synced yet" from "user has no active membership in this org".
+type ProfileMiss = 'no_user' | 'no_active_membership'
+
+async function diagnoseMiss(
+  client: PoolClient,
+  auth0UserId: string,
+  orgId: string
+): Promise<ProfileMiss> {
+  const userRes = await client.query(
+    `SELECT 1 FROM public.users WHERE auth0_user_id = $1 LIMIT 1`,
+    [auth0UserId]
+  )
+  if (userRes.rows.length === 0) return 'no_user'
+
+  // The user row exists; the JOIN failed because no membership is active for
+  // this user within the requesting organization.
+  void orgId
+  return 'no_active_membership'
+}
+
 // GET /api/userinfo — return the authenticated user's enriched profile.
-router.get('/api/userinfo', async (req: Request, res: Response): Promise<any> => {
+router.get('/userinfo', async (req: Request, res: Response): Promise<any> => {
   try {
     const authCtx = await verifyAuth0Token(req)
     if (!authCtx) return res.status(401).json({ error: 'Unauthorized.' })
@@ -61,18 +82,34 @@ router.get('/api/userinfo', async (req: Request, res: Response): Promise<any> =>
     )
 
     if (!profile) {
-      return res.status(404).json({ error: 'Profile not found for this account.' })
+      const reason = await withTenantContext(authCtx, (client) =>
+        diagnoseMiss(client, authCtx.auth0UserId, authCtx.orgId)
+      )
+
+      if (reason === 'no_active_membership') {
+        return res.status(404).json({
+          error:
+            'Your account has no active membership in this organization. ' +
+            'If you were just invited, finish accepting the invitation, then sign in again.',
+          code: 'no_active_membership',
+        })
+      }
+
+      return res.status(404).json({
+        error: 'Profile not found for this account.',
+        code: 'no_user',
+      })
     }
 
     return res.status(200).json(profile)
   } catch (error: any) {
-    console.error('GET /api/userinfo failed:', error)
+    console.error('GET /userinfo failed:', error)
     return res.status(500).json({ error: 'Failed to load profile.' })
   }
 })
 
-// PUT /api/userinfo — update the authenticated user's own editable fields.
-router.put('/api/userinfo', async (req: Request, res: Response): Promise<any> => {
+// PUT /userinfo — update the authenticated user's own editable fields.
+router.put('/userinfo', async (req: Request, res: Response): Promise<any> => {
   try {
     const authCtx = await verifyAuth0Token(req)
     if (!authCtx) return res.status(401).json({ error: 'Unauthorized.' })
@@ -104,7 +141,7 @@ router.put('/api/userinfo', async (req: Request, res: Response): Promise<any> =>
 
     return res.status(200).json(profile)
   } catch (error: any) {
-    console.error('PUT /api/userinfo failed:', error)
+    console.error('PUT /userinfo failed:', error)
     return res.status(500).json({ error: 'Failed to update profile.' })
   }
 })

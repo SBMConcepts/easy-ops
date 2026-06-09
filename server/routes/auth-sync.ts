@@ -55,6 +55,22 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
       [auth0UserId, email.trim().toLowerCase(), (name ?? email).trim(), avatarUrl ?? null]
     )
 
+    const userId = result.rows[0].id as string
+
+    // Activate any membership left in the 'invited' state once the user has
+    // authenticated for the first time. This covers both the tenant admin
+    // (provisioned by POST /api/tenants/create) and invited employees
+    // (provisioned by POST /api/employees/invite).
+    await pool.query(
+      `UPDATE public.memberships
+          SET status = 'active'::public.membership_status,
+              joined_at = COALESCE(joined_at, now()),
+              updated_at = now()
+        WHERE user_id = $1
+          AND status = 'invited'::public.membership_status`,
+      [userId]
+    )
+
     return res.status(200).json({ success: true, user: result.rows[0] })
   } catch (error: any) {
     console.error('POST /api/auth/sync failed:', error)

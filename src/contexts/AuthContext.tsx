@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Enriched user + tenant come from the Express backend, which reads
         // Supabase with the verified token. This is the single source of truth
         // for identity/organisation data across the workspace shell.
-        const profile = await apiFetch<CurrentUserProfile>('userinfo')
+        const profile = await apiFetch<CurrentUserProfile>('/userinfo')
 
         setUser({
           id: profile.profile_id,

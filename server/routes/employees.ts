@@ -34,6 +34,18 @@ router.post('/api/employees/invite', async (req: Request, res: Response): Promis
     }
 
     const localProvisionResult = await withTenantContext(authCtx, async (client) => {
+      // authCtx.orgId is the Auth0 org id (org_...). memberships.tenant_id and
+      // employee_profiles.tenant_id are UUID FKs to tenants.id, so resolve the
+      // internal tenant UUID first.
+      const tenantRes = await client.query(
+        `SELECT id FROM public.tenants WHERE auth0_org_id = $1 LIMIT 1`,
+        [authCtx.orgId]
+      )
+      if (tenantRes.rows.length === 0) {
+        throw new Error('Tenant not found for the authenticated organization.')
+      }
+      const tenantUuid = tenantRes.rows[0].id as string
+
       const userRes = await client.query(
         `INSERT INTO public.users (id, email, full_name, status)
          VALUES ('pending|' || $1, $1, $2, 'invited'::public.user_status)
@@ -48,7 +60,7 @@ router.post('/api/employees/invite', async (req: Request, res: Response): Promis
         `INSERT INTO public.memberships (tenant_id, user_id, role, status)
          VALUES ($1, $2, $3::public.tenant_role, 'invited'::public.membership_status)
          ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
-        [authCtx.orgId, newUserId, role]
+        [tenantUuid, newUserId, role]
       )
 
       await client.query(
@@ -58,7 +70,7 @@ router.post('/api/employees/invite', async (req: Request, res: Response): Promis
            full_name = EXCLUDED.full_name,
            department_id = EXCLUDED.department_id,
            site_id = EXCLUDED.site_id`,
-        [authCtx.orgId, newUserId, full_name.trim(), departmentId || null, siteId || null]
+        [tenantUuid, newUserId, full_name.trim(), departmentId || null, siteId || null]
       )
 
       return { id: newUserId }

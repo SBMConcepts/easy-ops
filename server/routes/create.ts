@@ -4,6 +4,7 @@ import { ManagementClient } from 'auth0'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
 import type { Database } from '../types/supabase.js'
+import { getPool } from '../lib/db.js'
 
 const router = Router()
 
@@ -72,6 +73,41 @@ router.post('/api/tenants/create', async (req: Request, res: Response): Promise<
     if (insertError) {
       await auth0.organizations.delete(auth0OrgId).catch(() => null)
       throw new Error(`Supabase insert failed: ${insertError.message}`)
+    }
+
+    // Provision the admin's local identity so GET /api/userinfo can resolve a
+    // tenant on first login. The user is created as a pending placeholder
+    // (id = 'pending|<email>', no auth0_user_id yet); POST /api/auth/sync links
+    // it to the real Auth0 identity by email on first login. The membership is
+    // created 'invited' and activated by that same first-login sync. Raw SQL via
+    // the pg pool mirrors POST /api/employees/invite and avoids the stricter
+    // generated Supabase types.
+    const normalizedEmail = adminEmail.trim().toLowerCase()
+    const pendingUserId = `pending|${normalizedEmail}`
+    const pool = getPool()
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+      await client.query(
+        `INSERT INTO public.users (id, email, full_name, status)
+         VALUES ($1, $2, $2, 'invited'::public.user_status)
+         ON CONFLICT (email) DO UPDATE SET full_name = EXCLUDED.full_name`,
+        [pendingUserId, normalizedEmail]
+      )
+      await client.query(
+        `INSERT INTO public.memberships (tenant_id, user_id, role, status)
+         VALUES ($1, $2, 'admin'::public.tenant_role, 'invited'::public.membership_status)
+         ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
+        [tenantId, pendingUserId]
+      )
+      await client.query('COMMIT')
+    } catch (provisionError: any) {
+      await client.query('ROLLBACK').catch(() => null)
+      await supabaseAdmin.from('tenants').delete().eq('id', tenantId)
+      await auth0.organizations.delete(auth0OrgId).catch(() => null)
+      throw new Error(`Admin provisioning failed: ${provisionError.message}`)
+    } finally {
+      client.release()
     }
 
     await auth0.organizations.invitations.create(auth0OrgId, {
