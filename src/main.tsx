@@ -13,9 +13,9 @@ createRoot(document.getElementById('root')!).render(
     domain={AUTH0_DOMAIN}
     clientId={AUTH0_CLIENT_ID}
     authorizationParams={{
-      redirect_uri: `${window.location.origin}`,
+      redirect_uri: `${window.location.origin}` + '/app',
       audience: AUTH0_AUDIENCE,
-      scope: 'openid profile email',
+      scope: '',
     }}
   >
     <DatabaseProvider>

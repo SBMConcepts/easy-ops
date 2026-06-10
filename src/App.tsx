@@ -23,6 +23,7 @@ import Settings from './pages/Settings'
 import SitesAndDepartments from './pages/SitesAndDepartments'
 import DashboardRouter from './pages/dashboard/DashboardRouter'
 import { DashboardLoader } from './pages/dashboard/DashboardLoader'
+import { Database } from './integrations/supabase/types'
 
 const queryClient = new QueryClient()
 
@@ -42,10 +43,10 @@ const MarketingRoutes = () => (
 // ── Workspace shell ──────────────────────────────────────────────────────────────
 // Authenticated application routes. Tenant context is derived automatically via JWT.
 const WorkspaceShell = () => {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user, tenant } = useAuth()
 
   // Handle initialization loading frames safely
-  if (isLoading) {
+  if (isLoading || (isAuthenticated && !user) || (isAuthenticated && !tenant)) {
     return <DashboardLoader />
   }
 
@@ -61,26 +62,25 @@ const WorkspaceShell = () => {
         <Route index element={<DashboardRouter />} />
 
         {/* General Staff & Operator Views */}
-        <Route path="check-in" element={<CheckIn />} />
+        <Route
+          path="check-in"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
+              <CheckIn />
+            </ProtectedRoute>
+          }
+        />
         <Route path="onboarding" element={<Onboarding />} />
         <Route path="reports" element={<Reports />} />
 
         {/* Management & Administration Views with RBAC */}
         <Route
-          path="employees"
+          path="employees-management"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
               <EmployeeManagement
-                requests={
-                  [
-                    /* Placeholder for time off requests data */
-                  ]
-                }
-                prefillEmailForRequest={function (req: {
-                  id: string
-                  status: string
-                  requester_email: string
-                }): string {
+                requests={[]}
+                prefillEmailForRequest={function (): string {
                   throw new Error('Function not implemented.')
                 }}
               />
@@ -122,7 +122,7 @@ const WorkspaceShell = () => {
         <Route
           path="settings"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
               <Settings />
             </ProtectedRoute>
           }

@@ -22,7 +22,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: { id: '', auth0_user_id: '', full_name: '', email: '', role: 'employee' } as AuthUser,
   tenant: {} as AuthTenant,
-  isAuthenticated: true,
+  isAuthenticated: false,
   isLoading: true,
   login: async () => {},
   logout: () => {},
@@ -110,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authorizationParams: {
           organization: options?.auth0OrgId,
           invitation: options?.invitation,
+          redirect_uri: window.location.origin, // Ensure we return to the app after login
         },
       })
     },

@@ -12,7 +12,7 @@ const LoginPage = () => {
   const [searchParams] = useSearchParams()
 
   const invitation = searchParams.get('invitation')
-  const orgId = searchParams.get('organization') || undefined
+  const orgId = searchParams.get('organization') // Auth0 sends the org ID as 'organization' in the query params
 
   useEffect(() => {
     // Escalate to dashboard automatically if session exists
@@ -21,7 +21,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     // Catch inbound Auth0 invitation links and pass them natively into the Context provider
-    if (invitation) login({ auth0OrgId: orgId, invitation })
+    if (invitation) login({ auth0OrgId: orgId ?? undefined, invitation })
   }, [invitation, orgId, login])
 
   if (isLoading || invitation) {
@@ -49,7 +49,7 @@ const LoginPage = () => {
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <Button
-              onClick={() => login({ auth0OrgId: orgId })}
+              onClick={() => login({ auth0OrgId: orgId ?? undefined })}
               className="w-full h-12 text-md font-semibold"
             >
               <LogIn className="mr-2 h-5 w-5" /> Proceed to Login
