@@ -24,7 +24,7 @@
 -- FIX: Drop the column. All plan reads go through subscriptions.
 --   A non-materialised view replaces the convenience without storing data twice.
 
-ALTER TABLE public.tenants DROP COLUMN IF EXISTS plan;
+ALTER TABLE tenants DROP COLUMN IF EXISTS plan;
 
 -- Convenience view — no Stripe-sensitive data, safe for all tenant members.
 CREATE OR REPLACE VIEW public.tenant_active_plan AS
