@@ -99,7 +99,9 @@ router.post('/api/tenants/create', async (req: Request, res: Response): Promise<
       await client.query('ROLLBACK').catch(() => null)
       await supabaseAdmin.from('tenants').delete().eq('id', tenantId)
       await auth0.organizations.delete(auth0OrgId).catch(() => null)
-      throw new Error(`Admin provisioning failed: ${provisionError.message}`)
+      throw new Error(`Admin provisioning failed: ${provisionError.message}`, {
+        cause: provisionError,
+      })
     } finally {
       client.release()
     }

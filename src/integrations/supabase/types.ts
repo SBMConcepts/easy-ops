@@ -223,6 +223,42 @@ export type Database = {
           },
         ]
       }
+      auth0_sync_outbox: {
+        Row: {
+          attempts: number
+          created_at: string
+          event_type: string
+          id: string
+          last_error: string | null
+          payload: Json
+          processed_at: string | null
+          status: string
+          tenant_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          event_type: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+          tenant_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+          tenant_id?: string | null
+        }
+        Relationships: []
+      }
       department_sites: {
         Row: {
           created_at: string
@@ -511,6 +547,27 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission: Database['public']['Enums']['app_permission']
+          role: Database['public']['Enums']['tenant_role']
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission: Database['public']['Enums']['app_permission']
+          role: Database['public']['Enums']['tenant_role']
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission?: Database['public']['Enums']['app_permission']
+          role?: Database['public']['Enums']['tenant_role']
+        }
+        Relationships: []
       }
       sales_leads: {
         Row: {
@@ -845,6 +902,10 @@ export type Database = {
       }
       current_tenant_id: { Args: never; Returns: string }
       current_user_id: { Args: never; Returns: string }
+      has_permission: {
+        Args: { _perm: Database['public']['Enums']['app_permission'] }
+        Returns: boolean
+      }
       has_tenant_role: {
         Args: { _role: Database['public']['Enums']['tenant_role'] }
         Returns: boolean
@@ -856,6 +917,22 @@ export type Database = {
     }
     Enums: {
       access_request_status: 'pending' | 'approved' | 'rejected' | 'expired'
+      app_permission:
+        | 'read:tenant'
+        | 'write:tenant'
+        | 'admin:tenant'
+        | 'read:members'
+        | 'invite:members'
+        | 'manage:members'
+        | 'read:attendance'
+        | 'write:attendance'
+        | 'verify:attendance'
+        | 'manage:departments'
+        | 'manage:sites'
+        | 'manage:shifts'
+        | 'manage:roles'
+        | 'read:audit'
+        | 'manage:billing'
       attendance_status: 'present' | 'late' | 'absent' | 'leave' | 'holiday'
       billing_plan: 'starter' | 'growth' | 'pro' | 'enterprise'
       billing_status: 'trialing' | 'active' | 'past_due' | 'canceled'
@@ -870,7 +947,7 @@ export type Database = {
         | 'lost'
         | 'unresponsive'
       membership_status: 'invited' | 'active' | 'suspended' | 'offboarded'
-      tenant_role: 'admin' | 'manager' | 'supervisor' | 'employee'
+      tenant_role: 'admin' | 'manager' | 'supervisor' | 'employee' | 'owner'
       tenant_status: 'provisioning' | 'active' | 'suspended' | 'offboarding' | 'archived'
       user_status: 'active' | 'suspended' | 'deleted'
     }
@@ -999,6 +1076,23 @@ export const Constants = {
   public: {
     Enums: {
       access_request_status: ['pending', 'approved', 'rejected', 'expired'],
+      app_permission: [
+        'tenant:read',
+        'tenant:write',
+        'tenant:admin',
+        'members:read',
+        'members:invite',
+        'members:manage',
+        'attendance:read',
+        'attendance:write',
+        'attendance:verify',
+        'departments:manage',
+        'sites:manage',
+        'shifts:manage',
+        'roles:manage',
+        'audit:read',
+        'billing:manage',
+      ],
       attendance_status: ['present', 'late', 'absent', 'leave', 'holiday'],
       billing_plan: ['starter', 'growth', 'pro', 'enterprise'],
       billing_status: ['trialing', 'active', 'past_due', 'canceled'],
@@ -1014,7 +1108,7 @@ export const Constants = {
         'unresponsive',
       ],
       membership_status: ['invited', 'active', 'suspended', 'offboarded'],
-      tenant_role: ['admin', 'manager', 'supervisor', 'employee'],
+      tenant_role: ['admin', 'manager', 'supervisor', 'employee', 'owner'],
       tenant_status: ['provisioning', 'active', 'suspended', 'offboarding', 'archived'],
       user_status: ['active', 'suspended', 'deleted'],
     },

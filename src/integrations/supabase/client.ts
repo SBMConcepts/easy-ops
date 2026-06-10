@@ -1,15 +1,12 @@
-// Browser Supabase clients for this app.
-// - `supabasePublic`: anonymous singleton (RLS as the anon role) for public
-//   reads/writes (e.g. access-request intake) before a user signs in.
-// - `createSupabaseClient(token)`: per-session client that forwards the Auth0
-//   access token as the Authorization header so Postgres RLS sees the user's
-//   JWT claims. Built by DatabaseContext once the user is authenticated.
+// Supabase browser client wired for Auth0 third-party auth. The Supabase
+// project must be configured in Dashboard -> Auth -> Third-Party Auth to
+// trust the Auth0 issuer; every request below carries the Auth0 access
+// token, which Supabase verifies and exposes to RLS via auth.jwt().
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './types'
+import { getAuth0AccessToken } from '../auth0/token-store'
 
-function readSupabaseEnv() {
-  // Use import.meta.env for client-side (Vite build-time replacement);
-  // fall back to process.env for SSR.
+function createSupabaseClient() {
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
   const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY
@@ -19,51 +16,30 @@ function readSupabaseEnv() {
       ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
       ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
     ]
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase Cloud Platform.`
+    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}.`
     console.error(`[Supabase] ${message}`)
     throw new Error(message)
   }
 
-  return { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY }
-}
-
-function createAnonClient() {
-  const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } = readSupabaseEnv()
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    accessToken: async () => getAuth0AccessToken() ?? '',
     auth: {
-      storage: typeof window !== 'undefined' ? localStorage : undefined,
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  })
-}
-
-// Creates a client that authenticates requests with the supplied Auth0 access
-// token, so Postgres RLS policies evaluate against the user's JWT claims.
-// `persistSession` is disabled — the token's lifecycle is owned by Auth0.
-export function createSupabaseClient(token: string) {
-  const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } = readSupabaseEnv()
-  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    global: {
-      headers: { Authorization: `Bearer ${token}` },
-    },
-    auth: {
+      // Auth0 owns the session; disable Supabase's own session machinery.
+      storage: undefined,
       persistSession: false,
       autoRefreshToken: false,
+      detectSessionInUrl: false,
     },
   })
 }
 
-let _supabasePublic: ReturnType<typeof createAnonClient> | undefined
+let _supabase: ReturnType<typeof createSupabaseClient> | undefined
 
-// Lazily-instantiated anonymous singleton. Import like:
-//   import { supabasePublic } from "@/integrations/supabase/client";
-export const supabasePublic = new Proxy({} as ReturnType<typeof createAnonClient>, {
+// Import the supabase client like this:
+// import { supabase } from "@/integrations/supabase/client";
+export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
   get(_, prop, receiver) {
-    if (!_supabasePublic) _supabasePublic = createAnonClient()
-    return Reflect.get(_supabasePublic, prop, receiver)
+    if (!_supabase) _supabase = createSupabaseClient()
+    return Reflect.get(_supabase, prop, receiver)
   },
 })
-
-// Backward-compatible alias for the anonymous singleton.
-export const supabase = supabasePublic

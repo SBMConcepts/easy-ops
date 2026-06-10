@@ -57,3 +57,20 @@ export function requireRole(minimumRole: AppRole) {
     next()
   }
 }
+
+// Middleware factory enforcing a specific Auth0 RBAC permission (e.g.
+// 'read:members'). Must run after requireAuth0Auth so req.auth is populated;
+// responds 403 when the caller's access token lacks the permission.
+export function requirePermission(permission: string) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.auth) {
+      res.status(401).json({ error: 'Unauthorized.' })
+      return
+    }
+    if (!req.auth.permissions.includes(permission)) {
+      res.status(403).json({ error: `Forbidden: missing permission ${permission}` })
+      return
+    }
+    next()
+  }
+}

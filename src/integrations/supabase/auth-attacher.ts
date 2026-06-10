@@ -1,32 +1,19 @@
-// Client-side bearer-token attacher aligned with this project's Auth0 + Vite +
-// Express stack (mirrors src/hooks/useTenantApi.ts). Replaces the original
-// TanStack Start / Supabase Auth scaffold, which did not match this app.
-import { useCallback } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
+// Client-side fetch helper: attaches the Auth0 access token (the canonical
+// identity provider) from the in-memory token store as `Authorization:
+// Bearer ...` on outgoing requests to Next.js route handlers. The same token
+// is forwarded to Supabase/PostgREST so RLS evaluates the user's JWT claims.
+'use client'
 
-// Returns a helper that merges an Auth0 access-token `Authorization` header into
-// any outgoing request headers. Use it when calling the Express API directly:
-//
-//   const attachAuth0Auth = useAttachAuth0Auth()
-//   const headers = await attachAuth0Auth()
-//   await fetch(`${import.meta.env.VITE_API_URL}/api/...`, { headers })
-//
-// For typical data fetching prefer the `apiFetch` helper from useTenantApi,
-// which already wraps this behaviour with error handling.
-export function useAttachAuth0Auth() {
-  const { getAccessTokenSilently } = useAuth0()
+import { getAuth0AccessToken } from '../auth0/token-store'
 
-  return useCallback(
-    async (headers: HeadersInit = {}): Promise<Headers> => {
-      const merged = new Headers(headers)
-      try {
-        const token = await getAccessTokenSilently()
-        merged.set('Authorization', `Bearer ${token}`)
-      } catch (err) {
-        console.warn('Failed to attach Auth0 token to request', err)
-      }
-      return merged
-    },
-    [getAccessTokenSilently]
-  )
+// Wraps the native fetch, injecting the current Auth0 bearer token (when
+// present) while preserving any caller-provided headers and init options.
+export async function authedFetch(
+  input: RequestInfo | URL,
+  init: RequestInit = {}
+): Promise<Response> {
+  const token = getAuth0AccessToken()
+  const headers = new Headers(init.headers)
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  return fetch(input, { ...init, headers })
 }

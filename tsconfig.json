@@ -14,8 +14,11 @@
     "jsx": "react-jsx",
     "strict": true,
     "rootDir": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "types": ["vite/client", "node", "@supabase/supabase-js"]
   },
-  "include": ["src", "vite.config.ts"], //
+  "include": ["src", "app", "vite.config.ts"],
   "exclude": ["supabase", "node_modules", "dist"]
 }

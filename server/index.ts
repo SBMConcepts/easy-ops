@@ -9,6 +9,9 @@ import tenantLookupRouter from './routes/tenant-lookup.js'
 import userinfoRouter from './routes/userinfo.js'
 import authSyncRouter from './routes/auth-sync.js'
 import sitesDepartmentsRouter from './routes/sites-departments.js'
+import sessionRouter from './routes/session.js'
+import membersRouter from './routes/members.js'
+import tenantsRouter from './routes/tenants.js'
 import { notFoundHandler, errorHandler, installProcessErrorHandlers } from './lib/error-handler.js'
 
 installProcessErrorHandlers()
@@ -35,10 +38,13 @@ app.use(authSyncRouter)
 // 3. Authenticated User Endpoints (JWT authenticated)
 app.use(userinfoRouter)
 app.use(sitesDepartmentsRouter)
+app.use(sessionRouter)
+app.use(tenantsRouter)
 
 // 4. Privileged Administrative Actions
 app.use(employeesRouter)
 app.use(accessRequestsRouter)
+app.use(membersRouter)
 
 // Health Check
 app.get('/api/health', (_req: Request, res: Response) => {
