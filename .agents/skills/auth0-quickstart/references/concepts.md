@@ -8,34 +8,38 @@ Core Auth0 concepts, terminology, troubleshooting guide, and security best pract
 
 Understanding which application type to choose:
 
-| Type | Use Case | Client Secret | PKCE | Token Storage |
-|------|----------|---------------|------|---------------|
-| **Single Page Application (SPA)** | React, Vue, Angular, client-side apps | ❌ Not used | ✅ Required | Browser (memory/storage) |
-| **Regular Web Application** | Next.js, Express, Rails, server-rendered | ✅ Required | ✅ Recommended | Server-side session |
-| **Native Application** | React Native, iOS, Android, Electron | ❌ Not used | ✅ Required | Secure device storage |
-| **Machine-to-Machine (M2M)** | Backend APIs, cron jobs, services | ✅ Required | ❌ Not applicable | Server environment |
+| Type                              | Use Case                                 | Client Secret | PKCE              | Token Storage            |
+| --------------------------------- | ---------------------------------------- | ------------- | ----------------- | ------------------------ |
+| **Single Page Application (SPA)** | React, Vue, Angular, client-side apps    | ❌ Not used   | ✅ Required       | Browser (memory/storage) |
+| **Regular Web Application**       | Next.js, Express, Rails, server-rendered | ✅ Required   | ✅ Recommended    | Server-side session      |
+| **Native Application**            | React Native, iOS, Android, Electron     | ❌ Not used   | ✅ Required       | Secure device storage    |
+| **Machine-to-Machine (M2M)**      | Backend APIs, cron jobs, services        | ✅ Required   | ❌ Not applicable | Server environment       |
 
 ### When to Use Each Type
 
 **Single Page Application (SPA):**
+
 - Client-side only (no backend server)
 - JavaScript runs in browser
 - Cannot keep secrets secure
 - Examples: Vite React app, Vue CLI app
 
 **Regular Web Application:**
+
 - Has a backend server
 - Server renders pages or handles authentication
 - Can securely store secrets
 - Examples: Next.js app, Express with sessions
 
 **Native Application:**
+
 - Mobile or desktop application
 - Runs on user's device
 - Cannot keep secrets secure (can be extracted)
 - Examples: React Native app, iOS app, Electron app
 
 **Machine-to-Machine (M2M):**
+
 - No user interaction
 - Server-to-server communication
 - Uses Client Credentials flow
@@ -47,41 +51,41 @@ Understanding which application type to choose:
 
 ### Authentication Terms
 
-| Term | Definition | Example |
-|------|------------|---------|
-| **Domain** | Your Auth0 tenant URL | `your-tenant.auth0.com` |
-| **Client ID** | Public identifier for your app | `abc123xyz` (safe to expose) |
-| **Client Secret** | Confidential secret (server-side only) | Never expose in client code! |
-| **Tenant** | Your Auth0 account/instance | `your-tenant` |
-| **Connection** | Authentication source | Username-Password, Google, SAML |
-| **Universal Login** | Auth0's hosted login page | Recommended for best security |
+| Term                | Definition                             | Example                         |
+| ------------------- | -------------------------------------- | ------------------------------- |
+| **Domain**          | Your Auth0 tenant URL                  | `your-tenant.auth0.com`         |
+| **Client ID**       | Public identifier for your app         | `abc123xyz` (safe to expose)    |
+| **Client Secret**   | Confidential secret (server-side only) | Never expose in client code!    |
+| **Tenant**          | Your Auth0 account/instance            | `your-tenant`                   |
+| **Connection**      | Authentication source                  | Username-Password, Google, SAML |
+| **Universal Login** | Auth0's hosted login page              | Recommended for best security   |
 
 ### URLs and Redirects
 
-| Term | Definition | Example |
-|------|------------|---------|
-| **Callback URL** | Where Auth0 redirects after login | `http://localhost:3000/callback` |
-| **Logout URL** | Where Auth0 redirects after logout | `http://localhost:3000` |
-| **Allowed Origins** | Domains that can make requests | `http://localhost:3000` |
-| **Allowed Web Origins** | For CORS and silent auth | `http://localhost:3000` |
+| Term                    | Definition                         | Example                          |
+| ----------------------- | ---------------------------------- | -------------------------------- |
+| **Callback URL**        | Where Auth0 redirects after login  | `http://localhost:3000/callback` |
+| **Logout URL**          | Where Auth0 redirects after logout | `http://localhost:3000`          |
+| **Allowed Origins**     | Domains that can make requests     | `http://localhost:3000`          |
+| **Allowed Web Origins** | For CORS and silent auth           | `http://localhost:3000`          |
 
 ### Tokens
 
-| Token | Purpose | Lifespan | Where Stored |
-|-------|---------|----------|--------------|
-| **Access Token** | API authorization | Short (hours) | Client or server |
-| **ID Token** | User identity info (JWT) | Short (hours) | Client or server |
-| **Refresh Token** | Get new access tokens | Long (days/months) | Secure storage only |
+| Token             | Purpose                  | Lifespan           | Where Stored        |
+| ----------------- | ------------------------ | ------------------ | ------------------- |
+| **Access Token**  | API authorization        | Short (hours)      | Client or server    |
+| **ID Token**      | User identity info (JWT) | Short (hours)      | Client or server    |
+| **Refresh Token** | Get new access tokens    | Long (days/months) | Secure storage only |
 
 ### OAuth/OIDC Terms
 
-| Term | Definition |
-|------|------------|
-| **Audience** | API identifier, specifies which API the token is for |
-| **Scope** | Permissions requested (e.g., `openid profile email`) |
-| **PKCE** | Proof Key for Code Exchange - security for SPAs/mobile |
+| Term           | Definition                                                     |
+| -------------- | -------------------------------------------------------------- |
+| **Audience**   | API identifier, specifies which API the token is for           |
+| **Scope**      | Permissions requested (e.g., `openid profile email`)           |
+| **PKCE**       | Proof Key for Code Exchange - security for SPAs/mobile         |
 | **Grant Type** | OAuth flow type (Authorization Code, Client Credentials, etc.) |
-| **Claims** | Information in a token (email, name, roles, etc.) |
+| **Claims**     | Information in a token (email, name, roles, etc.)              |
 
 ---
 
@@ -92,6 +96,7 @@ Understanding which application type to choose:
 **Used by:** SPAs, Native apps
 
 **How it works:**
+
 1. App redirects to Auth0 login
 2. User authenticates
 3. Auth0 redirects back with authorization code
@@ -104,6 +109,7 @@ Understanding which application type to choose:
 **Used by:** Regular web applications (server-side)
 
 **How it works:**
+
 1. App redirects to Auth0 login
 2. User authenticates
 3. Auth0 redirects back with authorization code
@@ -116,6 +122,7 @@ Understanding which application type to choose:
 **Used by:** M2M applications
 
 **How it works:**
+
 1. Service authenticates with client ID + secret
 2. Receives access token
 3. Uses token to call APIs
@@ -128,16 +135,16 @@ Understanding which application type to choose:
 
 ### Common Issues
 
-| Issue | Symptom | Solution |
-|-------|---------|----------|
-| **Invalid callback URL** | Error after login redirect | Add callback URL in Auth0 dashboard app settings |
-| **Invalid state** | Error during login | Clear browser storage and cookies, try again |
-| **Client authentication failed** | 401 error | Verify client ID and secret are correct |
-| **Missing required parameter** | Auth0 error message | Check environment variables are loaded |
-| **Unauthorized when calling API** | 401 from API | Ensure `audience` is configured in auth config |
-| **Session not created** | Login works but no session | Check `AUTH0_SECRET` is set (server-side apps) |
-| **CORS errors** | Browser blocks requests | Add your domain to Allowed Web Origins |
-| **Token expired** | 401 after some time | Implement token refresh or re-authentication |
+| Issue                             | Symptom                    | Solution                                         |
+| --------------------------------- | -------------------------- | ------------------------------------------------ |
+| **Invalid callback URL**          | Error after login redirect | Add callback URL in Auth0 dashboard app settings |
+| **Invalid state**                 | Error during login         | Clear browser storage and cookies, try again     |
+| **Client authentication failed**  | 401 error                  | Verify client ID and secret are correct          |
+| **Missing required parameter**    | Auth0 error message        | Check environment variables are loaded           |
+| **Unauthorized when calling API** | 401 from API               | Ensure `audience` is configured in auth config   |
+| **Session not created**           | Login works but no session | Check `AUTH0_SECRET` is set (server-side apps)   |
+| **CORS errors**                   | Browser blocks requests    | Add your domain to Allowed Web Origins           |
+| **Token expired**                 | 401 after some time        | Implement token refresh or re-authentication     |
 
 ### Debugging Steps
 
@@ -146,6 +153,7 @@ Understanding which application type to choose:
    - Or use: `auth0 logs tail`
 
 2. **Verify Environment Variables**
+
    ```bash
    # Check variables are loaded
    console.log(process.env.AUTH0_DOMAIN)
@@ -158,6 +166,7 @@ Understanding which application type to choose:
    - Check response errors
 
 4. **Clear Auth State**
+
    ```bash
    # Clear browser storage
    localStorage.clear()
@@ -166,6 +175,7 @@ Understanding which application type to choose:
    ```
 
 5. **Test with Auth0 CLI**
+
    ```bash
    # Test login flow
    auth0 test login <client-id>
@@ -223,12 +233,14 @@ Understanding which application type to choose:
 ### ❌ Security Anti-Patterns
 
 1. **Hardcoding Credentials**
+
    ```javascript
    // ❌ NEVER DO THIS
-   const clientSecret = "abc123secret";
+   const clientSecret = 'abc123secret'
    ```
 
 2. **Exposing Client Secret in Frontend**
+
    ```javascript
    // ❌ NEVER in browser code
    clientSecret: process.env.CLIENT_SECRET
@@ -243,12 +255,13 @@ Understanding which application type to choose:
    - Consider in-memory storage or httpOnly cookies
 
 5. **Skipping Token Validation**
+
    ```javascript
    // ❌ Don't trust tokens blindly
-   const user = jwt.decode(token);  // No validation!
+   const user = jwt.decode(token) // No validation!
 
    // ✅ Always verify
-   const user = jwt.verify(token, publicKey, options);
+   const user = jwt.verify(token, publicKey, options)
    ```
 
 6. **Using HTTP in Production**
@@ -262,44 +275,44 @@ Understanding which application type to choose:
 ### Recommended Scopes
 
 **For user authentication:**
-```
+
 openid profile email
-```
 
 **For API access:**
-```
+
 openid profile email read:users write:users
-```
 
 **Minimal:**
-```
+
 openid
-```
 
 ### Token Lifespans
 
 **Recommended values:**
 
-| Token Type | Development | Production |
-|------------|-------------|------------|
-| Access Token | 1 hour | 1 hour |
-| ID Token | 1 hour | 1 hour |
-| Refresh Token | 30 days | 30 days |
+| Token Type    | Development | Production |
+| ------------- | ----------- | ---------- |
+| Access Token  | 1 hour      | 1 hour     |
+| ID Token      | 1 hour      | 1 hour     |
+| Refresh Token | 30 days     | 30 days    |
 
 **Note:** Shorter is more secure, but requires more frequent renewal.
 
 ### Session Configuration
 
 **Express.js example:**
+
 ```javascript
-app.use(auth({
-  secret: process.env.AUTH0_SECRET,
-  session: {
-    rolling: true,              // Extend session on activity
-    rollingDuration: 86400,     // 24 hours
-    absoluteDuration: 604800    // 7 days max
-  }
-}));
+app.use(
+  auth({
+    secret: process.env.AUTH0_SECRET,
+    session: {
+      rolling: true, // Extend session on activity
+      rollingDuration: 86400, // 24 hours
+      absoluteDuration: 604800, // 7 days max
+    },
+  })
+)
 ```
 
 ---
@@ -311,6 +324,7 @@ app.use(auth({
 **Why:** Need server-side rendering, better security for secrets
 
 **Changes needed:**
+
 1. Create new Auth0 app (type: Regular Web App)
 2. Add client secret to environment (server-side only)
 3. Change callback URL pattern (usually `/api/auth/callback`)
@@ -322,6 +336,7 @@ app.use(auth({
 **Why:** Want client-side only, serverless deployment
 
 **Changes needed:**
+
 1. Create new Auth0 app (type: SPA)
 2. Remove client secret (not used in SPAs)
 3. Enable PKCE
@@ -335,6 +350,7 @@ app.use(auth({
 ### Organizations (B2B)
 
 Multi-tenant B2B applications:
+
 - Separate login domains per organization
 - Organization-specific branding
 - Organization invitation flows
@@ -344,6 +360,7 @@ Multi-tenant B2B applications:
 ### Multi-Factor Authentication (MFA)
 
 Require additional verification:
+
 - TOTP (Google Authenticator)
 - SMS, Email, Push
 - WebAuthn (security keys, biometrics)
@@ -354,6 +371,7 @@ Require additional verification:
 ### Passwordless Authentication
 
 Login without passwords:
+
 - Magic links via email
 - SMS one-time codes
 - WebAuthn / Passkeys
@@ -363,6 +381,7 @@ Login without passwords:
 ### Custom Domains
 
 Use your own domain for Auth0:
+
 - `auth.myapp.com` instead of `tenant.auth0.com`
 - Better branding
 - First-party cookies

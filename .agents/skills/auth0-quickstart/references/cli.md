@@ -9,11 +9,13 @@ Complete guide to installing, configuring, and using the Auth0 CLI.
 ### macOS/Linux
 
 **Via Homebrew (recommended):**
+
 ```bash
 brew install auth0/auth0-cli/auth0
 ```
 
 **Via curl (review script before executing):**
+
 ```bash
 curl -sSfL https://raw.githubusercontent.com/auth0/auth0-cli/main/install.sh -o /tmp/auth0-install.sh
 # Review the script before running: cat /tmp/auth0-install.sh
@@ -24,11 +26,13 @@ rm /tmp/auth0-install.sh
 ### Windows
 
 **Via Scoop:**
+
 ```bash
 scoop install auth0
 ```
 
 **Via Chocolatey:**
+
 ```bash
 choco install auth0-cli
 ```
@@ -248,61 +252,61 @@ auth0 apis show <api-id>
 
 ### Account & Tenant
 
-| Command | Purpose |
-|---------|---------|
-| `auth0 login` | Login to Auth0 |
-| `auth0 logout` | Logout from Auth0 |
-| `auth0 tenants list` | List your Auth0 tenants |
+| Command                      | Purpose                      |
+| ---------------------------- | ---------------------------- |
+| `auth0 login`                | Login to Auth0               |
+| `auth0 logout`               | Logout from Auth0            |
+| `auth0 tenants list`         | List your Auth0 tenants      |
 | `auth0 tenants use <tenant>` | Switch to a different tenant |
 
 ### Applications
 
-| Command | Purpose |
-|---------|---------|
-| `auth0 apps list` | List all applications |
-| `auth0 apps show <id>` | Show application details (get credentials) |
-| `auth0 apps create` | Create a new application |
-| `auth0 apps update <id>` | Update application settings |
-| `auth0 apps delete <id>` | Delete application |
-| `auth0 apps open <id>` | Open application in dashboard |
+| Command                  | Purpose                                    |
+| ------------------------ | ------------------------------------------ |
+| `auth0 apps list`        | List all applications                      |
+| `auth0 apps show <id>`   | Show application details (get credentials) |
+| `auth0 apps create`      | Create a new application                   |
+| `auth0 apps update <id>` | Update application settings                |
+| `auth0 apps delete <id>` | Delete application                         |
+| `auth0 apps open <id>`   | Open application in dashboard              |
 
 ### Users
 
-| Command | Purpose |
-|---------|---------|
-| `auth0 users list` | List users in tenant |
-| `auth0 users show <id>` | Show user details |
-| `auth0 users create` | Create a new user |
-| `auth0 users delete <id>` | Delete user |
-| `auth0 users search` | Search users by query |
-| `auth0 users open <id>` | Open user in dashboard |
+| Command                   | Purpose                |
+| ------------------------- | ---------------------- |
+| `auth0 users list`        | List users in tenant   |
+| `auth0 users show <id>`   | Show user details      |
+| `auth0 users create`      | Create a new user      |
+| `auth0 users delete <id>` | Delete user            |
+| `auth0 users search`      | Search users by query  |
+| `auth0 users open <id>`   | Open user in dashboard |
 
 ### APIs
 
-| Command | Purpose |
-|---------|---------|
-| `auth0 apis list` | List all APIs |
-| `auth0 apis show <id>` | Show API details |
-| `auth0 apis create` | Create a new API |
-| `auth0 apis delete <id>` | Delete API |
-| `auth0 apis open <id>` | Open API in dashboard |
+| Command                  | Purpose               |
+| ------------------------ | --------------------- |
+| `auth0 apis list`        | List all APIs         |
+| `auth0 apis show <id>`   | Show API details      |
+| `auth0 apis create`      | Create a new API      |
+| `auth0 apis delete <id>` | Delete API            |
+| `auth0 apis open <id>`   | Open API in dashboard |
 
-### Testing & Debugging
+### Testing & Debugging Commands
 
-| Command | Purpose |
-|---------|---------|
-| `auth0 test login <client-id>` | Test login flow |
+| Command                        | Purpose                      |
+| ------------------------------ | ---------------------------- |
+| `auth0 test login <client-id>` | Test login flow              |
 | `auth0 test token <client-id>` | Get access token for testing |
-| `auth0 logs tail` | Live tail of Auth0 logs |
-| `auth0 logs list` | List recent log entries |
+| `auth0 logs tail`              | Live tail of Auth0 logs      |
+| `auth0 logs list`              | List recent log entries      |
 
 ### Utility
 
-| Command | Purpose |
-|---------|---------|
-| `auth0 --version` | Show CLI version |
+| Command                  | Purpose                   |
+| ------------------------ | ------------------------- |
+| `auth0 --version`        | Show CLI version          |
 | `auth0 <command> --help` | Show help for any command |
-| `auth0 completion` | Generate shell completion |
+| `auth0 completion`       | Generate shell completion |
 
 ---
 

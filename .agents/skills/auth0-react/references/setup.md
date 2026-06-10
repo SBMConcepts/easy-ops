@@ -246,17 +246,20 @@ npm install @auth0/auth0-react
 ### Step 2: Install Auth0 CLI
 
 **macOS:**
+
 ```bash
 brew install auth0/auth0-cli/auth0
 ```
 
 **Linux (via Homebrew):**
+
 ```bash
 # Requires Homebrew on Linux: https://brew.sh
 brew install auth0/auth0-cli/auth0
 ```
 
 **Windows:**
+
 ```powershell
 scoop install auth0
 # Or: choco install auth0-cli
@@ -278,12 +281,14 @@ auth0 apps show <app-id>
 ### Step 4: Create .env File
 
 **For Vite:**
+
 ```bash
 VITE_AUTH0_DOMAIN=<your-tenant>.auth0.com
 VITE_AUTH0_CLIENT_ID=<your-client-id>
 ```
 
 **For Create React App:**
+
 ```bash
 REACT_APP_AUTH0_DOMAIN=<your-tenant>.auth0.com
 REACT_APP_AUTH0_CLIENT_ID=<your-client-id>
@@ -316,12 +321,14 @@ If you prefer using the Auth0 Dashboard instead of the CLI:
 ### CLI Installation Issues
 
 **macOS - Homebrew not found:**
+
 ```bash
 # Install Homebrew first
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
 **Windows - Scoop not found:**
+
 ```powershell
 # Install Scoop first
 iwr -useb get.scoop.sh | iex
@@ -330,12 +337,14 @@ iwr -useb get.scoop.sh | iex
 ### Login Issues
 
 **Browser doesn't open:**
+
 ```bash
 # Use device code flow
 auth0 login --no-browser
 ```
 
 **"Not logged in" error:**
+
 ```bash
 # Force new login
 auth0 login --force
@@ -344,11 +353,13 @@ auth0 login --force
 ### Environment Variable Issues
 
 **Variables not loading (Vite):**
+
 - Ensure variables start with `VITE_`
 - Restart dev server after creating `.env`
 - Check file is named exactly `.env` (not `.env.local`)
 
 **Variables not loading (CRA):**
+
 - Ensure variables start with `REACT_APP_`
 - Restart dev server after creating `.env`
 - CRA doesn't support `.env` hot reload
@@ -358,6 +369,7 @@ auth0 login --force
 ## Next Steps
 
 After setup is complete:
+
 1. Return to [main skill guide](../SKILL.md) for integration steps
 2. See [Integration Guide](integration.md) for advanced patterns
 3. Check [API Reference](api.md) for complete SDK documentation
