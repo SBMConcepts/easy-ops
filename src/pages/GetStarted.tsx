@@ -1,19 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from '../integrations/supabase/types'
+import { supabasePublic } from '../integrations/supabase/client'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { toast } from 'sonner'
 import { Loader2, Mail, Phone, Building2 } from 'lucide-react'
-
-// Utilizes the public client for anonymous request logging
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string
-const supabasePublic = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 export default function GetStarted() {
   const navigate = useNavigate()

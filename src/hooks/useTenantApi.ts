@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
+import { useAttachAuth0Auth } from '../integrations/supabase/auth-attacher'
 
 export class ApiError extends Error {
   constructor(
@@ -19,7 +19,7 @@ interface ApiFetchOptions extends RequestInit {
 }
 
 export function useTenantApi() {
-  const { getAccessTokenSilently } = useAuth0()
+  const attachAuth0Auth = useAttachAuth0Auth()
   // Fall back to a same-origin relative '/api' so the Vite dev proxy (and a
   // same-origin production deployment) work without VITE_API_URL being set.
   const baseUrl = `${import.meta.env.VITE_API_URL}`
@@ -34,18 +34,11 @@ export function useTenantApi() {
         reqHeaders.set('Accept', '*/*')
       }
 
-      if (requireAuth) {
-        try {
-          const token = await getAccessTokenSilently()
-          reqHeaders.set('Authorization', `Bearer ${token}`)
-        } catch (err) {
-          console.warn('Failed to attach Auth0 token to API request', err)
-        }
-      }
+      const finalHeaders = requireAuth ? await attachAuth0Auth(reqHeaders) : reqHeaders
 
       const response = await fetch(`${baseUrl}/${path.replace(/^\//, '')}`, {
         ...rest,
-        headers: reqHeaders,
+        headers: finalHeaders,
       })
 
       if (response.status === 204) return null as T
@@ -63,7 +56,7 @@ export function useTenantApi() {
 
       return (await response.json()) as T
     },
-    [getAccessTokenSilently, baseUrl]
+    [attachAuth0Auth, baseUrl]
   )
 
   return { apiFetch }

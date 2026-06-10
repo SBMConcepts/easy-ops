@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Router, Request, Response } from 'express'
 import { ManagementClient } from 'auth0'
-import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
 import type { Database } from '../types/supabase.js'
 import { getPool } from '../lib/db.js'
+import { supabaseAdmin } from '../lib/supabase-admin.js'
 
 const router = Router()
 
@@ -17,12 +17,6 @@ const auth0 = new ManagementClient({
   clientId: process.env.AUTH0_MANAGEMENT_CLIENT_ID!,
   clientSecret: process.env.AUTH0_MANAGEMENT_CLIENT_SECRET!,
 })
-
-// Strongly typed Supabase Client
-const supabaseAdmin = createClient<Database>(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 router.post('/api/tenants/create', async (req: Request, res: Response): Promise<any> => {
   const { orgName, adminEmail, plan } = req.body as {

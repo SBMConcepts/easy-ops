@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label'
 import { Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Database } from '../integrations/supabase/types'
+import { useTenantApi } from '../hooks/useTenantApi'
 
 type BillingPlan = Database['public']['Enums']['billing_plan']
 
@@ -34,6 +35,7 @@ const PACKAGES: { id: BillingPlan; name: string; price: string; features: string
 
 export default function Register() {
   const navigate = useNavigate()
+  const { apiFetch } = useTenantApi()
   const [step, setStep] = useState<1 | 2>(1)
   const [form, setForm] = useState({
     companyName: '',
@@ -47,24 +49,17 @@ export default function Register() {
     setSubmitting(true)
 
     try {
-      // Mirror useTenantApi: VITE_API_URL is the server ORIGIN; the '/api'
-      // prefix is appended here. Empty in local dev → same-origin '/api' via the
-      // Vite proxy. Server route is POST /api/tenants/create.
-      const baseUrl = `${import.meta.env.VITE_API_URL ?? ''}/api`
-      const response = await fetch(`${baseUrl}/tenants/create`, {
+      // Public endpoint (no auth yet) — POST /api/tenants/create. apiFetch
+      // appends '/api' to VITE_API_URL and handles error parsing.
+      await apiFetch('tenants/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: '*/*' },
+        requireAuth: false,
         body: JSON.stringify({
           orgName: form.companyName,
           adminEmail: form.adminEmail,
           plan: form.plan,
         }),
       })
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}))
-        throw new Error(errData.message || errData.error || 'Registration failed')
-      }
 
       toast.success('Workspace provisioned! Check your email for the Admin invitation.')
       navigate('/login')

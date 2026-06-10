@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Router, Request, Response } from 'express'
-import { verifyAuth0Token, AppRole } from '../lib/auth.js'
+import { Router, Response } from 'express'
+import { AppRole } from '../lib/auth.js'
 import { withTenantContext } from '../lib/db.js'
-import { hasRequiredRole } from '../lib/rbac.js'
+import { requireAuth0Org, requireRole, type AuthenticatedRequest } from '../lib/auth-middleware.js'
 
 const router = Router()
 
@@ -13,10 +13,10 @@ interface AccessRequestPayload {
 
 router.post(
   '/api/access-requests/approve-and-invite',
-  async (req: Request, res: Response): Promise<any> => {
-    const authCtx = await verifyAuth0Token(req)
-    if (!authCtx || !authCtx.orgId) return res.status(401).json({ error: 'Unauthorized.' })
-    if (!hasRequiredRole(authCtx, 'manager')) return res.status(403).json({ error: 'Forbidden.' })
+  requireAuth0Org,
+  requireRole('manager'),
+  async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+    const authCtx = req.auth!
 
     const { requestId, assignedRole = 'employee' } = req.body as AccessRequestPayload
 

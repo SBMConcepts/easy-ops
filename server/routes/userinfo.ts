@@ -1,10 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Router, Request, Response } from 'express'
+import { Router, Response } from 'express'
 import type { PoolClient } from 'pg'
-import { verifyAuth0Token } from '../lib/auth.js'
 import { withTenantContext } from '../lib/db.js'
+import { requireAuth0Auth, type AuthenticatedRequest } from '../lib/auth-middleware.js'
 
 const router = Router()
+
+// Every endpoint in this router requires a verified Auth0 access token. The
+// middleware is applied per-route (not via router.use) because this router is
+// mounted at '/', where a router-level middleware would intercept every request
+// that flows through the app — including unrelated public routes like /api/health.
 
 // Canonical projection consumed by the frontend (CurrentUserProfile in
 // src/hooks/useCurrentUser.ts and AuthContext). Joins the authenticated user to
@@ -72,78 +77,84 @@ async function diagnoseMiss(
 }
 
 // GET /api/userinfo — return the authenticated user's enriched profile.
-router.get('/userinfo', async (req: Request, res: Response): Promise<any> => {
-  try {
-    const authCtx = await verifyAuth0Token(req)
-    if (!authCtx) return res.status(401).json({ error: 'Unauthorized.' })
+router.get(
+  '/userinfo',
+  requireAuth0Auth,
+  async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+    try {
+      const authCtx = req.auth!
 
-    const profile = await withTenantContext(authCtx, (client) =>
-      loadProfile(client, authCtx.auth0UserId, authCtx.orgId)
-    )
-
-    if (!profile) {
-      const reason = await withTenantContext(authCtx, (client) =>
-        diagnoseMiss(client, authCtx.auth0UserId, authCtx.orgId)
+      const profile = await withTenantContext(authCtx, (client) =>
+        loadProfile(client, authCtx.auth0UserId, authCtx.orgId)
       )
 
-      if (reason === 'no_active_membership') {
+      if (!profile) {
+        const reason = await withTenantContext(authCtx, (client) =>
+          diagnoseMiss(client, authCtx.auth0UserId, authCtx.orgId)
+        )
+
+        if (reason === 'no_active_membership') {
+          return res.status(404).json({
+            error:
+              'Your account has no active membership in this organization. ' +
+              'If you were just invited, finish accepting the invitation, then sign in again.',
+            code: 'no_active_membership',
+          })
+        }
+
         return res.status(404).json({
-          error:
-            'Your account has no active membership in this organization. ' +
-            'If you were just invited, finish accepting the invitation, then sign in again.',
-          code: 'no_active_membership',
+          error: 'Profile not found for this account.',
+          code: 'no_user',
         })
       }
 
-      return res.status(404).json({
-        error: 'Profile not found for this account.',
-        code: 'no_user',
-      })
+      return res.status(200).json(profile)
+    } catch (error: any) {
+      console.error('GET /userinfo failed:', error)
+      return res.status(500).json({ error: 'Failed to load profile.' })
     }
-
-    return res.status(200).json(profile)
-  } catch (error: any) {
-    console.error('GET /userinfo failed:', error)
-    return res.status(500).json({ error: 'Failed to load profile.' })
   }
-})
+)
 
 // PUT /userinfo — update the authenticated user's own editable fields.
-router.put('/userinfo', async (req: Request, res: Response): Promise<any> => {
-  try {
-    const authCtx = await verifyAuth0Token(req)
-    if (!authCtx) return res.status(401).json({ error: 'Unauthorized.' })
+router.put(
+  '/userinfo',
+  requireAuth0Auth,
+  async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+    try {
+      const authCtx = req.auth!
 
-    const { full_name, avatar_url } = req.body as {
-      full_name?: string
-      avatar_url?: string | null
-    }
+      const { full_name, avatar_url } = req.body as {
+        full_name?: string
+        avatar_url?: string | null
+      }
 
-    if (full_name !== undefined && full_name.trim().length === 0) {
-      return res.status(400).json({ error: 'full_name cannot be empty.' })
-    }
+      if (full_name !== undefined && full_name.trim().length === 0) {
+        return res.status(400).json({ error: 'full_name cannot be empty.' })
+      }
 
-    const profile = await withTenantContext(authCtx, async (client) => {
-      await client.query(
-        `UPDATE public.users
+      const profile = await withTenantContext(authCtx, async (client) => {
+        await client.query(
+          `UPDATE public.users
             SET full_name = COALESCE($2, full_name),
                 avatar_url = COALESCE($3, avatar_url),
                 updated_at = now()
           WHERE auth0_user_id = $1`,
-        [authCtx.auth0UserId, full_name?.trim() ?? null, avatar_url ?? null]
-      )
-      return loadProfile(client, authCtx.auth0UserId, authCtx.orgId)
-    })
+          [authCtx.auth0UserId, full_name?.trim() ?? null, avatar_url ?? null]
+        )
+        return loadProfile(client, authCtx.auth0UserId, authCtx.orgId)
+      })
 
-    if (!profile) {
-      return res.status(404).json({ error: 'Profile not found for this account.' })
+      if (!profile) {
+        return res.status(404).json({ error: 'Profile not found for this account.' })
+      }
+
+      return res.status(200).json(profile)
+    } catch (error: any) {
+      console.error('PUT /userinfo failed:', error)
+      return res.status(500).json({ error: 'Failed to update profile.' })
     }
-
-    return res.status(200).json(profile)
-  } catch (error: any) {
-    console.error('PUT /userinfo failed:', error)
-    return res.status(500).json({ error: 'Failed to update profile.' })
   }
-})
+)
 
 export default router

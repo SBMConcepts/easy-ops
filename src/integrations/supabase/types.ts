@@ -1,4 +1,4 @@
-type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -848,6 +848,10 @@ export type Database = {
       has_tenant_role: {
         Args: { _role: Database['public']['Enums']['tenant_role'] }
         Returns: boolean
+      }
+      sync_employee_profile_tenant_on_login: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

@@ -8,6 +8,10 @@ import accessRequestsRouter from './routes/access-requests.js'
 import tenantLookupRouter from './routes/tenant-lookup.js'
 import userinfoRouter from './routes/userinfo.js'
 import authSyncRouter from './routes/auth-sync.js'
+import sitesDepartmentsRouter from './routes/sites-departments.js'
+import { notFoundHandler, errorHandler, installProcessErrorHandlers } from './lib/error-handler.js'
+
+installProcessErrorHandlers()
 
 const app = express()
 const PORT = Number(process.env.API_PORT ?? 3001)
@@ -30,6 +34,7 @@ app.use(authSyncRouter)
 
 // 3. Authenticated User Endpoints (JWT authenticated)
 app.use(userinfoRouter)
+app.use(sitesDepartmentsRouter)
 
 // 4. Privileged Administrative Actions
 app.use(employeesRouter)
@@ -43,6 +48,10 @@ app.get('/api/health', (_req: Request, res: Response) => {
     environment: process.env.NODE_ENV || 'development',
   })
 })
+
+// 404 + centralized error handling (must be registered last).
+app.use(notFoundHandler)
+app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`🚀 EasyOps API Server running on port ${PORT}`)
