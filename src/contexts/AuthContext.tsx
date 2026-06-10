@@ -147,6 +147,7 @@ const ROLE_HIERARCHY: Record<TenantRole, number> = {
   supervisor: 1,
   manager: 2,
   admin: 3,
+  owner: 4,
 }
 
 export const useAuthRole = () => {
