@@ -16,7 +16,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     // Escalate to dashboard automatically if session exists
-    if (!isLoading && isAuthenticated) navigate('/app', { replace: true })
+    if (!isLoading && isAuthenticated) navigate(`${window.location.origin}/app`, { replace: true })
   }, [isAuthenticated, isLoading, navigate])
 
   useEffect(() => {
@@ -49,7 +49,9 @@ const LoginPage = () => {
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <Button
-              onClick={() => login({ auth0OrgId: orgId ?? undefined })}
+              onClick={() =>
+                login({ auth0OrgId: orgId ?? undefined, invitation: invitation ?? undefined })
+              }
               className="w-full h-12 text-md font-semibold"
             >
               <LogIn className="mr-2 h-5 w-5" /> Proceed to Login

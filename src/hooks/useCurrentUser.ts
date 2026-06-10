@@ -81,10 +81,10 @@ export function useCurrentUser() {
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: currentUserKeys.profile(authUser?.id ?? auth0User?.sub),
+    queryKey: currentUserKeys.profile(authUser?.id ?? auth0User?.namespace ?? undefined),
     queryFn: () => apiFetch<CurrentUserProfile>('/userinfo'),
     // Only run when AuthContext has confirmed identity — avoids a 401 flash on mount
-    enabled: isAuthenticated && !!(authUser?.id ?? auth0User?.sub),
+    enabled: isAuthenticated && !!(authUser?.id ?? auth0User?.namespace),
     // 5 minutes: profile data is slow-changing; role/plan changes trigger
     // explicit invalidation via refreshProfile() or refetch()
     staleTime: 1000 * 60 * 5,
