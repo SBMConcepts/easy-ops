@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
-import {} from '../integrations/supabase/auth-attacher'
-import { getAuth0AccessToken } from '@/integrations/auth0/token-store'
+import { useAuth0 } from '@auth0/auth0-react'
 
 export class ApiError extends Error {
   constructor(
@@ -20,15 +19,20 @@ interface ApiFetchOptions extends RequestInit {
 }
 
 export function useTenantApi() {
-  const attachAuth0Auth = useCallback(async (headers: Headers): Promise<Headers> => {
-    try {
-      const token = await getAuth0AccessToken() // throws if no valid token is available
-      headers.set('Authorization', `Bearer ${token}`)
-    } catch (err) {
-      console.warn('No Auth0 token available for API request:', err)
-    }
-    return headers
-  }, [])
+  const { getAccessTokenSilently } = useAuth0()
+
+  const attachAuth0Auth = useCallback(
+    async (headers: Headers): Promise<Headers> => {
+      try {
+        const token = await getAccessTokenSilently() // throws if no valid token is available
+        headers.set('Authorization', `Bearer ${token}`)
+      } catch (err) {
+        console.warn('No Auth0 token available for API request:', err)
+      }
+      return headers
+    },
+    [getAccessTokenSilently]
+  )
 
   // Fall back to a same-origin relative '/api' so the Vite dev proxy (and a
   // same-origin production deployment) work without VITE_API_URL being set.

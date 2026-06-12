@@ -23,7 +23,6 @@ import Settings from './pages/Settings'
 import SitesAndDepartments from './pages/SitesAndDepartments'
 import DashboardRouter from './pages/dashboard/DashboardRouter'
 import { DashboardLoader } from './pages/dashboard/DashboardLoader'
-import { Database } from './integrations/supabase/types'
 
 const queryClient = new QueryClient()
 
@@ -78,12 +77,7 @@ const WorkspaceShell = () => {
           path="employees-management"
           element={
             <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
-              <EmployeeManagement
-                requests={[]}
-                prefillEmailForRequest={function (): string {
-                  throw new Error('Function not implemented.')
-                }}
-              />
+              <EmployeeManagement />
             </ProtectedRoute>
           }
         />

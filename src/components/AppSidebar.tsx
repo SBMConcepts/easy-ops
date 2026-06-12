@@ -29,29 +29,44 @@ const navItems: NavItem[] = [
     title: 'Dashboard',
     url: '/app',
     icon: LayoutDashboard,
-    roles: ['admin', 'manager', 'supervisor', 'employee'],
+    roles: ['admin', 'manager', 'supervisor', 'employee', 'owner'],
   },
   {
     title: 'Check In / Out',
     url: '/app/check-in',
     icon: QrCode,
-    roles: ['employee', 'supervisor', 'manager', 'admin'],
+    roles: ['employee', 'supervisor', 'manager', 'admin', 'owner'],
   },
   {
     title: 'Live Attendance',
     url: '/app/live-attendance',
     icon: BarChart3,
-    roles: ['admin', 'manager', 'supervisor'],
+    roles: ['admin', 'manager', 'supervisor', 'owner'],
   },
-  { title: 'Staff Directory', url: '/app/employees', icon: Users, roles: ['admin', 'manager'] },
+  {
+    title: 'Staff Directory',
+    url: '/app/employees',
+    icon: Users,
+    roles: ['admin', 'manager', 'owner'],
+  },
   {
     title: 'Sites & Depts',
     url: '/app/sites',
     icon: Building,
-    roles: ['admin', 'manager', 'supervisor'],
+    roles: ['admin', 'manager', 'supervisor', 'owner'],
   },
-  { title: 'Compliance', url: '/app/compliance', icon: Shield, roles: ['admin', 'manager'] },
-  { title: 'Settings', url: '/app/settings', icon: Settings, roles: ['admin'] },
+  {
+    title: 'Compliance',
+    url: '/app/compliance',
+    icon: Shield,
+    roles: ['admin', 'manager', 'owner'],
+  },
+  {
+    title: 'Settings',
+    url: '/app/settings',
+    icon: Settings,
+    roles: ['admin', 'owner', 'supervisor', 'employee'],
+  },
 ]
 
 const AppSidebar = () => {

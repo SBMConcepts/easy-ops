@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   )
 
   const logout = useCallback(() => {
-    auth0Logout({ logoutParams: { returnTo: window.location.origin } })
+    auth0Logout({ logoutParams: { returnTo: 'https://easy-ops-za.vercel.app' } })
   }, [auth0Logout])
 
   return (

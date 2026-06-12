@@ -1,12 +1,16 @@
 // Supabase browser client wired for Auth0 third-party auth. The Supabase
 // project must be configured in Dashboard -> Auth -> Third-Party Auth to
-// trust the Auth0 issuer; every request below carries the Auth0 access
+// trust the Auth0 issuer; authenticated requests carry the Auth0 access
 // token, which Supabase verifies and exposes to RLS via auth.jwt().
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './types'
-import { getAuth0AccessToken } from '../auth0/token-store'
 
-export function createSupabaseClient() {
+// Optional token provider. When supplied, the returned client forwards the
+// current Auth0 access token on every request so Postgres RLS evaluates the
+// user's JWT claims. Omit it for anonymous/public access.
+type TokenProvider = () => Promise<string | null>
+
+export function createSupabaseClient(getToken?: TokenProvider) {
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
   const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY
@@ -22,7 +26,7 @@ export function createSupabaseClient() {
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    accessToken: async () => getAuth0AccessToken() ?? '',
+    ...(getToken ? { accessToken: async () => (await getToken()) ?? '' } : {}),
     auth: {
       // Auth0 owns the session; disable Supabase's own session machinery.
       storage: undefined,
@@ -33,13 +37,14 @@ export function createSupabaseClient() {
   })
 }
 
-let _supabase: ReturnType<typeof createSupabaseClient> | undefined
+let _supabasePublic: ReturnType<typeof createSupabaseClient> | undefined
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
+// Anonymous (publishable-key) Supabase client for public, unauthenticated
+// access such as the access-request intake form. Import like:
+// import { supabasePublic } from "@/integrations/supabase/client";
+export const supabasePublic = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
   get(_, prop, receiver) {
-    if (!_supabase) _supabase = createSupabaseClient()
-    return Reflect.get(_supabase, prop, receiver)
+    if (!_supabasePublic) _supabasePublic = createSupabaseClient()
+    return Reflect.get(_supabasePublic, prop, receiver)
   },
 })

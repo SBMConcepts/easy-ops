@@ -1,34 +1,37 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
-import { useTenantApi } from '../hooks/useTenantApi'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
 import { toast } from 'sonner'
-import type { Database } from '../integrations/supabase/types'
+import { useAccessRequestApi, type AccessRequestRow } from '../hooks/useAccessRequestApi'
 
-type AccessRequestRow = Database['public']['Tables']['access_requests']['Row']
-
-export default function EmployeeManagement(props: {
-  requests: AccessRequestRow[]
-  prefillEmailForRequest: (req: AccessRequestRow) => string
-}) {
-  const { requests, prefillEmailForRequest } = props
-  const { apiFetch } = useTenantApi()
+export default function EmployeeManagement() {
+  const { listRequests, approveAndInvite } = useAccessRequestApi()
   const queryClient = useQueryClient()
   const [busyRequestIds, setBusyRequestIds] = useState<Record<string, boolean>>({})
+
+  const {
+    data: requests = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery<AccessRequestRow[]>({
+    queryKey: ['access-requests'],
+    queryFn: listRequests,
+  })
 
   const onApprove = async (req: AccessRequestRow) => {
     if (req.status !== 'pending') return
 
     const ref = req.id
-    const prefillEmail = prefillEmailForRequest(req)
     setBusyRequestIds((prev) => ({ ...prev, [ref]: true }))
 
     try {
       // Calls the Express backend which handles Auth0 user-provisioning and DB syncing
-      await apiFetch('access-requests/approve-and-invite', {
-        method: 'POST',
-        body: JSON.stringify({ requestId: ref, email: prefillEmail, assignedRole: 'employee' }),
+      await approveAndInvite({
+        requestId: ref,
+        email: req.requester_email,
+        assignedRole: 'employee',
       })
       toast.success('Access approved and official invitation dispatched.')
       queryClient.invalidateQueries({ queryKey: ['access-requests'] })
@@ -37,6 +40,18 @@ export default function EmployeeManagement(props: {
     } finally {
       setBusyRequestIds((prev) => ({ ...prev, [ref]: false }))
     }
+  }
+
+  if (isLoading) {
+    return <div className="text-center text-sm text-muted-foreground p-6">Loading requests…</div>
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center text-sm text-destructive p-6">
+        {(error as Error)?.message ?? 'Failed to load access requests.'}
+      </div>
+    )
   }
 
   return (

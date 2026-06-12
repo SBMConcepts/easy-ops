@@ -11,6 +11,11 @@ export type TypedSupabaseClient = SupabaseClient<Database>
 // Canonical anon singleton — valid from first render, never null or undefined
 const anonClient = createSupabaseClient() as TypedSupabaseClient
 
+// Build an authenticated client whose every request forwards a fresh Auth0
+// access token (so Postgres RLS evaluates the signed-in user's claims).
+const createAuthenticatedClient = (getToken: () => Promise<string | null>): TypedSupabaseClient =>
+  createSupabaseClient(getToken) as TypedSupabaseClient
+
 const DatabaseContext = createContext<TypedSupabaseClient>(anonClient)
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -33,9 +38,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const upgradeToAuthenticatedClient = async () => {
       try {
-        const token = await getAccessTokenSilently()
-
-        setAuthenticatedClient(createSupabaseClient() as TypedSupabaseClient)
+        // Probe once so we fail fast (and stay on the anon client) if Auth0
+        // cannot issue a token; the client itself fetches a fresh token per request.
+        await getAccessTokenSilently()
+        setAuthenticatedClient(createAuthenticatedClient(getAccessTokenSilently))
       } catch (err) {
         console.error('Failed to upgrade to authenticated database client:', err)
         // Keep existing client active as a safe fallback

@@ -11,6 +11,43 @@ interface AccessRequestPayload {
   assignedRole?: AppRole
 }
 
+// Lists the calling tenant's pending access requests. Resolves the Auth0 org
+// id to the tenant UUID (target_tenant_id is a UUID FK, never the Auth0 org id)
+// and returns only 'pending' rows so the admin queue stays focused.
+router.get(
+  '/api/access-requests',
+  requireAuth0Org,
+  requireRole('manager'),
+  async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+    const authCtx = req.auth!
+
+    try {
+      const rows = await withTenantContext(authCtx, async (client) => {
+        const tenant = await client.query(`SELECT id FROM public.tenants WHERE auth0_org_id = $1`, [
+          authCtx.orgId,
+        ])
+        const tenantId = tenant.rows[0]?.id
+        if (!tenantId) return []
+
+        const result = await client.query(
+          `SELECT id, requester_name, requester_email, email_domain, message,
+                  status, target_tenant_id, decided_at, decided_by, created_at
+             FROM public.access_requests
+            WHERE target_tenant_id = $1::uuid
+              AND status = 'pending'::public.access_request_status
+            ORDER BY created_at DESC`,
+          [tenantId]
+        )
+        return result.rows
+      })
+
+      return res.status(200).json({ requests: rows })
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message })
+    }
+  }
+)
+
 router.post(
   '/api/access-requests/approve-and-invite',
   requireAuth0Org,
