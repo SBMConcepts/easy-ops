@@ -23,12 +23,17 @@ export function useTenantApi() {
 
   const attachAuth0Auth = useCallback(
     async (headers: Headers): Promise<Headers> => {
+      // Do NOT swallow a token failure and continue: calling a protected
+      // endpoint (e.g. /userinfo) without a Bearer token yields a 401 and an
+      // opaque CORS/preflight-style failure in the browser. Surface it as a
+      // clear, retry-aware ApiError so callers know auth is required first.
+      let token: string
       try {
-        const token = await getAccessTokenSilently() // throws if no valid token is available
-        headers.set('Authorization', `Bearer ${token}`)
-      } catch (err) {
-        console.warn('No Auth0 token available for API request:', err)
+        token = await getAccessTokenSilently() // throws if no valid token is available
+      } catch {
+        throw new ApiError(401, '401 Not authenticated: no valid Auth0 access token available.')
       }
+      headers.set('Authorization', `Bearer ${token}`)
       return headers
     },
     [getAccessTokenSilently]
@@ -36,16 +41,20 @@ export function useTenantApi() {
 
   // Fall back to a same-origin relative '/api' so the Vite dev proxy (and a
   // same-origin production deployment) work without VITE_API_URL being set.
-  const baseUrl = `${import.meta.env.VITE_API_URL}`.replace(/\/?$/, '/api')
+  // A bare template literal would otherwise stringify `undefined` into the URL.
+  const apiBase = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+  const baseUrl = `${apiBase}/api`
 
   const apiFetch = useCallback(
     async <T = unknown>(path: string, options: ApiFetchOptions = {}): Promise<T> => {
       const { requireAuth = true, headers, ...rest } = options
       const reqHeaders = new Headers(headers)
 
-      if (!reqHeaders.has('Content-Type') && !(rest.body instanceof FormData)) {
+      // Only declare a JSON content type when we actually send a body. Setting
+      // Content-Type on a bodyless GET turns it into a non-simple request and
+      // forces an unnecessary CORS preflight (which is what fails for /userinfo).
+      if (rest.body && !(rest.body instanceof FormData) && !reqHeaders.has('Content-Type')) {
         reqHeaders.set('Content-Type', 'application/json')
-        reqHeaders.set('Accept', '*/*')
       }
 
       const finalHeaders = requireAuth ? await attachAuth0Auth(reqHeaders) : reqHeaders
