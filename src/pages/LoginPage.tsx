@@ -16,7 +16,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     // Escalate to dashboard automatically if session exists
-    if (!isLoading && isAuthenticated) navigate(`${window.location.origin}/app`, { replace: true })
+    if (!isLoading && isAuthenticated) navigate('/app', { replace: true })
   }, [isAuthenticated, isLoading, navigate])
 
   useEffect(() => {
