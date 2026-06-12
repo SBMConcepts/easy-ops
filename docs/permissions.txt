@@ -1,0 +1,133 @@
+===============================================================================
+ EasyOps — RBAC Permission Catalog
+===============================================================================
+ Source of truth : public.role_permissions  (DB)
+ Vocabulary      : public.app_permission enum
+ Propagation     : post-login Action injects a permissions[] claim on the ID +
+                   access tokens; `npm run auth0:sync-rbac` mirrors the same
+                   grants into Auth0 native RBAC for dashboard visibility.
+ Enforcement     : backend  -> requirePermission()/requireAnyPermission()
+                   frontend -> usePermissions().hasPermission()
+                   DB        -> public.has_permission(_perm)
+
+ Roles (tenant_role, high -> low): owner > admin > manager > supervisor > employee
+   'owner' is a DB-only superset (every permission). The application uses
+   'admin' as its top operating tier.
+
+ Legend: [x] granted   [ ] not granted   (status: IMPL = wired to a route today,
+   ENUM = in the enum/seed but no dedicated route yet)
+===============================================================================
+
+
+A. CORE PERMISSIONS  (capability : definition)
+-------------------------------------------------------------------------------
+                                                       own adm mgr sup emp  status
+read:tenant            View tenant settings/profile     x   x   x   x   x   IMPL
+write:tenant           Update tenant settings           x   x   x   .   .   ENUM
+admin:tenant           Destructive tenant admin /       x   x   .   .   .   IMPL
+                       delete site (cascades)
+read:own-profile       View own profile                 x   x   x   x   x   IMPL*
+update:own-profile     Edit own profile                 x   x   x   x   x   IMPL*
+read:members           List org members                 x   x   x   x   .   IMPL
+invite:members         Invite/add members               x   x   x   .   .   IMPL
+manage:members         Edit/remove members              x   x   x   .   .   IMPL
+manage:roles           Change a member's role           x   x   .   .   .   IMPL
+read:attendance        View attendance records          x   x   x   x   x   ENUM
+write:attendance       Clock in/out, edit own           x   x   x   x   x   ENUM
+verify:attendance      Approve others' attendance       x   x   x   x   .   ENUM
+read:sites             View sites                       x   x   x   x   x   IMPL
+manage:sites           Create/edit sites                x   x   x   .   .   IMPL
+read:departments       View departments                 x   x   x   x   x   IMPL
+manage:departments     Create/edit/delete departments   x   x   x   .   .   IMPL
+read:shifts            View shift schedules             x   x   x   x   x   ENUM
+manage:shifts          Create/assign shifts             x   x   x   .   .   ENUM
+read:access-requests   View pending access requests     x   x   x   .   .   IMPL
+approve:access-requests Approve request + invite        x   x   x   .   .   IMPL
+read:compliance        View BCEA compliance reports     x   x   x   x   .   IMPL
+read:audit             View audit log                   x   x   x   .   .   ENUM
+read:billing           View billing/subscription        x   x   x   .   .   ENUM
+manage:billing         Manage billing/subscription      x   x   .   .   .   ENUM
+
+  * read/update:own-profile are seeded for gating but the /userinfo routes are
+    intentionally gated by authentication only (self access), to keep the core
+    identity bootstrap independent of the permissions claim.
+
+
+B. SUGGESTED / FUTURE PERMISSIONS  (enum-ready; no dedicated route yet)
+-------------------------------------------------------------------------------
+                                                       own adm mgr sup emp  status
+read:reports           View analytics/reports           x   x   x   .   .   ENUM
+export:reports         Export analytics/reports         x   x   x   .   .   ENUM
+read:tenant-analytics  Org-wide dashboards              x   x   x   x   .   ENUM
+export:audit           Export audit log                 x   x   .   .   .   ENUM
+manage:security        MFA/SSO/security policy          x   x   .   .   .   ENUM
+manage:integrations    Configure integrations           x   x   .   .   .   ENUM
+read:payroll           View payroll                     x   x   .   .   .   ENUM
+manage:payroll         Run/manage payroll               x   x   .   .   .   ENUM
+read:benefits          View benefits                    x   x   x   x   x   ENUM
+manage:benefits        Administer benefits              x   x   .   .   .   ENUM
+
+
+C. ROUTE -> PERMISSION MAP  (Express API; enforcement source)
+-------------------------------------------------------------------------------
+  GET    /api/userinfo                          auth (self)
+  PUT    /api/userinfo                          auth (self)
+  GET    /api/session                           auth (self)
+  GET    /api/tenants                           auth (self; lists own memberships)
+  POST   /api/tenants                           auth (self-serve create)
+  POST   /api/tenants/create                    PUBLIC
+  GET    /api/tenant-lookup                     PUBLIC
+  POST   /api/auth/sync                          shared-secret (x-api-key)
+
+  GET    /api/members                           read:members
+  POST   /api/members                           invite:members
+  PATCH  /api/members/:id                        manage:roles
+  DELETE /api/members/:id                        manage:members
+  POST   /api/employees/invite                   invite:members
+
+  GET    /api/access-requests                    read:access-requests
+  POST   /api/access-requests/approve-and-invite approve:access-requests
+
+  GET    /api/sites                              read:sites
+  POST   /api/sites                              manage:sites
+  PATCH  /api/sites/:id                          manage:sites
+  DELETE /api/sites/:id                          admin:tenant   (cascades)
+  GET    /api/departments                        read:departments
+  POST   /api/departments                        manage:departments
+  PATCH  /api/departments/:id                    manage:departments
+  DELETE /api/departments/:id                    manage:departments
+
+  GET    /api/compliance                         read:compliance
+
+  attendance check-in / check-out (Supabase Edge Functions, Deno) — enforced
+  separately; conceptually write:attendance.
+
+
+D. FRONTEND GATING
+-------------------------------------------------------------------------------
+  AuthContext.usePermissions(): hasPermission / hasAnyPermission / hasAllPermissions
+  ProtectedRoute requiredPermissions={[...]} (any-of) — used by:
+    /app/employees-management  -> read:members
+    /app/compliance            -> read:compliance
+  SitesAndDepartments page:
+    Add/Edit Site        -> manage:sites
+    Delete Site          -> admin:tenant
+    Add/Edit/Delete Dept -> manage:departments
+
+
+E. AUTH0 SETUP CHECKLIST
+-------------------------------------------------------------------------------
+  1. Custom API (Applications -> APIs), identifier = AUTH0_AUDIENCE
+     (https://api.easyops.co.za). Enable RBAC + "Add Permissions in the Access
+     Token".
+  2. Run `npm run auth0:sync-rbac` to push enum -> API scopes and
+     role_permissions -> Auth0 roles/grants.
+  3. Post-login Action secrets: BACKEND_URL (https://api.easyops.co.za),
+     AUTH0_SYNC_SECRET (== server AUTH0_SYNC_SECRET).
+  4. Claim namespace must match across Action, frontend (VITE_AUTH0_CLAIM_NS)
+     and server (AUTH0_CLAIM_NS): https://easy-ops-za.vercel.app/
+
+  NOTE: Permissions are a global capability layer. Tenant data isolation remains
+  enforced by org_id + Postgres RLS — never rely on a permission alone for the
+  tenant boundary.
+===============================================================================

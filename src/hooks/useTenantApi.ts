@@ -43,7 +43,7 @@ export function useTenantApi() {
   // same-origin production deployment) work without VITE_API_URL being set.
   // A bare template literal would otherwise stringify `undefined` into the URL.
   const apiBase = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
-  const baseUrl = `${apiBase}/api`
+  const baseUrl = `${apiBase}/`
 
   const apiFetch = useCallback(
     async <T = unknown>(path: string, options: ApiFetchOptions = {}): Promise<T> => {

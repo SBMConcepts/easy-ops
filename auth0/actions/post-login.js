@@ -6,7 +6,11 @@
  *  1. Attach custom claims (role, org_id) to both the ID token and access token
  *     so the frontend AuthContext and the Express verifyAuth0Token() can read them.
  *  2. Call POST /api/auth/sync on every login to keep the Supabase public.users
- *     row up to date (email, avatar, name).
+ *     row up to date (email, avatar, name) AND to fetch the role's permissions
+ *     from the role_permissions source of truth.
+ *  3. Inject the DB-derived permissions array as a namespaced claim on both
+ *     tokens so the frontend (hasPermission) and backend (requirePermission)
+ *     gate on identical, login-fresh data.
  *
  * Required Secrets (set in Auth0 Dashboard → Actions → Secrets):
  *   BACKEND_URL        — Your Express server: https://api.easyops.co.za
@@ -31,7 +35,9 @@ exports.onExecutePostLogin = async (event, api) => {
   api.idToken.setCustomClaim(CLAIM_NS + 'role', role)
   api.accessToken.setCustomClaim(CLAIM_NS + 'role', role)
 
-  // 3. Sync user row to Supabase (fire-and-forget — never blocks login)
+  // 3. Sync user row to Supabase and fetch the role's permissions.
+  //    The sync endpoint returns the permissions granted to `role` in the
+  //    role_permissions table; we inject them as a claim below.
   const backendUrl = event.secrets && event.secrets.BACKEND_URL
   const syncSecret = event.secrets && event.secrets.AUTH0_SYNC_SECRET
 
@@ -53,6 +59,7 @@ exports.onExecutePostLogin = async (event, api) => {
         name: event.user.name || event.user.email,
         avatarUrl: event.user.picture || null,
         emailVerified: event.user.email_verified || false,
+        role: role,
       }),
     })
     if (!res.ok) {
@@ -60,7 +67,16 @@ exports.onExecutePostLogin = async (event, api) => {
         return ''
       })
       console.error('[post-login] Sync failed: ' + res.status + ' ' + text)
+      return
     }
+
+    // 4. Inject the DB-derived permissions claim on both tokens.
+    const data = await res.json().catch(function () {
+      return null
+    })
+    const permissions = data && Array.isArray(data.permissions) ? data.permissions : []
+    api.idToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
+    api.accessToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
   } catch (err) {
     console.error('[post-login] Sync fetch error:', err && err.message ? err.message : err)
   }

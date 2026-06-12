@@ -9,6 +9,7 @@
     "dev:full": "concurrently \"npm run dev\" \"npm run server:dev\"",
     "build": "tsc -b && vite build",
     "build:server": "tsc --project server/tsconfig.json",
+    "auth0:sync-rbac": "tsx server/scripts/sync-auth0-rbac.ts",
     "preview": "vite preview"
   },
   "dependencies": {

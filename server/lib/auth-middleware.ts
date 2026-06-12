@@ -74,3 +74,35 @@ export function requirePermission(permission: string) {
     next()
   }
 }
+
+// Middleware factory passing when the caller holds AT LEAST ONE of the listed
+// permissions. Use for endpoints reachable by several distinct capabilities.
+export function requireAnyPermission(...permissions: string[]) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.auth) {
+      res.status(401).json({ error: 'Unauthorized.' })
+      return
+    }
+    if (!permissions.some((p) => req.auth!.permissions.includes(p))) {
+      res.status(403).json({ error: `Forbidden: requires one of ${permissions.join(', ')}` })
+      return
+    }
+    next()
+  }
+}
+
+// Middleware factory requiring the caller to hold EVERY listed permission.
+export function requireAllPermissions(...permissions: string[]) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.auth) {
+      res.status(401).json({ error: 'Unauthorized.' })
+      return
+    }
+    const missing = permissions.filter((p) => !req.auth!.permissions.includes(p))
+    if (missing.length > 0) {
+      res.status(403).json({ error: `Forbidden: missing permission(s) ${missing.join(', ')}` })
+      return
+    }
+    next()
+  }
+}

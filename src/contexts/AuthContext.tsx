@@ -7,12 +7,37 @@ import type { CurrentUserProfile } from '../hooks/useCurrentUser'
 import { AUTH0_CLAIM_NS } from '../lib/auth0-config'
 
 export type TenantRole = Database['public']['Enums']['tenant_role']
+// Bridges the generated enum (regenerated from the DB) with the new permissions
+// added in migration 20260613000001 until `supabase gen types` is re-run. Keep
+// in sync with public.app_permission / docs/permissions.txt.
+export type AppPermission =
+  | Database['public']['Enums']['app_permission']
+  | 'read:own-profile'
+  | 'update:own-profile'
+  | 'read:sites'
+  | 'read:departments'
+  | 'read:shifts'
+  | 'read:access-requests'
+  | 'approve:access-requests'
+  | 'read:compliance'
+  | 'read:reports'
+  | 'export:reports'
+  | 'read:tenant-analytics'
+  | 'read:billing'
+  | 'export:audit'
+  | 'manage:security'
+  | 'manage:integrations'
+  | 'read:payroll'
+  | 'manage:payroll'
+  | 'read:benefits'
+  | 'manage:benefits'
 export type AuthTenant = Database['public']['Tables']['tenants']['Row']
 export type AuthUser = Database['public']['Tables']['users']['Row'] & { role: TenantRole }
 
 interface AuthContextType {
   user: AuthUser
   tenant: AuthTenant
+  permissions: AppPermission[]
   isAuthenticated: boolean
   isLoading: boolean
   login: (options?: { auth0OrgId?: string; invitation?: string }) => Promise<void>
@@ -22,6 +47,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: { id: '', auth0_user_id: '', full_name: '', email: '', role: 'admin' } as AuthUser,
   tenant: {} as AuthTenant,
+  permissions: [],
   isAuthenticated: false,
   isLoading: true,
   login: async () => {},
@@ -42,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [user, setUser] = useState<AuthUser | null>(null)
   const [tenant, setTenant] = useState<AuthTenant | null>(null)
+  const [permissions, setPermissions] = useState<AppPermission[]>([])
   const [isProfileLoading, setIsProfileLoading] = useState(true)
 
   useEffect(() => {
@@ -51,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!isAuthenticated || !auth0User?.sub) {
         setUser(null)
         setTenant(null)
+        setPermissions([])
         setIsProfileLoading(false)
         return
       }
@@ -58,9 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsProfileLoading(true)
 
       try {
-        // Role is sourced from the Auth0 JWT custom claim (authoritative for guards).
+        // Role + permissions are sourced from the Auth0 JWT custom claims
+        // (authoritative for guards). Permissions are injected by the post-login
+        // Action from the DB role_permissions source of truth.
         const claims = await getIdTokenClaims()
         const role = claims?.[`${AUTH0_CLAIM_NS}role`] as TenantRole
+        const claimPermissions = claims?.[`${AUTH0_CLAIM_NS}permissions`]
+        setPermissions(Array.isArray(claimPermissions) ? (claimPermissions as AppPermission[]) : [])
 
         // Enriched user + tenant come from the Express backend, which reads
         // Supabase with the verified token. This is the single source of truth
@@ -96,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Failed to load profile context:', err)
         setUser(null)
         setTenant(null)
+        setPermissions([])
       } finally {
         setIsProfileLoading(false)
       }
@@ -128,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           user ||
           ({ id: '', auth0_user_id: '', full_name: '', email: '', role: 'employee' } as AuthUser),
         tenant: tenant || ({} as AuthTenant),
+        permissions,
         isAuthenticated,
         isLoading: auth0Loading || isProfileLoading,
         login,
@@ -164,4 +198,19 @@ export const useAuthRole = () => {
     isManager: hasMinRole('manager'),
     isSupervisor: hasMinRole('supervisor'),
   }
+}
+
+// Permission Helpers — capability gating backed by the JWT permissions claim
+// (DB role_permissions is the source of truth). Prefer these over role checks
+// for gating specific actions; reserve role checks for tier/redirect logic.
+export const usePermissions = () => {
+  const { permissions } = useAuth()
+
+  const hasPermission = (permission: AppPermission) => permissions.includes(permission)
+  const hasAnyPermission = (...required: AppPermission[]) =>
+    required.some((p) => permissions.includes(p))
+  const hasAllPermissions = (...required: AppPermission[]) =>
+    required.every((p) => permissions.includes(p))
+
+  return { permissions, hasPermission, hasAnyPermission, hasAllPermissions }
 }

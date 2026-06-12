@@ -168,3 +168,94 @@ export async function resolveRoleIdByName(name: string): Promise<string | undefi
   }
   return _rolesByName.get(name.toLowerCase())
 }
+
+// ---- Resource-server (API) permissions / scopes ----
+// Used by the RBAC sync script to mirror the DB app_permission enum into the
+// custom API's scopes, and role_permissions into Auth0 native role grants.
+
+export interface Auth0Scope {
+  value: string
+  description: string
+}
+
+export interface Auth0ResourceServer {
+  id: string
+  identifier: string
+  name?: string
+  scopes?: Auth0Scope[]
+}
+
+// Looks up a resource server (API) by its audience identifier.
+export async function getResourceServerByIdentifier(
+  identifier: string
+): Promise<Auth0ResourceServer | undefined> {
+  const all = await mgmtRequest<Auth0ResourceServer[]>('/resource-servers')
+  return all.find((rs) => rs.identifier === identifier)
+}
+
+// Replaces the API's scope list. Auth0 has no incremental scope endpoint, so the
+// caller passes the full desired set (existing ∪ new) to avoid dropping scopes.
+export function updateResourceServerScopes(resourceServerId: string, scopes: Auth0Scope[]) {
+  return mgmtRequest<Auth0ResourceServer>(`/resource-servers/${resourceServerId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ scopes }),
+  })
+}
+
+// Creates an Auth0 role (idempotent at the call site via resolveRoleIdByName).
+export function createRole(name: string, description?: string) {
+  return mgmtRequest<Auth0Role>('/roles', {
+    method: 'POST',
+    body: JSON.stringify({ name, description: description ?? name }),
+  })
+}
+
+// Lists the permissions currently granted to an Auth0 role.
+export interface Auth0RolePermission {
+  permission_name: string
+  resource_server_identifier: string
+}
+export function getRolePermissions(roleId: string) {
+  return mgmtRequest<Auth0RolePermission[]>(`/roles/${roleId}/permissions`)
+}
+
+// Grants permissions (by API identifier + permission name) to an Auth0 role.
+export function addRolePermissions(
+  roleId: string,
+  resourceServerIdentifier: string,
+  permissionNames: string[]
+) {
+  if (permissionNames.length === 0) return Promise.resolve()
+  return mgmtRequest<void>(`/roles/${roleId}/permissions`, {
+    method: 'POST',
+    body: JSON.stringify({
+      permissions: permissionNames.map((name) => ({
+        permission_name: name,
+        resource_server_identifier: resourceServerIdentifier,
+      })),
+    }),
+  })
+}
+
+// Revokes permissions from an Auth0 role.
+export function removeRolePermissions(
+  roleId: string,
+  resourceServerIdentifier: string,
+  permissionNames: string[]
+) {
+  if (permissionNames.length === 0) return Promise.resolve()
+  return mgmtRequest<void>(`/roles/${roleId}/permissions`, {
+    method: 'DELETE',
+    body: JSON.stringify({
+      permissions: permissionNames.map((name) => ({
+        permission_name: name,
+        resource_server_identifier: resourceServerIdentifier,
+      })),
+    }),
+  })
+}
+
+// Invalidates the per-process role-name cache after roles are created/changed.
+export function clearRoleCache(): void {
+  _rolesByName = null
+}

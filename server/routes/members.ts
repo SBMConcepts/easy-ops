@@ -146,7 +146,7 @@ router.post(
 router.patch(
   '/api/members/:id',
   requireAuth0Auth,
-  requirePermission('manage:members'),
+  requirePermission('manage:roles'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const authCtx = req.auth!

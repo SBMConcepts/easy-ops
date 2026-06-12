@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react'
 import { useTenantApi } from '../hooks/useTenantApi'
-import { useAuthRole } from '../contexts/AuthContext'
+import { usePermissions } from '../contexts/AuthContext'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Database } from '../integrations/supabase/types'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -33,8 +33,15 @@ type DepartmentRow = Database['public']['Tables']['departments']['Row']
 
 export default function SitesAndDepartments() {
   const { apiFetch } = useTenantApi()
-  const { isManager } = useAuthRole()
+  const { hasPermission } = usePermissions()
   const queryClient = useQueryClient()
+
+  // Capability gates (DB role_permissions → JWT claim). Site deletes cascade, so
+  // they require admin:tenant rather than manage:sites.
+  const canManageSites = hasPermission('manage:sites')
+  const canDeleteSites = hasPermission('admin:tenant')
+  const canManageDepartments = hasPermission('manage:departments')
+  const canManageAny = canManageSites || canManageDepartments
 
   const [activeTab, setActiveTab] = useState<'sites' | 'departments'>('sites')
   const [siteSearch, setSiteSearch] = useState('')
@@ -197,7 +204,7 @@ export default function SitesAndDepartments() {
           Sites &amp; Departments
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {isManager
+          {canManageAny
             ? 'Manage operational locations and the departments assigned to them'
             : 'View the operational locations and departments in your organisation'}
         </p>
@@ -229,7 +236,7 @@ export default function SitesAndDepartments() {
                       className="pl-8 w-48"
                     />
                   </div>
-                  {isManager && (
+                  {canManageSites && (
                     <Button size="sm" onClick={openCreateSite}>
                       <Plus className="mr-1.5 h-4 w-4" /> Add Site
                     </Button>
@@ -260,27 +267,27 @@ export default function SitesAndDepartments() {
                       <Badge variant="outline" className="font-mono text-xs">
                         {site.geofence_radius_m}m geofence
                       </Badge>
-                      {isManager && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => openEditSite(site)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() =>
-                              setDeleteTarget({ kind: 'site', id: site.id, name: site.name })
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
+                      {canManageSites && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openEditSite(site)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {canDeleteSites && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() =>
+                            setDeleteTarget({ kind: 'site', id: site.id, name: site.name })
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -306,7 +313,7 @@ export default function SitesAndDepartments() {
                       className="pl-8 w-48"
                     />
                   </div>
-                  {isManager && (
+                  {canManageDepartments && (
                     <Button size="sm" onClick={openCreateDept}>
                       <Plus className="mr-1.5 h-4 w-4" /> Add Department
                     </Button>
@@ -338,7 +345,7 @@ export default function SitesAndDepartments() {
                           : 'Unassigned'}
                       </p>
                     </div>
-                    {isManager && (
+                    {canManageDepartments && (
                       <div className="flex items-center gap-3">
                         <Button
                           variant="ghost"

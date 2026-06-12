@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Router, Response } from 'express'
 import { withTenantContext } from '../lib/db.js'
-import { requireAuth0Auth, type AuthenticatedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth0Auth,
+  requirePermission,
+  type AuthenticatedRequest,
+} from '../lib/auth-middleware.js'
 
 const router = Router()
 
@@ -17,6 +21,7 @@ const LOOKBACK_WEEKS = 12
 router.get(
   '/api/compliance',
   requireAuth0Auth,
+  requirePermission('read:compliance'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const authCtx = req.auth!

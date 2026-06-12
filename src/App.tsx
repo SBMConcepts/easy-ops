@@ -76,7 +76,7 @@ const WorkspaceShell = () => {
         <Route
           path="employees-management"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor']}>
+            <ProtectedRoute requiredPermissions={['read:members']}>
               <EmployeeManagement />
             </ProtectedRoute>
           }
@@ -92,7 +92,7 @@ const WorkspaceShell = () => {
         <Route
           path="compliance"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
+            <ProtectedRoute requiredPermissions={['read:compliance']}>
               <Compliance />
             </ProtectedRoute>
           }

@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Router, Response } from 'express'
 import { withTenantContext } from '../lib/db.js'
-import { hasRequiredRole } from '../lib/rbac.js'
-import { requireAuth0Auth, type AuthenticatedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth0Auth,
+  requirePermission,
+  type AuthenticatedRequest,
+} from '../lib/auth-middleware.js'
 
 const router = Router()
 
@@ -12,13 +15,15 @@ const router = Router()
 // middleware is applied per-route (not via router.use) because this router is
 // mounted at '/', where a router-level middleware would intercept every request.
 //
-// Reads (GET) are available to every authenticated role; writes
-// (POST/PATCH/DELETE) require manager+ (manager or admin) via hasRequiredRole.
+// Capability gating: reads require the matching read:* permission (granted to
+// every role), structural writes require manage:sites / manage:departments
+// (manager+), and destructive site deletes require admin:tenant (admin/owner).
 
 // GET /api/sites — list the authenticated tenant's sites.
 router.get(
   '/api/sites',
   requireAuth0Auth,
+  requirePermission('read:sites'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const authCtx = req.auth!
@@ -38,6 +43,7 @@ router.get(
 router.get(
   '/api/departments',
   requireAuth0Auth,
+  requirePermission('read:departments'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const authCtx = req.auth!
@@ -53,23 +59,17 @@ router.get(
   }
 )
 
-// ── Write guard ──────────────────────────────────────────────────────────────
-// Sites/departments are operational structure: only manager+ (manager or admin)
-// may create, update, or delete. Returns true after sending a 403 if blocked.
-function denyIfNotManager(req: AuthenticatedRequest, res: Response): boolean {
-  if (!hasRequiredRole(req.auth!, 'manager')) {
-    res.status(403).json({ error: 'You do not have permission to modify sites or departments.' })
-    return true
-  }
-  return false
-}
+// ── Write gating ─────────────────────────────────────────────────────────────
+// Sites/departments are operational structure: create/update require
+// manage:sites / manage:departments (manager+). Destructive site deletes
+// cascade, so they require admin:tenant (admin/owner) only.
 
-// POST /api/sites — create a site (manager+).
+// POST /api/sites — create a site (manage:sites).
 router.post(
   '/api/sites',
   requireAuth0Auth,
+  requirePermission('manage:sites'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
-    if (denyIfNotManager(req, res)) return
     try {
       const { name, address, latitude, longitude, geofence_radius_m } = req.body as {
         name?: string
@@ -109,12 +109,12 @@ router.post(
   }
 )
 
-// PATCH /api/sites/:id — update a site (manager+).
+// PATCH /api/sites/:id — update a site (manage:sites).
 router.patch(
   '/api/sites/:id',
   requireAuth0Auth,
+  requirePermission('manage:sites'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
-    if (denyIfNotManager(req, res)) return
     try {
       const { id } = req.params
       const { name, address, latitude, longitude, geofence_radius_m } = req.body as {
@@ -155,12 +155,12 @@ router.patch(
   }
 )
 
-// DELETE /api/sites/:id — delete a site (manager+).
+// DELETE /api/sites/:id — delete a site (admin:tenant; deletes cascade).
 router.delete(
   '/api/sites/:id',
   requireAuth0Auth,
+  requirePermission('admin:tenant'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
-    if (denyIfNotManager(req, res)) return
     try {
       const { id } = req.params
       const deleted = await withTenantContext(req.auth!, async (client) => {
@@ -178,12 +178,12 @@ router.delete(
   }
 )
 
-// POST /api/departments — create a department (manager+).
+// POST /api/departments — create a department (manage:departments).
 router.post(
   '/api/departments',
   requireAuth0Auth,
+  requirePermission('manage:departments'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
-    if (denyIfNotManager(req, res)) return
     try {
       const { name, site_id } = req.body as { name?: string; site_id?: string | null }
       if (!name || name.trim().length === 0) {
@@ -208,12 +208,12 @@ router.post(
   }
 )
 
-// PATCH /api/departments/:id — update a department (manager+).
+// PATCH /api/departments/:id — update a department (manage:departments).
 router.patch(
   '/api/departments/:id',
   requireAuth0Auth,
+  requirePermission('manage:departments'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
-    if (denyIfNotManager(req, res)) return
     try {
       const { id } = req.params
       const { name, site_id } = req.body as { name?: string; site_id?: string | null }
@@ -238,12 +238,12 @@ router.patch(
   }
 )
 
-// DELETE /api/departments/:id — delete a department (manager+).
+// DELETE /api/departments/:id — delete a department (manage:departments).
 router.delete(
   '/api/departments/:id',
   requireAuth0Auth,
+  requirePermission('manage:departments'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
-    if (denyIfNotManager(req, res)) return
     try {
       const { id } = req.params
       const deleted = await withTenantContext(req.auth!, async (client) => {

@@ -2,7 +2,11 @@
 import { Router, Response } from 'express'
 import { AppRole } from '../lib/auth.js'
 import { withTenantContext } from '../lib/db.js'
-import { requireAuth0Org, requireRole, type AuthenticatedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth0Org,
+  requirePermission,
+  type AuthenticatedRequest,
+} from '../lib/auth-middleware.js'
 
 const router = Router()
 
@@ -17,7 +21,7 @@ interface AccessRequestPayload {
 router.get(
   '/api/access-requests',
   requireAuth0Org,
-  requireRole('manager'),
+  requirePermission('read:access-requests'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     const authCtx = req.auth!
 
@@ -51,7 +55,7 @@ router.get(
 router.post(
   '/api/access-requests/approve-and-invite',
   requireAuth0Org,
-  requireRole('manager'),
+  requirePermission('approve:access-requests'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     const authCtx = req.auth!
 

@@ -10,7 +10,11 @@ interface AuthSyncPayload {
   name?: string
   avatarUrl?: string | null
   emailVerified?: boolean
+  role?: string
 }
+
+// public.tenant_role enum — guards the role lookup against arbitrary input.
+const TENANT_ROLES = ['owner', 'admin', 'manager', 'supervisor', 'employee']
 
 // POST /api/auth/sync
 //
@@ -34,7 +38,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
     return res.status(401).json({ error: 'Unauthorized.' })
   }
 
-  const { auth0UserId, email, name, avatarUrl } = req.body as AuthSyncPayload
+  const { auth0UserId, email, name, avatarUrl, role } = req.body as AuthSyncPayload
 
   if (!auth0UserId || !email) {
     return res.status(400).json({ error: 'auth0UserId and email are required.' })
@@ -71,7 +75,21 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
       [userId]
     )
 
-    return res.status(200).json({ success: true, user: result.rows[0] })
+    // Resolve the permissions for the caller's role from the source-of-truth
+    // table so the post-login Action can inject them as a token claim. Returns
+    // an empty list for unknown/absent roles rather than erroring.
+    let permissions: string[] = []
+    if (role && TENANT_ROLES.includes(role)) {
+      const permsResult = await pool.query(
+        `SELECT permission FROM public.role_permissions
+          WHERE role = $1::public.tenant_role
+          ORDER BY permission`,
+        [role]
+      )
+      permissions = permsResult.rows.map((r) => r.permission as string)
+    }
+
+    return res.status(200).json({ success: true, user: result.rows[0], permissions })
   } catch (error: any) {
     console.error('POST /api/auth/sync failed:', error)
     return res.status(500).json({ error: 'Failed to sync user.' })

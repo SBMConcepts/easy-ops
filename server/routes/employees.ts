@@ -2,7 +2,11 @@
 import { Router, Response } from 'express'
 import { AppRole } from '../lib/auth.js'
 import { withTenantContext } from '../lib/db.js'
-import { requireAuth0Org, requireRole, type AuthenticatedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth0Org,
+  requirePermission,
+  type AuthenticatedRequest,
+} from '../lib/auth-middleware.js'
 import { ManagementClient } from 'auth0'
 
 const router = Router()
@@ -24,7 +28,7 @@ interface InviteStaffPayload {
 router.post(
   '/api/employees/invite',
   requireAuth0Org,
-  requireRole('manager'),
+  requirePermission('invite:members'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const authCtx = req.auth!
