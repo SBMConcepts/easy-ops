@@ -12,7 +12,8 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-const VALID_ROLES = ['admin', 'manager', 'supervisor', 'employee']
+const VALID_ROLES = ['admin', 'manager', 'supervisor', 'employee', 'owner'] as const
+type ValidRole = (typeof VALID_ROLES)[number]
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -204,7 +205,7 @@ Deno.serve(async (req: Request) => {
 
     // ── Update role if provided ──────────────────────────────────────────
     if (newRole !== undefined) {
-      if (!VALID_ROLES.includes(newRole)) {
+      if (!VALID_ROLES.includes(newRole as ValidRole)) {
         return jsonResponse(
           {
             error: `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}`,

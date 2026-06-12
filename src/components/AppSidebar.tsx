@@ -65,7 +65,7 @@ const navItems: NavItem[] = [
     title: 'Settings',
     url: '/app/settings',
     icon: Settings,
-    roles: ['admin', 'owner', 'supervisor', 'employee'],
+    roles: ['admin', 'owner', 'supervisor', 'employee', 'manager'],
   },
 ]
 
