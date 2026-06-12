@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { useAttendanceRecords, attendanceKeys } from '../hooks/useTenantData'
+import { useAttendanceRecords, attendanceKeys, useSites } from '../hooks/useTenantData'
 import { useDB } from '../contexts/DatabaseContext'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'sonner'
@@ -18,6 +18,7 @@ const CheckIn = () => {
   const queryClient = useQueryClient()
 
   const { data: attendanceHistory, isLoading } = useAttendanceRecords()
+  const { data: sites = [] } = useSites()
   const [selectedMethod, setSelectedMethod] = useState<'qr' | 'biometric' | 'manual'>('qr')
 
   // Direct Supabase Mutations replacing the old Express API calls
@@ -63,8 +64,15 @@ const CheckIn = () => {
 
   const handleClockIn = async () => {
     try {
-      const defaultSiteId = '00000000-0000-0000-0000-000000000000'
-      await checkIn.mutateAsync({ method: selectedMethod, site_id: defaultSiteId })
+      // attendance_records.site_id is a NOT-validated FK to public.sites, so a
+      // real site id is required. Prefer the employee's assigned site; fall back
+      // to the tenant's first available site.
+      const siteId = currentUser?.assigned_site_id ?? sites[0]?.id
+      if (!siteId) {
+        toast.error('No site is assigned to your profile. Contact your administrator.')
+        return
+      }
+      await checkIn.mutateAsync({ method: selectedMethod, site_id: siteId })
       toast.success(`Clock-in record captured via ${selectedMethod.toUpperCase()}`)
     } catch (err: any) {
       toast.error(err.message || 'Check-in processing failure')

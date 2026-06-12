@@ -31,7 +31,7 @@ export default function EmployeeManagement() {
       await approveAndInvite({
         requestId: ref,
         email: req.requester_email,
-        assignedRole: 'employee',
+        assignedRole: 'employee', // For now, hardcode the default role for new users; could make this selectable in the UI later
       })
       toast.success('Access approved and official invitation dispatched.')
       queryClient.invalidateQueries({ queryKey: ['access-requests'] })

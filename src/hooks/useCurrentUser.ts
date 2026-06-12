@@ -62,6 +62,12 @@ export interface CurrentUserProfile {
   billing_status: BillingStatus | null
   seat_cap: number | null
   current_period_end: string | null
+
+  // ── from public.employee_profiles (LEFT JOIN; null if no profile row) ───────
+  assigned_site_id: string | null
+  phone: string | null
+  address: string | null
+  job_title: string | null
 }
 
 // ── Query key factory ────────────────────────────────────────────────────────
@@ -81,10 +87,10 @@ export function useCurrentUser() {
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: currentUserKeys.profile(authUser?.id ?? auth0User?.namespace ?? undefined),
+    queryKey: currentUserKeys.profile(authUser?.id ?? auth0User?.sub ?? undefined),
     queryFn: () => apiFetch<CurrentUserProfile>('/userinfo'),
     // Only run when AuthContext has confirmed identity — avoids a 401 flash on mount
-    enabled: isAuthenticated && !!(authUser?.id ?? auth0User?.namespace),
+    enabled: isAuthenticated && !!(authUser?.id ?? auth0User?.sub),
     // 5 minutes: profile data is slow-changing; role/plan changes trigger
     // explicit invalidation via refreshProfile() or refetch()
     staleTime: 1000 * 60 * 5,

@@ -1,13 +1,11 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-//import { useComplianceCheck } from '../hooks/useTenantData'
+import { useComplianceCheck } from '../hooks/useTenantData'
 import { Shield, FileCheck, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
 
 const Compliance: React.FC = () => {
-  // const { data, isLoading } = useComplianceCheck()
-  const data = null
-  const isLoading = false
+  const { data, isLoading } = useComplianceCheck()
 
   if (isLoading) {
     return (
@@ -103,11 +101,12 @@ const Compliance: React.FC = () => {
                   <div className="flex gap-3 items-start">
                     <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-semibold text-foreground tracking-tight"></p>
+                      <p className="text-sm font-semibold text-foreground tracking-tight">
+                        {v.reasons.join(' · ')}
+                      </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        <span className="font-medium text-foreground/80">
-                          Employee Reference:
-                        </span>{' '}
+                        <span className="font-medium text-foreground/80">Employee Reference:</span>{' '}
+                        {v.employee_id?.slice(0, 8)} · Week of {v.week_start}
                       </p>
                     </div>
                   </div>

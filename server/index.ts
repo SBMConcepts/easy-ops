@@ -9,6 +9,7 @@ import tenantLookupRouter from './routes/tenant-lookup.js'
 import userinfoRouter from './routes/userinfo.js'
 import authSyncRouter from './routes/auth-sync.js'
 import sitesDepartmentsRouter from './routes/sites-departments.js'
+import complianceRouter from './routes/compliance.js'
 import sessionRouter from './routes/session.js'
 import membersRouter from './routes/members.js'
 import tenantsRouter from './routes/tenants.js'
@@ -38,6 +39,7 @@ app.use(authSyncRouter)
 // 3. Authenticated User Endpoints (JWT authenticated)
 app.use(userinfoRouter)
 app.use(sitesDepartmentsRouter)
+app.use(complianceRouter)
 app.use(sessionRouter)
 app.use(tenantsRouter)
 

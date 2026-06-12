@@ -35,7 +35,11 @@ const PROFILE_SELECT = `
     p.plan                AS plan,
     p.billing_status      AS billing_status,
     p.seat_cap            AS seat_cap,
-    p.current_period_end  AS current_period_end
+    p.current_period_end  AS current_period_end,
+    ep.site_id            AS assigned_site_id,
+    ep.phone              AS phone,
+    ep.address            AS address,
+    ep.job_title          AS job_title
   FROM public.users u
   JOIN public.memberships m
     ON m.user_id = u.id
@@ -44,6 +48,8 @@ const PROFILE_SELECT = `
     ON t.id = m.tenant_id
   LEFT JOIN public.tenant_active_plan p
     ON p.tenant_id = t.id
+  LEFT JOIN public.employee_profiles ep
+    ON ep.membership_id = m.id
   WHERE u.auth0_user_id = $1
     AND ($2 = '' OR t.auth0_org_id = $2)
   ORDER BY m.joined_at ASC
@@ -124,9 +130,12 @@ router.put(
     try {
       const authCtx = req.auth!
 
-      const { full_name, avatar_url } = req.body as {
+      const { full_name, avatar_url, phone, address, job_title } = req.body as {
         full_name?: string
         avatar_url?: string | null
+        phone?: string | null
+        address?: string | null
+        job_title?: string | null
       }
 
       if (full_name !== undefined && full_name.trim().length === 0) {
@@ -142,6 +151,27 @@ router.put(
           WHERE auth0_user_id = $1`,
           [authCtx.auth0UserId, full_name?.trim() ?? null, avatar_url ?? null]
         )
+
+        // Persist the profile-only fields onto the user's active membership's
+        // employee_profiles row. Insert one if it does not yet exist so a fresh
+        // member can save contact details before any profile row is created.
+        if (phone !== undefined || address !== undefined || job_title !== undefined) {
+          await client.query(
+            `INSERT INTO public.employee_profiles (membership_id, tenant_id, phone, address, job_title)
+             SELECT m.id, m.tenant_id, $2, $3, $4
+               FROM public.memberships m
+               JOIN public.users u ON u.id = m.user_id
+              WHERE u.auth0_user_id = $1
+                AND m.status = 'active'::public.membership_status
+             ON CONFLICT (membership_id) DO UPDATE
+                SET phone = COALESCE(EXCLUDED.phone, public.employee_profiles.phone),
+                    address = COALESCE(EXCLUDED.address, public.employee_profiles.address),
+                    job_title = COALESCE(EXCLUDED.job_title, public.employee_profiles.job_title),
+                    updated_at = now()`,
+            [authCtx.auth0UserId, phone ?? null, address ?? null, job_title ?? null]
+          )
+        }
+
         return loadProfile(client, authCtx.auth0UserId, authCtx.orgId)
       })
 

@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { useAuth } from '../contexts/AuthContext'
 import { useAttendanceRecords } from '../hooks/useTenantData'
 import { useTenantApi } from '../hooks/useTenantApi'
-import { currentUserKeys } from '../hooks/useCurrentUser'
+import { currentUserKeys, useCurrentUser } from '../hooks/useCurrentUser'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -30,6 +30,7 @@ type ProfileForm = z.infer<typeof profileSchema>
 export default function Settings() {
   const { user } = useAuth()
   const { apiFetch } = useTenantApi()
+  const { profile } = useCurrentUser()
   const queryClient = useQueryClient()
 
   // Use the updated hook for current employee attendance logs
@@ -37,12 +38,12 @@ export default function Settings() {
 
   const defaultForm = useMemo(
     () => ({
-      full_name: user?.full_name || '',
-      phone: '',
-      address: '',
-      job_title: '',
+      full_name: profile?.full_name || user?.full_name || '',
+      phone: profile?.phone || '',
+      address: profile?.address || '',
+      job_title: profile?.job_title || '',
     }),
-    [user]
+    [user, profile]
   )
 
   const [form, setForm] = useState(defaultForm)
@@ -257,7 +258,4 @@ export default function Settings() {
       </div>
     </div>
   )
-}
-function setErrors(fieldErrors: Record<string, string>) {
-  throw new Error('Function not implemented.')
 }
