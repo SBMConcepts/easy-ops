@@ -110,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authorizationParams: {
           organization: options?.auth0OrgId,
           invitation: options?.invitation,
-          redirect_uri: 'https://easy-ops-za.vercel.app/app', // Ensure we return to the app after login
+          redirect_uri: window.location.origin + '/app', // Ensure we return to the app after login
         },
       })
     },
@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   )
 
   const logout = useCallback(() => {
-    auth0Logout({ logoutParams: { returnTo: 'https://easy-ops-za.vercel.app' } })
+    auth0Logout({ logoutParams: { returnTo: window.location.origin } })
   }, [auth0Logout])
 
   return (
