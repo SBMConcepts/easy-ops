@@ -143,7 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authorizationParams: {
           organization: options?.auth0OrgId,
           invitation: options?.invitation,
-          redirect_uri: window.location.origin, // Ensure we return to the app root after login
+          redirect_uri: window.location.origin + '/app', // Ensure we return to the app root after login
         },
       })
     },
