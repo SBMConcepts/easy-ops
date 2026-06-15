@@ -84,7 +84,7 @@ async function diagnoseMiss(
 
 // GET /api/userinfo — return the authenticated user's enriched profile.
 router.get(
-  '/userinfo',
+  '/api/userinfo',
   requireAuth0Auth,
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
@@ -116,15 +116,15 @@ router.get(
 
       return res.status(200).json(profile)
     } catch (error: any) {
-      console.error('GET /userinfo failed:', error)
+      console.error('GET /api/userinfo failed:', error)
       return res.status(500).json({ error: 'Failed to load profile.' })
     }
   }
 )
 
-// PUT /userinfo — update the authenticated user's own editable fields.
+// PUT /api/userinfo — update the authenticated user's own editable fields.
 router.put(
-  '/userinfo',
+  '/api/userinfo',
   requireAuth0Auth,
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
@@ -181,7 +181,7 @@ router.put(
 
       return res.status(200).json(profile)
     } catch (error: any) {
-      console.error('PUT /userinfo failed:', error)
+      console.error('PUT /api/userinfo failed:', error)
       return res.status(500).json({ error: 'Failed to update profile.' })
     }
   }
