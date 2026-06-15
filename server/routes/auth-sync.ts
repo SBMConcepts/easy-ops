@@ -11,6 +11,10 @@ interface AuthSyncPayload {
   avatarUrl?: string | null
   emailVerified?: boolean
   role?: string
+  // When the login is scoped to an Auth0 Organization, the Action passes its id
+  // so the resolved role/permissions reflect the membership in THAT tenant.
+  // Empty/absent means "use the user's first active membership".
+  orgId?: string | null
 }
 
 // public.tenant_role enum — guards the role lookup against arbitrary input.
@@ -38,7 +42,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
     return res.status(401).json({ error: 'Unauthorized.' })
   }
 
-  const { auth0UserId, email, name, avatarUrl, role } = req.body as AuthSyncPayload
+  const { auth0UserId, email, name, avatarUrl, role, orgId } = req.body as AuthSyncPayload
 
   if (!auth0UserId || !email) {
     return res.status(400).json({ error: 'auth0UserId and email are required.' })
@@ -75,21 +79,51 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
       [userId]
     )
 
-    // Resolve the permissions for the caller's role from the source-of-truth
-    // table so the post-login Action can inject them as a token claim. Returns
+    // Resolve the AUTHORITATIVE role + tenant for this user from the database.
+    // On a custom-database connection, app_metadata is not a reliable carrier of
+    // the role on subsequent logins, so memberships.role is the source of truth.
+    // Prefer the membership matching the login's organization when one was
+    // supplied; otherwise take the first active membership (same ordering as
+    // GET /api/userinfo).
+    const orgFilter = (orgId ?? '').trim()
+    const membershipRes = await pool.query(
+      `SELECT m.role::text AS role, t.auth0_org_id AS org_id
+         FROM public.memberships m
+         JOIN public.tenants t ON t.id = m.tenant_id
+        WHERE m.user_id = $1
+          AND m.status = 'active'::public.membership_status
+          AND ($2 = '' OR t.auth0_org_id = $2)
+        ORDER BY m.joined_at ASC NULLS LAST
+        LIMIT 1`,
+      [userId, orgFilter]
+    )
+
+    // DB role wins; fall back to the hint the Action passed (app_metadata) only
+    // when the user has no active membership yet, then to 'employee'.
+    const hintRole = role && TENANT_ROLES.includes(role) ? role : undefined
+    const resolvedRole = (membershipRes.rows[0]?.role as string) ?? hintRole ?? 'employee'
+    const resolvedOrgId = (membershipRes.rows[0]?.org_id as string) ?? orgFilter ?? ''
+
+    // Permissions for the resolved role, from the source-of-truth table. Returns
     // an empty list for unknown/absent roles rather than erroring.
     let permissions: string[] = []
-    if (role && TENANT_ROLES.includes(role)) {
+    if (TENANT_ROLES.includes(resolvedRole)) {
       const permsResult = await pool.query(
         `SELECT permission FROM public.role_permissions
           WHERE role = $1::public.tenant_role
           ORDER BY permission`,
-        [role]
+        [resolvedRole]
       )
       permissions = permsResult.rows.map((r) => r.permission as string)
     }
 
-    return res.status(200).json({ success: true, user: result.rows[0], permissions })
+    return res.status(200).json({
+      success: true,
+      user: result.rows[0],
+      role: resolvedRole,
+      orgId: resolvedOrgId,
+      permissions,
+    })
   } catch (error: any) {
     console.error('POST /api/auth/sync failed:', error)
     return res.status(500).json({ error: 'Failed to sync user.' })

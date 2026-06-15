@@ -3,14 +3,14 @@
  * Trigger: Login / Post Login
  *
  * Responsibilities:
- *  1. Attach custom claims (role, org_id) to both the ID token and access token
- *     so the frontend AuthContext and the Express verifyAuth0Token() can read them.
- *  2. Call POST /api/auth/sync on every login to keep the Supabase public.users
- *     row up to date (email, avatar, name) AND to fetch the role's permissions
- *     from the role_permissions source of truth.
- *  3. Inject the DB-derived permissions array as a namespaced claim on both
- *     tokens so the frontend (hasPermission) and backend (requirePermission)
- *     gate on identical, login-fresh data.
+ *  1. Call POST /api/auth/sync on every login to keep the Supabase public.users
+ *     row up to date (email, avatar, name) AND to resolve the AUTHORITATIVE
+ *     role + org_id + permissions from the database (memberships.role and
+ *     role_permissions are the source of truth — app_metadata is not reliable
+ *     on a custom-database connection).
+ *  2. Inject the DB-resolved role, org_id and permissions as namespaced claims
+ *     on both the ID token and access token so the frontend AuthContext and the
+ *     Express verifyAuth0Token() gate on identical, login-fresh data.
  *
  * Required Secrets (set in Auth0 Dashboard → Actions → Secrets):
  *   BACKEND_URL        — Your Express server: https://api.easyops.co.za
@@ -20,64 +20,78 @@
 const CLAIM_NS = 'https://easy-ops-za.vercel.app/'
 
 exports.onExecutePostLogin = async (event, api) => {
-  // 1. Attach org_id claim
-  const orgId = event.organization && event.organization.id ? event.organization.id : null
+  // The login org, if this was an Organization-scoped login. Passed to the sync
+  // endpoint so it resolves the membership/role in THIS tenant.
+  const orgIdFromLogin = event.organization && event.organization.id ? event.organization.id : null
+
+  // Fallback role from app_metadata. On a custom-database connection this is not
+  // a reliable carrier of the role across logins, so it is only used when the DB
+  // sync yields nothing (e.g. first login before tenant provisioning).
+  const fallbackRole =
+    event.user.app_metadata && event.user.app_metadata.role
+      ? event.user.app_metadata.role
+      : 'employee'
+
+  // 1. Sync the Supabase users row and resolve the AUTHORITATIVE role + org_id
+  //    + permissions from the database (source of truth: memberships.role and
+  //    role_permissions). The claims are injected from the response below.
+  const backendUrl = event.secrets && event.secrets.BACKEND_URL
+  const syncSecret = event.secrets && event.secrets.AUTH0_SYNC_SECRET
+
+  let role = fallbackRole
+  let orgId = orgIdFromLogin
+  let permissions = []
+
+  if (!backendUrl || !syncSecret) {
+    console.warn('[post-login] BACKEND_URL or AUTH0_SYNC_SECRET not set — using fallback role/org')
+  } else {
+    try {
+      const res = await fetch(backendUrl + '/api/auth/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': syncSecret,
+        },
+        body: JSON.stringify({
+          auth0UserId: event.user.user_id,
+          email: event.user.email,
+          name: event.user.name || event.user.email,
+          avatarUrl: event.user.picture || null,
+          emailVerified: event.user.email_verified || false,
+          role: fallbackRole,
+          orgId: orgIdFromLogin,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json().catch(function () {
+          return null
+        })
+        if (data) {
+          if (data.role) role = data.role
+          if (data.orgId) orgId = data.orgId
+          if (Array.isArray(data.permissions)) permissions = data.permissions
+        }
+      } else {
+        const text = await res.text().catch(function () {
+          return ''
+        })
+        console.error('[post-login] Sync failed: ' + res.status + ' ' + text)
+      }
+    } catch (err) {
+      console.error('[post-login] Sync fetch error:', err && err.message ? err.message : err)
+    }
+  }
+
+  // 2. Inject claims (DB-authoritative when the sync succeeded) on both tokens
+  //    so the frontend AuthContext and the Express verifyAuth0Token() agree.
+  api.idToken.setCustomClaim(CLAIM_NS + 'role', role)
+  api.accessToken.setCustomClaim(CLAIM_NS + 'role', role)
+
   if (orgId) {
     api.idToken.setCustomClaim(CLAIM_NS + 'org_id', orgId)
     api.accessToken.setCustomClaim(CLAIM_NS + 'org_id', orgId)
   }
 
-  // 2. Attach role claim
-  const role =
-    event.user.app_metadata && event.user.app_metadata.role
-      ? event.user.app_metadata.role
-      : 'employee'
-  api.idToken.setCustomClaim(CLAIM_NS + 'role', role)
-  api.accessToken.setCustomClaim(CLAIM_NS + 'role', role)
-
-  // 3. Sync user row to Supabase and fetch the role's permissions.
-  //    The sync endpoint returns the permissions granted to `role` in the
-  //    role_permissions table; we inject them as a claim below.
-  const backendUrl = event.secrets && event.secrets.BACKEND_URL
-  const syncSecret = event.secrets && event.secrets.AUTH0_SYNC_SECRET
-
-  if (!backendUrl || !syncSecret) {
-    console.warn('[post-login] BACKEND_URL or AUTH0_SYNC_SECRET not set — skipping sync')
-    return
-  }
-
-  try {
-    const res = await fetch(backendUrl + '/api/auth/sync', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': syncSecret,
-      },
-      body: JSON.stringify({
-        auth0UserId: event.user.user_id,
-        email: event.user.email,
-        name: event.user.name || event.user.email,
-        avatarUrl: event.user.picture || null,
-        emailVerified: event.user.email_verified || false,
-        role: role,
-      }),
-    })
-    if (!res.ok) {
-      const text = await res.text().catch(function () {
-        return ''
-      })
-      console.error('[post-login] Sync failed: ' + res.status + ' ' + text)
-      return
-    }
-
-    // 4. Inject the DB-derived permissions claim on both tokens.
-    const data = await res.json().catch(function () {
-      return null
-    })
-    const permissions = data && Array.isArray(data.permissions) ? data.permissions : []
-    api.idToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
-    api.accessToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
-  } catch (err) {
-    console.error('[post-login] Sync fetch error:', err && err.message ? err.message : err)
-  }
+  api.idToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
+  api.accessToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
 }
