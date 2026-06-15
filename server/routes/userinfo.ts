@@ -52,7 +52,7 @@ const PROFILE_SELECT = `
     ON ep.membership_id = m.id
   WHERE u.auth0_user_id = $1
     AND ($2 = '' OR t.auth0_org_id = $2)
-  ORDER BY m.joined_at ASC
+  
   LIMIT 1
 `
 

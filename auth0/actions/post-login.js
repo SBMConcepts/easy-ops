@@ -22,15 +22,13 @@ const CLAIM_NS = 'https://easy-ops-za.vercel.app/'
 exports.onExecutePostLogin = async (event, api) => {
   // The login org, if this was an Organization-scoped login. Passed to the sync
   // endpoint so it resolves the membership/role in THIS tenant.
-  const orgIdFromLogin = event.organization && event.organization.id ? event.organization.id : null
+  const orgIdFromLogin = event.organization && event.organization.id
 
   // Fallback role from app_metadata. On a custom-database connection this is not
   // a reliable carrier of the role across logins, so it is only used when the DB
   // sync yields nothing (e.g. first login before tenant provisioning).
   const fallbackRole =
-    event.user.app_metadata && event.user.app_metadata.role
-      ? event.user.app_metadata.role
-      : 'employee'
+    (event.user.app_metadata && event.user.app_metadata.role) || event.user.app_metadata.role
 
   // 1. Sync the Supabase users row and resolve the AUTHORITATIVE role + org_id
   //    + permissions from the database (source of truth: memberships.role and

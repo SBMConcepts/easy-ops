@@ -53,6 +53,7 @@ function login(email, password, context, callback) {
       "LEFT JOIN public.memberships m ON m.user_id = u.id AND m.status = 'active'",
       'LEFT JOIN public.tenants t ON t.id = m.tenant_id',
       'WHERE u.email = $1',
+      'ORDER BY m.joined_at ASC NULLS LAST',
       'LIMIT 1',
     ].join(' ')
 
@@ -99,9 +100,9 @@ function login(email, password, context, callback) {
           name: user.full_name || user.email,
           picture: user.avatar_url || null,
           app_metadata: {
-            role: user.role || 'employee',
-            org_id: user.auth0_org_id || null,
-            tenant_slug: user.tenant_slug || null,
+            role: user.role,
+            org_id: user.auth0_org_id,
+            tenant_slug: user.tenant_slug,
           },
         })
       })

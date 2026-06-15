@@ -50,6 +50,7 @@ function getByEmail(email, context, callback) {
       "LEFT JOIN public.memberships m ON m.user_id = u.id AND m.status = 'active'",
       'LEFT JOIN public.tenants t ON t.id = m.tenant_id',
       'WHERE u.email = $1',
+      'ORDER BY m.joined_at ASC NULLS LAST',
       'LIMIT 1',
     ].join(' ')
 

@@ -10,7 +10,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-export type AppRole = 'admin' | 'manager' | 'supervisor' | 'employee'
+export type AppRole = 'admin' | 'manager' | 'supervisor' | 'employee' | 'owner'
 
 export interface AuthContext {
   /** Auth0 sub — equals auth.uid() in RLS policies */
@@ -18,7 +18,7 @@ export interface AuthContext {
   /** Local organisation UUID — use in every query for tenant isolation */
   organisationId: string
   /** Auth0 org_id claim from the JWT (e.g. "org_abc123"), null if absent */
-  auth0OrgId: string | null
+  auth0OrgId: string
   /** The caller's role from user_roles */
   role: AppRole
   /**
@@ -92,7 +92,7 @@ export async function resolveAuthContext(req: Request): Promise<AuthContext> {
 
   // Step 2 — Extract Auth0 org_id from the verified JWT payload (no extra RTT)
   const payload = decodeJwtPayload(token)
-  const auth0OrgId = (payload['org_id'] as string | undefined) ?? null
+  const auth0OrgId = payload['org_id'] as string
 
   // Step 3 — Resolve organisation UUID (parallel where possible)
   let organisationId: string | null = null
@@ -103,7 +103,7 @@ export async function resolveAuthContext(req: Request): Promise<AuthContext> {
       .from('organisations')
       .select('id')
       .eq('auth0_org_id', auth0OrgId)
-    organisationId = org?.[0]?.id ?? null
+    organisationId = org?.[0]?.id
   }
 
   if (!organisationId) {
@@ -112,7 +112,7 @@ export async function resolveAuthContext(req: Request): Promise<AuthContext> {
       .from('profiles')
       .select('organisation_id')
       .eq('id', user.id)
-    organisationId = profile?.[0]?.organisation_id ?? null
+    organisationId = profile?.[0]?.organisation_id
   }
 
   if (!organisationId) {

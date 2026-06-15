@@ -105,11 +105,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: profile.email,
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
-          status: profile.user_status,
+          user_status: profile.user_status,
           created_at: '',
           updated_at: '',
           role: profile.role,
-        } as AuthUser)
+        } as unknown as AuthUser)
 
         setTenant({
           id: profile.tenant_id,
