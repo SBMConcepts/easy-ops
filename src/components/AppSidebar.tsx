@@ -70,11 +70,11 @@ const navItems: NavItem[] = [
 ]
 
 const AppSidebar = () => {
-  const { user, tenant, isLoading } = useAuth()
+  const { user, tenant } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
 
-  const orgName = tenant?.name || (isLoading ? 'Loading...' : 'EasyOps')
+  const orgName = tenant?.name
 
   // Filter navigation items based on the user's role
   const filteredItems = navItems.filter((item) => user?.role && item.roles.includes(user.role))
