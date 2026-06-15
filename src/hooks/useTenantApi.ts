@@ -39,12 +39,6 @@ export function useTenantApi() {
     [getAccessTokenSilently]
   )
 
-  // Fall back to a same-origin relative '/api' so the Vite dev proxy (and a
-  // same-origin production deployment) work without VITE_API_URL being set.
-  // A bare template literal would otherwise stringify `undefined` into the URL.
-  const apiBase = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
-  const baseUrl = `${apiBase}/`
-
   const apiFetch = useCallback(
     async <T = unknown>(path: string, options: ApiFetchOptions = {}): Promise<T> => {
       const { requireAuth = true, headers, ...rest } = options
@@ -59,7 +53,13 @@ export function useTenantApi() {
 
       const finalHeaders = requireAuth ? await attachAuth0Auth(reqHeaders) : reqHeaders
 
-      const response = await fetch(`${baseUrl}/${path.replace(/^\//, '')}`, {
+      // Fall back to a same-origin relative '/api' so the Vite dev proxy (and a
+      // same-origin production deployment) work without VITE_API_URL being set.
+      // An empty base would build '//userinfo', which the browser treats as a
+      // protocol-relative URL and resolves to 'https://userinfo/'.
+      const apiBase = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
+
+      const response = await fetch(`${apiBase}/${path.replace(/^\//, '')}`, {
         ...rest,
         headers: finalHeaders,
       })
@@ -79,7 +79,7 @@ export function useTenantApi() {
 
       return (await response.json()) as T
     },
-    [attachAuth0Auth, baseUrl]
+    [attachAuth0Auth]
   )
 
   return { apiFetch }
