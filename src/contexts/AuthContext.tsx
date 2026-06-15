@@ -108,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           status: profile.user_status,
           created_at: '',
           updated_at: '',
-          role,
+          role: profile.role,
         } as AuthUser)
 
         setTenant({
@@ -157,9 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider
       value={{
-        user:
-          user ||
-          ({ id: '', auth0_user_id: '', full_name: '', email: '', role: 'employee' } as AuthUser),
+        user: user || ({} as AuthUser), // Avoid spreading null into the context value before the first profile load completes
         tenant: tenant || ({} as AuthTenant),
         permissions,
         isAuthenticated,

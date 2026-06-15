@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/appshell.css'
 
 const roleBadgeColors: Record<string, string> = {
+  owner: '!bg-emerald-500 text-emerald-50 border-emerald-500',
   admin: '!bg-destructive text-destructive border-destructive',
   manager: '!bg-secondary text-secondary border-secondary',
   supervisor: '!bg-accent text-accent-foreground border-accent',
@@ -31,8 +32,8 @@ const AppHeader = () => {
         <div className="app-header-right">
           <Badge className={roleBadgeColors[user.role]}>{user.role}</Badge>
           <div className="app-header-user">
-            <User className="h-4 w-4 icon-muted" style={{ color: 'var(--muted-foreground)' }} />
-            <span className="app-header-username">{user?.full_name || user?.email}</span>
+            <User className="h-4 w-4 icon-muted" style={{ color: 'var(--foreground)' }} />
+            <span className="app-header-username">{user?.full_name}</span>
           </div>
           <Button
             variant="ghost"
