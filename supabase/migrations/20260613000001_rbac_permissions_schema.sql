@@ -1,96 +1,105 @@
--- =============================================================================
--- RBAC permissions — schema (Part 1 of 2)
--- =============================================================================
--- Closes the drift between the remote schema (which already has app_permission,
--- role_permissions and has_permission) and the local migration history (which
--- did not define them). Idempotent so it is safe to apply to the live DB and to
--- a freshly reset local DB alike.
---
--- IMPORTANT: enum value additions live here, separate from the seed
--- (20260613000002). New enum values cannot be *used* in the same transaction
--- that adds them, so the INSERT of role_permissions rows must run afterwards.
--- =============================================================================
+-- employee — self-service + read-only operational visibility.
+INSERT INTO public.role_permissions (role, permission)
+VALUES
+  ('employee', 'read:own-profile'),
+  ('employee', 'update:own-profile'),
+  ('employee', 'read:sites'),
+  ('employee', 'read:departments'),
+  ('employee', 'read:shifts'),
+  ('employee', 'attendance:read'),
+  ('employee', 'attendance:write'),
+  ('employee', 'read:benefits')
+ON CONFLICT (role, permission) DO NOTHING;
 
--- 1. app_permission enum — create with the original 15 values if absent.
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'app_permission') THEN
-    CREATE TYPE public.app_permission AS ENUM (
-      'read:tenant', 'write:tenant', 'admin:tenant',
-      'read:members', 'invite:members', 'manage:members',
-      'read:attendance', 'write:attendance', 'verify:attendance',
-      'manage:departments', 'manage:sites', 'manage:shifts', 'manage:roles',
-      'read:audit', 'manage:billing'
-    );
-  END IF;
-END 
+-- supervisor — employee grants + team oversight.
+INSERT INTO public.role_permissions (role, permission)
+VALUES
+  ('supervisor', 'read:tenant'),
+  ('supervisor', 'read:own-profile'),
+  ('supervisor', 'update:own-profile'),
+  ('supervisor', 'read:sites'),
+  ('supervisor', 'read:departments'),
+  ('supervisor', 'read:shifts'),
+  ('supervisor', 'attendance:read'),
+  ('supervisor', 'attendance:write'),
+  ('supervisor', 'read:benefits'),
+  ('supervisor', 'read:members'),
+  ('supervisor', 'attendance:verify'),
+  ('supervisor', 'read:compliance'),
+  ('supervisor', 'read:tenant-analytics')
+ON CONFLICT (role, permission) DO NOTHING;
 
--- 2. Extend the enum with fine-grained + future-module permissions.
---    ADD VALUE IF NOT EXISTS is a no-op when the value already exists.
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:own-profile';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'update:own-profile';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:sites';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:departments';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:shifts';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:access-requests';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'approve:access-requests';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:compliance';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:reports';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'export:reports';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:tenant-analytics';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:billing';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'export:audit';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'manage:security';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'manage:integrations';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:payroll';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'manage:payroll';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'read:benefits';
-ALTER TYPE public.app_permission ADD VALUE IF NOT EXISTS 'manage:benefits';
+-- manager — supervisor grants + operational management.
+INSERT INTO public.role_permissions (role, permission)
+VALUES
+  ('manager', 'read:tenant'),
+  ('manager', 'write:tenant'),
+  ('manager', 'read:own-profile'),
+  ('manager', 'update:own-profile'),
+  ('manager', 'read:sites'),
+  ('manager', 'read:departments'),
+  ('manager', 'read:shifts'),
+  ('manager', 'attendance:read'),
+  ('manager', 'attendance:write'),
+  ('manager', 'attendance:verify'),
+  ('manager', 'read:benefits'),
+  ('manager', 'read:members'),
+  ('manager', 'invite:members'),
+  ('manager', 'manage:members'),
+  ('manager', 'manage:departments'),
+  ('manager', 'manage:sites'),
+  ('manager', 'manage:shifts'),
+  ('manager', 'read:access-requests'),
+  ('manager', 'approve:access-requests'),
+  ('manager', 'read:compliance'),
+  ('manager', 'read:reports'),
+  ('manager', 'export:reports'),
+  ('manager', 'read:tenant-analytics'),
+  ('manager', 'read:billing'),
+  ('manager', 'read:audit')
+ON CONFLICT (role, permission) DO NOTHING;
 
--- 3. role_permissions — the source of truth mapping tenant_role → permission.
-CREATE TABLE IF NOT EXISTS public.role_permissions (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  role        public.tenant_role     NOT NULL,
-  permission  public.app_permission  NOT NULL,
-  created_at  timestamptz            NOT NULL DEFAULT now()
-);
+-- admin — manager grants + tenant-level administration.
+INSERT INTO public.role_permissions (role, permission)
+VALUES
+  ('admin', 'read:tenant'),
+  ('admin', 'write:tenant'),
+  ('admin', 'admin:tenant'),
+  ('admin', 'read:own-profile'),
+  ('admin', 'update:own-profile'),
+  ('admin', 'read:sites'),
+  ('admin', 'read:departments'),
+  ('admin', 'read:shifts'),
+  ('admin', 'attendance:read'),
+  ('admin', 'attendance:write'),
+  ('admin', 'attendance:verify'),
+  ('admin', 'read:benefits'),
+  ('admin', 'manage:benefits'),
+  ('admin', 'read:members'),
+  ('admin', 'invite:members'),
+  ('admin', 'manage:members'),
+  ('admin', 'manage:roles'),
+  ('admin', 'manage:departments'),
+  ('admin', 'manage:sites'),
+  ('admin', 'manage:shifts'),
+  ('admin', 'read:access-requests'),
+  ('admin', 'approve:access-requests'),
+  ('admin', 'read:compliance'),
+  ('admin', 'read:reports'),
+  ('admin', 'export:reports'),
+  ('admin', 'read:tenant-analytics'),
+  ('admin', 'read:billing'),
+  ('admin', 'manage:billing'),
+  ('admin', 'read:audit'),
+  ('admin', 'export:audit'),
+  ('admin', 'manage:security'),
+  ('admin', 'manage:integrations'),
+  ('admin', 'read:payroll'),
+  ('admin', 'manage:payroll')
+ON CONFLICT (role, permission) DO NOTHING;
 
-COMMENT ON TABLE public.role_permissions IS
-  'Authoritative role → permission grants. Read by the Express API and the '
-  'Auth0 post-login Action; mirrored into Auth0 native RBAC by the sync script.';
-
--- Uniqueness guard so the seed (and re-seeds) are idempotent.
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'role_permissions_role_permission_key'
-  ) THEN
-    ALTER TABLE public.role_permissions
-      ADD CONSTRAINT role_permissions_role_permission_key UNIQUE (role, permission);
-  END IF;
-END $$;
-
-CREATE INDEX IF NOT EXISTS role_permissions_role_idx
-  ON public.role_permissions (role);
-
--- 4. has_permission(_perm) — true when the caller's JWT role grants _perm.
---    Permissions are a capability layer (global per role); tenant isolation
---    stays with current_tenant_id()/RLS. Aligns the function with the
---    role_permissions source of truth.
-CREATE OR REPLACE FUNCTION public.has_permission(_perm public.app_permission)
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-      FROM public.role_permissions rp
-     WHERE rp.permission = _perm
-       AND rp.role = NULLIF(
-             current_setting('request.jwt.claims', true)::jsonb
-               ->> 'https://easy-ops-za.vercel.app/role',
-             ''
-           )::public.tenant_role
-  );
-$$;
+-- owner — DB-only superset: every permission in the enum.
+INSERT INTO public.role_permissions (role, permission)
+SELECT 'owner'::public.tenant_role, p
+  FROM unnest(enum_range(NULL::public.app_permission)) AS p
+ON CONFLICT (role, permission) DO NOTHING;

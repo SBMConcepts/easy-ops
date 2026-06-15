@@ -16,7 +16,7 @@
 //
 // Required env: SUPABASE_DATABASE_URL, AUTH0_DOMAIN, AUTH0_AUDIENCE,
 // AUTH0_MANAGEMENT_CLIENT_ID, AUTH0_MANAGEMENT_CLIENT_SECRET.
-import 'dotenv/config'
+import '../lib/load-env.js'
 import { getPool } from '../lib/db.js'
 import * as mgmt from '../lib/auth0-management.js'
 

@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import './lib/load-env.js'
 import app from './app.js'
 
 // Standalone Node entrypoint. Used by `npm run server:dev` for local
