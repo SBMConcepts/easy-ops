@@ -14,7 +14,7 @@ export function getPool(): InstanceType<typeof Pool> {
     if (!connectionString) throw new Error('SUPABASE_DATABASE_URL is not set')
 
     _pool = new Pool({
-      connectionString,
+      connectionString: connectionString,
       ssl: { rejectUnauthorized: false },
       max: 10,
       idleTimeoutMillis: 30_000,

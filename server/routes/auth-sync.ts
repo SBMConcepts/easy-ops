@@ -8,13 +8,13 @@ interface AuthSyncPayload {
   auth0UserId?: string
   email?: string
   name?: string
-  avatarUrl?: string | null
+  avatarUrl?: string
   emailVerified?: boolean
   role?: string
   // When the login is scoped to an Auth0 Organization, the Action passes its id
   // so the resolved role/permissions reflect the membership in THAT tenant.
   // Empty/absent means "use the user's first active membership".
-  orgId?: string | null
+  orgId?: string
 }
 
 // public.tenant_role enum — guards the role lookup against arbitrary input.
