@@ -15,9 +15,9 @@ const DashboardRouter = () => {
   // A tenant is fully onboarded and ready when its status is marked 'active'[cite: 17]
   const isTenantSetupComplete = tenant?.status === 'active'
 
-  // Redirect admin to onboarding if they haven't been assigned a tenant
+  // Redirect admin to onboarding if their identity hasn't resolved yet
   // or if that tenant's configuration status is not yet finalized ('active')[cite: 17]
-  if (isAdmin && (!user?.auth0_user_id || !isTenantSetupComplete)) {
+  if (isAdmin && (!user?.id || !isTenantSetupComplete)) {
     return <Navigate to="/app/onboarding" replace />
   }
 

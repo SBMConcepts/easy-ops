@@ -1,10 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
+import type { Session } from '@supabase/supabase-js'
 import type { Database } from '../integrations/supabase/types'
-import { useTenantApi } from '../hooks/useTenantApi'
-import type { CurrentUserProfile } from '../hooks/useCurrentUser'
-import { AUTH0_CLAIM_NS } from '../lib/auth0-config'
+import { supabase } from '../integrations/supabase/client'
 
 export type TenantRole = Database['public']['Enums']['tenant_role']
 // Bridges the generated enum (regenerated from the DB) with the new permissions
@@ -34,48 +32,74 @@ export type AppPermission =
 export type AuthTenant = Database['public']['Tables']['tenants']['Row']
 export type AuthUser = Database['public']['Tables']['users']['Row'] & { role: TenantRole }
 
+export interface LoginResult {
+  error: string | null
+}
+
 interface AuthContextType {
   user: AuthUser
   tenant: AuthTenant
   permissions: AppPermission[]
   isAuthenticated: boolean
   isLoading: boolean
-  login: (options?: { auth0OrgId?: string; invitation?: string }) => Promise<void>
-  logout: () => void
+  login: (email: string, password: string) => Promise<LoginResult>
+  logout: () => Promise<void>
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: { id: '', auth0_user_id: '', full_name: '', email: '', role: 'admin' } as AuthUser,
+  user: { id: '', full_name: '', email: '', role: 'employee' } as AuthUser,
   tenant: {} as AuthTenant,
   permissions: [],
   isAuthenticated: false,
   isLoading: true,
-  login: async () => {},
-  logout: () => {},
+  login: async () => ({ error: null }),
+  logout: async () => {},
+  refresh: async () => {},
 })
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const {
-    isAuthenticated,
-    isLoading: auth0Loading,
-    user: auth0User,
-    loginWithRedirect,
-    logout: auth0Logout,
-    getIdTokenClaims,
-  } = useAuth0()
-
-  const { apiFetch } = useTenantApi()
-
+  const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<AuthUser | null>(null)
   const [tenant, setTenant] = useState<AuthTenant | null>(null)
   const [permissions, setPermissions] = useState<AppPermission[]>([])
   const [isProfileLoading, setIsProfileLoading] = useState(true)
 
-  useEffect(() => {
-    if (auth0Loading) return
+  // Resolves the workspace identity straight from Supabase using the active
+  // session: the user profile, their first active membership (role + tenant),
+  // and the permissions granted to that role. RLS scopes every query.
+  const loadIdentity = useCallback(async (userId: string) => {
+    const [{ data: profile }, { data: membershipRows }] = await Promise.all([
+      supabase.from('users').select('*').eq('id', userId).maybeSingle(),
+      supabase
+        .from('memberships')
+        .select('role, status, joined_at, tenant_id, tenants(*)')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .order('joined_at', { ascending: true, nullsFirst: false })
+        .limit(1),
+    ])
 
-    const fetchIdentity = async () => {
-      if (!isAuthenticated || !auth0User?.sub) {
+    const membership = membershipRows?.[0] ?? null
+    const role = (membership?.role ?? 'employee') as TenantRole
+
+    let perms: AppPermission[] = []
+    if (membership?.role) {
+      const { data: rolePerms } = await supabase
+        .from('role_permissions')
+        .select('permission')
+        .eq('role', membership.role)
+      perms = (rolePerms ?? []).map((r) => r.permission as AppPermission)
+    }
+
+    setUser(profile ? ({ ...profile, role } as AuthUser) : null)
+    setTenant((membership?.tenants ?? null) as AuthTenant | null)
+    setPermissions(perms)
+  }, [])
+
+  const hydrate = useCallback(
+    async (nextSession: Session | null) => {
+      if (!nextSession?.user?.id) {
         setUser(null)
         setTenant(null)
         setPermissions([])
@@ -84,46 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setIsProfileLoading(true)
-
       try {
-        // Role + permissions are sourced from the Auth0 JWT custom claims
-        // (authoritative for guards). Permissions are injected by the post-login
-        // Action from the DB role_permissions source of truth.
-        const claims = await getIdTokenClaims()
-        const role = claims?.[`${AUTH0_CLAIM_NS}role`] as TenantRole
-        const claimPermissions = claims?.[`${AUTH0_CLAIM_NS}permissions`]
-        setPermissions(Array.isArray(claimPermissions) ? (claimPermissions as AppPermission[]) : [])
-
-        // Enriched user + tenant come from the Express backend, which reads
-        // Supabase with the verified token. This is the single source of truth
-        // for identity/organisation data across the workspace shell.
-        const profile = await apiFetch<CurrentUserProfile>('/userinfo')
-
-        setUser({
-          id: profile.profile_id,
-          auth0_user_id: profile.auth0_user_id,
-          email: profile.email,
-          full_name: profile.full_name,
-          avatar_url: profile.avatar_url,
-          user_status: profile.user_status,
-          created_at: '',
-          updated_at: '',
-          role: profile.role,
-        } as unknown as AuthUser)
-
-        setTenant({
-          id: profile.tenant_id,
-          name: profile.tenant_name,
-          auth0_org_id: profile.tenant_auth0_org,
-          status: profile.tenant_status,
-          logo_url: profile.tenant_logo,
-          country: profile.tenant_country,
-          industry: profile.tenant_industry,
-          slug: '',
-          settings: {},
-          created_at: '',
-          updated_at: '',
-        } as AuthTenant)
+        await loadIdentity(nextSession.user.id)
       } catch (err) {
         console.error('Failed to load profile context:', err)
         setUser(null)
@@ -132,27 +118,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } finally {
         setIsProfileLoading(false)
       }
-    }
-
-    void fetchIdentity()
-  }, [auth0Loading, isAuthenticated, auth0User, apiFetch, getIdTokenClaims])
-
-  const login = useCallback(
-    async (options?: { auth0OrgId?: string; invitation?: string }) => {
-      await loginWithRedirect({
-        authorizationParams: {
-          organization: options?.auth0OrgId,
-          invitation: options?.invitation,
-          redirect_uri: window.location.origin + '/app', // Ensure we return to the app root after login
-        },
-      })
     },
-    [loginWithRedirect]
+    [loadIdentity]
   )
 
-  const logout = useCallback(() => {
-    auth0Logout({ logoutParams: { returnTo: window.location.origin } })
-  }, [auth0Logout])
+  useEffect(() => {
+    let active = true
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!active) return
+      setSession(data.session)
+      void hydrate(data.session)
+    })
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return
+      setSession(nextSession)
+      void hydrate(nextSession)
+    })
+
+    return () => {
+      active = false
+      sub.subscription.unsubscribe()
+    }
+  }, [hydrate])
+
+  const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    return { error: error?.message ?? null }
+  }, [])
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut()
+  }, [])
+
+  const refresh = useCallback(async () => {
+    if (session?.user?.id) await loadIdentity(session.user.id)
+  }, [session, loadIdentity])
 
   return (
     <AuthContext.Provider
@@ -160,10 +162,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user: user || ({} as AuthUser), // Avoid spreading null into the context value before the first profile load completes
         tenant: tenant || ({} as AuthTenant),
         permissions,
-        isAuthenticated,
-        isLoading: auth0Loading || isProfileLoading,
+        isAuthenticated: !!session,
+        isLoading: isProfileLoading,
         login,
         logout,
+        refresh,
       }}
     >
       {children}

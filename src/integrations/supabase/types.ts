@@ -761,7 +761,6 @@ export type Database = {
       }
       tenants: {
         Row: {
-          auth0_org_id: string
           country: string
           created_at: string
           id: string
@@ -773,7 +772,6 @@ export type Database = {
           status: Database['public']['Enums']['tenant_status']
         }
         Insert: {
-          auth0_org_id: string
           country?: string
           created_at?: string
           id?: string
@@ -785,7 +783,6 @@ export type Database = {
           status?: Database['public']['Enums']['tenant_status']
         }
         Update: {
-          auth0_org_id?: string
           country?: string
           created_at?: string
           id?: string
@@ -800,35 +797,29 @@ export type Database = {
       }
       users: {
         Row: {
-          auth0_user_id: string
           avatar_url: string | null
           created_at: string
           email: string
           full_name: string
           id: string
-          password_hash: string | null
           status: Database['public']['Enums']['user_status']
           updated_at: string
         }
         Insert: {
-          auth0_user_id?: string
           avatar_url?: string | null
           created_at?: string
           email: string
           full_name?: string
           id: string
-          password_hash?: string | null
           status?: Database['public']['Enums']['user_status']
           updated_at?: string
         }
         Update: {
-          auth0_user_id?: string
           avatar_url?: string | null
           created_at?: string
           email?: string
           full_name?: string
           id?: string
-          password_hash?: string | null
           status?: Database['public']['Enums']['user_status']
           updated_at?: string
         }
@@ -838,7 +829,6 @@ export type Database = {
     Views: {
       tenant_active_plan: {
         Row: {
-          auth0_org_id: string | null
           billing_status: Database['public']['Enums']['billing_status'] | null
           current_period_end: string | null
           plan: Database['public']['Enums']['billing_plan'] | null

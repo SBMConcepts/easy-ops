@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { z } from 'zod'
 import { useAuth } from '../contexts/AuthContext'
 import { useAttendanceRecords } from '../hooks/useTenantData'
-import { useTenantApi } from '../hooks/useTenantApi'
+import { supabase } from '../integrations/supabase/client'
 import { currentUserKeys, useCurrentUser } from '../hooks/useCurrentUser'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
@@ -29,7 +29,6 @@ type ProfileForm = z.infer<typeof profileSchema>
 
 export default function Settings() {
   const { user } = useAuth()
-  const { apiFetch } = useTenantApi()
   const { profile } = useCurrentUser()
   const queryClient = useQueryClient()
 
@@ -54,13 +53,41 @@ export default function Settings() {
     setForm(defaultForm)
   }, [defaultForm])
 
-  // Mutation to handle secure profile save via Express API
+  // Persist the user's own editable fields straight to Supabase. RLS limits the
+  // writes to the caller's own user row and active-membership employee_profile.
   const updateProfileMutation = useMutation({
     mutationFn: async (updatedData: ProfileForm) => {
-      return apiFetch('/userinfo', {
-        method: 'PUT',
-        body: JSON.stringify(updatedData),
-      })
+      if (!user?.id) throw new Error('Not authenticated.')
+
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ full_name: updatedData.full_name })
+        .eq('id', user.id)
+      if (userError) throw userError
+
+      // Resolve the active membership so contact details land on its profile row.
+      const { data: membership, error: membershipError } = await supabase
+        .from('memberships')
+        .select('id, tenant_id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('joined_at', { ascending: true, nullsFirst: false })
+        .limit(1)
+        .maybeSingle()
+      if (membershipError) throw membershipError
+      if (!membership) throw new Error('No active membership found.')
+
+      const { error: profileError } = await supabase.from('employee_profiles').upsert(
+        {
+          membership_id: membership.id,
+          tenant_id: membership.tenant_id,
+          phone: updatedData.phone || null,
+          address: updatedData.address || null,
+          job_title: updatedData.job_title || null,
+        },
+        { onConflict: 'membership_id' }
+      )
+      if (profileError) throw profileError
     },
     onSuccess: () => {
       toast.success('Profile updated successfully')

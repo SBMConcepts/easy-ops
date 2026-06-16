@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react'
-import { useTenantApi } from '../hooks/useTenantApi'
+import { supabase } from '../integrations/supabase/client'
 import { usePermissions } from '../contexts/AuthContext'
+import { useCurrentUser } from '../hooks/useCurrentUser'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Database } from '../integrations/supabase/types'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -32,9 +33,10 @@ type SiteRow = Database['public']['Tables']['sites']['Row']
 type DepartmentRow = Database['public']['Tables']['departments']['Row']
 
 export default function SitesAndDepartments() {
-  const { apiFetch } = useTenantApi()
   const { hasPermission } = usePermissions()
+  const { profile } = useCurrentUser()
   const queryClient = useQueryClient()
+  const tenantId = profile?.tenant_id
 
   // Capability gates (DB role_permissions → JWT claim). Site deletes cascade, so
   // they require admin:tenant rather than manage:sites.
@@ -73,17 +75,25 @@ export default function SitesAndDepartments() {
 
   const { data: sites = [], isLoading: loadingSites } = useQuery({
     queryKey: ['sites'],
-    queryFn: () => apiFetch<SiteRow[]>('sites'),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('sites').select('*').order('name')
+      if (error) throw error
+      return data as SiteRow[]
+    },
   })
 
   const { data: departments = [], isLoading: loadingDepts } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => apiFetch<DepartmentRow[]>('departments'),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments').select('*').order('name')
+      if (error) throw error
+      return data as DepartmentRow[]
+    },
   })
 
   const siteNameById = useMemo(() => new Map(sites.map((s) => [s.id, s.name])), [sites])
 
-  // ── Mutations ───────────────────────────────────────────────────────────────
+  // ── Mutations (RLS scopes every write to the caller's tenant) ───────────────
   const saveSite = useMutation({
     mutationFn: async (payload: typeof siteForm & { id?: string }) => {
       const body = {
@@ -94,10 +104,14 @@ export default function SitesAndDepartments() {
         geofence_radius_m:
           payload.geofence_radius_m === '' ? 150 : Number(payload.geofence_radius_m),
       }
-      return apiFetch(payload.id ? `sites/${payload.id}` : 'sites', {
-        method: payload.id ? 'PATCH' : 'POST',
-        body: JSON.stringify(body),
-      })
+      if (payload.id) {
+        const { error } = await supabase.from('sites').update(body).eq('id', payload.id)
+        if (error) throw error
+      } else {
+        if (!tenantId) throw new Error('No active tenant.')
+        const { error } = await supabase.from('sites').insert({ ...body, tenant_id: tenantId })
+        if (error) throw error
+      }
     },
     onSuccess: () => {
       toast.success(editingSite ? 'Site updated' : 'Site created')
@@ -110,10 +124,16 @@ export default function SitesAndDepartments() {
   const saveDept = useMutation({
     mutationFn: async (payload: typeof deptForm & { id?: string }) => {
       const body = { name: payload.name, site_id: payload.site_id || null }
-      return apiFetch(payload.id ? `departments/${payload.id}` : 'departments', {
-        method: payload.id ? 'PATCH' : 'POST',
-        body: JSON.stringify(body),
-      })
+      if (payload.id) {
+        const { error } = await supabase.from('departments').update(body).eq('id', payload.id)
+        if (error) throw error
+      } else {
+        if (!tenantId) throw new Error('No active tenant.')
+        const { error } = await supabase
+          .from('departments')
+          .insert({ ...body, tenant_id: tenantId })
+        if (error) throw error
+      }
     },
     onSuccess: () => {
       toast.success(editingDept ? 'Department updated' : 'Department created')
@@ -125,8 +145,9 @@ export default function SitesAndDepartments() {
 
   const deleteEntity = useMutation({
     mutationFn: async (target: { kind: 'site' | 'department'; id: string }) => {
-      const path = target.kind === 'site' ? `sites/${target.id}` : `departments/${target.id}`
-      return apiFetch(path, { method: 'DELETE' })
+      const table = target.kind === 'site' ? 'sites' : 'departments'
+      const { error } = await supabase.from(table).delete().eq('id', target.id)
+      if (error) throw error
     },
     onSuccess: (_data, target) => {
       toast.success(target.kind === 'site' ? 'Site deleted' : 'Department deleted')

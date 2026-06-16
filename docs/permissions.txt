@@ -3,12 +3,15 @@
 ===============================================================================
  Source of truth : public.role_permissions  (DB)
  Vocabulary      : public.app_permission enum
- Propagation     : post-login Action injects a permissions[] claim on the ID +
-                   access tokens; `npm run auth0:sync-rbac` mirrors the same
-                   grants into Auth0 native RBAC for dashboard visibility.
- Enforcement     : backend  -> requirePermission()/requireAnyPermission()
-                   frontend -> usePermissions().hasPermission()
-                   DB        -> public.has_permission(_perm)
+ Propagation     : the frontend reads role_permissions directly (RLS policy
+                   "role_permissions_read_own_role" exposes the caller's role
+                   grants). No external IdP mirror — Supabase Auth is the only
+                   identity provider.
+ Enforcement     : frontend -> usePermissions().hasPermission()
+                   DB        -> Postgres RLS via current_tenant_id() /
+                                has_tenant_role() + table policies
+                   privileged ops -> Supabase Edge Functions (service role)
+                                     verify the caller before mutating
 
  Roles (tenant_role, high -> low): owner > admin > manager > supervisor > employee
    'owner' is a DB-only superset (every permission). The application uses
@@ -48,9 +51,9 @@ read:audit             View audit log                   x   x   x   .   .   ENUM
 read:billing           View billing/subscription        x   x   x   .   .   ENUM
 manage:billing         Manage billing/subscription      x   x   .   .   .   ENUM
 
-  * read/update:own-profile are seeded for gating but the /userinfo routes are
-    intentionally gated by authentication only (self access), to keep the core
-    identity bootstrap independent of the permissions claim.
+  * read/update:own-profile are seeded for gating but profile reads/writes are
+    intentionally gated by authentication only (self access) via RLS, to keep
+    the core identity bootstrap independent of the permission grants.
 
 
 B. SUGGESTED / FUTURE PERMISSIONS  (enum-ready; no dedicated route yet)
@@ -68,39 +71,44 @@ read:benefits          View benefits                    x   x   x   x   x   ENUM
 manage:benefits        Administer benefits              x   x   .   .   .   ENUM
 
 
-C. ROUTE -> PERMISSION MAP  (Express API; enforcement source)
+C. DATA ACCESS -> ENFORCEMENT MAP  (Supabase; RLS + Edge Functions)
 -------------------------------------------------------------------------------
-  GET    /api/userinfo                          auth (self)
-  PUT    /api/userinfo                          auth (self)
-  GET    /api/session                           auth (self)
-  GET    /api/tenants                           auth (self; lists own memberships)
-  POST   /api/tenants                           auth (self-serve create)
-  POST   /api/tenants/create                    PUBLIC
-  GET    /api/tenant-lookup                     PUBLIC
-  POST   /api/auth/sync                          shared-secret (x-api-key)
+  Most reads/writes go straight to Supabase from the client and are enforced by
+  Postgres RLS (tenant-scoped via current_tenant_id() / has_tenant_role()).
+  Privileged, cross-cutting operations run in Edge Functions with the service
+  role after verifying the caller.
 
-  GET    /api/members                           read:members
-  POST   /api/members                           invite:members
-  PATCH  /api/members/:id                        manage:roles
-  DELETE /api/members/:id                        manage:members
-  POST   /api/employees/invite                   invite:members
+  Profile / session
+    users (self row)                 RLS (self)        — read/update own profile
+    memberships (own)                RLS (self)        — tenant + role resolution
+    role_permissions                 RLS (own role)    — permission grants
 
-  GET    /api/access-requests                    read:access-requests
-  POST   /api/access-requests/approve-and-invite approve:access-requests
+  Sites / departments (tenant-scoped via RLS)
+    sites      select/insert/update  read:sites / manage:sites
+    sites      delete                admin:tenant (cascades)
+    departments select/ins/upd/del   read:/manage:departments
 
-  GET    /api/sites                              read:sites
-  POST   /api/sites                              manage:sites
-  PATCH  /api/sites/:id                          manage:sites
-  DELETE /api/sites/:id                          admin:tenant   (cascades)
-  GET    /api/departments                        read:departments
-  POST   /api/departments                        manage:departments
-  PATCH  /api/departments/:id                    manage:departments
-  DELETE /api/departments/:id                    manage:departments
+  Compliance
+    attendance_records (read)        read:compliance — BCEA summary computed
+                                     client-side over RLS-scoped rows
 
-  GET    /api/compliance                         read:compliance
+  Privileged Edge Functions (service role; caller verified inside)
+    tenant-provision            PUBLIC  — create tenant + subscription + invite
+                                          admin auth user + admin membership
+    tenant-invite-member        invite:members (owner/admin/manager) — invite
+                                          auth user + 'invited' membership
+    tenant-remove-member        manage:members — set membership 'offboarded'
+    access-request-create       PUBLIC  — insert pending access_request
+    access-request-approve      approve:access-requests — invite auth user +
+                                          'invited' membership, mark approved
+    tenant-billing-sync         billing webhook — upsert subscription + status
 
-  attendance check-in / check-out (Supabase Edge Functions, Deno) — enforced
-  separately; conceptually write:attendance.
+  Auth user lifecycle (Supabase Auth)
+    sign in                     supabase.auth.signInWithPassword
+    sign out                    supabase.auth.signOut
+    password reset / set        resetPasswordForEmail / updateUser
+    new auth user               handle_new_user() trigger mirrors public.users
+                                and activates the matching invited membership
 
 
 D. FRONTEND GATING
@@ -115,19 +123,21 @@ D. FRONTEND GATING
     Add/Edit/Delete Dept -> manage:departments
 
 
-E. AUTH0 SETUP CHECKLIST
+E. SUPABASE SETUP CHECKLIST
 -------------------------------------------------------------------------------
-  1. Custom API (Applications -> APIs), identifier = AUTH0_AUDIENCE
-     (https://api.easyops.co.za). Enable RBAC + "Add Permissions in the Access
-     Token".
-  2. Run `npm run auth0:sync-rbac` to push enum -> API scopes and
-     role_permissions -> Auth0 roles/grants.
-  3. Post-login Action secrets: BACKEND_URL (https://api.easyops.co.za),
-     AUTH0_SYNC_SECRET (== server AUTH0_SYNC_SECRET).
-  4. Claim namespace must match across Action, frontend (VITE_AUTH0_CLAIM_NS)
-     and server (AUTH0_CLAIM_NS): https://easy-ops-za.vercel.app/
+  1. Apply migrations (supabase db push) to your schema project, including
+     20260616000000_remove_auth0_integration.sql, then regenerate types:
+       supabase gen types typescript --linked > src/integrations/supabase/types.ts
+  2. Auth settings: enable Email/password sign-in. Configure the Site URL and
+     additional redirect URLs (/reset-password) for invite + recovery links.
+  3. Email templates: customise the Invite and Reset Password templates (the
+     invite flow emails a set-password link that lands on /reset-password).
+  4. Edge Function secrets: SUPABASE_URL, SUPABASE_ANON_KEY,
+     SUPABASE_SERVICE_ROLE_KEY, PUBLIC_SITE_URL. Deploy the functions with
+     `supabase functions deploy`.
+  5. Frontend env: VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY.
 
   NOTE: Permissions are a global capability layer. Tenant data isolation remains
-  enforced by org_id + Postgres RLS — never rely on a permission alone for the
-  tenant boundary.
+  enforced by public.memberships + Postgres RLS — never rely on a permission
+  alone for the tenant boundary.
 ===============================================================================

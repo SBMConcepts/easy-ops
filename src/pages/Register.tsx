@@ -8,7 +8,7 @@ import { Label } from '../components/ui/label'
 import { Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Database } from '../integrations/supabase/types'
-import { useTenantApi } from '../hooks/useTenantApi'
+import { supabase } from '../integrations/supabase/client'
 
 type BillingPlan = Database['public']['Enums']['billing_plan']
 
@@ -35,7 +35,6 @@ const PACKAGES: { id: BillingPlan; name: string; price: string; features: string
 
 export default function Register() {
   const navigate = useNavigate()
-  const { apiFetch } = useTenantApi()
   const [step, setStep] = useState<1 | 2>(1)
   const [form, setForm] = useState({
     companyName: '',
@@ -49,19 +48,19 @@ export default function Register() {
     setSubmitting(true)
 
     try {
-      // Public endpoint (no auth yet) — POST /api/tenants/create. apiFetch
-      // appends '/api' to VITE_API_URL and handles error parsing.
-      await apiFetch('tenants/create', {
-        method: 'POST',
-        requireAuth: false,
-        body: JSON.stringify({
+      // Public signup → privileged Edge Function provisions the tenant,
+      // subscription, admin auth user and membership (service-role).
+      const { error } = await supabase.functions.invoke('tenant-provision', {
+        body: {
           orgName: form.companyName,
           adminEmail: form.adminEmail,
           plan: form.plan,
-        }),
+        },
       })
 
-      toast.success('Workspace provisioned! Check your email for the Admin invitation.')
+      if (error) throw error
+
+      toast.success('Workspace provisioned! Check your email to set your admin password.')
       navigate('/login')
     } catch (error: any) {
       toast.error(error.message)
@@ -136,7 +135,7 @@ export default function Register() {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              You will receive an email invitation to set up your secure credentials via Auth0.
+              You will receive an email to set up your secure password.
             </p>
             <div className="flex gap-2 pt-4">
               <Button type="button" variant="ghost" onClick={() => setStep(1)}>

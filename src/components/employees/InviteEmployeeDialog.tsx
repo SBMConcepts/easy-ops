@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
-import { useTenantApi } from '../../hooks/useTenantApi'
+import { supabase } from '../../integrations/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/button'
 import {
@@ -30,7 +30,6 @@ interface Props {
 }
 
 export const InviteEmployeeDialog = ({ onInvited }: Props) => {
-  const { apiFetch } = useTenantApi() // Leverage your new secure API bridge
   const queryClient = useQueryClient()
 
   const [open, setOpen] = useState(false)
@@ -59,25 +58,33 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
 
     setLoading(true)
     try {
-      // Send a single, secure payload to the Express backend.
-      // The backend will handle the Auth0 invitation ticket and DB inserts securely.
-      const newEmployee = await apiFetch<NewEmployee>('employees/invite', {
-        method: 'POST',
-        body: JSON.stringify({
+      // Privileged invite Edge Function: creates the Supabase auth user (emails a
+      // set-password link) and an 'invited' membership in the caller's tenant.
+      // The handle_new_user() trigger activates the membership on first sign-in.
+      const { error } = await supabase.functions.invoke('tenant-invite-member', {
+        body: {
           email: email.trim(),
-          full_name: fullName.trim(),
+          fullName: fullName.trim(),
           role,
-          department: department.trim() || null,
-          site: site.trim() || null,
-        }),
+        },
       })
+
+      if (error) throw error
 
       toast.success(`Invitation successfully dispatched to ${email}`)
 
       // Auto-refresh the employee table behind the modal
       queryClient.invalidateQueries({ queryKey: ['workspace-employees'] })
 
-      if (onInvited && newEmployee) onInvited(newEmployee)
+      if (onInvited) {
+        onInvited({
+          full_name: fullName.trim(),
+          email: email.trim(),
+          role,
+          department: department.trim() || null,
+          site: site.trim() || null,
+        })
+      }
 
       resetForm()
       setOpen(false)

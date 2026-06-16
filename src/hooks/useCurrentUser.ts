@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuth0 } from '@auth0/auth0-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useTenantApi } from './useTenantApi'
+import { supabase } from '../integrations/supabase/client'
 
 import type { Database } from '../integrations/supabase/types'
 
@@ -15,29 +14,25 @@ type TenantStatus = Database['public']['Enums']['tenant_status']
 // =============================================================================
 // useCurrentUser
 //
-// Fetches and caches the authenticated user's full profile from the Express
-// backend (/api/userinfo). This is the canonical source for profile data in
-// components that need it outside the AuthContext (e.g. settings pages,
+// Fetches and caches the authenticated user's full profile directly from
+// Supabase (RLS-scoped). This is the canonical source for enriched profile
+// data in components that need it outside the AuthContext (settings pages,
 // profile editors, admin panels that display the current operator).
 //
 // Relationship with AuthContext:
 //   AuthContext.user  — lightweight session identity (always available after
-//                       login, no extra query needed, drives role guards)
-//   useCurrentUser    — full enriched profile with membership details,
-//                       cached and refetchable via React Query
-//
-// They share the same backend endpoint so the data is identical; the
-// distinction is cache lifecycle and subscription granularity.
+//                       login, drives role guards)
+//   useCurrentUser    — full enriched profile with membership, tenant, plan
+//                       and employee-profile details, cached via React Query
 // =============================================================================
 
 // ── Response contract ─────────────────────────────────────────────────────────
-// Documents the exact shape /api/userinfo must return.
-// Keep this in sync with the Express route response serialiser.
+// The flattened shape components consume. Assembled client-side from several
+// RLS-scoped Supabase reads keyed off the active session.
 
 export interface CurrentUserProfile {
   // ── from public.users ──────────────────────────────────────────────────────
-  profile_id: string // users.id (Auth0 sub)
-  auth0_user_id: string // users.auth0_user_id
+  profile_id: string // users.id (Supabase auth uid)
   email: string
   full_name: string
   avatar_url: string | null
@@ -47,11 +42,10 @@ export interface CurrentUserProfile {
   tenant_id: string
   role: TenantRole
   membership_status: MembershipStatus
-  joined_at: string // ISO timestamp
+  joined_at: string | null // ISO timestamp
 
   // ── from public.tenants ────────────────────────────────────────────────────
   tenant_name: string
-  tenant_auth0_org: string
   tenant_status: TenantStatus
   tenant_logo: string | null
   tenant_country: string
@@ -63,7 +57,7 @@ export interface CurrentUserProfile {
   seat_cap: number | null
   current_period_end: string | null
 
-  // ── from public.employee_profiles (LEFT JOIN; null if no profile row) ───────
+  // ── from public.employee_profiles (null if no profile row) ──────────────────
   assigned_site_id: string | null
   phone: string | null
   address: string | null
@@ -75,30 +69,99 @@ export interface CurrentUserProfile {
 
 export const currentUserKeys = {
   all: ['current-user'] as const,
-  profile: (sub: string | undefined) => ['current-user', 'profile', sub] as const,
+  profile: (id: string | undefined) => ['current-user', 'profile', id] as const,
+}
+
+// ── Loader ───────────────────────────────────────────────────────────────────
+
+async function loadCurrentUserProfile(userId: string): Promise<CurrentUserProfile | null> {
+  const [{ data: userRow }, { data: membershipRows }] = await Promise.all([
+    supabase
+      .from('users')
+      .select('id, email, full_name, avatar_url, status')
+      .eq('id', userId)
+      .maybeSingle(),
+    supabase
+      .from('memberships')
+      .select(
+        'id, role, status, joined_at, tenant_id, tenants(name, status, logo_url, country, industry)'
+      )
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .order('joined_at', { ascending: true, nullsFirst: false })
+      .limit(1),
+  ])
+
+  const membership = membershipRows?.[0]
+  if (!userRow || !membership) return null
+
+  const tenant = membership.tenants as {
+    name: string
+    status: TenantStatus
+    logo_url: string | null
+    country: string
+    industry: string | null
+  } | null
+
+  const [{ data: plan }, { data: employeeProfile }] = await Promise.all([
+    supabase
+      .from('tenant_active_plan')
+      .select('plan, billing_status, seat_cap, current_period_end')
+      .eq('tenant_id', membership.tenant_id)
+      .maybeSingle(),
+    supabase
+      .from('employee_profiles')
+      .select('site_id, phone, address, job_title')
+      .eq('membership_id', membership.id)
+      .maybeSingle(),
+  ])
+
+  return {
+    profile_id: userRow.id,
+    email: userRow.email,
+    full_name: userRow.full_name,
+    avatar_url: userRow.avatar_url,
+    user_status: userRow.status,
+
+    tenant_id: membership.tenant_id,
+    role: membership.role,
+    membership_status: membership.status,
+    joined_at: membership.joined_at,
+
+    tenant_name: tenant?.name ?? '',
+    tenant_status: tenant?.status ?? 'active',
+    tenant_logo: tenant?.logo_url ?? null,
+    tenant_country: tenant?.country ?? '',
+    tenant_industry: tenant?.industry ?? null,
+
+    plan: plan?.plan ?? null,
+    billing_status: plan?.billing_status ?? null,
+    seat_cap: plan?.seat_cap ?? null,
+    current_period_end: plan?.current_period_end ?? null,
+
+    assigned_site_id: employeeProfile?.site_id ?? null,
+    phone: employeeProfile?.phone ?? null,
+    address: employeeProfile?.address ?? null,
+    job_title: employeeProfile?.job_title ?? null,
+  }
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useCurrentUser() {
-  const { user: auth0User, isLoading: isAuth0Loading } = useAuth0()
-  const { isAuthenticated, user: authUser } = useAuth()
-  const { apiFetch } = useTenantApi()
+  const { isAuthenticated, isLoading: isAuthLoading, user: authUser } = useAuth()
   const queryClient = useQueryClient()
 
+  const userId = authUser?.id || undefined
+
   const query = useQuery({
-    queryKey: currentUserKeys.profile(authUser?.id ?? auth0User?.sub ?? undefined),
-    queryFn: () => apiFetch<CurrentUserProfile>('/userinfo'),
-    // Only run when AuthContext has confirmed identity — avoids a 401 flash on mount
-    enabled: isAuthenticated && !!(authUser?.id ?? auth0User?.sub),
+    queryKey: currentUserKeys.profile(userId),
+    queryFn: () => loadCurrentUserProfile(userId as string),
+    // Only run when AuthContext has confirmed identity
+    enabled: isAuthenticated && !!userId,
     // 5 minutes: profile data is slow-changing; role/plan changes trigger
-    // explicit invalidation via refreshProfile() or refetch()
+    // explicit invalidation via refetchProfile()
     staleTime: 1000 * 60 * 5,
-    // On a 401, do not retry — the session is gone; Auth0 will handle re-auth
-    retry: (failureCount, error) => {
-      if (error instanceof Error && error.message.startsWith('401')) return false
-      return failureCount < 2
-    },
   })
 
   /**
@@ -111,12 +174,9 @@ export function useCurrentUser() {
     await queryClient.invalidateQueries({ queryKey: currentUserKeys.all })
   }
 
-  const profile = query.data
+  const profile = query.data ?? undefined
 
   return {
-    // ── Raw Auth0 session (always available after login) ─────────────────────
-    auth0User,
-
     // ── Enriched DB profile (available after first successful query) ─────────
     profile,
 
@@ -128,7 +188,7 @@ export function useCurrentUser() {
     isMembershipActive: profile?.membership_status === 'active',
 
     // ── Loading / error state ─────────────────────────────────────────────────
-    isLoading: isAuth0Loading || query.isLoading,
+    isLoading: isAuthLoading || query.isLoading,
     isFetching: query.isFetching,
     isError: query.isError,
     error: query.error,

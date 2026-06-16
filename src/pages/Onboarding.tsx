@@ -17,7 +17,7 @@ import CheckInMethodsStep, {
 } from '../components/onboarding/CheckInMethodsStep'
 import ReviewStep from '../components/onboarding/ReviewStep'
 import { useCurrentUser } from '../hooks/useCurrentUser'
-import type { Json } from '../../server/types/supabase'
+import type { Json } from '../integrations/supabase/types'
 
 const LAST_STEP = 6
 

@@ -19,8 +19,9 @@ const AppHeader = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    logout() // Auth0 logout handles the redirect automatically
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login', { replace: true })
   }
 
   return (
