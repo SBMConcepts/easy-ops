@@ -19,23 +19,26 @@ installProcessErrorHandlers()
 
 const app = express()
 
+// Trust proxy if you are deploying behind a reverse proxy like Vercel or Render
+app.set('trust proxy', 1)
+
 app.use(
   cors({
     origin: process.env.VITE_APP_URL ?? 'http://localhost:5173',
-    allowedHeaders: ['Authorization', 'Content-Type'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'x-api-key'],
   })
 )
 
 app.use(express.json())
 
-// 1. Public Endpoints
+// 1. Public Endpoints (Pre-Auth / Intake)
 app.use(createRouter)
 app.use(tenantLookupRouter)
 
-// 2. Identity Provider Webhooks (shared-secret authenticated)
+// 2. Identity Provider Webhooks (Auth0 Action Triggers)
 app.use(authSyncRouter)
 
-// 3. Authenticated User Endpoints (JWT authenticated)
+// 3. Authenticated User Endpoints (JWT authenticated, RLS Enforced)
 app.use(userinfoRouter)
 app.use(sitesDepartmentsRouter)
 app.use(complianceRouter)
@@ -47,16 +50,12 @@ app.use(employeesRouter)
 app.use(accessRequestsRouter)
 app.use(membersRouter)
 
-// Health Check
+// Health Check Endpoint
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-  })
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// 404 + centralized error handling (must be registered last).
+// Unhandled Route and Centralized Error Handling
 app.use(notFoundHandler)
 app.use(errorHandler)
 

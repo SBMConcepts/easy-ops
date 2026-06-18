@@ -1,9 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// GET /api/session — the authenticated user's session summary: their
-// memberships and the active membership for the token's organization. Mirrors
-// the (now removed) TanStack `getMySession` server fn. The user row is linked
-// from token claims on each call (idempotent, mirrors POST /api/auth/sync); the
-// canonical activation of invited memberships still happens in /api/auth/sync.
 import { Router, Response } from 'express'
 import { withTenantContext } from '../lib/db.js'
 import { requireAuth0Auth, type AuthenticatedRequest } from '../lib/auth-middleware.js'
@@ -16,32 +11,29 @@ router.get(
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const authCtx = req.auth!
+      const email = (authCtx.email || '').toLowerCase().trim()
+
+      if (!email) {
+        return res
+          .status(400)
+          .json({ error: 'Invalid claims: Email address is missing from identity token.' })
+      }
 
       const result = await withTenantContext(authCtx, async (client) => {
-        // Link the local user row to the Auth0 identity (keyed on email so a
-        // previously-invited 'pending|email' row is upgraded, not duplicated).
-        const email = (authCtx.email ?? '').toLowerCase().trim()
-        if (email) {
-          await client.query(
-            `INSERT INTO public.users (id, auth0_user_id, email, full_name, avatar_url, status)
-             VALUES ($1, $1, $2, $3, $4, 'active'::public.user_status)
-             ON CONFLICT (email) DO UPDATE SET
-               auth0_user_id = EXCLUDED.auth0_user_id,
-               full_name = COALESCE(EXCLUDED.full_name, public.users.full_name),
-               avatar_url = COALESCE(EXCLUDED.avatar_url, public.users.avatar_url),
-               updated_at = now()`,
-            [authCtx.auth0UserId, email, authCtx.name ?? email, authCtx.picture ?? null]
-          )
-        }
+        // Safe check-and-insert profile boundary for resilience on client loads
+        await client.query(
+          `INSERT INTO public.users (id, auth0_user_id, email, full_name, status, created_at)
+           VALUES ($1, $1, $2, $3, 'active', NOW())
+           ON CONFLICT (email) DO UPDATE 
+           SET auth0_user_id = EXCLUDED.auth0_user_id, id = EXCLUDED.id
+           WHERE public.users.auth0_user_id IS NULL OR public.users.id LIKE 'pending|%'`,
+          [authCtx.auth0UserId, email, authCtx.name || 'Workspace User']
+        )
 
-        // memberships.user_id references users.id (which may be 'pending|email'
-        // or the Auth0 sub), so resolve via auth0_user_id rather than the sub.
+        // Select all active memberships for this authenticated operator
         const membershipsRes = await client.query(
-          `SELECT
-             m.id            AS id,
-             m.role          AS role,
-             m.status        AS status,
-             m.tenant_id     AS tenant_id,
+          `SELECT 
+             m.id, m.role, m.status, m.tenant_id,
              t.id            AS tenant__id,
              t.name          AS tenant__name,
              t.slug          AS tenant__slug,
@@ -51,7 +43,7 @@ router.get(
            FROM public.memberships m
            JOIN public.users u ON u.id = m.user_id
            JOIN public.tenants t ON t.id = m.tenant_id
-           WHERE u.auth0_user_id = $1`,
+           WHERE u.auth0_user_id = $1 AND m.status = 'active'::public.membership_status`,
           [authCtx.auth0UserId]
         )
 
@@ -73,6 +65,7 @@ router.get(
         },
       }))
 
+      // Pin active workspace context matching the active Auth0 token's target organization
       const activeMembership = authCtx.orgId
         ? (memberships.find((m) => m.tenants.auth0_org_id === authCtx.orgId) ?? null)
         : null
@@ -80,15 +73,13 @@ router.get(
       return res.status(200).json({
         userId: authCtx.auth0UserId,
         email: authCtx.email,
-        orgId: authCtx.orgId || null,
-        permissions: authCtx.permissions,
-        roles: authCtx.role ? [authCtx.role] : [],
-        memberships,
+        orgId: authCtx.orgId,
         activeMembership,
+        memberships,
       })
     } catch (error: any) {
-      console.error('GET /api/session failed:', error)
-      return res.status(500).json({ error: 'Failed to load session.' })
+      console.error('Session loading endpoint failed:', error)
+      return res.status(500).json({ error: error.message })
     }
   }
 )

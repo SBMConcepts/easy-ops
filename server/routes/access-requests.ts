@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Router, Response } from 'express'
-import { AppRole } from '../lib/auth.js'
 import { withTenantContext } from '../lib/db.js'
 import {
   requireAuth0Org,
@@ -12,12 +11,10 @@ const router = Router()
 
 interface AccessRequestPayload {
   requestId?: string
-  assignedRole?: AppRole
+  assignedRole?: string
 }
 
-// Lists the calling tenant's pending access requests. Resolves the Auth0 org
-// id to the tenant UUID (target_tenant_id is a UUID FK, never the Auth0 org id)
-// and returns only 'pending' rows so the admin queue stays focused.
+// GET /api/access-requests - Lists pending requests for the current workspace
 router.get(
   '/api/access-requests',
   requireAuth0Org,
@@ -47,33 +44,35 @@ router.get(
 
       return res.status(200).json({ requests: rows })
     } catch (error: any) {
+      console.error('Failed to get access requests:', error)
       return res.status(500).json({ error: error.message })
     }
   }
 )
 
+// POST /api/access-requests/approve-and-invite
 router.post(
   '/api/access-requests/approve-and-invite',
   requireAuth0Org,
   requirePermission('approve:access-requests'),
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     const authCtx = req.auth!
-
     const { requestId, assignedRole = 'employee' } = req.body as AccessRequestPayload
 
-    if (!requestId) return res.status(400).json({ error: 'Missing requestId' })
+    if (!requestId) return res.status(400).json({ error: 'Missing required parameter: requestId' })
 
     try {
-      const queryResult = await withTenantContext(authCtx, async (client) => {
+      const success = await withTenantContext(authCtx, async (client) => {
         const result = await client.query(
           `SELECT public.approve_access_request_and_invite($1::uuid, $2::public.tenant_role) AS success`,
           [requestId, assignedRole]
         )
-        return result.rows[0]
+        return result.rows[0]?.success
       })
 
-      return res.status(200).json({ success: true, data: queryResult })
+      return res.status(200).json({ success })
     } catch (error: any) {
+      console.error('Approval mapping routine rejected:', error)
       return res.status(500).json({ error: error.message })
     }
   }

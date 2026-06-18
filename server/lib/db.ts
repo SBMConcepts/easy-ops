@@ -24,6 +24,9 @@ export function getPool(): InstanceType<typeof Pool> {
   return _pool
 }
 
+// Executes a database query under the strict scope of the authenticated user.
+// This simulates Supabase's native auth context, allowing Express to trigger
+// Postgres Row Level Security (RLS) identically to frontend calls.
 export async function withTenantContext<T>(
   ctx: AuthContext,
   callback: (client: PoolClient) => Promise<T>
@@ -34,12 +37,18 @@ export async function withTenantContext<T>(
   try {
     await client.query('BEGIN')
 
+    // Construct a simulated JWT payload that matches your custom Supabase functions
+    // e.g. current_user_id() uses ->> 'sub'
+    // e.g. current_tenant_id() uses ->> 'org_id'
     const simulatedJwtClaims = {
       sub: ctx.auth0UserId,
+      org_id: ctx.orgId, // Injected at the root so auth.jwt()->>'org_id' works perfectly
       [`${CLAIM_NAMESPACE}org_id`]: ctx.orgId,
       [`${CLAIM_NAMESPACE}role`]: ctx.role,
     }
 
+    // Inject the simulated JWT into the Postgres session configuration.
+    // The `true` parameter makes this variable locally scoped to this transaction only.
     await client.query(`SELECT set_config('request.jwt.claims', $1, true)`, [
       JSON.stringify(simulatedJwtClaims),
     ])
@@ -48,9 +57,9 @@ export async function withTenantContext<T>(
 
     await client.query('COMMIT')
     return result
-  } catch (error) {
-    await client.query('ROLLBACK')
-    throw error
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => null)
+    throw err
   } finally {
     client.release()
   }

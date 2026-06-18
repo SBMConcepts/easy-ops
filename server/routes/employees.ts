@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Router, Response } from 'express'
-import { AppRole } from '../lib/auth.js'
 import { withTenantContext } from '../lib/db.js'
 import {
   requireAuth0Org,
@@ -20,7 +19,7 @@ const auth0 = new ManagementClient({
 interface InviteStaffPayload {
   email?: string
   full_name?: string
-  role?: AppRole
+  role?: string
   departmentId?: string | null
   siteId?: string | null
 }
@@ -32,66 +31,74 @@ router.post(
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const authCtx = req.auth!
-
       const { email, full_name, role, departmentId, siteId } = req.body as InviteStaffPayload
 
       if (!email || !full_name || !role) {
-        return res.status(400).json({ error: 'Missing required fields' })
+        return res
+          .status(400)
+          .json({ error: 'Missing required invitation fields: email, full_name, or role.' })
       }
 
-      const localProvisionResult = await withTenantContext(authCtx, async (client) => {
-        // authCtx.orgId is the Auth0 org id (org_...). memberships.tenant_id and
-        // employee_profiles.tenant_id are UUID FKs to tenants.id, so resolve the
-        // internal tenant UUID first.
+      const targetEmail = email.trim().toLowerCase()
+      const newUserId = `pending|${targetEmail}` // Deterministic placeholder ID
+
+      await withTenantContext(authCtx, async (client) => {
         const tenantRes = await client.query(
-          `SELECT id FROM public.tenants WHERE auth0_org_id = $1 LIMIT 1`,
+          `SELECT id FROM public.tenants WHERE auth0_org_id = $1`,
           [authCtx.orgId]
         )
-        if (tenantRes.rows.length === 0) {
-          throw new Error('Tenant not found for the authenticated organization.')
-        }
-        const tenantUuid = tenantRes.rows[0].id as string
+        const tenantUuid = tenantRes.rows[0]?.id
+        if (!tenantUuid)
+          throw new Error('Target workspace configuration context could not be resolved.')
 
-        const userRes = await client.query(
-          `INSERT INTO public.users (id, email, full_name, status)
-         VALUES ('pending|' || $1, $1, $2, 'invited'::public.user_status)
-         ON CONFLICT (email) DO UPDATE SET full_name = EXCLUDED.full_name
-         RETURNING id`,
-          [email.trim().toLowerCase(), full_name.trim()]
+        // Create the shell user profile
+        await client.query(
+          `INSERT INTO public.users (id, email, full_name, status, created_at)
+           VALUES ($1, $2, $3, 'active', NOW())
+           ON CONFLICT (email) DO UPDATE SET full_name = EXCLUDED.full_name`,
+          [newUserId, targetEmail, full_name.trim()]
         )
 
-        const newUserId = userRes.rows[0].id
-
+        // Associate with membership row
         await client.query(
-          `INSERT INTO public.memberships (tenant_id, user_id, role, status)
-         VALUES ($1, $2, $3::public.tenant_role, 'invited'::public.membership_status)
-         ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
+          `INSERT INTO public.memberships (tenant_id, user_id, role, status, joined_at)
+           VALUES ($1, $2, $3::public.tenant_role, 'invited'::public.membership_status, NOW())
+           ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
           [tenantUuid, newUserId, role]
         )
 
+        // Provision specific operational employee layout tracking metadata
         await client.query(
           `INSERT INTO public.employee_profiles (id, tenant_id, membership_id, full_name, department_id, site_id)
-         VALUES (gen_random_uuid(), $1, (SELECT id FROM public.memberships WHERE tenant_id = $1 AND user_id = $2), $3, $4, $5)
-         ON CONFLICT (tenant_id, membership_id) DO UPDATE SET
-           full_name = EXCLUDED.full_name,
-           department_id = EXCLUDED.department_id,
-           site_id = EXCLUDED.site_id`,
-          [tenantUuid, newUserId, full_name.trim(), departmentId, siteId]
+           VALUES (
+             gen_random_uuid(), 
+             $1, 
+             (SELECT id FROM public.memberships WHERE tenant_id = $1 AND user_id = $2 LIMIT 1), 
+             $3, $4, $5
+           )
+           ON CONFLICT (tenant_id, membership_id) DO UPDATE SET
+             full_name = EXCLUDED.full_name,
+             department_id = EXCLUDED.department_id,
+             site_id = EXCLUDED.site_id`,
+          [tenantUuid, newUserId, full_name.trim(), departmentId || null, siteId || null]
         )
-
-        return { id: newUserId }
       })
 
-      await auth0.organizations.invitations.create(authCtx.orgId, {
-        inviter: { name: authCtx.auth0UserId },
-        invitee: { email: email.trim().toLowerCase() },
+      // Dispatch invitation email via the Auth0 Organization API surface
+      const invitation = await auth0.organizations.invitations.create(authCtx.orgId!, {
+        inviter: { name: authCtx.auth0UserId || 'Workspace Admin' },
+        invitee: { email: targetEmail },
         client_id: process.env.AUTH0_CLIENT_ID!,
         send_invitation_email: true,
-        app_metadata: { orgId: authCtx.orgId, role: role },
+        ttl_sec: 259200, // 3 days
+        app_metadata: {
+          role,
+        },
       })
 
-      return res.status(201).json({ success: true, employeeId: localProvisionResult.id })
+      return res.status(201).json({ success: true, invitationId: invitation.id, userId: newUserId })
     } catch (error: any) {
+      console.error('Failed to create employee invitation package:', error)
       return res.status(500).json({ error: error.message })
     }
   }

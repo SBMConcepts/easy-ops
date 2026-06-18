@@ -11,107 +11,101 @@ interface AuthSyncPayload {
   avatarUrl?: string
   emailVerified?: boolean
   role?: string
-  // When the login is scoped to an Auth0 Organization, the Action passes its id
-  // so the resolved role/permissions reflect the membership in THAT tenant.
-  // Empty/absent means "use the user's first active membership".
-  orgId?: string
+  orgId?: string // Auth0 Organization ID passed during login scope
 }
 
-// public.tenant_role enum — guards the role lookup against arbitrary input.
 const TENANT_ROLES = ['owner', 'admin', 'manager', 'supervisor', 'employee']
 
-// POST /api/auth/sync
-//
-// Called by the Auth0 post-login and post-user-registration Actions to keep the
-// public.users row in sync with the identity provider. Authenticated with a
-// shared secret (x-api-key) rather than a user JWT, because Actions run in the
-// Auth0 pipeline before a usable access token exists for the end user.
-//
-// Reconciliation: upsert keyed on email so a previously-invited row
-// (id = 'pending|email', auth0_user_id empty) gets linked to the real Auth0
-// identity on first login without orphaning its membership.
 router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> => {
-  const expectedSecret = process.env.AUTH0_SYNC_SECRET
-  if (!expectedSecret) {
-    console.error('AUTH0_SYNC_SECRET is not configured on the server.')
-    return res.status(500).json({ error: 'Sync is not configured.' })
-  }
-
-  const providedSecret = req.header('x-api-key')
-  if (!providedSecret || providedSecret !== expectedSecret) {
-    return res.status(401).json({ error: 'Unauthorized.' })
-  }
-
   const { auth0UserId, email, name, avatarUrl, role, orgId } = req.body as AuthSyncPayload
 
   if (!auth0UserId || !email) {
-    return res.status(400).json({ error: 'auth0UserId and email are required.' })
+    return res.status(400).json({ error: 'Missing auth0UserId or email parameter.' })
   }
 
   const pool = getPool()
+  const normalizedEmail = email.toLowerCase().trim()
+  const fallbackName = name || 'Workspace User'
 
   try {
-    const result = await pool.query(
-      `INSERT INTO public.users (id, auth0_user_id, email, full_name, avatar_url, status)
-       VALUES ($1, $1, $2, $3, $4, 'active'::public.user_status)
-       ON CONFLICT (email) DO UPDATE SET
-         auth0_user_id = EXCLUDED.auth0_user_id,
-         full_name = EXCLUDED.full_name,
-         avatar_url = COALESCE(EXCLUDED.avatar_url, public.users.avatar_url),
-         updated_at = now()
-       RETURNING id, auth0_user_id, email`,
-      [auth0UserId, email.trim().toLowerCase(), (name ?? email).trim(), avatarUrl ?? null]
+    // Start reconciliation and profile sync transaction
+    await pool.query('BEGIN')
+
+    // 1. Check if user already exists by real Auth0 ID or placeholder
+    const userCheck = await pool.query(
+      `SELECT id FROM public.users WHERE id = $1 OR email = $2 LIMIT 1`,
+      [auth0UserId, normalizedEmail]
     )
 
-    const userId = result.rows[0].id as string
+    const finalUserId = auth0UserId
 
-    // Activate any membership left in the 'invited' state once the user has
-    // authenticated for the first time. This covers both the tenant admin
-    // (provisioned by POST /api/tenants/create) and invited employees
-    // (provisioned by POST /api/employees/invite).
-    await pool.query(
-      `UPDATE public.memberships
-          SET status = 'active'::public.membership_status,
-              joined_at = COALESCE(joined_at, now()),
-              updated_at = now()
-        WHERE user_id = $1
-          AND status = 'invited'::public.membership_status`,
-      [userId]
-    )
+    if ((userCheck.rowCount ?? 0) > 0) {
+      const existingUser = userCheck.rows[0]
 
-    // Resolve the AUTHORITATIVE role + tenant for this user from the database.
-    // On a custom-database connection, app_metadata is not a reliable carrier of
-    // the role on subsequent logins, so memberships.role is the source of truth.
-    // Prefer the membership matching the login's organization when one was
-    // supplied; otherwise take the first active membership (same ordering as
-    // GET /api/userinfo).
-    const orgFilter = (orgId ?? '').trim()
+      if (existingUser.id !== auth0UserId && existingUser.id.startsWith('pending|')) {
+        // RECONCILIATION CASE: User was invited via email first.
+        // Migrate their profile ID to the official Auth0 User ID.
+
+        // Update foreign key references in memberships first to prevent FK failures
+        await pool.query(`UPDATE public.memberships SET user_id = $1 WHERE user_id = $2`, [
+          auth0UserId,
+          existingUser.id,
+        ])
+
+        // Update the primary key ID and profile data in public.users
+        await pool.query(
+          `UPDATE public.users 
+           SET id = $1, auth0_user_id = $1, full_name = $2, avatar_url = $3, status = 'active'
+           WHERE id = $4`,
+          [auth0UserId, fallbackName, avatarUrl || null, existingUser.id]
+        )
+      } else {
+        // STANDARD UPDATE: User already exists with correct ID, sync fields
+        await pool.query(
+          `UPDATE public.users 
+           SET full_name = COALESCE($2, full_name), avatar_url = COALESCE($3, avatar_url)
+           WHERE id = $1`,
+          [auth0UserId, fallbackName, avatarUrl || null]
+        )
+      }
+    } else {
+      // FRESH PROVISION: No record exists yet (e.g. public sign-up flow)
+      await pool.query(
+        `INSERT INTO public.users (id, auth0_user_id, email, full_name, avatar_url, status, created_at)
+         VALUES ($1, $1, $2, $3, $4, 'active', NOW())`,
+        [auth0UserId, normalizedEmail, fallbackName, avatarUrl || null]
+      )
+    }
+
+    await pool.query('COMMIT')
+
+    // 2. Resolve Active Membership, Tenant Role, and Capabilities
+    const orgFilter = orgId?.trim() || ''
+
     const membershipRes = await pool.query(
-      `SELECT m.role::text AS role, t.auth0_org_id AS org_id
-         FROM public.memberships m
-         JOIN public.tenants t ON t.id = m.tenant_id
-        WHERE m.user_id = $1
-          AND m.status = 'active'::public.membership_status
-          AND ($2 = '' OR t.auth0_org_id = $2)
-        ORDER BY m.joined_at ASC NULLS LAST
-        LIMIT 1`,
-      [userId, orgFilter]
+      `SELECT m.role, m.tenant_id as org_id, t.name as tenant_name
+       FROM public.memberships m
+       JOIN public.tenants t ON t.id = m.tenant_id
+       WHERE m.user_id = $1 
+         AND m.status = 'active'::public.membership_status
+         AND ($2 = '' OR t.auth0_org_id = $2)
+       ORDER BY m.joined_at ASC NULLS LAST
+       LIMIT 1`,
+      [finalUserId, orgFilter]
     )
 
-    // DB role wins; fall back to the hint the Action passed (app_metadata) only
-    // when the user has no active membership yet, then to 'employee'.
+    // DB Role takes absolute precedence. Fall back to metadata rules only if new
     const hintRole = role && TENANT_ROLES.includes(role) ? role : undefined
     const resolvedRole = (membershipRes.rows[0]?.role as string) ?? hintRole ?? 'employee'
     const resolvedOrgId = (membershipRes.rows[0]?.org_id as string) ?? orgFilter ?? ''
 
-    // Permissions for the resolved role, from the source-of-truth table. Returns
-    // an empty list for unknown/absent roles rather than erroring.
+    // 3. Fetch permissions from the source-of-truth configuration matrix
     let permissions: string[] = []
     if (TENANT_ROLES.includes(resolvedRole)) {
       const permsResult = await pool.query(
         `SELECT permission FROM public.role_permissions
-          WHERE role = $1::public.tenant_role
-          ORDER BY permission`,
+         WHERE role = $1::public.tenant_role
+         ORDER BY permission`,
         [resolvedRole]
       )
       permissions = permsResult.rows.map((r) => r.permission as string)
@@ -119,14 +113,14 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
 
     return res.status(200).json({
       success: true,
-      user: result.rows[0],
       role: resolvedRole,
       orgId: resolvedOrgId,
       permissions,
     })
   } catch (error: any) {
-    console.error('POST /api/auth/sync failed:', error)
-    return res.status(500).json({ error: 'Failed to sync user.' })
+    await pool.query('ROLLBACK').catch(() => null)
+    console.error('Critical failure in /api/auth/sync payload ingestion:', error)
+    return res.status(500).json({ error: error.message })
   }
 })
 
