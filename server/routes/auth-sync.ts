@@ -1,3 +1,4 @@
+//server/routes/auth-sync.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Router, Request, Response } from 'express'
 import { getPool } from '../lib/db.js'

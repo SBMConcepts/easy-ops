@@ -1,3 +1,4 @@
+//server/routes/userinfo.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Router, Response } from 'express'
 import type { PoolClient } from 'pg'

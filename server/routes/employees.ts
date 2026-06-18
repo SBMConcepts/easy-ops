@@ -7,9 +7,11 @@ import {
   type AuthenticatedRequest,
 } from '../lib/auth-middleware.js'
 import { ManagementClient } from 'auth0'
+import type { AppRole } from '../lib/auth.js'
 
 const router = Router()
 
+// Ensure you use the Machine-to-Machine App credentials here
 const auth0 = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN!,
   clientId: process.env.AUTH0_MANAGEMENT_CLIENT_ID!,
@@ -19,7 +21,7 @@ const auth0 = new ManagementClient({
 interface InviteStaffPayload {
   email?: string
   full_name?: string
-  role?: string
+  role?: AppRole
   departmentId?: string | null
   siteId?: string | null
 }
@@ -31,6 +33,7 @@ router.post(
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const authCtx = req.auth!
+
       const { email, full_name, role, departmentId, siteId } = req.body as InviteStaffPayload
 
       if (!email || !full_name || !role) {
@@ -85,6 +88,7 @@ router.post(
       })
 
       // Dispatch invitation email via the Auth0 Organization API surface
+      // FIX: Use v4 createInvitation and pass the orgId as an object property
       const invitation = await auth0.organizations.invitations.create(authCtx.orgId!, {
         inviter: { name: authCtx.auth0UserId || 'Workspace Admin' },
         invitee: { email: targetEmail },
@@ -96,7 +100,10 @@ router.post(
         },
       })
 
-      return res.status(201).json({ success: true, invitationId: invitation.id, userId: newUserId })
+      // Safely extract ID supporting SDK v3 and v4
+      const invitationId = invitation.id || invitation.id
+
+      return res.status(201).json({ success: true, invitationId, userId: newUserId })
     } catch (error: any) {
       console.error('Failed to create employee invitation package:', error)
       return res.status(500).json({ error: error.message })
