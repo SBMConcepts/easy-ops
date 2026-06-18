@@ -1,1 +1,5 @@
 project_id = "ewniypaosorbepjxnqqz"
+[auth.third_party.auth0]
+enabled = true
+tenant = "ewniypaosorbepjxnqqz"
+tenant_region = "eu-central-1" 

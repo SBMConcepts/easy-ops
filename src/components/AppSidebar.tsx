@@ -77,7 +77,7 @@ const AppSidebar = () => {
   const orgName = tenant?.name
 
   // Filter navigation items based on the user's role
-  const filteredItems = navItems.filter((item) => user?.role && item.roles.includes(user.role))
+  const filteredItems = navItems.filter((item) => item.roles.includes(user?.role))
 
   return (
     <Sidebar className="app-sidebar">
