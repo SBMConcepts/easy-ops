@@ -1,6 +1,7 @@
 //server/routes/auth-sync.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Router, Request, Response } from 'express'
+import { timingSafeEqual } from 'crypto'
 import { getPool } from '../lib/db.js'
 
 const router = Router()
@@ -17,7 +18,30 @@ interface AuthSyncPayload {
 
 const TENANT_ROLES = ['owner', 'admin', 'manager', 'supervisor', 'employee']
 
+// Constant-time comparison of the inbound x-api-key against AUTH0_SYNC_SECRET.
+// This endpoint is called by Auth0 Actions (post-login / post-registration),
+// which present the shared secret as the `x-api-key` header. It is NOT
+// JWT-protected, so the shared secret is the ONLY gate — never skip it.
+function isAuthorizedSyncRequest(req: Request): boolean {
+  const expected = process.env.AUTH0_SYNC_SECRET
+  if (!expected) {
+    console.error('AUTH0_SYNC_SECRET is not set — refusing all /api/auth/sync requests')
+    return false
+  }
+  const provided = req.headers['x-api-key']
+  if (typeof provided !== 'string' || provided.length === 0) return false
+
+  const expectedBuf = Buffer.from(expected)
+  const providedBuf = Buffer.from(provided)
+  if (expectedBuf.length !== providedBuf.length) return false
+  return timingSafeEqual(expectedBuf, providedBuf)
+}
+
 router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> => {
+  if (!isAuthorizedSyncRequest(req)) {
+    return res.status(401).json({ error: 'Unauthorized.' })
+  }
+
   const { auth0UserId, email, name, avatarUrl, role, orgId } = req.body as AuthSyncPayload
 
   if (!auth0UserId || !email) {
@@ -25,15 +49,17 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
   }
 
   const pool = getPool()
+  const client = await pool.connect()
   const normalizedEmail = email.toLowerCase().trim()
   const fallbackName = name || 'Workspace User'
 
   try {
-    // Start reconciliation and profile sync transaction
-    await pool.query('BEGIN')
+    // Reconciliation + profile sync run on a single dedicated client so that
+    // BEGIN/COMMIT/ROLLBACK all execute on the same physical connection.
+    await client.query('BEGIN')
 
     // 1. Check if user already exists by real Auth0 ID or placeholder
-    const userCheck = await pool.query(
+    const userCheck = await client.query(
       `SELECT id FROM public.users WHERE id = $1 OR email = $2 LIMIT 1`,
       [auth0UserId, normalizedEmail]
     )
@@ -48,13 +74,13 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
         // Migrate their profile ID to the official Auth0 User ID.
 
         // Update foreign key references in memberships first to prevent FK failures
-        await pool.query(`UPDATE public.memberships SET user_id = $1 WHERE user_id = $2`, [
+        await client.query(`UPDATE public.memberships SET user_id = $1 WHERE user_id = $2`, [
           auth0UserId,
           existingUser.id,
         ])
 
         // Update the primary key ID and profile data in public.users
-        await pool.query(
+        await client.query(
           `UPDATE public.users 
            SET id = $1, auth0_user_id = $1, full_name = $2, avatar_url = $3, status = 'active'
            WHERE id = $4`,
@@ -62,7 +88,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
         )
       } else {
         // STANDARD UPDATE: User already exists with correct ID, sync fields
-        await pool.query(
+        await client.query(
           `UPDATE public.users 
            SET full_name = COALESCE($2, full_name), avatar_url = COALESCE($3, avatar_url)
            WHERE id = $1`,
@@ -71,20 +97,21 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
       }
     } else {
       // FRESH PROVISION: No record exists yet (e.g. public sign-up flow)
-      await pool.query(
+      await client.query(
         `INSERT INTO public.users (id, auth0_user_id, email, full_name, avatar_url, status, created_at)
          VALUES ($1, $1, $2, $3, $4, 'active', NOW())`,
         [auth0UserId, normalizedEmail, fallbackName, avatarUrl || null]
       )
     }
 
-    await pool.query('COMMIT')
-
-    // 2. Resolve Active Membership, Tenant Role, and Capabilities
+    // 2. Resolve Active Membership, Tenant Role, and Capabilities. The org_id
+    //    returned to the caller (and injected as the JWT claim) is the Auth0
+    //    organization id (tenants.auth0_org_id) — the canonical tenant bridge
+    //    consumed by current_tenant_id() (RLS) and resolveTenantId().
     const orgFilter = orgId?.trim() || ''
 
-    const membershipRes = await pool.query(
-      `SELECT m.role, m.tenant_id as org_id, t.name as tenant_name
+    const membershipRes = await client.query(
+      `SELECT m.role, t.auth0_org_id AS org_id, t.name as tenant_name
        FROM public.memberships m
        JOIN public.tenants t ON t.id = m.tenant_id
        WHERE m.user_id = $1 
@@ -103,7 +130,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
     // 3. Fetch permissions from the source-of-truth configuration matrix
     let permissions: string[] = []
     if (TENANT_ROLES.includes(resolvedRole)) {
-      const permsResult = await pool.query(
+      const permsResult = await client.query(
         `SELECT permission FROM public.role_permissions
          WHERE role = $1::public.tenant_role
          ORDER BY permission`,
@@ -112,6 +139,8 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
       permissions = permsResult.rows.map((r) => r.permission as string)
     }
 
+    await client.query('COMMIT')
+
     return res.status(200).json({
       success: true,
       role: resolvedRole,
@@ -119,9 +148,11 @@ router.post('/api/auth/sync', async (req: Request, res: Response): Promise<any> 
       permissions,
     })
   } catch (error: any) {
-    await pool.query('ROLLBACK').catch(() => null)
+    await client.query('ROLLBACK').catch(() => null)
     console.error('Critical failure in /api/auth/sync payload ingestion:', error)
     return res.status(500).json({ error: error.message })
+  } finally {
+    client.release()
   }
 })
 

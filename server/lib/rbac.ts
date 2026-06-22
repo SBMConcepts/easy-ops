@@ -2,6 +2,7 @@ import { AuthContext, AppRole } from './auth.js'
 
 // Automatically maps to the literal union types exported from your Database schema
 const roleHierarchy: Record<AppRole, number> = {
+  owner: 5,
   admin: 4,
   manager: 3,
   supervisor: 2,

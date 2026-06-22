@@ -19,6 +19,12 @@
     },
     "types": ["vite/client", "node", "@supabase/supabase-js"]
   },
-  "include": ["src", "app", "vite.config.ts"],
+  "include": [
+    "src",
+    "app",
+    "vite.config.ts,",
+    "server",
+    ".agents/skills/auth0-saas-builder/scripts/audit-security.ts"
+  ],
   "exclude": ["supabase", "node_modules", "dist"]
 }

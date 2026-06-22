@@ -45,7 +45,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: { id: '', auth0_user_id: '', full_name: '', email: '', role: 'admin' } as AuthUser,
+  user: { id: '', auth0_user_id: '', full_name: '', email: '', role: 'employee' } as AuthUser,
   tenant: {} as AuthTenant,
   permissions: [],
   isAuthenticated: false,
