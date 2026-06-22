@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useTenantApi } from '../../hooks/useTenantApi'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/button'
 import {
   Dialog,
@@ -25,6 +25,17 @@ export interface NewEmployee {
   site: string | null
 }
 
+interface NamedRow {
+  id: string
+  name: string
+}
+
+interface InviteResponse {
+  success: boolean
+  invitationId?: string
+  userId?: string
+}
+
 interface Props {
   onInvited?: (employee: NewEmployee) => void
 }
@@ -40,15 +51,28 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<AppRole>('employee')
-  const [department, setDepartment] = useState('')
-  const [site, setSite] = useState('')
+  const [departmentId, setDepartmentId] = useState('')
+  const [siteId, setSiteId] = useState('')
+
+  // Load the tenant's sites and departments so the invite carries real UUIDs
+  // (the backend expects departmentId/siteId, not free-text names).
+  const { data: sites = [] } = useQuery({
+    queryKey: ['sites'],
+    queryFn: () => apiFetch<NamedRow[]>('sites'),
+    enabled: open,
+  })
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => apiFetch<NamedRow[]>('departments'),
+    enabled: open,
+  })
 
   const resetForm = () => {
     setFullName('')
     setEmail('')
     setRole('employee')
-    setDepartment('')
-    setSite('')
+    setDepartmentId('')
+    setSiteId('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,14 +85,14 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
     try {
       // Send a single, secure payload to the Express backend.
       // The backend will handle the Auth0 invitation ticket and DB inserts securely.
-      const newEmployee = await apiFetch<NewEmployee>('employees/invite', {
+      const result = await apiFetch<InviteResponse>('employees/invite', {
         method: 'POST',
         body: JSON.stringify({
           email: email.trim(),
           full_name: fullName.trim(),
           role,
-          department: department.trim() || null,
-          site: site.trim() || null,
+          departmentId: departmentId || null,
+          siteId: siteId || null,
         }),
       })
 
@@ -77,7 +101,16 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
       // Auto-refresh the employee table behind the modal
       queryClient.invalidateQueries({ queryKey: ['workspace-employees'] })
 
-      if (onInvited && newEmployee) onInvited(newEmployee)
+      if (onInvited && result?.success) {
+        onInvited({
+          id: result.userId,
+          full_name: fullName.trim(),
+          email: email.trim(),
+          role,
+          department: departments.find((d) => d.id === departmentId)?.name ?? null,
+          site: sites.find((s) => s.id === siteId)?.name ?? null,
+        })
+      }
 
       resetForm()
       setOpen(false)
@@ -142,20 +175,34 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
             </ModalField>
 
             <ModalField label="Department">
-              <ModalInput
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                placeholder="e.g. Operations"
-              />
+              <select
+                value={departmentId}
+                onChange={(e) => setDepartmentId(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-700 text-zinc-100 text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block p-2.5 transition-colors"
+              >
+                <option value="">Unassigned</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
             </ModalField>
           </div>
 
           <ModalField label="Default Site">
-            <ModalInput
-              value={site}
-              onChange={(e) => setSite(e.target.value)}
-              placeholder="e.g. Main Factory"
-            />
+            <select
+              value={siteId}
+              onChange={(e) => setSiteId(e.target.value)}
+              className="w-full bg-zinc-900 border border-zinc-700 text-zinc-100 text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block p-2.5 transition-colors"
+            >
+              <option value="">Unassigned</option>
+              {sites.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
           </ModalField>
 
           <div className="flex gap-3 pt-4 border-t border-zinc-800">

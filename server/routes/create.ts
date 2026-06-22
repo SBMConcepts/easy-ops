@@ -67,10 +67,23 @@ router.post('/api/tenants/create', async (req: Request, res: Response): Promise<
     try {
       await client.query('BEGIN')
 
+      // NOTE: `plan` is NOT a column on `tenants` (it lives on `subscriptions`).
+      // The live tenants schema is: id, auth0_org_id, slug, name, status,
+      // industry, country, logo_url, settings, created_at.
       await client.query(
-        `INSERT INTO public.tenants (id, auth0_org_id, slug, name, status, plan)
-         VALUES ($1, $2, $3, $4, 'provisioning'::public.tenant_status, $5)`,
-        [tenantId, auth0OrgId, slug, orgName, normalizedPlan]
+        `INSERT INTO public.tenants (id, auth0_org_id, slug, name, status)
+         VALUES ($1, $2, $3, $4, 'provisioning'::public.tenant_status)`,
+        [tenantId, auth0OrgId, slug, orgName]
+      )
+
+      // Persist the selected plan on the subscriptions row. 'trialing' keeps the
+      // plan visible via the tenant_active_plan view WITHOUT engaging the
+      // seat-cap trigger (enforce_seat_cap only counts ACTIVE subscriptions).
+      await client.query(
+        `INSERT INTO public.subscriptions (tenant_id, plan, status)
+         VALUES ($1, $2::public.billing_plan, 'trialing'::public.billing_status)
+         ON CONFLICT (tenant_id) DO UPDATE SET plan = EXCLUDED.plan`,
+        [tenantId, normalizedPlan]
       )
 
       await client.query(
@@ -80,9 +93,13 @@ router.post('/api/tenants/create', async (req: Request, res: Response): Promise<
         [pendingUserId, adminEmail.toLowerCase()]
       )
 
+      // memberships.invited_by and memberships.joined_at are both NOT NULL with
+      // no default (the BEFORE INSERT trigger handle_user_sync_from_jwt does NOT
+      // populate them), so they MUST be supplied. This admin is self-provisioned
+      // via a public endpoint, so invited_by references the pending admin itself.
       await client.query(
-        `INSERT INTO public.memberships (tenant_id, user_id, role, status)
-         VALUES ($1, $2, 'admin'::public.tenant_role, 'invited'::public.membership_status)
+        `INSERT INTO public.memberships (tenant_id, user_id, role, status, invited_by, joined_at)
+         VALUES ($1, $2, 'admin'::public.tenant_role, 'invited'::public.membership_status, $2, now())
          ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
         [tenantId, pendingUserId]
       )

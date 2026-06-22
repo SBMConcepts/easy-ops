@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { useDB } from '../contexts/DatabaseContext'
+import { useTenantApi } from '../hooks/useTenantApi'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
@@ -17,13 +17,12 @@ import CheckInMethodsStep, {
 } from '../components/onboarding/CheckInMethodsStep'
 import ReviewStep from '../components/onboarding/ReviewStep'
 import { useCurrentUser } from '../hooks/useCurrentUser'
-import type { Json } from '../../server/types/supabase'
 
 const LAST_STEP = 6
 
 export default function Onboarding() {
   const { tenant, user } = useAuth()
-  const supabase = useDB()
+  const { apiFetch } = useTenantApi()
 
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
@@ -56,81 +55,22 @@ export default function Onboarding() {
     setSaving(true)
 
     try {
-      // 1. Insert Sites sequentially so we can extract their generated UUIDs for relationships
-      let insertedSites: any[] = []
-      if (sites.length > 0) {
-        const { data: siteData, error: sitesErr } = await supabase
-          .from('sites')
-          .insert(
-            sites.map((s) => ({
-              name: s.name,
-              address: s.address,
-              geofence_radius_m: parseInt(s.geofence_radius_m || '200'),
-              latitude: parseFloat(s.latitude),
-              longitude: parseFloat(s.longitude),
-              tenant_id: tenant.id,
-            }))
-          )
-          .select()
-        if (sitesErr) throw sitesErr
-        insertedSites = siteData || []
-      }
-
-      // 2. Insert Departments (linked to Sites)
-      if (departments.length > 0) {
-        const { error: deptErr } = await supabase.from('departments').insert(
-          departments.map((d) => ({
-            name: d.name,
-            site_id: insertedSites[d.site_index]?.id || null,
-            tenant_id: tenant.id,
-          }))
-        )
-        if (deptErr) throw deptErr
-      }
-
-      // 3. Insert Custom Roles
-      if (roles.length > 0) {
-        const { error: roleErr } = await supabase.from('organisation_roles').insert(
-          roles.map((r) => ({
-            name: r.name,
-            base_role: r.base_role,
-            tenant_id: tenant.id,
-          }))
-        )
-        if (roleErr) throw roleErr
-      }
-
-      // 4. Insert Shifts (linked to Sites)
-      if (shifts.length > 0) {
-        const { error: shiftErr } = await supabase.from('shifts').insert(
-          shifts.map((s) => ({
-            name: s.name,
-            start_time: s.start_time,
-            end_time: s.end_time,
-            grace_period_minutes: parseInt(s.grace_period_minutes || '0'),
-            site_id: insertedSites[s.site_index]?.id,
-            tenant_id: tenant.id,
-          }))
-        )
-        if (shiftErr) throw shiftErr
-      }
-
-      // 5. Finalize Tenant Onboarding
-      const { error: tenantErr } = await supabase
-        .from('tenants')
-        .update({
-          name: company.name,
-          country: company.country,
-          status: 'active',
-          settings: {
-            industry: company.industry,
-            workRules: workRules,
-            checkInMethods: checkIn.methods,
-          } as unknown as Json,
-        })
-        .eq('id', tenant.id)
-
-      if (tenantErr) throw tenantErr
+      // All provisioning is performed server-side in a single transaction by
+      // the permission-gated /api/onboarding/complete endpoint. The server
+      // resolves the tenant from the caller's token, inserts sites/departments/
+      // roles/shifts with correct UUID linking, and activates the tenant.
+      await apiFetch('onboarding/complete', {
+        method: 'POST',
+        body: JSON.stringify({
+          company,
+          sites,
+          departments,
+          roles,
+          shifts,
+          workRules,
+          checkInMethods: checkIn.methods,
+        }),
+      })
 
       toast.success('Workspace successfully provisioned!')
 

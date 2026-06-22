@@ -62,28 +62,30 @@ router.post(
           [newUserId, targetEmail, full_name.trim()]
         )
 
-        // Associate with membership row
+        // Associate with membership row. invited_by + joined_at are NOT NULL
+        // with no default, so both MUST be supplied (the inviting admin is the
+        // invited_by reference).
         await client.query(
-          `INSERT INTO public.memberships (tenant_id, user_id, role, status, joined_at)
-           VALUES ($1, $2, $3::public.tenant_role, 'invited'::public.membership_status, NOW())
+          `INSERT INTO public.memberships (tenant_id, user_id, role, status, invited_by, joined_at)
+           VALUES ($1, $2, $3::public.tenant_role, 'invited'::public.membership_status, $4, NOW())
            ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
-          [tenantUuid, newUserId, role]
+          [tenantUuid, newUserId, role, authCtx.auth0UserId]
         )
 
-        // Provision specific operational employee layout tracking metadata
+        // Provision the operational employee profile. NOTE: employee_profiles
+        // is keyed on membership_id (its PK) — it has NO `id` column and NO
+        // `full_name` column (the display name lives on users). tenant_id is a
+        // denormalised projection auto-overwritten by trg_emp_profile_sync_tenant.
         await client.query(
-          `INSERT INTO public.employee_profiles (id, tenant_id, membership_id, full_name, department_id, site_id)
+          `INSERT INTO public.employee_profiles (membership_id, tenant_id, department_id, site_id)
            VALUES (
-             gen_random_uuid(), 
-             $1, 
-             (SELECT id FROM public.memberships WHERE tenant_id = $1 AND user_id = $2 LIMIT 1), 
-             $3, $4, $5
+             (SELECT id FROM public.memberships WHERE tenant_id = $1 AND user_id = $2 LIMIT 1),
+             $1, $3, $4
            )
-           ON CONFLICT (tenant_id, membership_id) DO UPDATE SET
-             full_name = EXCLUDED.full_name,
+           ON CONFLICT (membership_id) DO UPDATE SET
              department_id = EXCLUDED.department_id,
              site_id = EXCLUDED.site_id`,
-          [tenantUuid, newUserId, full_name.trim(), departmentId || null, siteId || null]
+          [tenantUuid, newUserId, departmentId || null, siteId || null]
         )
       })
 

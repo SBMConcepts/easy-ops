@@ -13,6 +13,7 @@ import complianceRouter from './routes/compliance.js'
 import sessionRouter from './routes/session.js'
 import membersRouter from './routes/members.js'
 import tenantsRouter from './routes/tenants.js'
+import onboardingRouter from './routes/onboarding.js'
 import { notFoundHandler, errorHandler, installProcessErrorHandlers } from './lib/error-handler.js'
 
 installProcessErrorHandlers()
@@ -44,6 +45,7 @@ app.use(sitesDepartmentsRouter)
 app.use(complianceRouter)
 app.use(sessionRouter)
 app.use(tenantsRouter)
+app.use(onboardingRouter)
 
 // 4. Privileged Administrative Actions
 app.use(employeesRouter)
