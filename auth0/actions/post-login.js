@@ -5,7 +5,7 @@
  * Responsibilities:
  *  1. Call POST /api/auth/sync on every login to keep the Supabase public.users
  *     row up to date (email, avatar, name) AND to resolve the AUTHORITATIVE
- *     role + org_id + permissions from the database (memberships.role and
+ *     role + org_id + permissions from the database (org_members.role and
  *     role_permissions are the source of truth — app_metadata is not reliable
  *     on a custom-database connection).
  *  2. Inject the DB-resolved role, org_id and permissions as namespaced claims
@@ -31,7 +31,7 @@ exports.onExecutePostLogin = async (event, api) => {
     (event.user.app_metadata && event.user.app_metadata.role) || event.user.app_metadata.role
 
   // 1. Sync the Supabase users row and resolve the AUTHORITATIVE role + org_id
-  //    + permissions from the database (source of truth: memberships.role and
+  //    + permissions from the database (source of truth: org_members.role and
   //    role_permissions). The claims are injected from the response below.
   const backendUrl = event.secrets && event.secrets.BACKEND_URL
   const syncSecret = event.secrets && event.secrets.AUTH0_SYNC_SECRET

@@ -32,6 +32,14 @@ const ProtectedRoute = ({ children, allowedRoles, requiredPermissions }: Protect
     return <Navigate to={loginPath} replace state={{ from: location }} />
   }
 
+  // Organization gate: an authenticated user with no organization (tenant)
+  // context cannot access tenant-scoped views. This is the Express/SPA
+  // equivalent of the former Next.js edge middleware that redirected sessions
+  // lacking an org claim away from protected routes.
+  if (!tenant?.auth0_org_id) {
+    return <Navigate to={loginPath} replace state={{ from: location }} />
+  }
+
   const needsOnboarding =
     isAdmin && tenant?.status === 'provisioning' && location.pathname !== onboardingPath
 

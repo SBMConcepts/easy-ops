@@ -31,8 +31,32 @@ export type AppPermission =
   | 'manage:payroll'
   | 'read:benefits'
   | 'manage:benefits'
-export type AuthTenant = Database['public']['Tables']['tenants']['Row']
-export type AuthUser = Database['public']['Tables']['users']['Row'] & { role: TenantRole }
+// Schema v2 identity shapes. Deliberately hand-written (not derived from the
+// generated Supabase Row types) so the context survives `supabase gen types`
+// against the organizations/org_members model. Per the v2 direction we keep the
+// "tenant" naming in code while it points at the organizations table; the org
+// key (`id`/`auth0_org_id`) is the Auth0 org id (text).
+export interface AuthUser {
+  id: string // users.id (uuid surrogate)
+  auth0_user_id: string
+  email: string
+  full_name: string
+  avatar_url: string | null
+  user_status: string
+  role: TenantRole
+}
+
+export interface AuthTenant {
+  id: string // organizations.auth0_org_id (text)
+  auth0_org_id: string
+  name: string
+  slug: string | null
+  status: string
+  plan: string | null
+  logo_url: string | null
+  country: string | null
+  industry: string | null
+}
 
 interface AuthContextType {
   user: AuthUser
@@ -106,24 +130,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
           user_status: profile.user_status,
-          created_at: '',
-          updated_at: '',
           role: profile.role,
-        } as unknown as AuthUser)
+        })
 
         setTenant({
           id: profile.tenant_id,
           name: profile.tenant_name,
           auth0_org_id: profile.tenant_auth0_org,
           status: profile.tenant_status,
+          plan: profile.plan,
           logo_url: profile.tenant_logo,
           country: profile.tenant_country,
           industry: profile.tenant_industry,
-          slug: '',
-          settings: {},
-          created_at: '',
-          updated_at: '',
-        } as AuthTenant)
+          slug: null,
+        })
       } catch (err) {
         console.error('Failed to load profile context:', err)
         setUser(null)

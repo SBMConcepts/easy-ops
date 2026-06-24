@@ -36,38 +36,38 @@ type TenantStatus = Database['public']['Enums']['tenant_status']
 
 export interface CurrentUserProfile {
   // ── from public.users ──────────────────────────────────────────────────────
-  profile_id: string // users.id (Auth0 sub)
-  auth0_user_id: string // users.auth0_user_id
+  profile_id: string // users.id (uuid surrogate)
+  auth0_user_id: string // users.auth0_user_id (Auth0 sub)
   email: string
   full_name: string
   avatar_url: string | null
   user_status: UserStatus
 
-  // ── from public.memberships ────────────────────────────────────────────────
-  tenant_id: string
+  // ── from public.org_members ────────────────────────────────────────────────
+  tenant_id: string // org_members.org_id (the Auth0 org id, text)
   role: TenantRole
   membership_status: MembershipStatus
   joined_at: string // ISO timestamp
 
-  // ── from public.tenants ────────────────────────────────────────────────────
+  // ── from public.organizations ──────────────────────────────────────────────
   tenant_name: string
   tenant_auth0_org: string
   tenant_status: TenantStatus
-  tenant_logo: string | null
-  tenant_country: string
-  tenant_industry: string | null
+  tenant_logo: string | null // organizations.metadata ->> 'logo_url'
+  tenant_country: string // organizations.metadata ->> 'country'
+  tenant_industry: string | null // organizations.metadata ->> 'industry'
 
-  // ── from tenant_active_plan view ───────────────────────────────────────────
+  // ── from public.subscriptions ──────────────────────────────────────────────
   plan: BillingPlan | null
   billing_status: BillingStatus | null
-  seat_cap: number | null
   current_period_end: string | null
 
-  // ── from public.employee_profiles (LEFT JOIN; null if no profile row) ───────
-  assigned_site_id: string | null
-  phone: string | null
-  address: string | null
-  job_title: string | null
+  // ── reintegrated with the operational schema (not returned by v2 core) ──────
+  seat_cap?: number | null
+  assigned_site_id?: string | null
+  phone?: string | null
+  address?: string | null
+  job_title?: string | null
 }
 
 // ── Query key factory ────────────────────────────────────────────────────────

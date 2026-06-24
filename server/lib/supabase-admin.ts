@@ -2,8 +2,7 @@
 // Use ONLY for trusted server-side operations (admin provisioning, etc.).
 // Never import this from client/`src` code; the service-role key must never
 // reach the browser. Mirrors the lazy-init pattern used elsewhere in server/lib.
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from '../types/supabase.js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 function createSupabaseAdminClient() {
   const SUPABASE_URL = process.env.SUPABASE_URL
@@ -17,7 +16,7 @@ function createSupabaseAdminClient() {
     throw new Error(`Missing Supabase environment variable(s): ${missing.join(', ')}.`)
   }
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -36,3 +35,10 @@ export const supabaseAdmin = new Proxy({} as ReturnType<typeof createSupabaseAdm
     return Reflect.get(_supabaseAdmin, prop, receiver)
   },
 })
+
+// Transitional untyped handle for Schema v2 tables (organizations, org_members,
+// subscriptions, invitations, audit_logs) that are not yet present in the
+// generated `Database` types. Use for those tables until `supabase gen types`
+// is re-run against the v2 migration, after which callers can switch back to
+// the typed `supabaseAdmin` and this export can be removed.
+export const supabaseAdminV2 = supabaseAdmin as unknown as SupabaseClient
