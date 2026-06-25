@@ -1,15 +1,15 @@
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth, useAuthRole, type TenantRole } from '../contexts/AuthContext'
+import { useAuth, useAuthRole, type OrgRole } from '../contexts/AuthContext'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
   // Access-tier gate: caller's role (owner|admin|member|viewer) must be listed.
-  allowedRoles?: TenantRole[]
+  allowedRoles?: OrgRole[]
 }
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, tenant, user } = useAuth()
+  const { isAuthenticated, isLoading, organization, user } = useAuth()
   const { isAdmin } = useAuthRole()
   const location = useLocation()
 
@@ -23,16 +23,16 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     return <Navigate to={loginPath} replace state={{ from: location }} />
   }
 
-  // Organization gate: an authenticated user with no organization (tenant)
-  // context cannot access tenant-scoped views. This is the Express/SPA
-  // equivalent of the former Next.js edge middleware that redirected sessions
-  // lacking an org claim away from protected routes.
-  if (!tenant?.auth0_org_id) {
+  // Organization gate: an authenticated user with no organization context
+  // cannot access org-scoped views. This is the Express/SPA equivalent of the
+  // former Next.js edge middleware that redirected sessions lacking an org
+  // claim away from protected routes.
+  if (!organization?.auth0_org_id) {
     return <Navigate to={loginPath} replace state={{ from: location }} />
   }
 
   const needsOnboarding =
-    isAdmin && tenant?.status === 'provisioning' && location.pathname !== onboardingPath
+    isAdmin && organization?.status === 'provisioning' && location.pathname !== onboardingPath
 
   if (needsOnboarding) {
     return <Navigate to={onboardingPath} replace />

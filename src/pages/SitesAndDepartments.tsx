@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react'
-import { useTenantApi } from '../hooks/useTenantApi'
+import { useOrgApi } from '../hooks/useOrgApi'
 import { useAuthRole } from '../contexts/AuthContext'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -43,7 +43,7 @@ interface DepartmentRow {
 }
 
 export default function SitesAndDepartments() {
-  const { apiFetch } = useTenantApi()
+  const { apiFetch } = useOrgApi()
   const { isAdmin, isOwner } = useAuthRole()
   const queryClient = useQueryClient()
 

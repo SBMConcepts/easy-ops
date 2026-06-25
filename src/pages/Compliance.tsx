@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import { useComplianceCheck } from '../hooks/useTenantData'
+import { useComplianceCheck } from '../hooks/useOrgData'
 import { Shield, FileCheck, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
 
 const Compliance: React.FC = () => {

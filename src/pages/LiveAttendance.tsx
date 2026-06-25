@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select'
-import { useAttendanceRecords } from '../hooks/useTenantData'
+import { useAttendanceRecords } from '../hooks/useOrgData'
 import { MapPin, Loader2 } from 'lucide-react'
 
 const LiveAttendance = () => {

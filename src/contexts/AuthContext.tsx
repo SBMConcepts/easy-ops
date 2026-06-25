@@ -1,19 +1,18 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
-import { useTenantApi } from '../hooks/useTenantApi'
+import { useOrgApi } from '../hooks/useOrgApi'
 import type { CurrentUserProfile } from '../hooks/useCurrentUser'
 
 // Access tiers — mirror the org_members.role CHECK constraint
 // (owner > admin > member > viewer). These are the ONLY role values used for
 // gating across the workspace. Job roles (org_roles) are mapped down to these
 // tiers server-side (see server/lib/rbac.ts).
-export type TenantRole = 'owner' | 'admin' | 'member' | 'viewer'
+export type OrgRole = 'owner' | 'admin' | 'member' | 'viewer'
 // Schema v2 identity shapes. Deliberately hand-written (not derived from the
 // generated Supabase Row types) so the context survives `supabase gen types`
-// against the organizations/org_members model. Per the v2 direction we keep the
-// "tenant" naming in code while it points at the organizations table; the org
-// key (`id`/`auth0_org_id`) is the Auth0 org id (text).
+// against the organizations/org_members model. The org key (`id`/`auth0_org_id`)
+// is the Auth0 org id (text).
 export interface AuthUser {
   id: string // users.id (uuid surrogate)
   auth0_user_id: string
@@ -21,10 +20,10 @@ export interface AuthUser {
   full_name: string
   avatar_url: string | null
   user_status: string
-  role: TenantRole
+  role: OrgRole
 }
 
-export interface AuthTenant {
+export interface AuthOrganization {
   id: string // organizations.auth0_org_id (text)
   auth0_org_id: string
   name: string
@@ -38,7 +37,7 @@ export interface AuthTenant {
 
 interface AuthContextType {
   user: AuthUser
-  tenant: AuthTenant
+  organization: AuthOrganization
   isAuthenticated: boolean
   isLoading: boolean
   login: (options?: { auth0OrgId?: string; invitation?: string }) => Promise<void>
@@ -47,7 +46,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: { id: '', auth0_user_id: '', full_name: '', email: '', role: 'viewer' } as AuthUser,
-  tenant: {} as AuthTenant,
+  organization: {} as AuthOrganization,
   isAuthenticated: false,
   isLoading: true,
   login: async () => {},
@@ -63,10 +62,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout: auth0Logout,
   } = useAuth0()
 
-  const { apiFetch } = useTenantApi()
+  const { apiFetch } = useOrgApi()
 
   const [user, setUser] = useState<AuthUser | null>(null)
-  const [tenant, setTenant] = useState<AuthTenant | null>(null)
+  const [organization, setOrganization] = useState<AuthOrganization | null>(null)
   const [isProfileLoading, setIsProfileLoading] = useState(true)
 
   useEffect(() => {
@@ -75,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchIdentity = async () => {
       if (!isAuthenticated || !auth0User?.sub) {
         setUser(null)
-        setTenant(null)
+        setOrganization(null)
         setIsProfileLoading(false)
         return
       }
@@ -83,9 +82,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsProfileLoading(true)
 
       try {
-        // Enriched user + tenant come from the Express backend, which reads
-        // Supabase with the verified token. This is the single source of truth
-        // for identity/organisation data across the workspace shell.
+        // Enriched user + organization come from the Express backend, which
+        // reads Supabase with the verified token. This is the single source of
+        // truth for identity/organisation data across the workspace shell.
         const profile = await apiFetch<CurrentUserProfile>('/userinfo')
 
         setUser({
@@ -98,21 +97,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: profile.role,
         })
 
-        setTenant({
-          id: profile.tenant_id,
-          name: profile.tenant_name,
-          auth0_org_id: profile.tenant_auth0_org,
-          status: profile.tenant_status,
+        setOrganization({
+          id: profile.org_id,
+          name: profile.org_name,
+          auth0_org_id: profile.org_auth0_id,
+          status: profile.org_status,
           plan: profile.plan,
-          logo_url: profile.tenant_logo,
-          country: profile.tenant_country,
-          industry: profile.tenant_industry,
+          logo_url: profile.org_logo,
+          country: profile.org_country,
+          industry: profile.org_industry,
           slug: null,
         })
       } catch (err) {
         console.error('Failed to load profile context:', err)
         setUser(null)
-        setTenant(null)
+        setOrganization(null)
       } finally {
         setIsProfileLoading(false)
       }
@@ -142,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user: user || ({} as AuthUser), // Avoid spreading null into the context value before the first profile load completes
-        tenant: tenant || ({} as AuthTenant),
+        organization: organization || ({} as AuthOrganization),
         isAuthenticated,
         isLoading: auth0Loading || isProfileLoading,
         login,
@@ -157,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => useContext(AuthContext)
 
 // Role Helpers — access tiers (owner > admin > member > viewer).
-const ROLE_HIERARCHY: Record<TenantRole, number> = {
+const ROLE_HIERARCHY: Record<OrgRole, number> = {
   viewer: 0,
   member: 1,
   admin: 2,
@@ -167,7 +166,7 @@ const ROLE_HIERARCHY: Record<TenantRole, number> = {
 export const useAuthRole = () => {
   const { user } = useAuth()
 
-  const hasMinRole = (required: TenantRole) => {
+  const hasMinRole = (required: OrgRole) => {
     if (!user) return false
     return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[required]
   }

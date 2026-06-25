@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
-import { useTenantApi } from '../../hooks/useTenantApi'
+import { useOrgApi } from '../../hooks/useOrgApi'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/button'
 import {
@@ -41,7 +41,7 @@ interface Props {
 }
 
 export const InviteEmployeeDialog = ({ onInvited }: Props) => {
-  const { apiFetch } = useTenantApi() // Leverage your new secure API bridge
+  const { apiFetch } = useOrgApi() // Leverage your new secure API bridge
   const queryClient = useQueryClient()
 
   const [open, setOpen] = useState(false)

@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useTenantApi } from './useTenantApi'
+import { useOrgApi } from './useOrgApi'
 
 // Local shapes — the access_requests table and tenant_role enum were removed in
 // the v2 schema. This dropped feature's UI is retained but its endpoints are not
@@ -13,16 +13,16 @@ export interface AccessRequestRow {
   status: string
   created_at: string
 }
-export type TenantRole = 'owner' | 'admin' | 'member' | 'viewer'
+export type OrgRole = 'owner' | 'admin' | 'member' | 'viewer'
 
 export type ApproveAndInviteBody = {
   requestId: string
   email: string
-  assignedRole?: TenantRole
+  assignedRole?: OrgRole
 }
 
 export function useAccessRequestApi() {
-  const { apiFetch } = useTenantApi()
+  const { apiFetch } = useOrgApi()
 
   const listRequests = useCallback(async (): Promise<AccessRequestRow[]> => {
     const { requests } = await apiFetch<{ requests: AccessRequestRow[] }>('access-requests', {

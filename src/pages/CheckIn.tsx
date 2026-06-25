@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { useAttendanceRecords, attendanceKeys } from '../hooks/useTenantData'
+import { useAttendanceRecords, attendanceKeys } from '../hooks/useOrgData'
 import { useDB } from '../contexts/DatabaseContext'
 import { toast } from 'sonner'
 import { QrCode, Fingerprint, MapPin, CheckCircle2, Loader2 } from 'lucide-react'
@@ -24,7 +24,7 @@ const CheckIn = () => {
   // overtime for the day rather than a clock-in/clock-out event pair.
   const logAttendance = useMutation({
     mutationFn: async () => {
-      if (!currentUser?.auth0_user_id || !currentUser?.tenant_id) {
+      if (!currentUser?.auth0_user_id || !currentUser?.org_id) {
         throw new Error('User profile not loaded')
       }
       const hours = Number(hoursWorked)
@@ -33,7 +33,7 @@ const CheckIn = () => {
       if (!Number.isFinite(ot) || ot < 0) throw new Error('Enter valid overtime hours')
 
       const { error } = await supabase.from('org_attendance').insert({
-        org_id: currentUser.tenant_id,
+        org_id: currentUser.org_id,
         user_id: currentUser.auth0_user_id,
         date: new Date().toISOString().slice(0, 10),
         method: selectedMethod,

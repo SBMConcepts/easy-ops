@@ -7,7 +7,7 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
-import { useTenantApi } from '../hooks/useTenantApi'
+import { useOrgApi } from '../hooks/useOrgApi'
 
 // Local plan union for the public registration package picker. organizations.plan
 // and subscriptions.plan are plain text/enum columns server-side; this is just
@@ -37,7 +37,7 @@ const PACKAGES: { id: BillingPlan; name: string; price: string; features: string
 
 export default function Register() {
   const navigate = useNavigate()
-  const { apiFetch } = useTenantApi()
+  const { apiFetch } = useOrgApi()
   const [step, setStep] = useState<1 | 2>(1)
   const [form, setForm] = useState({
     companyName: '',

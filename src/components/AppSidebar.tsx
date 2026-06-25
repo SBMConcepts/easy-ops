@@ -1,7 +1,7 @@
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import type { TenantRole } from '../contexts/AuthContext'
+import type { OrgRole } from '../contexts/AuthContext'
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +21,7 @@ interface NavItem {
   title: string
   url: string
   icon: React.ElementType
-  roles: TenantRole[]
+  roles: OrgRole[]
 }
 
 const navItems: NavItem[] = [
@@ -70,11 +70,11 @@ const navItems: NavItem[] = [
 ]
 
 const AppSidebar = () => {
-  const { user, tenant } = useAuth()
+  const { user, organization } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
 
-  const orgName = tenant?.name
+  const orgName = organization?.name
 
   // Filter navigation items based on the user's role
   const filteredItems = navItems.filter((item) => item.roles.includes(user?.role))

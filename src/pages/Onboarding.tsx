@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { useTenantApi } from '../hooks/useTenantApi'
+import { useOrgApi } from '../hooks/useOrgApi'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
@@ -21,15 +21,15 @@ import { useCurrentUser } from '../hooks/useCurrentUser'
 const LAST_STEP = 6
 
 export default function Onboarding() {
-  const { tenant, user } = useAuth()
-  const { apiFetch } = useTenantApi()
+  const { organization, user } = useAuth()
+  const { apiFetch } = useOrgApi()
 
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
 
   // ── Form State ─────────────────────────────────────────────────────────────
   const [company, setCompany] = useState<CompanyData>({
-    name: tenant?.name || '',
+    name: organization?.name || '',
     country: 'South Africa',
     industry: 'Technology',
   })
@@ -51,13 +51,13 @@ export default function Onboarding() {
 
   // ── Database Orchestration ─────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!tenant || !user) return
+    if (!organization || !user) return
     setSaving(true)
 
     try {
       // All provisioning is performed server-side in a single transaction by
       // the permission-gated /api/onboarding/complete endpoint. The server
-      // resolves the tenant from the caller's token, inserts sites/departments/
+      // resolves the organization from the caller's token, inserts sites/departments/
       // roles/shifts with correct UUID linking, and activates the tenant.
       await apiFetch('onboarding/complete', {
         method: 'POST',

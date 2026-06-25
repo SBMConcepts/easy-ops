@@ -18,7 +18,7 @@ interface ApiFetchOptions extends RequestInit {
   requireAuth?: boolean
 }
 
-export function useTenantApi() {
+export function useOrgApi() {
   const { getAccessTokenSilently } = useAuth0()
 
   const attachAuth0Auth = useCallback(

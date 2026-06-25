@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
-import { useAttendanceRecords } from '../../hooks/useTenantData'
+import { useAttendanceRecords } from '../../hooks/useOrgData'
 import { Users, UserCheck, Clock } from 'lucide-react'
 import { DashboardLoader, AttendanceRow } from './DashboardLoader'
 import '../../styles/dashboard.css'

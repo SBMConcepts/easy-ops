@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useDB } from '../contexts/DatabaseContext'
 import { useAuth } from '../contexts/AuthContext'
-import { useTenantApi } from './useTenantApi'
+import { useOrgApi } from './useOrgApi'
 import type { Database } from '../integrations/supabase/types'
 
 // v2 operational tables. org_sites replaces the legacy `sites` table; the daily
@@ -80,7 +80,7 @@ export function useAttendanceRecords() {
 
 // ── 3. Compliance Summary (via Express + RLS) ───────────────────────────────
 export function useComplianceCheck() {
-  const { apiFetch } = useTenantApi()
+  const { apiFetch } = useOrgApi()
   const { user } = useAuth()
 
   return useQuery({

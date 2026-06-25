@@ -2,8 +2,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import { z } from 'zod'
 import { useAuth } from '../contexts/AuthContext'
-import { useAttendanceRecords } from '../hooks/useTenantData'
-import { useTenantApi } from '../hooks/useTenantApi'
+import { useAttendanceRecords } from '../hooks/useOrgData'
+import { useOrgApi } from '../hooks/useOrgApi'
 import { currentUserKeys, useCurrentUser } from '../hooks/useCurrentUser'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
@@ -29,7 +29,7 @@ type ProfileForm = z.infer<typeof profileSchema>
 
 export default function Settings() {
   const { user } = useAuth()
-  const { apiFetch } = useTenantApi()
+  const { apiFetch } = useOrgApi()
   const { profile } = useCurrentUser()
   const queryClient = useQueryClient()
 

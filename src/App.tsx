@@ -40,12 +40,12 @@ const MarketingRoutes = () => (
 )
 
 // ── Workspace shell ──────────────────────────────────────────────────────────────
-// Authenticated application routes. Tenant context is derived automatically via JWT.
+// Authenticated application routes. Organization context is derived automatically via JWT.
 const WorkspaceShell = () => {
-  const { isAuthenticated, isLoading, user, tenant } = useAuth()
+  const { isAuthenticated, isLoading, user, organization } = useAuth()
 
   // Handle initialization loading frames safely
-  if (isLoading || (isAuthenticated && !user) || (isAuthenticated && !tenant)) {
+  if (isLoading || (isAuthenticated && !user) || (isAuthenticated && !organization)) {
     return <DashboardLoader />
   }
 

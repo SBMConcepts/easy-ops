@@ -1,10 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useTenantApi } from './useTenantApi'
+import { useOrgApi } from './useOrgApi'
 
 // Access tier — mirrors org_members.role (owner|admin|member|viewer).
-type TenantRole = 'owner' | 'admin' | 'member' | 'viewer'
+type OrgRole = 'owner' | 'admin' | 'member' | 'viewer'
 // org_members.status CHECK (active|suspended).
 type MembershipStatus = 'active' | 'suspended'
 
@@ -40,18 +40,18 @@ export interface CurrentUserProfile {
   user_status: string
 
   // ── from public.org_members ────────────────────────────────────────────────
-  tenant_id: string // org_members.org_id (the Auth0 org id, text)
-  role: TenantRole
+  org_id: string // org_members.org_id (the Auth0 org id, text)
+  role: OrgRole
   membership_status: MembershipStatus
   joined_at: string // ISO timestamp
 
   // ── from public.organizations ──────────────────────────────────────────────
-  tenant_name: string
-  tenant_auth0_org: string
-  tenant_status: string
-  tenant_logo: string | null // organizations.metadata ->> 'logo_url'
-  tenant_country: string // organizations.metadata ->> 'country'
-  tenant_industry: string | null // organizations.metadata ->> 'industry'
+  org_name: string
+  org_auth0_id: string
+  org_status: string
+  org_logo: string | null // organizations.metadata ->> 'logo_url'
+  org_country: string // organizations.metadata ->> 'country'
+  org_industry: string | null // organizations.metadata ->> 'industry'
 
   // ── from public.subscriptions ──────────────────────────────────────────────
   plan: string | null
@@ -79,7 +79,7 @@ export const currentUserKeys = {
 export function useCurrentUser() {
   const { user: auth0User, isLoading: isAuth0Loading } = useAuth0()
   const { isAuthenticated, user: authUser } = useAuth()
-  const { apiFetch } = useTenantApi()
+  const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
 
   const query = useQuery({

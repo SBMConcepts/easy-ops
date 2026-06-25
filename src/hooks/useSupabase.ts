@@ -2,9 +2,11 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { useMemo } from 'react'
+import { AUTH0_CLAIM_NS } from '../lib/auth0-config'
 
-// Define the namespace you used in your Auth0 Action
-const CLAIM_NAMESPACE = 'https://easy-ops-za.vercel.app/supabase_jwt'
+// The Auth0 Action mints a Supabase JWT and injects it as a namespaced ID-token
+// claim. Must match server/lib/auth.ts (AUTH0_CLAIM_NS) and the DB org_id().
+const CLAIM_NAMESPACE = `${AUTH0_CLAIM_NS}supabase_jwt`
 
 export function useSupabase(): SupabaseClient {
   const { getIdTokenClaims } = useAuth0()
