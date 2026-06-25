@@ -227,25 +227,10 @@ export default function Settings() {
                       {myAttendance.map((r, i) => (
                         <div key={i} className="settings-activity-row">
                           <span className="settings-activity-date">{r.date}</span>
-                          <span className="settings-activity-time">
-                            {r.clock_in
-                              ? new Date(r.clock_in).toLocaleTimeString([], {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })
-                              : '—'}
-                            {' → '}
-                            {r.clock_out
-                              ? new Date(r.clock_out).toLocaleTimeString([], {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })
-                              : '—'}
+                          <span className="settings-activity-time uppercase">{r.method}</span>
+                          <span className="settings-activity-hours">
+                            {r.hours_worked}h{r.overtime ? ` +${r.overtime}h OT` : ''}
                           </span>
-                          <span className="settings-activity-hours">{r.hours_worked ?? 0}h</span>
-                          <Badge variant="outline" className="capitalize">
-                            {r.status}
-                          </Badge>
                         </div>
                       ))}
                     </div>

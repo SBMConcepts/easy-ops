@@ -1,35 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query'
 import { useDB } from '../contexts/DatabaseContext'
 import { useAuth } from '../contexts/AuthContext'
 import { useTenantApi } from './useTenantApi'
+import type { Database } from '../integrations/supabase/types'
 
-// Legacy row shapes. The `sites` and `attendance_records` tables predate the v2
-// schema and no longer exist in the database (replaced by org_sites /
-// org_attendance with a different shape). These hooks and the pages that depend
-// on them are retained for UI continuity but will not return data at runtime
-// until refactored onto the new endpoints. Typed locally so the views compile.
-export interface SiteRow {
-  id: string
-  name: string
-  address: string | null
-  latitude: number | null
-  longitude: number | null
-  geofence_radius_m: number | null
-}
-
-export interface AttendanceRow {
-  id: string
-  employee_id: string
-  tenant_id: string
-  site_id: string | null
-  method: string
-  status: string
-  date: string
-  clock_in: string | null
-  clock_out: string | null
-  hours_worked: number | null
-}
+// v2 operational tables. org_sites replaces the legacy `sites` table; the daily
+// org_attendance aggregate (one row per user per day) replaces the legacy
+// `attendance_records` event log. Typed directly from the generated schema —
+// the useDB() client is fully typed, so no `any` casts are needed.
+export type SiteRow = Database['public']['Tables']['org_sites']['Row']
+export type AttendanceRow = Database['public']['Tables']['org_attendance']['Row']
 
 export const attendanceKeys = {
   all: ['attendance'] as const,
@@ -68,9 +48,9 @@ export function useSites() {
   return useQuery({
     queryKey: sitesKeys.lists(),
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from('sites').select('*').order('name')
+      const { data, error } = await supabase.from('org_sites').select('*').order('site_name')
       if (error) throw error
-      return (data ?? []) as SiteRow[]
+      return data ?? []
     },
     staleTime: 1000 * 60 * 10,
   })
@@ -84,17 +64,15 @@ export function useAttendanceRecords() {
   return useQuery({
     queryKey: attendanceKeys.lists(),
     queryFn: async () => {
-      // RLS automatically filters this based on the JWT claims:
-      //   Employee → restricted to their own rows.
-      //   Manager/Admin → all rows for their tenant.
-      const { data, error } = await (supabase as any)
-        .from('attendance_records')
+      // RLS scopes rows by JWT claims (own rows for members; all tenant rows for
+      // admins). org_attendance is a daily aggregate keyed by (user_id, date).
+      const { data, error } = await supabase
+        .from('org_attendance')
         .select('*')
         .order('date', { ascending: false })
-        .order('clock_in', { ascending: false })
 
       if (error) throw error
-      return (data ?? []) as AttendanceRow[]
+      return data ?? []
     },
     enabled: !!user,
   })

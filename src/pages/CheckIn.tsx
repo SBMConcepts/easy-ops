@@ -1,93 +1,56 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { useAttendanceRecords, attendanceKeys, useSites } from '../hooks/useTenantData'
+import { useAttendanceRecords, attendanceKeys } from '../hooks/useTenantData'
 import { useDB } from '../contexts/DatabaseContext'
-import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'sonner'
-import { QrCode, Fingerprint, MapPin, Clock, CheckCircle2, Loader2 } from 'lucide-react'
+import { QrCode, Fingerprint, MapPin, CheckCircle2, Loader2 } from 'lucide-react'
 import { useCurrentUser } from '../hooks/useCurrentUser'
 
 const CheckIn = () => {
   const supabase = useDB()
-  const { user } = useAuth()
   const { profile: currentUser } = useCurrentUser()
   const queryClient = useQueryClient()
 
-  const { data: attendanceHistory, isLoading } = useAttendanceRecords()
-  const { data: sites = [] } = useSites()
+  const { data: attendanceHistory = [], isLoading } = useAttendanceRecords()
   const [selectedMethod, setSelectedMethod] = useState<'qr' | 'biometric' | 'manual'>('qr')
+  const [hoursWorked, setHoursWorked] = useState('8')
+  const [overtime, setOvertime] = useState('0')
 
-  // Direct Supabase Mutations replacing the old Express API calls
-  const checkIn = useMutation({
-    mutationFn: async ({
-      method,
-      site_id,
-    }: {
-      method: 'qr' | 'biometric' | 'manual'
-      site_id: string
-    }) => {
-      if (!currentUser?.profile_id || !currentUser?.tenant_id) {
+  // org_attendance is a daily aggregate (one row per user per day), so logging
+  // attendance inserts a record with the chosen method and the hours worked /
+  // overtime for the day rather than a clock-in/clock-out event pair.
+  const logAttendance = useMutation({
+    mutationFn: async () => {
+      if (!currentUser?.auth0_user_id || !currentUser?.tenant_id) {
         throw new Error('User profile not loaded')
       }
-      const { error } = await (supabase as any).from('attendance_records').insert({
-        employee_id: currentUser.profile_id,
-        tenant_id: currentUser.tenant_id,
-        method,
-        site_id,
-        status: 'present',
-        clock_in: new Date().toISOString(),
+      const hours = Number(hoursWorked)
+      const ot = Number(overtime)
+      if (!Number.isFinite(hours) || hours < 0) throw new Error('Enter valid hours worked')
+      if (!Number.isFinite(ot) || ot < 0) throw new Error('Enter valid overtime hours')
+
+      const { error } = await supabase.from('org_attendance').insert({
+        org_id: currentUser.tenant_id,
+        user_id: currentUser.auth0_user_id,
+        date: new Date().toISOString().slice(0, 10),
+        method: selectedMethod,
+        hours_worked: hours,
+        overtime: ot,
       })
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: attendanceKeys.lists() }),
-  })
-
-  const clockOut = useMutation({
-    mutationFn: async ({ recordId }: { recordId: string }) => {
-      const { error } = await (supabase as any)
-        .from('attendance_records')
-        .update({ clock_out: new Date().toISOString() })
-        .eq('id', recordId)
-      if (error) throw error
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.lists() })
+      toast.success(`Attendance logged via ${selectedMethod.toUpperCase()}`)
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: attendanceKeys.lists() }),
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : 'Attendance logging failure'),
   })
 
-  // Ascertain current shift clock-in state using structural evaluation from history[cite: 18]
-  const activeRecord = attendanceHistory?.find((r) => r.clock_in && !r.clock_out)
-  const isClockedIn = !!activeRecord
-  const processing = checkIn.isPending || clockOut.isPending
-
-  const handleClockIn = async () => {
-    try {
-      // attendance_records.site_id is a NOT-validated FK to public.sites, so a
-      // real site id is required. Prefer the employee's assigned site; fall back
-      // to the tenant's first available site.
-      const siteId = currentUser?.assigned_site_id ?? sites[0]?.id
-      if (!siteId) {
-        toast.error('No site is assigned to your profile. Contact your administrator.')
-        return
-      }
-      await checkIn.mutateAsync({ method: selectedMethod, site_id: siteId })
-      toast.success(`Clock-in record captured via ${selectedMethod.toUpperCase()}`)
-    } catch (err: any) {
-      toast.error(err.message || 'Check-in processing failure')
-    }
-  }
-
-  const handleClockOut = async () => {
-    if (!activeRecord?.id) return
-    try {
-      await clockOut.mutateAsync({ recordId: activeRecord.id })
-      toast.success('Clock-out transaction validated successfully')
-    } catch (err: any) {
-      toast.error(err.message || 'Clock-out processing failure')
-    }
-  }
+  const processing = logAttendance.isPending
 
   const methods = [
     { id: 'qr' as const, label: 'QR Scan', icon: QrCode, desc: 'Stationary scanner check' },
@@ -125,62 +88,88 @@ const CheckIn = () => {
       <Card className="border-border shadow-sm">
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center justify-between border-b border-border pb-4">
-            <span className="text-sm font-medium text-muted-foreground">Current State</span>
-            <Badge
-              variant={isClockedIn ? 'secondary' : 'outline'}
-              className={isClockedIn ? 'bg-secondary/10 text-secondary border-secondary/20' : ''}
-            >
-              {isClockedIn ? 'On Shift Duty' : 'Off Duty'}
+            <span className="text-sm font-medium text-muted-foreground">Check-in Method</span>
+            <Badge variant="outline" className="uppercase">
+              {selectedMethod}
             </Badge>
           </div>
 
-          {!isClockedIn && (
-            <div className="grid grid-cols-1 gap-3">
-              {methods.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setSelectedMethod(m.id)}
-                  className={`flex items-center gap-4 rounded-lg border p-4 text-left transition-all ${
-                    selectedMethod === m.id
-                      ? 'border-secondary bg-secondary/5 ring-1 ring-secondary'
-                      : 'border-border hover:border-muted-foreground/30 bg-card'
-                  }`}
+          <div className="grid grid-cols-1 gap-3">
+            {methods.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setSelectedMethod(m.id)}
+                className={`flex items-center gap-4 rounded-lg border p-4 text-left transition-all ${
+                  selectedMethod === m.id
+                    ? 'border-secondary bg-secondary/5 ring-1 ring-secondary'
+                    : 'border-border hover:border-muted-foreground/30 bg-card'
+                }`}
+              >
+                <m.icon
+                  className={`h-6 w-6 shrink-0 ${selectedMethod === m.id ? 'text-secondary' : 'text-muted-foreground'}`}
+                />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{m.label}</p>
+                  <p className="text-xs text-muted-foreground">{m.desc}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="space-y-1">
+              <span className="text-xs font-medium text-muted-foreground">Hours worked</span>
+              <input
+                type="number"
+                min={0}
+                step="0.5"
+                value={hoursWorked}
+                onChange={(e) => setHoursWorked(e.target.value)}
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs font-medium text-muted-foreground">Overtime hours</span>
+              <input
+                type="number"
+                min={0}
+                step="0.5"
+                value={overtime}
+                onChange={(e) => setOvertime(e.target.value)}
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="flex justify-center pt-2">
+            <Button
+              size="lg"
+              className="w-full text-md py-6 bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-sm"
+              onClick={() => logAttendance.mutate()}
+              disabled={processing}
+            >
+              <CheckCircle2 className="h-5 w-5 mr-2" /> Log Today's Attendance
+            </Button>
+          </div>
+
+          {attendanceHistory.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <span className="text-xs font-medium text-muted-foreground">Recent entries</span>
+              {attendanceHistory.slice(0, 5).map((rec) => (
+                <div
+                  key={rec.id}
+                  className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-xs"
                 >
-                  <m.icon
-                    className={`h-6 w-6 shrink-0 ${selectedMethod === m.id ? 'text-secondary' : 'text-muted-foreground'}`}
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{m.label}</p>
-                    <p className="text-xs text-muted-foreground">{m.desc}</p>
-                  </div>
-                </button>
+                  <span className="font-medium text-foreground">{rec.date}</span>
+                  <span className="uppercase text-muted-foreground">{rec.method}</span>
+                  <span className="font-mono text-foreground">
+                    {rec.hours_worked}h{rec.overtime ? ` +${rec.overtime}h OT` : ''}
+                  </span>
+                </div>
               ))}
             </div>
           )}
-
-          <div className="flex justify-center pt-2">
-            {isClockedIn ? (
-              <Button
-                size="lg"
-                variant="destructive"
-                className="w-full text-md py-6 shadow-sm"
-                onClick={handleClockOut}
-                disabled={processing}
-              >
-                <Clock className="h-5 w-5 mr-2" /> Clock Out of Shift
-              </Button>
-            ) : (
-              <Button
-                size="lg"
-                className="w-full text-md py-6 bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-sm"
-                onClick={handleClockIn}
-                disabled={processing}
-              >
-                <CheckCircle2 className="h-5 w-5 mr-2" /> Clock In for Duty
-              </Button>
-            )}
-          </div>
         </CardContent>
       </Card>
     </div>

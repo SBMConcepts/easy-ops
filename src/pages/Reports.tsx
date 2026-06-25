@@ -3,19 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { useAttendanceRecords } from '../hooks/useTenantData'
-import type { Database } from '../integrations/supabase/types'
 import { Download, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-
-type AttendanceStatus = Database['public']['Enums']['attendance_status']
-
-const statusColors: Record<AttendanceStatus, string> = {
-  present: 'bg-secondary/10 text-secondary border-secondary/20',
-  late: 'bg-accent/10 text-accent-foreground border-accent/20',
-  absent: 'bg-destructive/10 text-destructive border-destructive/20',
-  leave: 'bg-muted text-muted-foreground border-muted',
-  holiday: 'bg-muted text-muted-foreground border-muted',
-}
 
 const Reports = () => {
   // Utilizing the RLS-backed hook directly
@@ -25,14 +14,11 @@ const Reports = () => {
     if (records.length === 0) return toast.error('No record logs found within date bounds')
     toast.success('Document compiling... Download stream initialized')
 
-    // Simplistic CSV mapping for real-time dataset export
+    // CSV mapping for the daily attendance aggregate.
     const csvContent =
-      'Date,Employee ID,Status,Clock In,Clock Out,Hours\n' +
+      'Date,Operator ID,Method,Hours,Overtime\n' +
       records
-        .map(
-          (r) =>
-            `${r.date},${r.employee_id},${r.status},${r.clock_in},${r.clock_out},${r.hours_worked || 0}`
-        )
+        .map((r) => `${r.date},${r.user_id},${r.method},${r.hours_worked},${r.overtime}`)
         .join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -71,16 +57,15 @@ const Reports = () => {
                 <tr>
                   <th className="p-4 font-medium">Date</th>
                   <th className="p-4 font-medium">Operator ID</th>
-                  <th className="p-4 font-medium">Clock In</th>
-                  <th className="p-4 font-medium">Clock Out</th>
                   <th className="p-4 font-medium">Method</th>
-                  <th className="p-4 font-medium">Status</th>
+                  <th className="p-4 font-medium">Hours</th>
+                  <th className="p-4 font-medium">Overtime</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="p-12 text-center">
+                    <td colSpan={5} className="p-12 text-center">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                     </td>
                   </tr>
@@ -89,42 +74,20 @@ const Reports = () => {
                     <tr key={rec.id} className="hover:bg-muted/5">
                       <td className="p-4 font-medium text-foreground">{rec.date}</td>
                       <td className="p-4 font-mono text-xs text-muted-foreground">
-                        {rec.employee_id?.slice(0, 8)}
-                      </td>
-                      <td className="p-4 font-mono text-xs text-foreground">
-                        {rec.clock_in
-                          ? new Date(rec.clock_in).toLocaleTimeString('en-ZA', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '—'}
-                      </td>
-                      <td className="p-4 font-mono text-xs text-foreground">
-                        {rec.clock_out
-                          ? new Date(rec.clock_out).toLocaleTimeString('en-ZA', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '—'}
+                        {rec.user_id?.slice(0, 8)}
                       </td>
                       <td className="p-4">
                         <Badge variant="outline" className="text-xs uppercase">
                           {rec.method}
                         </Badge>
                       </td>
-                      <td className="p-4">
-                        <Badge
-                          variant="outline"
-                          className={`text-xs capitalize ${statusColors[rec.status as keyof typeof statusColors] || ''}`}
-                        >
-                          {rec.status}
-                        </Badge>
-                      </td>
+                      <td className="p-4 font-mono text-xs text-foreground">{rec.hours_worked}</td>
+                      <td className="p-4 font-mono text-xs text-foreground">{rec.overtime}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={5} className="p-8 text-center text-muted-foreground">
                       No logs records discovered within active parameters.
                     </td>
                   </tr>

@@ -53,7 +53,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
         }
 
         await fetch(
-          'https://' + domain + '/api/v2/users/' + encodeURIComponent(event.user.user_id),
+          'https://' + domain + '/api/v2/userinfo/' + encodeURIComponent(event.user.user_id),
           {
             method: 'PATCH',
             headers: {

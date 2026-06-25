@@ -9,26 +9,19 @@ import {
   SelectValue,
 } from '../components/ui/select'
 import { useAttendanceRecords } from '../hooks/useTenantData'
-import { Clock, MapPin, Loader2 } from 'lucide-react'
-
-const statusColors: Record<string, string> = {
-  present: 'bg-secondary/10 text-secondary border-secondary/20',
-  late: 'bg-accent/10 text-accent-foreground border-accent/20',
-  absent: 'bg-destructive/10 text-destructive border-destructive/20',
-  leave: 'bg-muted text-muted-foreground border-muted',
-  holiday: 'bg-muted text-muted-foreground border-muted',
-}
+import { MapPin, Loader2 } from 'lucide-react'
 
 const LiveAttendance = () => {
-  const [siteFilter, setSiteFilter] = useState('all')
+  const [methodFilter, setMethodFilter] = useState('all')
 
-  // Safely scoped directly via database RLS[cite: 21]
+  // Safely scoped directly via database RLS.
   const { data: records = [], isLoading } = useAttendanceRecords()
 
-  // Collect distinct operational locations present in real-time records[cite: 21]
-  const uniqueSites = Array.from(new Map(records.map((r) => [r.site_id, r])).values())
+  // org_attendance has no site dimension; filter the daily aggregate by the
+  // check-in method instead.
+  const methods = Array.from(new Set(records.map((r) => r.method)))
   const filteredRecords =
-    siteFilter === 'all' ? records : records.filter((r) => r.site_id === siteFilter)
+    methodFilter === 'all' ? records : records.filter((r) => r.method === methodFilter)
 
   if (isLoading) {
     return (
@@ -51,15 +44,15 @@ const LiveAttendance = () => {
         </div>
 
         <div className="w-full sm:w-48">
-          <Select value={siteFilter} onValueChange={(value) => setSiteFilter(value ?? 'all')}>
+          <Select value={methodFilter} onValueChange={(value) => setMethodFilter(value ?? 'all')}>
             <SelectTrigger className="w-full border-border">
-              <SelectValue placeholder="All Operations Locations" />
+              <SelectValue placeholder="All Methods" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Locations</SelectItem>
-              {uniqueSites.map((r) => (
-                <SelectItem key={r.site_id} value={r.site_id}>
-                  Location Space {r.site_id?.slice(0, 8)}
+              <SelectItem value="all">All Methods</SelectItem>
+              {methods.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m.toUpperCase()}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -84,28 +77,16 @@ const LiveAttendance = () => {
             >
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">
-                  Employee {rec.employee_id?.slice(0, 8)}
+                  Employee {rec.user_id?.slice(0, 8)}
                 </p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <MapPin className="h-3 w-3" /> Method: {rec.method.toUpperCase()}
+                  <MapPin className="h-3 w-3" /> Method: {rec.method.toUpperCase()} · {rec.date}
                 </p>
               </div>
               <div className="flex items-center gap-4">
-                {rec.clock_in && (
-                  <span className="text-xs font-mono font-medium text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {new Date(rec.clock_in).toLocaleTimeString('en-ZA', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                )}
-                <Badge
-                  variant="outline"
-                  className={`capitalize text-xs ${statusColors[rec.status] || ''}`}
-                >
-                  {rec.status}
-                </Badge>
+                <span className="text-xs font-mono font-medium text-foreground">
+                  {rec.hours_worked}h{rec.overtime ? ` +${rec.overtime}h OT` : ''}
+                </span>
               </div>
             </div>
           ))}

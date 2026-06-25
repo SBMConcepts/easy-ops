@@ -10,15 +10,15 @@ const AdminDashboard = () => {
 
   if (loadingReport) return <DashboardLoader />
 
-  // Compute stats securely on the client from the flat array
-  const presentCount = records.filter((r) => r.status === 'present').length
-  const lateCount = records.filter((r) => r.status === 'late').length
-  const uniqueEmployees = new Set(records.map((r) => r.employee_id)).size
+  // Compute stats client-side from the daily attendance aggregate.
+  const uniqueEmployees = new Set(records.map((r) => r.user_id)).size
+  const totalHours = records.reduce((sum, r) => sum + Number(r.hours_worked), 0)
+  const totalOvertime = records.reduce((sum, r) => sum + Number(r.overtime), 0)
 
   const statCards = [
     { label: 'Active Today', value: uniqueEmployees, icon: Users, color: 'icon-primary' },
-    { label: 'Present', value: presentCount, icon: UserCheck, color: 'icon-secondary' },
-    { label: 'Late', value: lateCount, icon: Clock, color: 'icon-accent' },
+    { label: 'Total Hours', value: totalHours, icon: UserCheck, color: 'icon-secondary' },
+    { label: 'Overtime Hours', value: totalOvertime, icon: Clock, color: 'icon-accent' },
   ]
 
   return (
@@ -56,10 +56,10 @@ const AdminDashboard = () => {
             {records.slice(0, 6).map((rec) => (
               <AttendanceRow
                 key={rec.id}
-                fullName={rec.employee_id}
-                metaText={`${rec.method.toUpperCase()} · ${rec.site_id ?? '—'}`}
-                clockIn={rec.clock_in}
-                status={rec.status}
+                fullName={rec.user_id?.slice(0, 8)}
+                metaText={`${rec.method.toUpperCase()} · ${rec.date}`}
+                status={rec.method}
+                hoursWorked={String(rec.hours_worked)}
               />
             ))}
             {records.length === 0 && (

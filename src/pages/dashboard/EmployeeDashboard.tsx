@@ -13,8 +13,8 @@ const EmployeeDashboard = () => {
 
   if (isLoading) return <DashboardLoader />
 
-  const totalHours = records.reduce((sum, r) => sum + (r.hours_worked ?? 0), 0)
-  const absentDays = records.filter((r) => r.status === 'absent').length
+  const totalHours = records.reduce((sum, r) => sum + Number(r.hours_worked), 0)
+  const overtimeHours = records.reduce((sum, r) => sum + Number(r.overtime), 0)
 
   return (
     <div className="dashboard-page">
@@ -44,8 +44,8 @@ const EmployeeDashboard = () => {
               <CalendarDays className="h-6 w-6" />
             </div>
             <div>
-              <p className="stat-value">{absentDays}</p>
-              <p className="stat-label">Days Absent</p>
+              <p className="stat-value">{overtimeHours.toFixed(1)}h</p>
+              <p className="stat-label">Overtime Hours</p>
             </div>
           </CardContent>
         </Card>
@@ -65,10 +65,8 @@ const EmployeeDashboard = () => {
                   key={rec.id}
                   fullName={rec.date}
                   metaText={rec.method.toUpperCase()}
-                  clockIn={rec.clock_in}
-                  clockOut={rec.clock_out}
-                  status={rec.status}
-                  hoursWorked={rec.hours_worked != null ? String(rec.hours_worked) : null}
+                  status={rec.method}
+                  hoursWorked={String(rec.hours_worked)}
                 />
               ))}
             </div>

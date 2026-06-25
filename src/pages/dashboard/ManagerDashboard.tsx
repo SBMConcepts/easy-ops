@@ -28,10 +28,10 @@ const ManagerDashboard = () => {
             {records.map((rec) => (
               <AttendanceRow
                 key={rec.id}
-                fullName={rec.employee_id}
-                metaText={`${rec.method.toUpperCase()} · ${rec.site_id ?? '—'}`}
-                clockIn={rec.clock_in}
-                status={rec.status}
+                fullName={rec.user_id?.slice(0, 8)}
+                metaText={`${rec.method.toUpperCase()} · ${rec.date}`}
+                status={rec.method}
+                hoursWorked={String(rec.hours_worked)}
               />
             ))}
             {records.length === 0 && (
