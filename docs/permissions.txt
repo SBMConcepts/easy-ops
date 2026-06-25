@@ -1,133 +1,143 @@
 ===============================================================================
- EasyOps — RBAC Permission Catalog
+ EasyOps — RBAC Reference (Access Tiers + Route Map)
 ===============================================================================
- Source of truth : public.role_permissions  (DB)
- Vocabulary      : public.app_permission enum
- Propagation     : post-login Action injects a permissions[] claim on the ID +
-                   access tokens; `npm run auth0:sync-rbac` mirrors the same
-                   grants into Auth0 native RBAC for dashboard visibility.
- Enforcement     : backend  -> requirePermission()/requireAnyPermission()
-                   frontend -> usePermissions().hasPermission()
-                   DB        -> public.has_permission(_perm)
+ Model        : Access tiers (NOT fine-grained permissions). A caller's tier is
+                org_members.role, one of: owner > admin > member > viewer.
+ Token claims : The Auth0 post-login Action injects `org_id` and `role` as
+                namespaced custom claims on the ID + access tokens.
+ Namespace    : https://easyops.us.auth0.com/   (server/lib/auth.ts AUTH0_CLAIM_NS,
+                src/lib/auth0-config.ts, auth0/actions/post-login.js, DB org_id()).
+ Enforcement  : backend  -> requireAuth + requireOrg + requireRole(minTier)
+                            (server/lib/auth-middleware.ts, server/lib/rbac.ts)
+                frontend -> <ProtectedRoute allowedRoles={[...]}>, useAuthRole()
+                DB        -> public.org_id() + Row-Level Security scope by org_id
 
- Roles (tenant_role, high -> low): owner > admin > manager > supervisor > employee
-   'owner' is a DB-only superset (every permission). The application uses
-   'admin' as its top operating tier.
-
- Legend: [x] granted   [ ] not granted   (status: IMPL = wired to a route today,
-   ENUM = in the enum/seed but no dedicated route yet)
+ NOTE: The earlier fine-grained model (public.role_permissions, app_permission
+ enum, requirePermission(), has_permission()) was REMOVED in the schema v2
+ refactor. Gating is now purely tier-based.
 ===============================================================================
 
 
-A. CORE PERMISSIONS  (capability : definition)
+A. ACCESS TIERS  (org_members.role)
 -------------------------------------------------------------------------------
-                                                       own adm mgr sup emp  status
-read:tenant            View tenant settings/profile     x   x   x   x   x   IMPL
-write:tenant           Update tenant settings           x   x   x   .   .   ENUM
-admin:tenant           Destructive tenant admin /       x   x   .   .   .   IMPL
-                       delete site (cascades)
-read:own-profile       View own profile                 x   x   x   x   x   IMPL*
-update:own-profile     Edit own profile                 x   x   x   x   x   IMPL*
-read:members           List org members                 x   x   x   x   .   IMPL
-invite:members         Invite/add members               x   x   x   .   .   IMPL
-manage:members         Edit/remove members              x   x   x   .   .   IMPL
-manage:roles           Change a member's role           x   x   .   .   .   IMPL
-read:attendance        View attendance records          x   x   x   x   x   ENUM
-write:attendance       Clock in/out, edit own           x   x   x   x   x   ENUM
-verify:attendance      Approve others' attendance       x   x   x   x   .   ENUM
-read:sites             View sites                       x   x   x   x   x   IMPL
-manage:sites           Create/edit sites                x   x   x   .   .   IMPL
-read:departments       View departments                 x   x   x   x   x   IMPL
-manage:departments     Create/edit/delete departments   x   x   x   .   .   IMPL
-read:shifts            View shift schedules             x   x   x   x   x   ENUM
-manage:shifts          Create/assign shifts             x   x   x   .   .   ENUM
-read:access-requests   View pending access requests     x   x   x   .   .   IMPL
-approve:access-requests Approve request + invite        x   x   x   .   .   IMPL
-read:compliance        View BCEA compliance reports     x   x   x   x   .   IMPL
-read:audit             View audit log                   x   x   x   .   .   ENUM
-read:billing           View billing/subscription        x   x   x   .   .   ENUM
-manage:billing         Manage billing/subscription      x   x   .   .   .   ENUM
+  Tier      Rank  Meaning
+  owner      3    Organization owner — full control.
+  admin      2    Administrator — manage members, sites, departments, billing.
+  member     1    Standard member — read org data, record own attendance.
+  viewer     0    Read-only.
 
-  * read/update:own-profile are seeded for gating but the /userinfo routes are
-    intentionally gated by authentication only (self access), to keep the core
-    identity bootstrap independent of the permissions claim.
+  requireRole(min) / hasMinRole(min) pass when rank(role) >= rank(min).
 
 
-B. SUGGESTED / FUTURE PERMISSIONS  (enum-ready; no dedicated route yet)
+B. JOB ROLES vs ACCESS TIERS
 -------------------------------------------------------------------------------
-                                                       own adm mgr sup emp  status
-read:reports           View analytics/reports           x   x   x   .   .   ENUM
-export:reports         Export analytics/reports         x   x   x   .   .   ENUM
-read:tenant-analytics  Org-wide dashboards              x   x   x   x   .   ENUM
-export:audit           Export audit log                 x   x   .   .   .   ENUM
-manage:security        MFA/SSO/security policy          x   x   .   .   .   ENUM
-manage:integrations    Configure integrations           x   x   .   .   .   ENUM
-read:payroll           View payroll                     x   x   .   .   .   ENUM
-manage:payroll         Run/manage payroll               x   x   .   .   .   ENUM
-read:benefits          View benefits                    x   x   x   x   x   ENUM
-manage:benefits        Administer benefits              x   x   .   .   .   ENUM
+  Job roles (org_roles.name, the organization_role enum) describe a person's
+  POSITION and are distinct from access tiers. Mapping (rbac.ts jobRoleToTier):
+
+    job role      -> access tier
+    owner         -> owner
+    admin         -> admin
+    manager       -> admin
+    supervisor    -> member
+    employee      -> member
+    (unknown)     -> viewer
 
 
-C. ROUTE -> PERMISSION MAP  (Express API; enforcement source)
+C. ROUTE -> ACCESS MAP  (Express API; server/app.ts mount order)
 -------------------------------------------------------------------------------
-  GET    /api/userinfo                          auth (self)
-  PUT    /api/userinfo                          auth (self)
-  GET    /api/session                           auth (self)
-  GET    /api/tenants                           auth (self; lists own memberships)
-  POST   /api/tenants                           auth (self-serve create)
-  POST   /api/tenants/create                    PUBLIC
-  GET    /api/tenant-lookup                     PUBLIC
-  POST   /api/auth/sync                          shared-secret (x-api-key)
+  Public (no token)
+    POST   /api/organizations                 create org (pre-signup intake)
+    GET    /api/org-lookup                     resolve org by ?slug= or ?email=
 
-  GET    /api/members                           read:members
-  POST   /api/members                           invite:members
-  PATCH  /api/members/:id                        manage:roles
-  DELETE /api/members/:id                        manage:members
-  POST   /api/employees/invite                   invite:members
+  Identity-provider webhook (x-api-key shared secret)
+    POST   /api/auth/sync                      Auth0 post-login Action
 
-  GET    /api/access-requests                    read:access-requests
-  POST   /api/access-requests/approve-and-invite approve:access-requests
+  Authenticated, self (requireAuth [+ requireOrg])
+    GET    /api/health                         liveness (no auth)
+    GET    /api/session                        token echo
+    GET    /api/userinfo                       current user profile (+requireOrg)
+    PUT    /api/userinfo                        update own profile
+    GET    /api/organizations                  current organization (+requireOrg)
+    GET    /api/user-credentials/me            own credential status
 
-  GET    /api/sites                              read:sites
-  POST   /api/sites                              manage:sites
-  PATCH  /api/sites/:id                          manage:sites
-  DELETE /api/sites/:id                          admin:tenant   (cascades)
-  GET    /api/departments                        read:departments
-  POST   /api/departments                        manage:departments
-  PATCH  /api/departments/:id                    manage:departments
-  DELETE /api/departments/:id                    manage:departments
+  member+ (requireRole('member'))
+    GET    /api/org-members                    list members
+    GET    /api/org-sites                      list sites
+    GET    /api/org-departments               list departments
+    GET    /api/org-roles                      list job roles
+    GET    /api/org-attendance                 list attendance
+    POST   /api/org-attendance                 record OWN daily attendance
+    GET    /api/subscriptions                  current subscription
+    GET    /api/compliance                     BCEA compliance summary
 
-  GET    /api/compliance                         read:compliance
+  admin+ (requireRole('admin'))
+    POST   /api/onboarding/complete            finalize onboarding
+    POST   /api/org-members                    set a member's access tier
+    DELETE /api/org-members/:id                remove a member
+    POST   /api/invitations                    invite a person to the org
+    POST   /api/org-sites                      create site
+    PATCH  /api/org-sites/:id                  update site
+    DELETE /api/org-sites/:id                  delete site
+    POST   /api/org-departments               create department
+    PATCH  /api/org-departments/:id           rename department
+    DELETE /api/org-departments/:id           delete department
+    POST   /api/org-roles                      add a job role
+    DELETE /api/org-roles/:id                  remove a job role
+    PATCH  /api/subscriptions                  update plan/status
+    PATCH  /api/user-credentials/:auth0UserId/status
+                                               enable/disable a credential
+                                               (guarded to caller's org)
 
-  attendance check-in / check-out (Supabase Edge Functions, Deno) — enforced
-  separately; conceptually write:attendance.
+  SECURITY: /api/user-credentials never returns password_hash (the bcrypt store
+  used by the Auth0 custom-database scripts in auth0/database-scripts/).
+
+  GAP: the frontend (src/hooks/useAccessRequestApi.ts) still calls
+    GET  /api/access-requests
+    POST /api/access-requests/approve-and-invite
+  but there is NO server route for these (the access_requests table is not part
+  of schema v2). Treat as unimplemented until reintroduced.
 
 
-D. FRONTEND GATING
+D. FRONTEND GATING  (src/App.tsx + useAuthRole)
 -------------------------------------------------------------------------------
-  AuthContext.usePermissions(): hasPermission / hasAnyPermission / hasAllPermissions
-  ProtectedRoute requiredPermissions={[...]} (any-of) — used by:
-    /app/employees-management  -> read:members
-    /app/compliance            -> read:compliance
-  SitesAndDepartments page:
-    Add/Edit Site        -> manage:sites
-    Delete Site          -> admin:tenant
-    Add/Edit/Delete Dept -> manage:departments
+  <ProtectedRoute allowedRoles={[...]}> redirects:
+    - unauthenticated            -> /login
+    - no organization (tenant)   -> /login
+    - admin + org provisioning   -> /app/onboarding
+    - role not in allowedRoles   -> /app
+
+  Route                         allowedRoles
+    /app (index dashboard)      role-routed by DashboardRouter
+    /app/check-in               owner, admin, member, viewer
+    /app/live-attendance        owner, admin, member, viewer
+    /app/compliance             owner, admin, member, viewer
+    /app/sites                  owner, admin, member, viewer
+    /app/payroll                owner, admin, member, viewer
+    /app/settings               owner, admin, member, viewer
+    /app/employees-management   owner, admin
+    /app/onboarding             (no wrapper; redirect handled in ProtectedRoute)
+    /app/reports                (no wrapper)
+
+  useAuthRole(): hasMinRole(tier), isOwner, isAdmin (>=admin), isMember (>=member).
+  SitesAndDepartments page hides create/edit/delete controls unless isAdmin
+  (canManageSites / canManageDepartments); reads are open to all tiers.
 
 
 E. AUTH0 SETUP CHECKLIST
 -------------------------------------------------------------------------------
-  1. Custom API (Applications -> APIs), identifier = AUTH0_AUDIENCE
-     (https://api.easyops.co.za). Enable RBAC + "Add Permissions in the Access
-     Token".
-  2. Run `npm run auth0:sync-rbac` to push enum -> API scopes and
-     role_permissions -> Auth0 roles/grants.
-  3. Post-login Action secrets: BACKEND_URL (https://api.easyops.co.za),
-     AUTH0_SYNC_SECRET (== server AUTH0_SYNC_SECRET).
-  4. Claim namespace must match across Action, frontend (VITE_AUTH0_CLAIM_NS)
-     and server (AUTH0_CLAIM_NS): https://easy-ops-za.vercel.app/
+  1. Custom API (Applications -> APIs), identifier = AUTH0_AUDIENCE. RBAC is not
+     required for tier gating, but the API must exist so access tokens are JWTs.
+  2. Post-login Action (auth0/actions/post-login.js) secrets:
+       BACKEND_URL        — Express server base URL
+       AUTH0_SYNC_SECRET  — must equal server AUTH0_SYNC_SECRET (x-api-key)
+     The Action calls POST /api/auth/sync, then injects `org_id` + `role` claims.
+  3. Claim namespace must match across the Action, frontend
+     (src/lib/auth0-config.ts AUTH0_CLAIM_NS) and server
+     (server/lib/auth.ts AUTH0_CLAIM_NS): https://easyops.us.auth0.com/
+  4. Organizations: each tenant is an Auth0 Organization; the org id is the
+     organizations.auth0_org_id primary key and the JWT `org_id` claim.
 
-  NOTE: Permissions are a global capability layer. Tenant data isolation remains
-  enforced by org_id + Postgres RLS — never rely on a permission alone for the
+  NOTE: Access tiers are a global capability layer. Tenant data isolation is
+  enforced by org_id + Postgres RLS — never rely on a tier alone for the
   tenant boundary.
 ===============================================================================
