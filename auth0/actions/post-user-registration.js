@@ -19,7 +19,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
   var clientId = event.secrets.AUTH0_M2M_CLIENT_ID
   var clientSecret = event.secrets.AUTH0_M2M_CLIENT_SECRET
   var managementAudience = event.secrets.API_BASE_URL // https://easy-ops.us.auth0.com/api/v2/
-  var backendUrl = event.secrets.BACKEND_URL // https://api.easyops.co.za
+  var backendUrl = event.secrets.BACKEND_URL // https://api.easyops.com
   var syncSecret = event.secrets.AUTH0_SYNC_SECRET
 
   // ── 1. Stamp app_metadata via Management API ──────────────────────────────
