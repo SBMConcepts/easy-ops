@@ -1,4 +1,4 @@
-// GET /api/tenant-lookup?slug=<slug>|?email=<email>
+// GET /api/org-lookup?slug=<slug>|?email=<email>
 //
 // Public, pre-auth helper that resolves an Auth0 organization id so the login
 // flow can pass `organization` to Auth0. Returns 404 when no match is found.
@@ -9,7 +9,7 @@ import { supabaseAdmin } from '../lib/supabase-admin.js'
 
 const router = Router()
 
-router.get('/api/tenant-lookup', async (req: Request, res: Response) => {
+router.get('/api/org-lookup', async (req: Request, res: Response) => {
   const slug = typeof req.query.slug === 'string' ? req.query.slug.trim() : ''
   const email = typeof req.query.email === 'string' ? req.query.email.trim().toLowerCase() : ''
 

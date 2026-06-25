@@ -84,12 +84,12 @@ export default function SitesAndDepartments() {
 
   const { data: sites = [], isLoading: loadingSites } = useQuery({
     queryKey: ['sites'],
-    queryFn: () => apiFetch<SiteRow[]>('sites'),
+    queryFn: () => apiFetch<SiteRow[]>('org-sites'),
   })
 
   const { data: departments = [], isLoading: loadingDepts } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => apiFetch<DepartmentRow[]>('departments'),
+    queryFn: () => apiFetch<DepartmentRow[]>('org-departments'),
   })
 
   const siteNameById = useMemo(() => new Map(sites.map((s) => [s.id, s.name])), [sites])
@@ -105,7 +105,7 @@ export default function SitesAndDepartments() {
         geofence_radius_m:
           payload.geofence_radius_m === '' ? 150 : Number(payload.geofence_radius_m),
       }
-      return apiFetch(payload.id ? `sites/${payload.id}` : 'sites', {
+      return apiFetch(payload.id ? `org-sites/${payload.id}` : 'org-sites', {
         method: payload.id ? 'PATCH' : 'POST',
         body: JSON.stringify(body),
       })
@@ -121,7 +121,7 @@ export default function SitesAndDepartments() {
   const saveDept = useMutation({
     mutationFn: async (payload: typeof deptForm & { id?: string }) => {
       const body = { name: payload.name, site_id: payload.site_id || null }
-      return apiFetch(payload.id ? `departments/${payload.id}` : 'departments', {
+      return apiFetch(payload.id ? `org-departments/${payload.id}` : 'org-departments', {
         method: payload.id ? 'PATCH' : 'POST',
         body: JSON.stringify(body),
       })
@@ -136,7 +136,8 @@ export default function SitesAndDepartments() {
 
   const deleteEntity = useMutation({
     mutationFn: async (target: { kind: 'site' | 'department'; id: string }) => {
-      const path = target.kind === 'site' ? `sites/${target.id}` : `departments/${target.id}`
+      const path =
+        target.kind === 'site' ? `org-sites/${target.id}` : `org-departments/${target.id}`
       return apiFetch(path, { method: 'DELETE' })
     },
     onSuccess: (_data, target) => {

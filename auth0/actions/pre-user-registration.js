@@ -7,8 +7,8 @@
  *
  * Responsibilities:
  *  1. Block self-service signups that arrive WITHOUT an org invitation.
- *     EasyOps tenants are provisioned exclusively via POST /api/auth/register
- *     (admin self-serve) or POST /api/employees/invite (invited employees).
+ *     EasyOps tenants are provisioned exclusively via POST /api/organizations
+ *     (admin self-serve) or POST /api/invitations (invited employees).
  *     Direct signups to the Auth0 /authorize endpoint without an invitation
  *     token should be rejected to prevent orphaned users.
  *  2. For valid invitation-based signups, allow and pre-populate metadata.

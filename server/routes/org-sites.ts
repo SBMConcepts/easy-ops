@@ -1,13 +1,9 @@
-// Sites & departments CRUD for the current organization.
+// Sites CRUD for the current organization (org_sites).
 //
-//   GET    /api/departments       — list (member+)
-//   POST   /api/departments       — create (admin+)
-//   PATCH  /api/departments/:id    — rename (admin+)
-//   DELETE /api/departments/:id    — delete (admin+)
-//   GET    /api/sites             — list (member+)
-//   POST   /api/sites             — create (admin+)
-//   PATCH  /api/sites/:id          — update (admin+)
-//   DELETE /api/sites/:id          — delete (admin+)
+//   GET    /api/org-sites           — list (member+)
+//   POST   /api/org-sites           — create (admin+)
+//   PATCH  /api/org-sites/:id        — update (admin+)
+//   DELETE /api/org-sites/:id        — delete (admin+)
 //
 // Field mapping (frontend <-> org_sites): name<->site_name, geofence_radius_m<->geo_radius.
 // org_sites.department_id is NOT NULL, so a site without an explicit department
@@ -16,9 +12,11 @@ import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
+import type { TablesUpdate } from '../types/supabase.js'
 
 const router = Router()
 
+// Resolve (or lazily create) a department to satisfy org_sites.department_id NOT NULL.
 async function ensureDefaultDepartment(orgId: string): Promise<string | null> {
   const { data: existing } = await supabaseAdmin
     .from('org_departments')
@@ -36,102 +34,6 @@ async function ensureDefaultDepartment(orgId: string): Promise<string | null> {
     .maybeSingle()
   return created?.id ?? null
 }
-
-// ── Departments ──────────────────────────────────────────────────────────────
-
-router.get(
-  '/api/departments',
-  requireAuth,
-  requireOrg,
-  requireRole('member'),
-  async (req: AuthedRequest, res: Response) => {
-    const { data, error } = await supabaseAdmin
-      .from('org_departments')
-      .select('id, department_name, created_at')
-      .eq('org_id', req.orgId!)
-      .order('department_name', { ascending: true })
-    if (error) {
-      res.status(500).json({ error: error.message })
-      return
-    }
-    res.json((data ?? []).map((d) => ({ id: d.id, name: d.department_name, site_id: null })))
-  }
-)
-
-router.post(
-  '/api/departments',
-  requireAuth,
-  requireOrg,
-  requireRole('admin'),
-  async (req: AuthedRequest, res: Response) => {
-    const body = (req.body ?? {}) as { name?: string }
-    if (!body.name?.trim()) {
-      res.status(400).json({ error: 'name is required.' })
-      return
-    }
-    const { data, error } = await supabaseAdmin
-      .from('org_departments')
-      .insert({ org_id: req.orgId!, department_name: body.name.trim() })
-      .select('id, department_name')
-      .single()
-    if (error) {
-      res.status(500).json({ error: error.message })
-      return
-    }
-    res.status(201).json({ id: data.id, name: data.department_name, site_id: null })
-  }
-)
-
-router.patch(
-  '/api/departments/:id',
-  requireAuth,
-  requireOrg,
-  requireRole('admin'),
-  async (req: AuthedRequest, res: Response) => {
-    const body = (req.body ?? {}) as { name?: string }
-    if (!body.name?.trim()) {
-      res.status(400).json({ error: 'name is required.' })
-      return
-    }
-    const { data, error } = await supabaseAdmin
-      .from('org_departments')
-      .update({ department_name: body.name.trim(), updated_at: new Date().toISOString() })
-      .eq('org_id', req.orgId!)
-      .eq('id', req.params.id)
-      .select('id, department_name')
-      .maybeSingle()
-    if (error) {
-      res.status(500).json({ error: error.message })
-      return
-    }
-    if (!data) {
-      res.status(404).json({ error: 'Department not found.' })
-      return
-    }
-    res.json({ id: data.id, name: data.department_name, site_id: null })
-  }
-)
-
-router.delete(
-  '/api/departments/:id',
-  requireAuth,
-  requireOrg,
-  requireRole('admin'),
-  async (req: AuthedRequest, res: Response) => {
-    const { error } = await supabaseAdmin
-      .from('org_departments')
-      .delete()
-      .eq('org_id', req.orgId!)
-      .eq('id', req.params.id)
-    if (error) {
-      res.status(500).json({ error: error.message })
-      return
-    }
-    res.status(204).end()
-  }
-)
-
-// ── Sites ────────────────────────────────────────────────────────────────────
 
 interface SiteBody {
   name?: string
@@ -163,7 +65,7 @@ function serializeSite(row: {
 }
 
 router.get(
-  '/api/sites',
+  '/api/org-sites',
   requireAuth,
   requireOrg,
   requireRole('member'),
@@ -182,7 +84,7 @@ router.get(
 )
 
 router.post(
-  '/api/sites',
+  '/api/org-sites',
   requireAuth,
   requireOrg,
   requireRole('admin'),
@@ -219,13 +121,13 @@ router.post(
 )
 
 router.patch(
-  '/api/sites/:id',
+  '/api/org-sites/:id',
   requireAuth,
   requireOrg,
   requireRole('admin'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as SiteBody
-    const update: Record<string, unknown> = {}
+    const update: TablesUpdate<'org_sites'> = {}
     if (typeof body.name === 'string') update.site_name = body.name.trim()
     if (body.address !== undefined) update.address = body.address ?? ''
     if (body.latitude !== undefined) update.latitude = body.latitude ?? 0
@@ -237,7 +139,7 @@ router.patch(
       .from('org_sites')
       .update(update)
       .eq('org_id', req.orgId!)
-      .eq('id', req.params.id)
+      .eq('id', String(req.params.id))
       .select('id, site_name, address, latitude, longitude, geo_radius, department_id')
       .maybeSingle()
     if (error) {
@@ -253,7 +155,7 @@ router.patch(
 )
 
 router.delete(
-  '/api/sites/:id',
+  '/api/org-sites/:id',
   requireAuth,
   requireOrg,
   requireRole('admin'),
@@ -262,7 +164,7 @@ router.delete(
       .from('org_sites')
       .delete()
       .eq('org_id', req.orgId!)
-      .eq('id', req.params.id)
+      .eq('id', String(req.params.id))
     if (error) {
       res.status(500).json({ error: error.message })
       return

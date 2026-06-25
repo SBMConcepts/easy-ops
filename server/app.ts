@@ -7,8 +7,8 @@ import cors from 'cors'
 // below so the wiring reads top-to-bottom.
 
 // 1. Public (pre-auth / intake) — no token required
-import createRouter from './routes/create.js'
-import tenantLookupRouter from './routes/tenant-lookup.js'
+import organizationsRouter from './routes/organizations.js'
+import orgLookupRouter from './routes/org-lookup.js'
 
 // 2. Identity-provider webhook (Auth0 Action) — x-api-key shared-secret auth
 import authSyncRouter from './routes/auth-sync.js'
@@ -16,14 +16,18 @@ import authSyncRouter from './routes/auth-sync.js'
 // 3. Authenticated, org-scoped — JWT bearer (requireAuth/requireOrg)
 import userinfoRouter from './routes/userinfo.js'
 import sessionRouter from './routes/session.js'
-import tenantsRouter from './routes/tenants.js'
 import onboardingRouter from './routes/onboarding.js'
-import sitesDepartmentsRouter from './routes/sites-departments.js'
+import orgSitesRouter from './routes/org-sites.js'
+import orgDepartmentsRouter from './routes/org-departments.js'
+import orgRolesRouter from './routes/org-roles.js'
+import orgAttendanceRouter from './routes/org-attendance.js'
+import subscriptionsRouter from './routes/subscriptions.js'
 import complianceRouter from './routes/compliance.js'
+import userCredentialsRouter from './routes/user-credentials.js'
 
 // 4. Privileged administrative — JWT bearer + admin access tier
-import membersRouter from './routes/members.js'
-import employeesRouter from './routes/employees.js'
+import orgMembersRouter from './routes/org-members.js'
+import invitationsRouter from './routes/invitations.js'
 
 import { notFoundHandler, errorHandler } from './lib/error-handler.js'
 
@@ -48,8 +52,8 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 // ── Route tiers ───────────────────────────────────────────────────────────────
 // 1. Public endpoints (no auth)
-app.use(createRouter)
-app.use(tenantLookupRouter)
+app.use(organizationsRouter)
+app.use(orgLookupRouter)
 
 // 2. Identity-provider webhook (x-api-key)
 app.use(authSyncRouter)
@@ -57,14 +61,18 @@ app.use(authSyncRouter)
 // 3. Authenticated, org-scoped (JWT)
 app.use(userinfoRouter)
 app.use(sessionRouter)
-app.use(tenantsRouter)
 app.use(onboardingRouter)
-app.use(sitesDepartmentsRouter)
+app.use(orgSitesRouter)
+app.use(orgDepartmentsRouter)
+app.use(orgRolesRouter)
+app.use(orgAttendanceRouter)
+app.use(subscriptionsRouter)
 app.use(complianceRouter)
+app.use(userCredentialsRouter)
 
 // 4. Privileged administrative (JWT + admin tier)
-app.use(membersRouter)
-app.use(employeesRouter)
+app.use(orgMembersRouter)
+app.use(invitationsRouter)
 
 // ── Fallbacks ─────────────────────────────────────────────────────────────────
 // Unmatched routes + centralized error handling. Must be registered last.

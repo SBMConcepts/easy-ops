@@ -1,7 +1,7 @@
-// Organization membership management.
-//   GET    /api/members        — list members of the current org (member+).
-//   POST   /api/members        — set a member's access tier (admin+).
-//   DELETE /api/members/:id     — remove a member by org_members.id (admin+).
+// Organization membership management (org_members).
+//   GET    /api/org-members        — list members of the current org (member+).
+//   POST   /api/org-members        — set a member's access tier (admin+).
+//   DELETE /api/org-members/:id     — remove a member by org_members.id (admin+).
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
@@ -11,7 +11,7 @@ import { isAccessRole } from '../lib/rbac.js'
 const router = Router()
 
 router.get(
-  '/api/members',
+  '/api/org-members',
   requireAuth,
   requireOrg,
   requireRole('member'),
@@ -31,7 +31,7 @@ router.get(
 )
 
 router.post(
-  '/api/members',
+  '/api/org-members',
   requireAuth,
   requireOrg,
   requireRole('admin'),
@@ -63,7 +63,7 @@ router.post(
 )
 
 router.delete(
-  '/api/members/:id',
+  '/api/org-members/:id',
   requireAuth,
   requireOrg,
   requireRole('admin'),
@@ -72,7 +72,7 @@ router.delete(
       .from('org_members')
       .delete()
       .eq('org_id', req.orgId!)
-      .eq('id', req.params.id)
+      .eq('id', String(req.params.id))
 
     if (error) {
       res.status(500).json({ error: error.message })

@@ -58,12 +58,12 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
   // (the backend expects departmentId/siteId, not free-text names).
   const { data: sites = [] } = useQuery({
     queryKey: ['sites'],
-    queryFn: () => apiFetch<NamedRow[]>('sites'),
+    queryFn: () => apiFetch<NamedRow[]>('org-sites'),
     enabled: open,
   })
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => apiFetch<NamedRow[]>('departments'),
+    queryFn: () => apiFetch<NamedRow[]>('org-departments'),
     enabled: open,
   })
 
@@ -85,7 +85,7 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
     try {
       // Send a single, secure payload to the Express backend.
       // The backend will handle the Auth0 invitation ticket and DB inserts securely.
-      const result = await apiFetch<InviteResponse>('employees/invite', {
+      const result = await apiFetch<InviteResponse>('invitations', {
         method: 'POST',
         body: JSON.stringify({
           email: email.trim(),

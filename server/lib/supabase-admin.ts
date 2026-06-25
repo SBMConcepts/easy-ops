@@ -4,6 +4,8 @@
 // reach the browser. Mirrors the lazy-init pattern used elsewhere in server/lib.
 import { createClient } from '@supabase/supabase-js'
 
+import type { Database } from '../types/supabase.js'
+
 function createSupabaseAdminClient() {
   const SUPABASE_URL = process.env.SUPABASE_URL
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -16,7 +18,7 @@ function createSupabaseAdminClient() {
     throw new Error(`Missing Supabase environment variable(s): ${missing.join(', ')}.`)
   }
 
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

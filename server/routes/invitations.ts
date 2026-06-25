@@ -1,4 +1,4 @@
-// POST /api/employees/invite
+// POST /api/invitations
 //
 // Invites a person to the current organization: records a DB invitation
 // (org-scoped, unique per email) and sends an Auth0 organization invitation.
@@ -14,7 +14,7 @@ import { createOrgInvitation } from '../lib/auth0-admin.js'
 const router = Router()
 
 router.post(
-  '/api/employees/invite',
+  '/api/invitations',
   requireAuth,
   requireOrg,
   requireRole('admin'),

@@ -1,17 +1,20 @@
-// POST /api/tenants/create — public organization intake.
+// Organization intake + lookup for the current caller.
 //
-// Creates the Auth0 organization (source of the auth0_org_id primary key),
-// mirrors it into Supabase, seeds a subscription, and emails an organization
-// invitation to the admin. No auth required (pre-signup intake).
+//   POST /api/organizations  — public intake: create the Auth0 organization
+//                              (source of the auth0_org_id primary key), mirror
+//                              it into Supabase, seed a subscription, and email
+//                              an organization invitation to the admin.
+//   GET  /api/organizations  — the authenticated caller's organization.
 import { Router, type Request, type Response } from 'express'
 
+import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { createAuth0Org, createOrgInvitation } from '../lib/auth0-admin.js'
 
 const router = Router()
 
-// organizations.plan CHECK allows only these values; anything else falls back to
-// 'free'. The requested plan is still recorded on the subscription row (free text).
+// organizations.plan allows only these values; anything else falls back to
+// 'free'. The requested plan is still recorded on the subscription row.
 const ORG_PLANS = new Set(['free', 'starter', 'pro', 'enterprise'])
 
 function slugify(input: string): string {
@@ -23,7 +26,8 @@ function slugify(input: string): string {
     .slice(0, 50)
 }
 
-router.post('/api/tenants/create', async (req: Request, res: Response) => {
+// Public pre-signup intake — no auth required.
+router.post('/api/organizations', async (req: Request, res: Response) => {
   const body = (req.body ?? {}) as { orgName?: string; adminEmail?: string; plan?: string }
   const orgName = typeof body.orgName === 'string' ? body.orgName.trim() : ''
   const adminEmail = typeof body.adminEmail === 'string' ? body.adminEmail.trim().toLowerCase() : ''
@@ -74,9 +78,33 @@ router.post('/api/tenants/create', async (req: Request, res: Response) => {
     res.status(201).json({ orgId: auth0Org.id, slug, invitationId })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Organization creation failed.'
-    console.error('tenants/create failed:', message)
+    console.error('organizations/create failed:', message)
     res.status(500).json({ error: message })
   }
 })
+
+// The authenticated caller's organization.
+router.get(
+  '/api/organizations',
+  requireAuth,
+  requireOrg,
+  async (req: AuthedRequest, res: Response) => {
+    const { data, error } = await supabaseAdmin
+      .from('organizations')
+      .select('auth0_org_id, name, slug, plan, status, industry, country, logo_url, created_at')
+      .eq('auth0_org_id', req.orgId!)
+      .maybeSingle()
+
+    if (error) {
+      res.status(500).json({ error: error.message })
+      return
+    }
+    if (!data) {
+      res.status(404).json({ error: 'Organization not found.' })
+      return
+    }
+    res.json(data)
+  }
+)
 
 export default router

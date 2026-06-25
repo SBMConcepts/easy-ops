@@ -51,9 +51,9 @@ export default function Register() {
     setSubmitting(true)
 
     try {
-      // Public endpoint (no auth yet) — POST /api/tenants/create. apiFetch
+      // Public endpoint (no auth yet) — POST /api/organizations. apiFetch
       // appends '/api' to VITE_API_URL and handles error parsing.
-      await apiFetch('tenants/create', {
+      await apiFetch('organizations', {
         method: 'POST',
         requireAuth: false,
         body: JSON.stringify({

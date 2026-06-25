@@ -8,6 +8,7 @@ import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
+import type { Json, TablesUpdate } from '../types/supabase.js'
 
 const router = Router()
 
@@ -54,9 +55,9 @@ router.post(
         shifts: body.shifts ?? [],
       }
 
-      const orgUpdate: Record<string, unknown> = {
+      const orgUpdate: TablesUpdate<'organizations'> = {
         status: 'active',
-        metadata: mergedMetadata,
+        metadata: mergedMetadata as Json,
         updated_at: new Date().toISOString(),
       }
       if (body.company?.name) orgUpdate.name = body.company.name
