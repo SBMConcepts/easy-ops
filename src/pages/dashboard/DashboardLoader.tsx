@@ -24,7 +24,7 @@ interface AttendanceItemProps {
   metaText: string // e.g. "Clock-in · Site Name"
   clockIn?: string | null
   clockOut?: string | null
-  status: AttendanceStatus
+  status: string
   hoursWorked?: string | null
 }
 
@@ -51,7 +51,10 @@ export const AttendanceRow: React.FC<AttendanceItemProps> = ({
           {clockOut !== undefined && ` — ${clockOut ? formatTime(clockOut) : '...'}`}
         </span>
         {hoursWorked && <span className="text-xs font-medium text-foreground">{hoursWorked}h</span>}
-        <Badge variant="outline" className={`capitalize text-xs ${STATUS_COLORS[status] || ''}`}>
+        <Badge
+          variant="outline"
+          className={`capitalize text-xs ${STATUS_COLORS[status as keyof typeof STATUS_COLORS] || ''}`}
+        >
           {status}
         </Badge>
       </div>

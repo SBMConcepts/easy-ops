@@ -1,9 +1,19 @@
 import { useCallback } from 'react'
 import { useTenantApi } from './useTenantApi'
-import type { Database } from '../integrations/supabase/types'
 
-export type AccessRequestRow = Database['public']['Tables']['access_requests']['Row']
-export type TenantRole = Database['public']['Enums']['tenant_role']
+// Local shapes — the access_requests table and tenant_role enum were removed in
+// the v2 schema. This dropped feature's UI is retained but its endpoints are not
+// implemented server-side (the calls will 404 at runtime).
+export interface AccessRequestRow {
+  id: string
+  requester_name: string
+  requester_email: string
+  email_domain: string | null
+  message: string | null
+  status: string
+  created_at: string
+}
+export type TenantRole = 'owner' | 'admin' | 'member' | 'viewer'
 
 export type ApproveAndInviteBody = {
   requestId: string

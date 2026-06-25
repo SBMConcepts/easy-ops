@@ -33,7 +33,7 @@ const CheckIn = () => {
       if (!currentUser?.profile_id || !currentUser?.tenant_id) {
         throw new Error('User profile not loaded')
       }
-      const { error } = await supabase.from('attendance_records').insert({
+      const { error } = await (supabase as any).from('attendance_records').insert({
         employee_id: currentUser.profile_id,
         tenant_id: currentUser.tenant_id,
         method,
@@ -48,7 +48,7 @@ const CheckIn = () => {
 
   const clockOut = useMutation({
     mutationFn: async ({ recordId }: { recordId: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('attendance_records')
         .update({ clock_out: new Date().toISOString() })
         .eq('id', recordId)

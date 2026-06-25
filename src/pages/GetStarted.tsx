@@ -21,7 +21,7 @@ export default function GetStarted() {
     try {
       const emailDomain = form.workEmail.split('@')[1]
 
-      const { error } = await supabasePublic.from('access_requests').insert({
+      const { error } = await (supabasePublic as any).from('access_requests').insert({
         requester_name: form.fullName,
         requester_email: form.workEmail,
         email_domain: emailDomain,

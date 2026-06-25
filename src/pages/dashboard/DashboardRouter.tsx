@@ -2,8 +2,6 @@ import { Navigate } from 'react-router-dom'
 import { useAuth, useAuthRole } from '../../contexts/AuthContext'
 import { DashboardLoader } from './DashboardLoader'
 import AdminDashboard from './AdminDashboard'
-import ManagerDashboard from './ManagerDashboard'
-import SupervisorDashboard from './SupervisorDashboard'
 import EmployeeDashboard from './EmployeeDashboard'
 
 const DashboardRouter = () => {
@@ -22,13 +20,11 @@ const DashboardRouter = () => {
   }
 
   switch (user?.role) {
+    case 'owner':
     case 'admin':
       return <AdminDashboard />
-    case 'manager':
-      return <ManagerDashboard />
-    case 'supervisor':
-      return <SupervisorDashboard />
-    case 'employee':
+    case 'member':
+    case 'viewer':
     default:
       return <EmployeeDashboard />
   }

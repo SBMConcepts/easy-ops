@@ -87,11 +87,11 @@ exports.onExecutePostUserRegistration = async (event, api) => {
         'x-api-key': syncSecret,
       },
       body: JSON.stringify({
-        auth0UserId: event.user.user_id,
+        auth0_user_id: event.user.user_id,
         email: event.user.email,
-        name: event.user.name || event.user.email,
-        avatarUrl: event.user.picture || null,
-        emailVerified: event.user.email_verified || false,
+        full_name: event.user.name || event.user.email,
+        avatar_url: event.user.picture || null,
+        org_id: orgId || undefined,
       }),
     })
 

@@ -115,7 +115,7 @@ const Reports = () => {
                       <td className="p-4">
                         <Badge
                           variant="outline"
-                          className={`text-xs capitalize ${statusColors[rec.status] || ''}`}
+                          className={`text-xs capitalize ${statusColors[rec.status as keyof typeof statusColors] || ''}`}
                         >
                           {rec.status}
                         </Badge>

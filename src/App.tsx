@@ -64,7 +64,7 @@ const WorkspaceShell = () => {
         <Route
           path="check-in"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
               <CheckIn />
             </ProtectedRoute>
           }
@@ -76,7 +76,7 @@ const WorkspaceShell = () => {
         <Route
           path="employees-management"
           element={
-            <ProtectedRoute requiredPermissions={['read:members']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin']}>
               <EmployeeManagement />
             </ProtectedRoute>
           }
@@ -84,7 +84,7 @@ const WorkspaceShell = () => {
         <Route
           path="live-attendance"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
               <LiveAttendance />
             </ProtectedRoute>
           }
@@ -92,7 +92,7 @@ const WorkspaceShell = () => {
         <Route
           path="compliance"
           element={
-            <ProtectedRoute requiredPermissions={['read:compliance']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
               <Compliance />
             </ProtectedRoute>
           }
@@ -100,7 +100,7 @@ const WorkspaceShell = () => {
         <Route
           path="sites"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
               <SitesAndDepartments />
             </ProtectedRoute>
           }
@@ -108,7 +108,7 @@ const WorkspaceShell = () => {
         <Route
           path="payroll"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
               <ComingSoon title="Payroll Export" />
             </ProtectedRoute>
           }
@@ -116,7 +116,7 @@ const WorkspaceShell = () => {
         <Route
           path="settings"
           element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'supervisor', 'employee']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
               <Settings />
             </ProtectedRoute>
           }

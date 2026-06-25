@@ -3,14 +3,10 @@ import { useAuth0 } from '@auth0/auth0-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTenantApi } from './useTenantApi'
 
-import type { Database } from '../integrations/supabase/types'
-
-type TenantRole = Database['public']['Enums']['tenant_role']
-type MembershipStatus = Database['public']['Enums']['membership_status']
-type UserStatus = Database['public']['Enums']['user_status']
-type BillingPlan = Database['public']['Enums']['billing_plan']
-type BillingStatus = Database['public']['Enums']['billing_status']
-type TenantStatus = Database['public']['Enums']['tenant_status']
+// Access tier — mirrors org_members.role (owner|admin|member|viewer).
+type TenantRole = 'owner' | 'admin' | 'member' | 'viewer'
+// org_members.status CHECK (active|suspended).
+type MembershipStatus = 'active' | 'suspended'
 
 // =============================================================================
 // useCurrentUser
@@ -41,7 +37,7 @@ export interface CurrentUserProfile {
   email: string
   full_name: string
   avatar_url: string | null
-  user_status: UserStatus
+  user_status: string
 
   // ── from public.org_members ────────────────────────────────────────────────
   tenant_id: string // org_members.org_id (the Auth0 org id, text)
@@ -52,14 +48,14 @@ export interface CurrentUserProfile {
   // ── from public.organizations ──────────────────────────────────────────────
   tenant_name: string
   tenant_auth0_org: string
-  tenant_status: TenantStatus
+  tenant_status: string
   tenant_logo: string | null // organizations.metadata ->> 'logo_url'
   tenant_country: string // organizations.metadata ->> 'country'
   tenant_industry: string | null // organizations.metadata ->> 'industry'
 
   // ── from public.subscriptions ──────────────────────────────────────────────
-  plan: BillingPlan | null
-  billing_status: BillingStatus | null
+  plan: string | null
+  billing_status: string | null
   current_period_end: string | null
 
   // ── reintegrated with the operational schema (not returned by v2 core) ──────

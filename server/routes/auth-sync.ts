@@ -1,0 +1,80 @@
+// POST /api/auth/sync
+//
+// Called by the Auth0 Post-Login Action to mirror the authenticated identity
+// into Supabase and resolve the caller's access tier. Authenticated with a
+// shared secret header (x-api-key === AUTH0_SYNC_SECRET) since the Action runs
+// server-side in Auth0, not in the browser.
+//
+// Returns { role } — the org_members access tier — which the Action injects as
+// a namespaced custom claim on the issued token.
+import { Router, type Request, type Response } from 'express'
+
+import { supabaseAdmin } from '../lib/supabase-admin.js'
+import { jobRoleToTier } from '../lib/rbac.js'
+
+const router = Router()
+
+router.post('/api/auth/sync', async (req: Request, res: Response) => {
+  const secret = process.env.AUTH0_SYNC_SECRET
+  if (!secret || req.header('x-api-key') !== secret) {
+    res.status(401).json({ error: 'Invalid sync credentials.' })
+    return
+  }
+
+  const body = (req.body ?? {}) as {
+    auth0_user_id?: string
+    email?: string
+    full_name?: string
+    avatar_url?: string | null
+    org_id?: string
+    role?: string
+  }
+
+  if (!body.auth0_user_id || !body.email) {
+    res.status(400).json({ error: 'auth0_user_id and email are required.' })
+    return
+  }
+
+  const { data: user, error: userErr } = await supabaseAdmin
+    .from('users')
+    .upsert(
+      {
+        auth0_user_id: body.auth0_user_id,
+        email: body.email,
+        full_name: body.full_name ?? '',
+        avatar_url: body.avatar_url ?? null,
+        auth0_org_id: body.org_id ?? '',
+        last_seen_at: new Date().toISOString(),
+      },
+      { onConflict: 'auth0_user_id' }
+    )
+    .select('id')
+    .single()
+
+  if (userErr || !user) {
+    res.status(500).json({ error: userErr?.message ?? 'Failed to sync user.' })
+    return
+  }
+
+  let role = 'viewer'
+  if (body.org_id) {
+    role = jobRoleToTier(body.role)
+    const { error: memberErr } = await supabaseAdmin.from('org_members').upsert(
+      {
+        org_id: body.org_id,
+        user_id: user.id,
+        role,
+        status: 'active',
+      },
+      { onConflict: 'org_id,user_id' }
+    )
+    if (memberErr) {
+      res.status(500).json({ error: memberErr.message })
+      return
+    }
+  }
+
+  res.json({ ok: true, role })
+})
+
+export default router

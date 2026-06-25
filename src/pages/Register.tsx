@@ -7,10 +7,12 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Database } from '../integrations/supabase/types'
 import { useTenantApi } from '../hooks/useTenantApi'
 
-type BillingPlan = Database['public']['Enums']['billing_plan']
+// Local plan union for the public registration package picker. organizations.plan
+// and subscriptions.plan are plain text/enum columns server-side; this is just
+// the set of plans offered on the signup screen.
+type BillingPlan = 'free' | 'starter' | 'growth' | 'pro' | 'enterprise'
 
 const PACKAGES: { id: BillingPlan; name: string; price: string; features: string[] }[] = [
   {

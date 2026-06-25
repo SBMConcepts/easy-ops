@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react'
 import { useTenantApi } from '../hooks/useTenantApi'
-import { usePermissions } from '../contexts/AuthContext'
+import { useAuthRole } from '../contexts/AuthContext'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { Database } from '../integrations/supabase/types'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -28,20 +27,32 @@ import {
 import { toast } from 'sonner'
 import { Building2, MapPin, Plus, Pencil, Trash2, Loader2, Search } from 'lucide-react'
 
-type SiteRow = Database['public']['Tables']['sites']['Row']
-type DepartmentRow = Database['public']['Tables']['departments']['Row']
+interface SiteRow {
+  id: string
+  name: string
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  geofence_radius_m: number | null
+}
+
+interface DepartmentRow {
+  id: string
+  name: string
+  site_id: string | null
+}
 
 export default function SitesAndDepartments() {
   const { apiFetch } = useTenantApi()
-  const { hasPermission } = usePermissions()
+  const { isAdmin, isOwner } = useAuthRole()
   const queryClient = useQueryClient()
 
-  // Capability gates (DB role_permissions → JWT claim). Site deletes cascade, so
-  // they require admin:tenant rather than manage:sites.
-  const canManageSites = hasPermission('manage:sites')
-  const canDeleteSites = hasPermission('admin:tenant')
-  const canManageDepartments = hasPermission('manage:departments')
-  const canManageAny = canManageSites || canManageDepartments
+  // Role-tier gates. Writes require admin tier; destructive site deletes cascade
+  // to departments, so they require the owner tier.
+  const canManageSites = isAdmin
+  const canDeleteSites = isOwner
+  const canManageDepartments = isAdmin
+  const canManageAny = isAdmin
 
   const [activeTab, setActiveTab] = useState<'sites' | 'departments'>('sites')
   const [siteSearch, setSiteSearch] = useState('')
