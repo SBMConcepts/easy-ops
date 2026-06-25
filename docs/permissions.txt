@@ -141,3 +141,77 @@ E. AUTH0 SETUP CHECKLIST
   enforced by org_id + Postgres RLS — never rely on a tier alone for the
   tenant boundary.
 ===============================================================================
+
+
+F. CUSTOM API SCOPES (OPTIONAL)  — Applications -> APIs -> [API] -> Permissions
+-------------------------------------------------------------------------------
+  Convention: verb:resource. These map 1:1 to the schema/routes above.
+
+  IMPORTANT: enforcement today is ACCESS-TIER based (requireRole + DB checks),
+  NOT scopes. Loading these is optional — useful only if you later (a) surface
+  RBAC roles in the Auth0 dashboard, (b) gate scopes per machine-to-machine
+  client, or (c) move to permission-based middleware. If you adopt them, enable
+  "RBAC" + "Add Permissions in the Access Token" on the API and assign scopes to
+  Auth0 roles that mirror the tiers in section A.
+
+  Organizations & onboarding
+    create:organizations   Create a new organization (public provisioning)
+    read:organizations     View the current organization profile and settings
+    update:organizations   Update organization name, status, slug, metadata
+    manage:onboarding      Complete onboarding (sites/departments/roles + activate)
+
+  Members (org_members)
+    read:members           List members of the organization
+    create:members         Add a member and assign an access tier
+    update:members         Change a member's access tier or status
+    delete:members         Remove a member from the organization
+
+  Invitations
+    read:invitations       View pending and sent invitations
+    create:invitations     Invite a person to the organization
+    delete:invitations     Revoke a pending invitation
+
+  Sites (org_sites)
+    read:sites             View organization sites
+    create:sites           Create a new site
+    update:sites           Update site details (address, geofence, etc.)
+    delete:sites           Delete a site
+
+  Departments (org_departments)
+    read:departments       View departments
+    create:departments     Create a department
+    update:departments     Rename or update a department
+    delete:departments     Delete a department
+
+  Job roles (org_roles)
+    read:roles             View the organization's job roles
+    create:roles           Add a job role
+    delete:roles           Remove a job role
+
+  Attendance (org_attendance)
+    read:attendance        View attendance records (own or org-wide per tier)
+    create:attendance      Record a daily attendance entry
+
+  Subscriptions & billing
+    read:subscriptions     View the current plan and billing status
+    update:subscriptions   Change plan, seats, or billing status
+
+  Compliance
+    read:compliance        View BCEA compliance summaries and violations
+
+  User profile & credentials
+    read:profile           Read the current user's own profile
+    update:profile         Update the current user's own profile
+    read:credentials       Read own credential status (never the password hash)
+    manage:credentials     Enable/disable/block a user's login credential (admin)
+
+  Audit logs (audit_logs)
+    read:audit-logs        View the organization's audit trail
+
+  Suggested tier -> scope mapping (mirrors rbac.ts tiers)
+    viewer   all read:* scopes
+    member   viewer + create:attendance, read:profile, update:profile
+    admin    member + all create:*/update:*/delete:*, manage:onboarding,
+             manage:credentials, update:subscriptions
+    owner    admin + create:organizations (full control)
+===============================================================================

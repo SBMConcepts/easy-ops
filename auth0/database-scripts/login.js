@@ -1,3 +1,5 @@
+const { URL } = require('url')
+
 /**
  * Auth0 Custom Database — LOGIN script (MANDATORY)
  * Connection: Username-Password-Authentication (custom database)

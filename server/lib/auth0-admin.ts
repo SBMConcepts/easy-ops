@@ -9,14 +9,14 @@ function mgmt(): ManagementClient {
   if (_mgmt) return _mgmt
 
   const domain = process.env.AUTH0_DOMAIN?.replace(/^https?:\/\//, '').replace(/\/$/, '')
-  const clientId = process.env.AUTH0_MGMT_CLIENT_ID ?? process.env.AUTH0_CLIENT_ID
-  const clientSecret = process.env.AUTH0_MGMT_CLIENT_SECRET ?? process.env.AUTH0_CLIENT_SECRET
+  const clientId = process.env.AUTH0_M2M_CLIENT_ID ?? process.env.AUTH0_CLIENT_ID
+  const clientSecret = process.env.AUTH0_M2M_CLIENT_SECRET ?? process.env.AUTH0_CLIENT_SECRET
 
   if (!domain || !clientId || !clientSecret) {
     const missing = [
       ...(!domain ? ['AUTH0_DOMAIN'] : []),
-      ...(!clientId ? ['AUTH0_MGMT_CLIENT_ID'] : []),
-      ...(!clientSecret ? ['AUTH0_MGMT_CLIENT_SECRET'] : []),
+      ...(!clientId ? ['AUTH0_M2M_CLIENT_ID'] : []),
+      ...(!clientSecret ? ['AUTH0_M2M_CLIENT_SECRET'] : []),
     ]
     throw new Error(`Missing Auth0 Management env variable(s): ${missing.join(', ')}.`)
   }

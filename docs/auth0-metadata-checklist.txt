@@ -8,8 +8,8 @@
    server/lib/auth.ts  verifyAuth0Token   (reads custom claims)
    server/lib/db.ts    withTenantContext   (rebuilds request.jwt.claims)
 
- Namespace (CLAIM_NS): https://easy-ops-za.vercel.app/
- API audience:          https://api.easyops.co.za
+ Namespace (CLAIM_NS): https://easy-ops-com.vercel.app/
+ API audience:          https://api.easyops.com
 ===============================================================================
 
 
@@ -44,14 +44,14 @@
  Namespaced claims written to BOTH the ID token and the access token. These are
  the AUTHORITATIVE values consumed at runtime (DB-sourced via /api/auth/sync).
 
- [ ] Claim          : https://easy-ops-za.vercel.app/role
+ [ ] Claim          : https://easy-ops-com.vercel.app/role
      Source         : /api/auth/sync response.role (DB memberships.role)
      Tokens         : ID + access
      Read by FE     : AuthContext (getIdTokenClaims -> user.role)
      Read by BE     : auth.ts verifyAuth0Token -> AuthContext.role
      Required       : Yes
 
- [ ] Claim          : https://easy-ops-za.vercel.app/org_id
+ [ ] Claim          : https://easy-ops-com.vercel.app/org_id
      Source         : /api/auth/sync response.orgId (DB tenants.auth0_org_id)
      Tokens         : ID + access
      Read by BE     : auth.ts -> AuthContext.orgId -> db.ts request.jwt.claims
@@ -79,7 +79,7 @@
 -------------------------------------------------------------------------------
  SECTION 4 — Action Secrets (Dashboard -> Actions -> post-login -> Secrets)
 -------------------------------------------------------------------------------
- [ ] BACKEND_URL        : https://easy-ops-za.vercel.app   (Express API origin)
+ [ ] BACKEND_URL        : https://easy-ops-com.vercel.app   (Express API origin)
  [ ] AUTH0_SYNC_SECRET  : must equal server env AUTH0_SYNC_SECRET (x-api-key)
 
 -------------------------------------------------------------------------------
@@ -92,9 +92,9 @@
 -------------------------------------------------------------------------------
  SECTION 6 — Application / API settings
 -------------------------------------------------------------------------------
- [ ] SPA Allowed Callback URLs   : http://localhost:5173/app, https://easy-ops-za.vercel.app/app
- [ ] SPA Allowed Logout URLs     : http://localhost:5173, https://easy-ops-za.vercel.app
- [ ] SPA Allowed Web Origins     : http://localhost:5173, https://easy-ops-za.vercel.app
+ [ ] SPA Allowed Callback URLs   : http://localhost:5173/app, https://easy-ops-com.vercel.app/app
+ [ ] SPA Allowed Logout URLs     : http://localhost:5173, https://easy-ops-com.vercel.app
+ [ ] SPA Allowed Web Origins     : http://localhost:5173, https://easy-ops-com.vercel.app
  [ ] API Identifier (audience)   : https://api.easyops.co.za   (matches VITE_AUTH0_AUDIENCE / AUTH0_AUDIENCE)
  [ ] API RBAC                    : Enable RBAC + Add Permissions in Access Token
  [ ] post-login Action           : Deployed and bound to the Login flow
