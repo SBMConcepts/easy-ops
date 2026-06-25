@@ -22,6 +22,7 @@
   "include": [
     "src",
     "app",
+    "api",
     "vite.config.ts,",
     "server",
     ".agents/skills/auth0-saas-builder/scripts/audit-security.ts"

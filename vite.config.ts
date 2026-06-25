@@ -13,10 +13,11 @@ export default defineConfig({
   server: {
     proxy: {
       // Forward all /api requests to the Express server in development.
+      // Must match the server's port (server/index.ts → PORT ?? 3000).
       // In production, deploy the server/ directory separately and
       // configure your hosting platform's rewrite rules instead.
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3000',
         changeOrigin: true,
       },
     },
