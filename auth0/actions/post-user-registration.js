@@ -7,8 +7,8 @@
  *
  * Required Secrets (Auth0 Dashboard → Actions → your action → Secrets):
  *   AUTH0_DOMAIN               — e.g. easy-ops.us.auth0.com
- *   AUTH0_MANAGEMENT_CLIENT_ID
- *   AUTH0_MANAGEMENT_CLIENT_SECRET
+ *   AUTH0_M2M_CLIENT_ID
+ *   AUTH0_M2M_CLIENT_SECRET
  *   API_BASE_URL               — Auth0 Management API audience: https://easy-ops.us.auth0.com/api/v2/
  *   BACKEND_URL                — Your Express server: https://api.easyops.co.za
  *   AUTH0_SYNC_SECRET
@@ -16,8 +16,8 @@
 
 exports.onExecutePostUserRegistration = async (event, api) => {
   var domain = event.secrets.AUTH0_DOMAIN
-  var clientId = event.secrets.AUTH0_MANAGEMENT_CLIENT_ID
-  var clientSecret = event.secrets.AUTH0_MANAGEMENT_CLIENT_SECRET
+  var clientId = event.secrets.AUTH0_M2M_CLIENT_ID
+  var clientSecret = event.secrets.AUTH0_M2M_CLIENT_SECRET
   var managementAudience = event.secrets.API_BASE_URL // https://easy-ops.us.auth0.com/api/v2/
   var backendUrl = event.secrets.BACKEND_URL // https://api.easyops.co.za
   var syncSecret = event.secrets.AUTH0_SYNC_SECRET
