@@ -10,7 +10,7 @@
 import { Router, type Request, type Response } from 'express'
 
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import { jobRoleToTier } from '../lib/rbac.js'
+import { hasRequiredRole, jobRoleToTier } from '../lib/rbac.js'
 
 const router = Router()
 
@@ -68,7 +68,14 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
       .eq('org_id', body.org_id)
       .eq('email', body.email.toLowerCase())
       .maybeSingle()
-    if (invite?.role && (!roleHint || jobRoleToTier(roleHint) === 'admin')) {
+    // The invitation carries the provisioning-time intent — the org creator is
+    // always invited as 'owner'. Let it win whenever it grants at least as much
+    // privilege as the token hint, so a stale or low app_metadata role can never
+    // downgrade the creator (or any invited admin) below their intended tier.
+    if (
+      invite?.role &&
+      (!roleHint || hasRequiredRole(jobRoleToTier(invite.role), jobRoleToTier(roleHint)))
+    ) {
       roleHint = invite.role
     }
 
