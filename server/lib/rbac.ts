@@ -45,7 +45,7 @@ const JOB_ROLE_TO_TIER: Record<string, AccessRole> = {
 
 /** Resolve a job role (or any incoming role string) to an access tier. */
 export function jobRoleToTier(jobRole: string | null | undefined): AccessRole {
-  if (!jobRole) return 'viewer'
+  if (!jobRole) return 'owner'
   if (isAccessRole(jobRole)) return jobRole
-  return JOB_ROLE_TO_TIER[jobRole] ?? 'viewer'
+  return JOB_ROLE_TO_TIER[jobRole] ?? 'owner'
 }

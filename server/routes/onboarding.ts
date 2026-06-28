@@ -13,7 +13,7 @@ import type { Json, TablesUpdate } from '../types/supabase.js'
 const router = Router()
 
 // Valid organization_role enum values for org_roles.name.
-const JOB_ROLES = new Set(['admin', 'manager', 'supervisor', 'employee', 'owner'])
+const JOB_ROLES = new Set(['admin', 'manager', 'employee', 'owner', 'supervisor'])
 
 interface OnboardingBody {
   company?: { name?: string; country?: string; industry?: string }
@@ -116,14 +116,19 @@ router.post(
       const roleNames = Array.from(
         new Set(
           (body.roles ?? [])
-            .map((r) => (r.base_role ?? r.name ?? '').toLowerCase())
+            .map((r) => {
+              const normalized = (r.base_role ?? r.name ?? '').toLowerCase()
+              if (normalized === 'member') return 'employee'
+              if (normalized === 'viewer') return 'supervisor'
+              return normalized
+            })
             .filter((name) => JOB_ROLES.has(name))
         )
       )
       if (roleNames.length > 0) {
         const roleRows = roleNames.map((name) => ({
           org_id: orgId,
-          name: name as 'admin' | 'manager' | 'supervisor' | 'employee' | 'owner',
+          name: name as 'admin' | 'manager' | 'employee' | 'owner' | 'supervisor',
         }))
         const { error: roleErr } = await supabaseAdmin.from('org_roles').insert(roleRows)
         if (roleErr) throw new Error(roleErr.message)

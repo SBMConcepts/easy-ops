@@ -56,7 +56,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     return
   }
 
-  let role = 'viewer'
+  let role = 'admin' // default to owner/admin if no org context
   if (body.org_id) {
     // Resolve the access tier. Prefer an explicit role hint from the token, but
     // fall back to the pending invitation for this email — that is where the
@@ -68,7 +68,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
       .eq('org_id', body.org_id)
       .eq('email', body.email.toLowerCase())
       .maybeSingle()
-    if (invite?.role && (!roleHint || jobRoleToTier(roleHint) === 'viewer')) {
+    if (invite?.role && (!roleHint || jobRoleToTier(roleHint) === 'admin')) {
       roleHint = invite.role
     }
 
@@ -84,7 +84,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
       .maybeSingle()
 
     if (!invite && !existingMember) {
-      res.json({ ok: true, role: 'viewer' })
+      res.json({ ok: true, role: 'admin' })
       return
     }
 
