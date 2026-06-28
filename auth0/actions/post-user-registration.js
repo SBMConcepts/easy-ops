@@ -88,7 +88,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
         email: event.user.email,
         full_name: event.user.name || event.user.email,
         avatar_url: event.user.picture || null,
-        org_id: orgId || undefined,
+        org_id: orgId,
       }),
     })
 

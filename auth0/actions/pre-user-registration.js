@@ -54,15 +54,6 @@ exports.onExecutePreUserRegistration = async (event, api) => {
     })
   )
 
-  if (!hasInvitation && !hasOrgContext) {
-    // api.access.deny requires (code, message) — two arguments
-    api.access.deny(
-      'unauthorized',
-      'Self-service registration is not available. Please ask your workspace administrator to invite you.'
-    )
-    return
-  }
-
   const orgId =
     (event.organization && event.organization.id) ||
     params.organization ||
