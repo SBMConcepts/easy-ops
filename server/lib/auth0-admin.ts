@@ -27,7 +27,7 @@ function mgmt(): ManagementClient {
 
 export interface Auth0Org {
   id: string
-  name: string
+  name?: string
   display_name?: string
 }
 
