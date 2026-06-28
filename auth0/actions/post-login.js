@@ -41,7 +41,7 @@ exports.onExecutePostLogin = async (event, api) => {
     console.warn('[post-login] BACKEND_URL or AUTH0_SYNC_SECRET not set — using fallback role/org')
   } else {
     try {
-      const res = await fetch(backendUrl + '/api/auth/sync', {
+      const res = await fetch(backendUrl + '/auth/sync', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
