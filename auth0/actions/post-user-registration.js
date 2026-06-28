@@ -10,7 +10,7 @@
  *   AUTH0_M2M_CLIENT_ID
  *   AUTH0_M2M_CLIENT_SECRET
  *   API_BASE_URL               — Auth0 Management API audience: https://easy-ops.us.auth0.com/api/v2/
- *   BACKEND_URL                — Your Express server: https://api.easyops.co.za
+ *   BACKEND_URL                — Your Express server: https://api.easyops.com/api
  *   AUTH0_SYNC_SECRET
  */
 
@@ -19,7 +19,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
   var clientId = event.secrets.AUTH0_M2M_CLIENT_ID
   var clientSecret = event.secrets.AUTH0_M2M_CLIENT_SECRET
   var managementAudience = event.secrets.API_BASE_URL // https://easy-ops.us.auth0.com/api/v2/
-  var backendUrl = event.secrets.BACKEND_URL // https://api.easyops.com
+  var backendUrl = event.secrets.BACKEND_URL // https://api.easyops.com/api
   var syncSecret = event.secrets.AUTH0_SYNC_SECRET
 
   // ── 1. Stamp app_metadata via Management API ──────────────────────────────
