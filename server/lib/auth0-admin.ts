@@ -59,6 +59,57 @@ export async function createAuth0Org(
 }
 
 /**
+ * Resolve the database connection id to enable on new organizations. Prefers an
+ * explicit `AUTH0_DB_CONNECTION_ID`; otherwise looks one up by name
+ * (`AUTH0_DB_CONNECTION_NAME`) or falls back to the sole database connection.
+ */
+async function resolveDbConnectionId(): Promise<string> {
+  const explicitId = process.env.AUTH0_DB_CONNECTION_ID
+  if (explicitId) return explicitId
+
+  const name = process.env.AUTH0_DB_CONNECTION_NAME
+  const page = await mgmt().connections.list({
+    strategy: ['auth0'],
+    ...(name ? { name } : {}),
+  })
+  const connections = (page.data ?? []).filter((c) => c.id)
+
+  if (name) {
+    const match = connections.find((c) => c.name === name)
+    if (match?.id) return match.id
+    throw new Error(`No Auth0 database connection named "${name}" was found.`)
+  }
+
+  if (connections.length === 1 && connections[0].id) return connections[0].id
+  if (connections.length === 0) {
+    throw new Error('No Auth0 database connection was found to enable on the organization.')
+  }
+  throw new Error(
+    'Multiple Auth0 database connections exist; set AUTH0_DB_CONNECTION_ID or AUTH0_DB_CONNECTION_NAME to pick one.'
+  )
+}
+
+/**
+ * Enable a database connection on an organization so users can log in (and, for
+ * invited admins, set their password) under that org. Idempotent: skips if the
+ * connection is already enabled. `assign_membership_on_login` is left false so
+ * membership is granted explicitly via invitations rather than on first login.
+ */
+export async function enableOrgConnection(orgId: string): Promise<void> {
+  const connectionId = await resolveDbConnectionId()
+
+  const existing = await mgmt().organizations.enabledConnections.list(orgId)
+  const alreadyEnabled = (existing.data ?? []).some((c) => c.connection_id === connectionId)
+  if (alreadyEnabled) return
+
+  await mgmt().organizations.enabledConnections.add(orgId, {
+    connection_id: connectionId,
+    assign_membership_on_login: false,
+    is_signup_enabled: true,
+  })
+}
+
+/**
  * Add a user to an Auth0 organization and optionally assign organization roles.
  * `roles` are Auth0 role IDs; pass an empty array to skip role assignment.
  */

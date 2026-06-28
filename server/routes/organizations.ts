@@ -9,7 +9,7 @@ import { Router, type Request, type Response } from 'express'
 
 import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import { createAuth0Org, createOrgInvitation } from '../lib/auth0-admin.js'
+import { createAuth0Org, createOrgInvitation, enableOrgConnection } from '../lib/auth0-admin.js'
 
 const router = Router()
 
@@ -43,6 +43,11 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
 
   try {
     const auth0Org = await createAuth0Org(orgName, slug)
+
+    // Enable a database connection on the new org so the invited admin can set
+    // their password and log in under the organization. Without this, an Auth0
+    // org has zero enabled connections and org-scoped login fails.
+    await enableOrgConnection(auth0Org.id)
 
     const { error: orgErr } = await supabaseAdmin.from('organizations').upsert(
       {
