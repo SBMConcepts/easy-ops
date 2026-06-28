@@ -55,10 +55,19 @@ function create(user, callback) {
         return callback(connErr)
       }
 
-      // email_verified defaults false (the Verify flow flips it); status 'active'.
-      const sql = 'INSERT INTO public.user_credentials (email, password_hash) VALUES ($1, $2)'
+      // Insert the credential row, generating the id once so it can also seed
+      // auth0_user_id = 'auth0|' || id (the Auth0 subject). email_verified
+      // defaults false (the Verify flow flips it) and status is 'active'.
+      // Returning the id makes the Auth0 subject the credential id, so Login /
+      // Get User / Create stay in agreement on a stable identity.
+      const sql =
+        'INSERT INTO public.user_credentials ' +
+        '(id, email, password_hash, email_verified, status, auth0_user_id) ' +
+        "SELECT gen.id, $1, $2, false, 'active', 'auth0|' || gen.id::text " +
+        'FROM (SELECT gen_random_uuid() AS id) gen ' +
+        'RETURNING id'
 
-      client.query(sql, [email, passwordHash], function (queryErr) {
+      client.query(sql, [email, passwordHash], function (queryErr, result) {
         client.end()
         if (queryErr) {
           // 23505 = unique_violation on the lower(email) index.
@@ -69,7 +78,12 @@ function create(user, callback) {
           }
           return callback(queryErr)
         }
-        return callback(null)
+        const row = result && result.rows && result.rows[0]
+        return callback(null, {
+          user_id: row && row.id,
+          email: email,
+          email_verified: false,
+        })
       })
     })
   })
