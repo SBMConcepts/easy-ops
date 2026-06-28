@@ -105,7 +105,6 @@ export async function enableOrgConnection(orgId: string): Promise<void> {
   await mgmt().organizations.enabledConnections.add(orgId, {
     connection_id: connectionId,
     assign_membership_on_login: false,
-    is_signup_enabled: true,
   })
 }
 
