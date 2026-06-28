@@ -20,26 +20,55 @@ exports.onExecutePreUserRegistration = async (event, api) => {
   // Programmatic creation via the Management API does not trigger this Action.
   // Only interactive (browser) signups reach this point.
   const isInteractiveSignup = !!event.transaction
-
-  if (isInteractiveSignup) {
-    const hasInvitation = !!(
-      event.transaction &&
-      event.transaction.params &&
-      event.transaction.params.invitation
-    )
-    const hasOrgContext = !!(event.organization && event.organization.id)
-
-    if (!hasInvitation && !hasOrgContext) {
-      // api.access.deny requires (code, message) — two arguments
-      api.access.deny(
-        'unauthorized',
-        'Self-service registration is not available. Please ask your workspace administrator to invite you.'
-      )
-      return
-    }
+  if (!isInteractiveSignup) {
+    return
   }
 
-  if (event.organization && event.organization.id) {
-    api.user.setAppMetadata('org_id', event.organization.id)
+  // The org / invitation context can surface in several places depending on the
+  // flow (organization invitation vs. org-scoped authorize). Check all of them
+  // so a legitimately invited user is never wrongly blocked.
+  const params = (event.transaction && event.transaction.params) || {}
+  const query = (event.request && event.request.query) || {}
+  const body = (event.request && event.request.body) || {}
+
+  const hasInvitation = !!(params.invitation || query.invitation || body.invitation)
+  const hasOrgContext = !!(
+    (event.organization && event.organization.id) ||
+    params.organization ||
+    query.organization ||
+    body.organization
+  )
+
+  // Diagnostic (no secrets): shows which signals were present in the tenant log
+  // stream if a signup is unexpectedly blocked.
+  console.log(
+    'pre-user-registration signals',
+    JSON.stringify({
+      hasInvitation,
+      hasOrgContext,
+      orgFromEvent: !!(event.organization && event.organization.id),
+      orgFromParams: !!params.organization,
+      orgFromQuery: !!query.organization,
+      invFromParams: !!params.invitation,
+      invFromQuery: !!query.invitation,
+    })
+  )
+
+  if (!hasInvitation && !hasOrgContext) {
+    // api.access.deny requires (code, message) — two arguments
+    api.access.deny(
+      'unauthorized',
+      'Self-service registration is not available. Please ask your workspace administrator to invite you.'
+    )
+    return
+  }
+
+  const orgId =
+    (event.organization && event.organization.id) ||
+    params.organization ||
+    query.organization ||
+    body.organization
+  if (orgId) {
+    api.user.setAppMetadata('org_id', orgId)
   }
 }
