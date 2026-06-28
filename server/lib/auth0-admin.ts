@@ -90,21 +90,36 @@ async function resolveDbConnectionId(): Promise<string> {
 }
 
 /**
- * Enable a database connection on an organization so users can log in (and, for
- * invited admins, set their password) under that org. Idempotent: skips if the
- * connection is already enabled. `assign_membership_on_login` is left false so
- * membership is granted explicitly via invitations rather than on first login.
+ * Enable a database connection on an organization so users can log in and accept
+ * invitations (which is a signup) under that org. Idempotent: skips if the
+ * connection is already enabled. Auth0 requires `assign_membership_on_login` to
+ * be true whenever `is_signup_enabled` is true; access is still gated by the
+ * `org_members`/`invitations` tables in /api/auth/sync, which only grant a
+ * membership when a real invitation (or prior membership) exists.
  */
 export async function enableOrgConnection(orgId: string): Promise<void> {
   const connectionId = await resolveDbConnectionId()
 
   const existing = await mgmt().organizations.enabledConnections.list(orgId)
-  const alreadyEnabled = (existing.data ?? []).some((c) => c.connection_id === connectionId)
-  if (alreadyEnabled) return
+  const current = (existing.data ?? []).find((c) => c.connection_id === connectionId)
+
+  if (current) {
+    // Already enabled — ensure the signup/membership flags are correct (an org
+    // enabled by an earlier version may have signup disabled, which breaks
+    // invitation acceptance).
+    if (!current.assign_membership_on_login || !current.is_signup_enabled) {
+      await mgmt().organizations.enabledConnections.update(orgId, connectionId, {
+        assign_membership_on_login: true,
+        is_signup_enabled: true,
+      })
+    }
+    return
+  }
 
   await mgmt().organizations.enabledConnections.add(orgId, {
     connection_id: connectionId,
-    assign_membership_on_login: false,
+    assign_membership_on_login: true,
+    is_signup_enabled: true,
   })
 }
 

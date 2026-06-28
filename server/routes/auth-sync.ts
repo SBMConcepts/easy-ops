@@ -62,14 +62,30 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     // fall back to the pending invitation for this email — that is where the
     // org creator ('owner') and invited employees get their intended role.
     let roleHint = body.role
-    if (!roleHint || jobRoleToTier(roleHint) === 'viewer') {
-      const { data: invite } = await supabaseAdmin
-        .from('invitations')
-        .select('role')
-        .eq('org_id', body.org_id)
-        .eq('email', body.email.toLowerCase())
-        .maybeSingle()
-      if (invite?.role) roleHint = invite.role
+    const { data: invite } = await supabaseAdmin
+      .from('invitations')
+      .select('role')
+      .eq('org_id', body.org_id)
+      .eq('email', body.email.toLowerCase())
+      .maybeSingle()
+    if (invite?.role && (!roleHint || jobRoleToTier(roleHint) === 'viewer')) {
+      roleHint = invite.role
+    }
+
+    // Only provision/refresh a membership when the user was actually invited or
+    // already belongs to the org. The connection has assign_membership_on_login
+    // enabled (required for invitation signup), so without this gate any user
+    // initiating org-scoped login would otherwise be auto-added as a member.
+    const { data: existingMember } = await supabaseAdmin
+      .from('org_members')
+      .select('role')
+      .eq('org_id', body.org_id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!invite && !existingMember) {
+      res.json({ ok: true, role: 'viewer' })
+      return
     }
 
     role = jobRoleToTier(roleHint)
