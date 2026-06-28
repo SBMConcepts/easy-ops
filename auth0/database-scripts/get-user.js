@@ -30,7 +30,7 @@ function getByEmail(email, callback) {
     user: decodeURIComponent(dsn.username),
     password: decodeURIComponent(dsn.password),
     host: dsn.hostname,
-    port: dsn.port ? parseInt(dsn.port, 80) : 5432,
+    port: dsn.port ? parseInt(dsn.port, 10) : 5432,
     database: dsn.pathname.replace(/^\//, '') || 'postgres',
     ssl: { rejectUnauthorized: false },
   })
