@@ -50,11 +50,23 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
         name: orgName,
         slug,
         plan: orgPlan,
-        status: 'active',
+        status: 'provisioning',
       },
       { onConflict: 'auth0_org_id' }
     )
     if (orgErr) throw new Error(orgErr.message)
+
+    // Record the creator as the organization owner so that, on their first
+    // login, /api/auth/sync resolves their access tier from this invitation
+    // (instead of defaulting to 'viewer') and they land in the onboarding flow
+    // with full admin capabilities.
+    const { error: inviteErr } = await supabaseAdmin
+      .from('invitations')
+      .upsert(
+        { org_id: auth0Org.id, email: adminEmail, role: 'owner' },
+        { onConflict: 'org_id,email' }
+      )
+    if (inviteErr) throw new Error(inviteErr.message)
 
     await supabaseAdmin.from('subscriptions').insert({
       org_id: auth0Org.id,

@@ -58,7 +58,21 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
 
   let role = 'viewer'
   if (body.org_id) {
-    role = jobRoleToTier(body.role)
+    // Resolve the access tier. Prefer an explicit role hint from the token, but
+    // fall back to the pending invitation for this email — that is where the
+    // org creator ('owner') and invited employees get their intended role.
+    let roleHint = body.role
+    if (!roleHint || jobRoleToTier(roleHint) === 'viewer') {
+      const { data: invite } = await supabaseAdmin
+        .from('invitations')
+        .select('role')
+        .eq('org_id', body.org_id)
+        .eq('email', body.email.toLowerCase())
+        .maybeSingle()
+      if (invite?.role) roleHint = invite.role
+    }
+
+    role = jobRoleToTier(roleHint)
     const { error: memberErr } = await supabaseAdmin.from('org_members').upsert(
       {
         org_id: body.org_id,
