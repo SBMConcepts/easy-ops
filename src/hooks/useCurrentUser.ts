@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuth0 } from '@auth0/auth0-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useOrgApi } from './useOrgApi'
 
@@ -77,16 +76,15 @@ export const currentUserKeys = {
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useCurrentUser() {
-  const { user: auth0User, isLoading: isAuth0Loading } = useAuth0()
-  const { isAuthenticated, user: authUser } = useAuth()
+  const { isAuthenticated, user: authUser, isLoading: isAuthLoading } = useAuth()
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: currentUserKeys.profile(authUser?.id ?? auth0User?.sub ?? undefined),
+    queryKey: currentUserKeys.profile(authUser?.id ?? undefined),
     queryFn: () => apiFetch<CurrentUserProfile>('/userinfo'),
     // Only run when AuthContext has confirmed identity — avoids a 401 flash on mount
-    enabled: isAuthenticated && !!(authUser?.id ?? auth0User?.sub),
+    enabled: isAuthenticated && !!authUser?.id,
     // 5 minutes: profile data is slow-changing; role/plan changes trigger
     // explicit invalidation via refreshProfile() or refetch()
     staleTime: 1000 * 60 * 5,
@@ -110,9 +108,6 @@ export function useCurrentUser() {
   const profile = query.data
 
   return {
-    // ── Raw Auth0 session (always available after login) ─────────────────────
-    auth0User,
-
     // ── Enriched DB profile (available after first successful query) ─────────
     profile,
 
@@ -124,7 +119,7 @@ export function useCurrentUser() {
     isMembershipActive: profile?.membership_status === 'active',
 
     // ── Loading / error state ─────────────────────────────────────────────────
-    isLoading: isAuth0Loading || query.isLoading,
+    isLoading: isAuthLoading || query.isLoading,
     isFetching: query.isFetching,
     isError: query.isError,
     error: query.error,

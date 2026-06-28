@@ -1,6 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
 import { useOrgApi } from '../hooks/useOrgApi'
 import type { CurrentUserProfile } from '../hooks/useCurrentUser'
 
@@ -54,38 +53,35 @@ const AuthContext = createContext<AuthContextType>({
 })
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const {
-    isAuthenticated,
-    isLoading: auth0Loading,
-    user: auth0User,
-    loginWithRedirect,
-    logout: auth0Logout,
-  } = useAuth0()
-
   const { apiFetch } = useOrgApi()
 
   const [user, setUser] = useState<AuthUser | null>(null)
   const [organization, setOrganization] = useState<AuthOrganization | null>(null)
-  const [isProfileLoading, setIsProfileLoading] = useState(true)
+  // 'loading' until the backend session is probed; 'authed' once a valid session
+  // cookie is confirmed; 'anon' otherwise.
+  const [status, setStatus] = useState<'loading' | 'authed' | 'anon'>('loading')
 
   useEffect(() => {
-    if (auth0Loading) return
+    let cancelled = false
 
-    const fetchIdentity = async () => {
-      if (!isAuthenticated || !auth0User?.sub) {
-        setUser(null)
-        setOrganization(null)
-        setIsProfileLoading(false)
+    const boot = async () => {
+      // 1. Probe the server-side OIDC session. 401 → no session cookie.
+      try {
+        await apiFetch('/session')
+      } catch {
+        if (!cancelled) {
+          setUser(null)
+          setOrganization(null)
+          setStatus('anon')
+        }
         return
       }
 
-      setIsProfileLoading(true)
-
+      // 2. Authenticated — load the enriched profile + organization. This is the
+      //    single source of truth for identity across the workspace shell.
       try {
-        // Enriched user + organization come from the Express backend, which
-        // reads Supabase with the verified token. This is the single source of
-        // truth for identity/organisation data across the workspace shell.
         const profile = await apiFetch<CurrentUserProfile>('/userinfo')
+        if (cancelled) return
 
         setUser({
           id: profile.profile_id,
@@ -110,40 +106,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         })
       } catch (err) {
         console.error('Failed to load profile context:', err)
-        setUser(null)
-        setOrganization(null)
+        if (!cancelled) {
+          setUser(null)
+          setOrganization(null)
+        }
       } finally {
-        setIsProfileLoading(false)
+        if (!cancelled) setStatus('authed')
       }
     }
 
-    void fetchIdentity()
-  }, [auth0Loading, isAuthenticated, auth0User, apiFetch])
+    void boot()
+    return () => {
+      cancelled = true
+    }
+  }, [apiFetch])
 
-  const login = useCallback(
-    async (options?: { auth0OrgId?: string; invitation?: string }) => {
-      await loginWithRedirect({
-        authorizationParams: {
-          organization: options?.auth0OrgId,
-          invitation: options?.invitation,
-          redirect_uri: window.location.origin + '/app', // Ensure we return to the app root after login
-        },
-      })
-    },
-    [loginWithRedirect]
-  )
+  const login = useCallback(async (options?: { auth0OrgId?: string; invitation?: string }) => {
+    // The backend is the OAuth client; a full-page redirect to /api/login starts
+    // the server-side Authorization Code flow. Organization + invitation ride as
+    // query params so the login is scoped to the correct tenant.
+    const params = new URLSearchParams()
+    if (options?.auth0OrgId) params.set('organization', options.auth0OrgId)
+    if (options?.invitation) params.set('invitation', options.invitation)
+    const qs = params.toString()
+    window.location.href = `/api/login${qs ? `?${qs}` : ''}`
+  }, [])
 
   const logout = useCallback(() => {
-    auth0Logout({ logoutParams: { returnTo: window.location.origin } })
-  }, [auth0Logout])
+    // /api/logout clears the session cookie and ends the Auth0 session.
+    window.location.href = '/api/logout'
+  }, [])
 
   return (
     <AuthContext.Provider
       value={{
         user: user || ({} as AuthUser), // Avoid spreading null into the context value before the first profile load completes
         organization: organization || ({} as AuthOrganization),
-        isAuthenticated,
-        isLoading: auth0Loading || isProfileLoading,
+        isAuthenticated: status === 'authed',
+        isLoading: status === 'loading',
         login,
         logout,
       }}
