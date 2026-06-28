@@ -31,17 +31,30 @@ export interface Auth0Org {
   display_name?: string
 }
 
+// The auth0 SDK v5 sometimes returns the resource directly and sometimes wraps
+// it in an ApiResponse `{ data }`. Normalise both shapes so reads never throw
+// "Cannot read properties of undefined".
+function unwrap<T>(res: T | { data: T }): T {
+  return res && typeof res === 'object' && 'data' in (res as { data: T })
+    ? (res as { data: T }).data
+    : (res as T)
+}
+
 /** Create an Auth0 organization. `slug`/`name` is the URL-safe handle. */
 export async function createAuth0Org(
   displayName: string,
   slug: string,
   metadata?: Record<string, string>
 ): Promise<Auth0Org> {
-  const { data } = await mgmt().organizations.create({
+  const res = await mgmt().organizations.create({
     name: slug,
     display_name: displayName,
     ...(metadata ? { metadata } : {}),
   })
+  const data = unwrap(res)
+  if (!data?.id) {
+    throw new Error('Auth0 organization was created but no id was returned.')
+  }
   return { id: data.id, name: data.name, display_name: data.display_name }
 }
 
@@ -74,5 +87,5 @@ export async function createOrgInvitation(params: {
     client_id: params.clientId,
     ...(params.roles && params.roles.length > 0 ? { roles: params.roles } : {}),
   })
-  return invitation.id
+  return unwrap(invitation)?.id
 }
