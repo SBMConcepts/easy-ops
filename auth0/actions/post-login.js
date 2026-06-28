@@ -12,9 +12,18 @@
  *     verifyAuth0Token() gate on identical, login-fresh data.
  *
  * Required Secrets (set in Auth0 Dashboard → Actions → Secrets):
- *   BACKEND_URL        — Your Express server: https://api.easyops.co.za
- *   AUTH0_SYNC_SECRET  — must match process.env.AUTH0_SYNC_SECRET on your server
+ *   BACKEND_URL          — Your Express server: https://api.easyops.co.za
+ *   AUTH0_SYNC_SECRET    — must match process.env.AUTH0_SYNC_SECRET on your server
+ *   SUPABASE_JWT_SECRET  — the project's legacy HS256 JWT secret (Supabase →
+ *                          Project Settings → API → JWT Settings → JWT Secret).
+ *                          Used to mint the `supabase_jwt` claim the frontend
+ *                          attaches to Supabase REST calls for RLS.
+ *
+ * Required Dependencies (Auth0 Action editor → Dependencies):
+ *   jsonwebtoken (latest)
  */
+
+const jwt = require('jsonwebtoken')
 
 const CLAIM_NS = 'https://easyops.us.auth0.com/'
 
@@ -82,5 +91,35 @@ exports.onExecutePostLogin = async (event, api) => {
   if (orgId) {
     api.idToken.setCustomClaim(CLAIM_NS + 'org_id', orgId)
     api.accessToken.setCustomClaim(CLAIM_NS + 'org_id', orgId)
+  }
+
+  // 3. Mint a short-lived Supabase JWT (HS256) and inject it as a namespaced ID
+  //    token claim. On the Regular Web App flow the browser does not hold the
+  //    Auth0 token, so GET /api/supabase-token reads this claim from the session
+  //    and hands it to the Supabase client, which attaches it as a Bearer token.
+  //    Supabase validates it with the same JWT secret and applies RLS:
+  //      - sub      -> auth.jwt() ->> 'sub'  (row ownership policies)
+  //      - org_id   -> public.org_id()       (tenant isolation)
+  //      - role/aud -> 'authenticated'       (PostgREST assumes the authenticated role)
+  const supabaseJwtSecret = event.secrets && event.secrets.SUPABASE_JWT_SECRET
+  if (!supabaseJwtSecret) {
+    console.warn('[post-login] SUPABASE_JWT_SECRET not set — skipping supabase_jwt mint')
+  } else {
+    const nowSec = Math.floor(Date.now() / 1000)
+    const supabaseJwt = jwt.sign(
+      {
+        sub: event.user.user_id,
+        email: event.user.email,
+        aud: 'authenticated',
+        role: 'authenticated',
+        org_id: orgId || null,
+        user_role: role || null,
+        iat: nowSec,
+        exp: nowSec + 60 * 60, // 1 hour
+      },
+      supabaseJwtSecret,
+      { algorithm: 'HS256' }
+    )
+    api.idToken.setCustomClaim(CLAIM_NS + 'supabase_jwt', supabaseJwt)
   }
 }
