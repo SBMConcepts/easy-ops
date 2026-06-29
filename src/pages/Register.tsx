@@ -80,6 +80,10 @@ export default function Register() {
     <div className="login-page">
       {/* We expand the max-width for Step 1 so the 3 cards have room to breathe */}
       <div className="login-content-column" style={{ maxWidth: step === 1 ? '980px' : '520px' }}>
+        {/* Back navigation button matching standard workflow styling */}
+        <button type="button" className="login-back-btn" onClick={() => navigate('/login')}>
+          <ArrowLeft size={14} /> Back to login
+        </button>
         {step === 1 ? (
           <div className="login-brand-block">
             <h1 className="login-brand-title">Select your operational capacity</h1>

@@ -2,12 +2,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabasePublic } from '../integrations/supabase/client'
-import { Button } from '../components/ui/button'
-import { Card } from '../components/ui/card'
-import { Input } from '../components/ui/input'
-import { Label } from '../components/ui/label'
 import { toast } from 'sonner'
-import { Loader2, Mail, Phone, Building2 } from 'lucide-react'
+import { Loader2, Mail, Phone, Building2, ArrowLeft } from 'lucide-react'
+import '../styles/loginpage.css'
 
 export default function GetStarted() {
   const navigate = useNavigate()
@@ -41,72 +38,101 @@ export default function GetStarted() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/20 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-      <div className="max-w-4xl w-full grid md:grid-cols-2 gap-12 items-start mt-8">
-        <div className="space-y-6">
-          <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
-            Get Started with EasyOps
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Ready to completely automate your workforce tracking operations? Submit an inquiry and
-            our technical onboarding team will configure your environment.
-          </p>
+    <div className="login-page">
+      <div className="login-content-column" style={{ maxWidth: '520px' }}>
+        {/* Back navigation button matching standard workflow styling */}
+        <button type="button" className="login-back-btn" onClick={() => navigate('/login')}>
+          <ArrowLeft size={14} /> Back to login
+        </button>
 
-          <Card className="p-6 border-border bg-card">
-            <h3 className="font-semibold mb-4 text-foreground">Contact Information</h3>
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p className="flex items-center gap-3">
-                <Mail className="h-4 w-4" /> sales@easyops.co.za
-              </p>
-              <p className="flex items-center gap-3">
-                <Phone className="h-4 w-4" /> +27 (0) 11 000 0000
-              </p>
-              <p className="flex items-center gap-3">
-                <Building2 className="h-4 w-4" /> Johannesburg, South Africa
+        <div className="login-card">
+          <div className="login-card-content">
+            {/* Header Content */}
+            <div className="login-flow-header">
+              <h1
+                className="login-flow-title"
+                style={{ fontSize: '1.35rem', marginBottom: '0.5rem' }}
+              >
+                Get Started with EasyOps
+              </h1>
+              <p className="login-flow-desc">
+                Ready to completely automate your workforce tracking operations? Submit an inquiry
+                and our technical onboarding team will configure your environment.
               </p>
             </div>
-          </Card>
+
+            {/* Input Form Fields */}
+            <form onSubmit={handleSubmit} className="login-fields">
+              <div className="login-field">
+                <label className="login-label">Full Name</label>
+                <input
+                  required
+                  type="text"
+                  className="login-textarea"
+                  style={{ height: '42px' }}
+                  placeholder="Jane Doe"
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                />
+              </div>
+
+              <div className="login-field">
+                <label className="login-label">Work Email</label>
+                <input
+                  required
+                  type="email"
+                  className="login-textarea"
+                  style={{ height: '42px' }}
+                  placeholder="jane@company.com"
+                  value={form.workEmail}
+                  onChange={(e) => setForm({ ...form, workEmail: e.target.value })}
+                />
+              </div>
+
+              <div className="login-field">
+                <label className="login-label">Company Name</label>
+                <input
+                  required
+                  type="text"
+                  className="login-textarea"
+                  style={{ height: '42px' }}
+                  placeholder="Acme Logistics"
+                  value={form.companyName}
+                  onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                />
+              </div>
+
+              <button type="submit" className="login-button mt-4" disabled={loading}>
+                {loading ? (
+                  <Loader2 className="animate-spin h-5 w-5" />
+                ) : (
+                  'Request Enterprise Access'
+                )}
+              </button>
+            </form>
+
+            {/* Bottom Contact Information Panel */}
+            <div className="mt-6 pt-6 border-t border-black/5 dark:border-white/5">
+              <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#888780] mb-3">
+                Contact Information
+              </h3>
+              <div className="flex flex-col gap-2.5 text-xs text-[#5f5e5a] dark:text-[#b4b2a9]">
+                <div className="flex items-center gap-2.5">
+                  <Mail size={14} className="text-[#534ab7]" />
+                  <span>sales@easyops.co.za</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Phone size={14} className="text-[#534ab7]" />
+                  <span>+27 (0) 11 000 0000</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Building2 size={14} className="text-[#534ab7]" />
+                  <span>Johannesburg, South Africa</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <Card className="p-8 shadow-xl border-border">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label>Full Name</Label>
-              <Input
-                required
-                placeholder="Jane Doe"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Work Email</Label>
-              <Input
-                required
-                type="email"
-                placeholder="jane@company.com"
-                value={form.workEmail}
-                onChange={(e) => setForm({ ...form, workEmail: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Company Name</Label>
-              <Input
-                required
-                placeholder="Acme Logistics"
-                value={form.companyName}
-                onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-              />
-            </div>
-
-            <Button type="submit" className="w-full mt-4 h-12 text-md" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : null}
-              Request Enterprise Access
-            </Button>
-          </form>
-        </Card>
       </div>
     </div>
   )
