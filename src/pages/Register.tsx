@@ -1,37 +1,43 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Label } from '../components/ui/label'
-import { Loader2, Check } from 'lucide-react'
+import { Loader2, Check, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { useOrgApi } from '../hooks/useOrgApi'
+import '../styles/loginpage.css'
 
-// Local plan union for the public registration package picker. organizations.plan
-// and subscriptions.plan are plain text/enum columns server-side; this is just
-// the set of plans offered on the signup screen.
 type BillingPlan = 'free' | 'starter' | 'growth' | 'pro' | 'enterprise'
 
 const PACKAGES: { id: BillingPlan; name: string; price: string; features: string[] }[] = [
   {
+    id: 'free',
+    name: 'Free',
+    price: 'R0/mo',
+    features: ['14 Day Trial', '5 Employees', 'Basic Check-in', 'QR & Manual'],
+  },
+  {
     id: 'starter',
     name: 'Starter',
     price: 'R299/mo',
-    features: ['Up to 10 Employees', 'Basic Check-in', 'QR & Manual'],
+    features: ['35 Employees', '', 'Basic Check-in', 'QR & Manual'],
   },
   {
     id: 'growth',
     name: 'Growth',
     price: 'R799/mo',
-    features: ['Up to 100 Employees', 'Geofencing', 'Reports', 'WhatsApp Check-in'],
+    features: ['70 Employees', 'Geofencing', 'Reports', 'Mobile Check-in'],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: 'R799/mo',
+    features: ['100 Employees', 'Geofencing', 'Reports', 'Mobile Check-in'],
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
     price: 'Custom',
-    features: ['Unlimited Employees', 'API Access', 'Custom Roles', 'Priority Support'],
+    features: ['100+ Employees', 'API Access', 'Custom Roles', 'Priority Support'],
   },
 ]
 
@@ -51,8 +57,6 @@ export default function Register() {
     setSubmitting(true)
 
     try {
-      // Public endpoint (no auth yet) — POST /api/organizations. apiFetch
-      // appends '/api' to VITE_API_URL and handles error parsing.
       await apiFetch('organizations', {
         method: 'POST',
         requireAuth: false,
@@ -73,84 +77,115 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      {step === 1 ? (
-        <div className="w-full max-w-4xl space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Select your operational capacity</h1>
-            <p className="text-muted-foreground">Choose a plan that fits your workforce size.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {PACKAGES.map((pkg) => (
-              <Card
-                key={pkg.id}
-                className={`relative cursor-pointer transition-all hover:border-secondary ${form.plan === pkg.id ? 'border-secondary ring-1 ring-secondary' : ''}`}
-                onClick={() => setForm({ ...form, plan: pkg.id })}
-              >
-                {form.plan === pkg.id && (
-                  <div className="absolute top-4 right-4 text-secondary">
-                    <Check className="h-5 w-5" />
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle>{pkg.name}</CardTitle>
-                  <div className="text-2xl font-bold">{pkg.price}</div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    {pkg.features.map((f, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-secondary" /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className="w-full mt-6"
-                    variant={form.plan === pkg.id ? 'default' : 'outline'}
-                    onClick={() => setStep(2)}
+    <div className="login-page">
+      {/* We expand the max-width for Step 1 so the 3 cards have room to breathe */}
+      <div className="login-content-column" style={{ maxWidth: step === 1 ? '980px' : '520px' }}>
+        {step === 1 ? (
+          <div className="login-brand-block">
+            <h1 className="login-brand-title">Select your operational capacity</h1>
+            <p className="login-brand-subtitle">Choose a plan that fits your workforce size.</p>
+
+            <div className="login-plans mt-6 flex flex-col gap-4 sm:flex-row ">
+              {PACKAGES.map((pkg) => {
+                const isSelected = form.plan === pkg.id
+                // Split the price strings into amount and period to use the proper CSS classes
+                const priceAmount = pkg.price.includes('/') ? pkg.price.split('/')[0] : pkg.price
+                const pricePeriod = pkg.price.includes('/') ? `/${pkg.price.split('/')[1]}` : ''
+
+                return (
+                  <div
+                    key={pkg.id}
+                    className={`login-plan-card flex-1 ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setForm({ ...form, plan: pkg.id })}
                   >
-                    Select {pkg.name}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                    {isSelected && <span className="login-plan-badge">Selected</span>}
+
+                    <div className="login-plan-name">{pkg.name}</div>
+
+                    <div className="login-plan-price">
+                      <span className="login-plan-amount">{priceAmount}</span>
+                      {pricePeriod && <span className="login-plan-period">{pricePeriod}</span>}
+                    </div>
+
+                    <ul className="login-plan-features mt-4 flex flex-col gap-2 text-sm">
+                      {pkg.features.map((f, i) => (
+                        <li key={i}>
+                          <Check size={14} /> {f}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button
+                      className="login-button mt-4 w-full text-sm font-semibold "
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setForm({ ...form, plan: pkg.id })
+                        setStep(2)
+                      }}
+                    >
+                      {pkg.name}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      ) : (
-        <Card className="w-full max-w-md p-6 shadow-lg">
-          <h2 className="text-xl font-bold mb-4">Create your workspace</h2>
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <Label>Company Name</Label>
-              <Input
-                required
-                value={form.companyName}
-                onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-              />
+        ) : (
+          <div className="login-card">
+            <div className="login-card-content">
+              <button type="button" className="login-back-btn" onClick={() => setStep(1)}>
+                <ArrowLeft size={14} /> Back to plans
+              </button>
+
+              <div className="login-flow-header">
+                <h2 className="login-flow-title">Create your workspace</h2>
+                <p className="login-flow-desc">
+                  You will receive an email invitation to set up your workspace and credentials.
+                </p>
+              </div>
+
+              {/* Pill displaying the plan selected in Step 1 */}
+              <div className="login-selected-plan mb-6">
+                <span className="login-selected-plan-label">Selected Plan</span>
+                <span className="login-selected-plan-name">
+                  {PACKAGES.find((p) => p.id === form.plan)?.name}
+                </span>
+              </div>
+
+              <form onSubmit={handleRegister} className="login-fields">
+                <div className="login-field">
+                  <label className="login-label">Company Name</label>
+                  {/* Using .login-textarea for standard text inputs inherits the correct borders/focus rings */}
+                  <input
+                    required
+                    type="text"
+                    className="login-textarea"
+                    style={{ height: '42px' }}
+                    value={form.companyName}
+                    onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                  />
+                </div>
+
+                <div className="login-field">
+                  <label className="login-label">Admin Email</label>
+                  <input
+                    required
+                    type="email"
+                    className="login-textarea"
+                    style={{ height: '42px' }}
+                    value={form.adminEmail}
+                    onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
+                  />
+                </div>
+
+                <button type="submit" className="login-button mt-2" disabled={submitting}>
+                  {submitting ? <Loader2 className="animate-spin h-5 w-5" /> : 'Create Workspace'}
+                </button>
+              </form>
             </div>
-            <div>
-              <Label>Admin Email</Label>
-              <Input
-                type="email"
-                required
-                value={form.adminEmail}
-                onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              You will receive an email invitation to set up your secure credentials via Auth0.
-            </p>
-            <div className="flex gap-2 pt-4">
-              <Button type="button" variant="ghost" onClick={() => setStep(1)}>
-                Back
-              </Button>
-              <Button type="submit" className="flex-1" disabled={submitting}>
-                {submitting && <Loader2 className="animate-spin h-4 w-4 mr-2" />} Create Workspace
-              </Button>
-            </div>
-          </form>
-        </Card>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

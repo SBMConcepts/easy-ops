@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { LogIn, Loader2, Sparkles, UserPlus } from 'lucide-react'
 import '../styles/loginpage.css'
@@ -40,47 +39,53 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/20 p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl border-border">
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-3xl font-extrabold tracking-tight">EasyOps</CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">Secure Workspace Authentication</p>
+    <div className="login-page">
+      <div className="login-content-column">
+        <Card className="login-card">
+          <CardHeader className="login-card-header">
+            <CardTitle className="login-card-title">EasyOps</CardTitle>
+            <p className="login-card-description">Secure Workspace Authentication</p>
           </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <Button
-              onClick={() =>
-                login({ auth0OrgId: orgId ?? undefined, invitation: invitation ?? undefined })
-              }
-              className="w-full h-12 text-md font-semibold"
-            >
-              <LogIn className="mr-2 h-5 w-5" /> Proceed to Login
-            </Button>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">New to EasyOps?</span>
-              </div>
-            </div>
+          <CardContent className="login-card-content">
+            <div className="login-mode-grid">
+              {/* Top Option: Existing User Login */}
+              <button
+                onClick={() =>
+                  login({ auth0OrgId: orgId ?? undefined, invitation: invitation ?? undefined })
+                }
+                className="login-mode-btn login-mode-btn--featured"
+              >
+                <LogIn className="login-mode-icon" size={24} />
+                <span className="login-mode-label">Sign In</span>
+                <span className="login-mode-sub">Access your existing EasyOps workspace</span>
+              </button>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                className="w-full h-10"
-                onClick={() => navigate('/register')}
-              >
-                <Sparkles className="mr-2 h-4 w-4 text-secondary" /> Subscribe
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full h-10"
-                onClick={() => navigate('/get-started')}
-              >
-                <UserPlus className="mr-2 h-4 w-4 text-primary" /> Request Access
-              </Button>
+              {/* Divider */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-black/10 dark:border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-[#ffffff] dark:bg-[#242420] px-3 text-[#888780] font-medium">
+                    New to EasyOps?
+                  </span>
+                </div>
+              </div>
+
+              {/* Option 2: Subscribe & Register */}
+              <button onClick={() => navigate('/register')} className="login-mode-btn">
+                <Sparkles className="login-mode-icon" size={24} />
+                <span className="login-mode-label">Subscribe</span>
+                <span className="login-mode-sub">Pick a subscription plan and register</span>
+              </button>
+
+              {/* Option 3: Request Access */}
+              <button onClick={() => navigate('/get-started')} className="login-mode-btn">
+                <UserPlus className="login-mode-icon" size={24} />
+                <span className="login-mode-label">Request Access</span>
+                <span className="login-mode-sub">Ask your admin for an email invitation</span>
+              </button>
             </div>
           </CardContent>
         </Card>

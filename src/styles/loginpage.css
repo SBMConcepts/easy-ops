@@ -70,19 +70,22 @@
 }
 
 .login-card-content {
-  padding: 1.75rem;
+  padding: 1.75rem 1.75rem 2.5rem;
 }
 
 .login-card-header {
-  padding: 0;
-  margin-bottom: 1.5rem;
+  padding: 1.75rem 1.75rem 0;
+  margin-bottom: 1rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .login-card-title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: #1a1a18;
   margin: 0 0 0.25rem;
+  text-align: center;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -94,27 +97,27 @@
 .login-card-description {
   font-size: 0.875rem;
   color: #888780;
+  margin: 0;
+  text-align: center;
 }
 
 /* ── Mode selector grid ───────────────────────────────────── */
 .login-mode-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .login-mode-btn {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  grid-template-rows: auto auto;
-  column-gap: 12px;
-  align-items: start;
-  padding: 1rem 1.25rem;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #fafaf8;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
   cursor: pointer;
-  text-align: left;
   transition:
     border-color 0.15s,
     background 0.15s,
@@ -396,145 +399,101 @@
 /* ── Plan cards ──────────────────────────────────────────── */
 .login-plans {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 1.25rem;
-}
-
-@media (min-width: 480px) {
-  .login-plans {
-    flex-direction: row;
-    align-items: stretch;
-  }
-  .login-plan-card {
-    flex: 1;
-  }
+  flex-direction: row;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .login-plan-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex: 1;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
   padding: 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #fafaf8;
   cursor: pointer;
-  text-align: left;
   transition:
     border-color 0.15s,
-    background 0.15s;
+    background 0.15s,
+    box-shadow 0.15s;
 }
 
 .login-plan-card:hover {
-  border-color: rgba(0, 0, 0, 0.2);
-  background: #f5f4f0;
+  border-color: #534ab7;
+  background: #f5f4fe;
+  box-shadow: 0 0 0 2px rgba(83, 74, 183, 0.12);
 }
 
 .login-plan-card.selected {
   border-color: #534ab7;
   background: #f5f4fe;
-  box-shadow: 0 0 0 2px rgba(83, 74, 183, 0.18);
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-plan-card {
-    background: #2c2c28;
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-  .login-plan-card:hover {
-    background: #333330;
-  }
-  .login-plan-card.selected {
-    background: #26215c55;
-    border-color: #7f77dd;
-  }
+  box-shadow: 0 0 0 2px rgba(83, 74, 183, 0.12);
 }
 
 .login-plan-badge {
   position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #534ab7;
-  color: #fff;
-  font-size: 0.6875rem;
+  top: -8px;
+  right: -8px;
+  font-size: 0.625rem;
   font-weight: 600;
-  padding: 2px 10px;
-  border-radius: 20px;
-  white-space: nowrap;
+  color: #ffffff;
+  background: #3c3489;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
 }
 
 .login-plan-name {
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #1a1a18;
-  margin-top: 6px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-plan-name {
-    color: #f0ede6;
-  }
+  margin: 0;
 }
 
 .login-plan-price {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-  margin: 4px 0 2px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1a1a18;
+  margin: 0.25rem 0;
 }
 
 .login-plan-amount {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
-  color: #1a1a18;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-plan-amount {
-    color: #f0ede6;
-  }
+  color: #3c3489;
+  margin: 0.25rem 0;
 }
 
 .login-plan-period {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #888780;
+  margin: 0;
 }
 
 .login-plan-desc {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #888780;
-  margin-bottom: 8px;
+  margin: 0.5rem 0 1rem;
 }
 
 .login-plan-features {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
 .login-plan-features li {
+  font-size: 0.8125rem;
+  color: #5f5e5a;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  color: #5f5e5a;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-plan-features li {
-    color: #b4b2a9;
-  }
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .login-plan-features li svg {
-  color: #0f6e56;
-  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: #3c3489;
 }
 
 /* ── Selected plan pill ──────────────────────────────────── */
@@ -542,37 +501,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.625rem 0.875rem;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  background: #eeedfe;
-  border: 1px solid rgba(83, 74, 183, 0.2);
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-selected-plan {
-    background: #26215c55;
-    border-color: rgba(83, 74, 183, 0.4);
-  }
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #f5f4fe;
 }
 
 .login-selected-plan-label {
   font-size: 0.8125rem;
-  color: #534ab7;
+  font-weight: 500;
+  color: #5f5e5a;
 }
 
 .login-selected-plan-name {
   font-size: 0.8125rem;
   font-weight: 600;
   color: #3c3489;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-selected-plan-label {
-    color: #afa9ec;
-  }
-  .login-selected-plan-name {
-    color: #cecbf6;
-  }
 }
 
 /* ── Success state ───────────────────────────────────────── */
@@ -598,14 +543,6 @@
   padding: 0.75rem 1rem;
   line-height: 1.5;
   max-width: 380px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-success-note {
-    background: #173404;
-    border-color: rgba(15, 110, 86, 0.4);
-    color: #c0dd97;
-  }
 }
 
 /* ── Loading state ───────────────────────────────────────── */
