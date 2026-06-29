@@ -1,283 +1,289 @@
-@import "./onboarding.css";
+@import './onboarding.css';
 /* review-step.css */
 
 /* ── Page ───────────────────────────────────────────────── */
 
 .review-step {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .review-step__desc {
-	font-size: 0.875rem;
-	color: var(--onboarding-text-muted);
-	margin: 0;
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted);
+  margin: 0;
 }
 
 /* ── Review card ────────────────────────────────────────── */
 
 .review-card {
-	border: 1px solid var(--onboarding-border);
-	border-radius: var(--onboarding-radius-lg);
-	box-shadow: var(--onboarding-surface-raised);
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-lg);
+  box-shadow: var(--onboarding-surface-raised);
+  transition:
+    box-shadow var(--onboarding-transition),
+    border-color var(--onboarding-transition);
 }
 
 .review-card__content {
-	padding: 1rem 1.125rem !important;
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
+  padding: 1rem 1.125rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 /* ── Card heading row ───────────────────────────────────── */
 
 .review-card__heading {
-	display: flex;
-	align-items: center;
-	gap: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 .review-card__heading--sub {
-	margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--onboarding-text-muted);
+  letter-spacing: 0.01em;
 }
 
 .review-card__heading-icon {
-	width: 0.875rem;
-	height: 0.875rem;
-	color: hsl(var(--primary));
-	flex-shrink: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--onboarding-text-muted);
 }
 
 .review-card__title {
-	font-size: 0.8125rem;
-	font-weight: 600;
-	color: var(--onboarding-text-label);
-	letter-spacing: 0.01em;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--onboarding-text-primary);
 }
 
 .review-card__count {
-	margin-left: auto;
-	font-size: 0.7rem;
-	font-weight: 500;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
-	color: hsl(var(--onboarding-accent));
-	background: hsl(var(--onboarding-accent) / 0.08);
-	padding: 0.125rem 0.5rem;
-	border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--onboarding-accent);
+  background: var(--onboarding-accent-dim);
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
 }
 
 /* ── Card body ──────────────────────────────────────────── */
 
 .review-card__body {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .review-divider {
-	border: none;
-	border-top: 1px solid var(--onboarding-border);
-	margin: 0.25rem 0;
+  height: 1px;
+  background: var(--onboarding-border);
+  margin: 0.5rem -1.125rem;
 }
 
 /* ── Company ────────────────────────────────────────────── */
 
 .review-company__name {
-	font-size: 0.9375rem;
-	font-weight: 600;
-	color: var(--onboarding-text);
-	margin: 0 0 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--onboarding-text);
 }
 
 .review-pills {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.375rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .review-pill {
-	font-size: 0.75rem;
-	font-weight: 400;
-	color: var(--onboarding-text-muted);
-	background: var(--onboarding-surface-subtle);
-	border: 1px solid var(--onboarding-border);
-	padding: 0.1875rem 0.5rem;
-	border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
 }
 
 /* ── Generic data row ───────────────────────────────────── */
 
 .review-row {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.625rem;
+  border-radius: var(--onboarding-radius);
+  border: 1px solid var(--onboarding-border);
 }
 
 .review-row__name {
-	font-size: 0.875rem;
-	font-weight: 500;
-	color: var(--onboarding-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--onboarding-text-primary);
 }
 
 .review-row__meta {
-	font-size: 0.8rem;
-	color: var(--onboarding-text-muted);
+  font-size: 0.75rem;
+  color: var(--onboarding-text-muted);
 }
 
 .review-row__sep {
-	opacity: 0.4;
+  width: 1px;
+  height: 0.75rem;
+  background: var(--onboarding-border);
 }
 
 .review-row__arrow {
-	font-size: 0.75rem;
-	color: var(--onboarding-text-muted);
-	opacity: 0.5;
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--onboarding-text-muted);
+  flex-shrink: 0;
 }
 
 .review-row__inline-icon {
-	width: 0.75rem;
-	height: 0.75rem;
-	color: var(--onboarding-text-muted);
-	flex-shrink: 0;
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--onboarding-text-muted);
+  flex-shrink: 0;
 }
 
 /* Inline tag/badge */
 .review-row__tag {
-	font-size: 0.7rem;
-	font-weight: 500;
-	padding: 0.1875rem 0.4375rem;
-	border-radius: 999px;
-	background: var(--onboarding-surface-subtle);
-	color: var(--onboarding-text-muted);
-	border: 1px solid var(--onboarding-border);
-	white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
 }
 
 .review-row__tag--mono {
-	font-family: var(--onboarding-font-mono);
-	letter-spacing: 0.03em;
+  background: hsl(var(--onboarding-text-muted) / 0.08);
+  color: hsl(var(--onboarding-text-muted));
+  border-color: hsl(var(--onboarding-text-muted) / 0.2);
 }
 
 .review-row__tag--primary {
-	background: hsl(var(--onboarding-accent) / 0.08);
-	color: hsl(var(--onboarding-accent));
-	border-color: hsl(var(--onboarding-accent) / 0.2);
+  background: hsl(221 83% 53% / 0.1);
+  color: hsl(221 60% 40%);
+  border-color: hsl(221 83% 53% / 0.25);
 }
 
 .review-row__tag--green {
-	background: hsl(142 71% 45% / 0.1);
-	color: hsl(142 55% 34%);
-	border-color: hsl(142 71% 45% / 0.25);
+  background: hsl(142 71% 45% / 0.1);
+  color: hsl(142 55% 32%);
+  border-color: hsl(142 71% 45% / 0.25);
 }
 
 .review-row__tag--muted {
-	opacity: 0.6;
+  background: hsl(var(--onboarding-text-muted) / 0.08);
+  color: hsl(var(--onboarding-text-muted));
+  border-color: hsl(var(--onboarding-text-muted) / 0.2);
 }
 
 /* ── Roles ──────────────────────────────────────────────── */
 
 .review-roles {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .review-role-badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.375rem;
-	padding: 0.25rem 0.625rem;
-	border-radius: 999px;
-	font-size: 0.75rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--onboarding-radius-md);
 }
 
 .review-role-badge__name {
-	font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--onboarding-text-primary);
 }
 
 .review-role-badge__base {
-	font-size: 0.7rem;
-	opacity: 0.65;
+  font-size: 0.75rem;
+  color: var(--onboarding-text-muted);
 }
 
 /* Reuse role colours from roles-step.css */
 .review-role-badge--admin {
-	background: hsl(262 83% 58% / 0.1);
-	color: hsl(262 60% 45%);
+  background: hsl(221 83% 53% / 0.1);
+  color: hsl(221 60% 40%);
 }
 .review-role-badge--manager {
-	background: hsl(221 83% 53% / 0.1);
-	color: hsl(221 60% 40%);
+  background: hsl(38 92% 50% / 0.1);
+  color: hsl(38 70% 36%);
 }
 .review-role-badge--supervisor {
-	background: hsl(38 92% 50% / 0.1);
-	color: hsl(38 70% 36%);
+  background: hsl(38 92% 50% / 0.1);
+  color: hsl(38 70% 36%);
 }
 .review-role-badge--employee {
-	background: hsl(142 71% 45% / 0.1);
-	color: hsl(142 55% 32%);
+  background: hsl(0 72% 51% / 0.1);
+  color: hsl(0 60% 42%);
 }
 
 /* ── Check-in methods grid ──────────────────────────────── */
 
 .review-methods {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 0.375rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.5rem;
 }
 
-@media (max-width: 400px) {
-	.review-methods {
-		grid-template-columns: 1fr;
-	}
+@media (max-width: 480px) {
+  .review-methods {
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  }
 }
 
 .review-method {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.4375rem 0.625rem;
-	border-radius: var(--onboarding-radius);
-	border: 1px solid var(--onboarding-border);
-	transition: background var(--onboarding-transition)
-		var(--onboarding-transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--onboarding-radius-md);
+  border: 1px solid var(--onboarding-border-dim);
 }
 
 .review-method--on {
-	background: var(--onboarding-surface-subtle);
+  background: hsl(142 55% 40% / 0.1);
+  border-color: hsl(142 55% 40% / 0.25);
 }
 
 .review-method--off {
-	background: transparent;
-	opacity: 0.45;
+  background: hsl(var(--onboarding-text-muted) / 0.08);
+  border-color: hsl(var(--onboarding-text-muted) / 0.2);
 }
 
 .review-method__icon {
-	width: 0.875rem;
-	height: 0.875rem;
-	color: var(--onboarding-text-muted);
-	flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
 }
 
 .review-method__label {
-	font-size: 0.8rem;
-	font-weight: 500;
-	color: var(--onboarding-text);
-	flex: 1;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--onboarding-text-primary);
 }
 
 .review-method__status {
-	width: 0.875rem;
-	height: 0.875rem;
-	flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--onboarding-text-muted);
 }
 
 .review-method__status--on {
-	color: hsl(142 55% 40%);
+  color: hsl(142 55% 40%);
 }
 .review-method__status--off {
-	color: var(--onboarding-border);
+  color: hsl(var(--onboarding-text-muted));
 }

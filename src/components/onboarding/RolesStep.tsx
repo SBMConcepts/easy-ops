@@ -10,6 +10,7 @@ import {
 } from '../../components/ui/select'
 import { Button } from '../../components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
+
 import '../../styles/form.css'
 import '../../styles/rolesstep.css'
 
@@ -39,39 +40,47 @@ const RolesStep = ({ data, onChange }: Props) => {
 
   return (
     <div className="roles-step">
-      <h2 className="text-xl font-bold mb-4">Custom Roles</h2>
-      <div className="roles-step__list space-y-4">
+      <div>
+        <h2 className="text-xl font-bold mb-1">Custom Roles</h2>
+        <p className="roles-step__desc">Define specialized access tiers for your organization.</p>
+      </div>
+
+      <div className="roles-step__list">
         {data.map((role, i) => (
           <Card key={i} className="role-card relative">
-            <CardContent className="role-card__content p-4 grid grid-cols-2 gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 text-destructive"
+            <CardContent className="role-card__content grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                className="role-card__remove"
                 onClick={() => onChange(data.filter((_, idx) => idx !== i))}
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              <div className="form-field">
-                <Label>Role Name (e.g. Shift Lead)</Label>
+                <Trash2 className="role-card__remove-icon " />
+              </button>
+
+              <div className="role-card__row">
+                <Label className="role-card__label">Role Name (e.g. Shift Lead)</Label>
                 <Input
-                  className="form-input"
+                  className="role-card__input"
                   value={role.name}
                   onChange={(e) => update(i, 'name', e.target.value)}
                 />
               </div>
-              <div className="form-field">
-                <Label>Base Permission Tier</Label>
+
+              <div className="role-card__row pr-6">
+                <Label className="role-card__label">Base Permission Tier</Label>
                 <Select
                   value={role.base_role}
                   onValueChange={(v) => update(i, 'base_role', v as RoleData['base_role'])}
                 >
-                  <SelectTrigger className="form-select-trigger">
-                    <SelectValue />
+                  <SelectTrigger className="role-card__select-trigger ">
+                    <SelectValue placeholder="Select Tier" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="role-card__select-content">
                     {BASE_ROLES.map((br) => (
-                      <SelectItem key={br.value} value={br.value}>
+                      <SelectItem
+                        key={br.value}
+                        value={br.value}
+                        className="role-card__select-content-item"
+                      >
                         {br.label}
                       </SelectItem>
                     ))}
@@ -82,13 +91,13 @@ const RolesStep = ({ data, onChange }: Props) => {
           </Card>
         ))}
       </div>
-      <Button
-        variant="outline"
+
+      <button
         onClick={() => onChange([...data, { name: '', base_role: 'employee' }])}
-        className="mt-4 w-full"
+        className="roles-step__add-btn"
       >
         <Plus className="h-4 w-4 mr-2" /> Add Custom Role
-      </Button>
+      </button>
     </div>
   )
 }

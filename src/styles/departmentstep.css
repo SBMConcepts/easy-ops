@@ -1,141 +1,198 @@
-@import "./onboarding.css";
+@import './onboarding.css';
 
 /* ── Page section ── */
 
 .departments-step {
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .departments-step__desc {
-	font-size: 0.875rem;
-	color: var(--onboarding-text-secondary);
-	margin: 0;
+  font-size: 0.875rem;
+  color: var(--onboarding-text-secondary);
+  margin: 0;
 }
 
 .departments-step__list {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 /* ── Department card ── */
 
 .dept-card {
-	border: 1px solid var(--onboarding-border);
-	border-radius: var(--onboarding-radius-lg);
-	box-shadow: var(--onboarding-surface-raised);
-	transition:
-		box-shadow var(--onboarding-transition) var(--onboarding-transition),
-		border-color var(--onboarding-transition) var(--onboarding-transition);
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-lg);
+  box-shadow: var(--onboarding-surface-raised);
+  transition:
+    box-shadow var(--onboarding-transition),
+    border-color var(--onboarding-transition);
 }
 
 .dept-card:focus-within {
-	border-color: var(--onboarding-border-focus);
-	box-shadow:
-		var(--onboarding-surface-raised),
-		0 0 0 3px hsl(var(--onboarding-accent) / 0.06);
+  border-color: var(--onboarding-border-focus);
+  box-shadow: var(--onboarding-surface-raised), var(--onboarding-accent-glow);
 }
 
 .dept-card__content {
-	padding: 1.125rem !important;
-	display: flex;
-	flex-direction: column;
-	gap: 0.875rem;
+  padding: 1.125rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
 }
 
 /* ── Card header ── */
 
 .dept-card__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.dept-card__label {
-	display: flex;
-	align-items: center;
-	gap: 0.375rem;
-	font-size: 0.8125rem;
-	font-weight: 600;
-	color: var(--onboarding-text-primary);
-	letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .dept-card__icon {
-	width: 0.875rem;
-	height: 0.875rem;
-	color: var(--onboarding-accent);
-	flex-shrink: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--onboarding-accent);
+  flex-shrink: 0;
 }
 
 .dept-card__name-preview {
-	font-weight: 400;
-	color: var(--onboarding-text-secondary);
-	font-size: 0.8rem;
-	max-width: 180px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+  font-weight: 400;
+  color: var(--onboarding-text-secondary);
+  font-size: 0.8rem;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -- Form Fields --*/
+.dept-card__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.dept-card__label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--onboarding-text-primary);
+  letter-spacing: 0.01em;
+}
+
+.dept-card__input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-md);
+  background: var(--onboarding-surface);
+  color: var(--onboarding-text-primary);
+  font-size: 0.875rem;
+  transition:
+    box-shadow var(--onboarding-transition),
+    border-color var(--onboarding-transition);
+}
+
+.dept-card__select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-md);
+  background: var(--onboarding-surface);
+  color: var(--onboarding-text-primary);
+  font-size: 0.875rem;
+  transition:
+    box-shadow var(--onboarding-transition),
+    border-color var(--onboarding-transition);
+}
+
+.dept-card__select-trigger {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-md);
+  background: var(--onboarding-surface);
+  color: var(--onboarding-text-primary);
+  font-size: 0.875rem;
+  transition:
+    box-shadow var(--onboarding-transition),
+    border-color var(--onboarding-transition);
+}
+
+.dept-card__select-content {
+  padding: 1.25rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dept-card__select-content-item {
+  padding: 0.75rem;
+  border-radius: var(--onboarding-radius-md);
+  background: var(--onboarding-surface);
+  color: var(--onboarding-text-primary);
+  font-size: 0.875rem;
+  transition:
+    box-shadow var(--onboarding-transition),
+    background-color var(--onboarding-transition);
 }
 
 /* ── Remove button ── */
 
 .dept-card__remove {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 1.75rem;
-	height: 1.75rem;
-	border: none;
-	border-radius: var(--onboarding-radius-md);
-	background: transparent;
-	cursor: pointer;
-	color: var(--onboarding-text-secondary);
-	transition:
-		background var(--onboarding-transition) var(--onboarding-transition),
-		color var(--onboarding-transition) var(--onboarding-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--onboarding-radius-md);
+  background: transparent;
+  cursor: pointer;
+  color: var(--onboarding-text-secondary);
+  transition:
+    background var(--onboarding-transition),
+    color var(--onboarding-transition);
 }
 
 .dept-card__remove:hover {
-	background: hsl(var(--onboarding-accent) / 0.08);
-	color: var(--onboarding-accent);
+  background: var(--onboarding-accent-dim);
+  color: var(--onboarding-accent);
 }
 
 .dept-card__remove-icon {
-	width: 0.875rem;
-	height: 0.875rem;
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 /* ── Field row ── */
 
-.dept-card__row {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 0.75rem;
-}
-
 @media (max-width: 480px) {
-	.dept-card__row {
-		grid-template-columns: 1fr;
-	}
+  .dept-card__row {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── Add button ── */
 
 .departments-step__add-btn {
-	width: 100%;
-	border-style: dashed !important;
-	color: var(--onboarding-text-secondary);
-	transition:
-		color var(--onboarding-transition) var(--onboarding-transition),
-		border-color var(--onboarding-transition) var(--onboarding-transition),
-		background var(--onboarding-transition) var(--onboarding-transition);
+  width: 100%;
+  border-style: dashed !important;
+  color: var(--onboarding-text-secondary);
+  transition:
+    color var(--onboarding-transition),
+    border-color var(--onboarding-transition),
+    background var(--onboarding-transition);
 }
 
 .departments-step__add-btn:hover {
-	color: var(--onboarding-text-primary);
-	border-color: var(--onboarding-border-focus) !important;
-	background: var(--onboarding-surface-raised);
+  color: var(--onboarding-accent);
+  border-color: var(--onboarding-accent);
+  background: var(--onboarding-accent-dim);
 }

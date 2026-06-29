@@ -2,6 +2,7 @@ import { Label } from '../../components/ui/label'
 import { Switch } from '../../components/ui/switch'
 import { Input } from '../../components/ui/input'
 import { Card, CardContent } from '../../components/ui/card'
+import { QrCode, Fingerprint, MapPin, ShieldCheck } from 'lucide-react'
 import '../../styles/form.css'
 import '../../styles/checkinmethods.css'
 
@@ -25,13 +26,24 @@ const CheckInMethodsStep = ({ data, onChange }: Props) => {
   const update = (key: keyof CheckInSettings['methods'], val: boolean | number) =>
     onChange({ ...data, methods: { ...data.methods, [key]: val } })
 
+  const enabledCount = Object.values(data.methods).filter((v) => v === true).length
+
   return (
     <div className="checkin-step">
-      <h2 className="checkin-step__section-title text-xl font-bold mb-4">Validation Methods</h2>
-      <div className="space-y-4">
+      <div className="checkin-step__section">
+        <div className="checkin-step__section-header mb-4">
+          <h2 className="checkin-step__section-title">Validation Methods</h2>
+          <span className="checkin-step__enabled-count">{enabledCount} Active</span>
+        </div>
+      </div>
+
+      <div className="space-y-3">
         <Card className="method-card">
           <CardContent className="method-card__content">
-            <Label>QR Code Scanning</Label>
+            <div className="method-card__icon-wrap method-card__icon-wrap--qr">
+              <QrCode size={18} />
+            </div>
+            <Label className="method-card__label">QR Code Scanning</Label>
             <Switch
               checked={data.methods.qrEnabled}
               onCheckedChange={(v) => update('qrEnabled', v)}
@@ -41,7 +53,10 @@ const CheckInMethodsStep = ({ data, onChange }: Props) => {
 
         <Card className="method-card">
           <CardContent className="method-card__content">
-            <Label>Biometric Verification</Label>
+            <div className="method-card__icon-wrap method-card__icon-wrap--biometric">
+              <Fingerprint size={18} />
+            </div>
+            <Label className="method-card__label">Biometric Verification</Label>
             <Switch
               checked={data.methods.biometricEnabled}
               onCheckedChange={(v) => update('biometricEnabled', v)}
@@ -51,7 +66,10 @@ const CheckInMethodsStep = ({ data, onChange }: Props) => {
 
         <Card className="method-card">
           <CardContent className="method-card__content">
-            <Label>Geofence Lock</Label>
+            <div className="method-card__icon-wrap method-card__icon-wrap--whatsapp">
+              <ShieldCheck size={18} />
+            </div>
+            <Label className="method-card__label">Geofence Lock</Label>
             <Switch
               checked={data.methods.geofencingEnabled}
               onCheckedChange={(v) => update('geofencingEnabled', v)}
@@ -60,15 +78,19 @@ const CheckInMethodsStep = ({ data, onChange }: Props) => {
         </Card>
 
         {data.methods.geofencingEnabled && (
-          <div className="form-field p-4 border rounded bg-muted/20">
-            <Label>Default Global Radius (meters)</Label>
-            <Input
-              type="number"
-              min={50}
-              value={data.methods.defaultGeofenceRadius}
-              onChange={(e) => update('defaultGeofenceRadius', Number(e.target.value))}
-              className="form-input mt-2"
-            />
+          <div className="p-4 mt-2 border border-primary/10 rounded-lg bg-primary/5 flex gap-4 items-start">
+            <MapPin className="text-primary mt-1 shrink-0" size={18} />
+            <div className="flex-1">
+              <Label className="method-card__label">Default Global Radius (meters)</Label>
+              <p className="method-card__desc mb-2">Distance allowed from site coordinates.</p>
+              <Input
+                type="number"
+                min={50}
+                value={data.methods.defaultGeofenceRadius}
+                onChange={(e) => update('defaultGeofenceRadius', Number(e.target.value))}
+                className="method-card__input"
+              />
+            </div>
           </div>
         )}
       </div>

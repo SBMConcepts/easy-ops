@@ -1,21 +1,52 @@
 /* onboarding.onboardings */
 
+/* ─── Tokens ──*/
+:root {
+  /* Backgrounds & Surfaces */
+  --onboarding-background: #f5f4f0;
+  --onboarding-surface: #ffffff;
+  --onboarding-surface-raised: 0 2px 16px rgba(0, 0, 0, 0.06);
+
+  /* Borders */
+  --onboarding-border: rgba(0, 0, 0, 0.09);
+  --onboarding-border-focus: rgba(83, 74, 183, 0.4);
+  --onboarding-border-hover: rgba(0, 0, 0, 0.15);
+  --onboarding-border-error: #e11d48;
+
+  /* Accents (from loginpage: #534ab7) */
+  --onboarding-accent: #534ab7;
+  --onboarding-accent-dim: rgba(83, 74, 183, 0.1);
+  --onboarding-accent-glow: 0 0 0 3px rgba(83, 74, 183, 0.2);
+
+  /* Typography */
+  --onboarding-text-primary: #1a1a18;
+  --onboarding-text-secondary: #888780;
+  --onboarding-text-placeholder: #a09f98;
+  --onboarding-text-muted: #888780;
+
+  /* Geometry */
+  --onboarding-radius-sm: 6px;
+  --onboarding-radius-md: 8px;
+  --onboarding-radius-lg: 16px;
+
+  --onboarding-transition: 0.2s ease;
+}
 /* ── Page shell ── */
 
 .onboarding-page {
   min-height: 100dvh;
-  background: #f5f4f0;
+  background: var(--onboarding-background);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   box-sizing: border-box;
+  padding: 2rem 1rem;
 }
 
 .onboarding-container {
   width: 100%;
   max-width: 48rem;
-  padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -135,18 +166,39 @@
   display: none;
 }
 
-@media (min-width: 560px) {
+@media (max-width: 480px) {
   .onboarding-step-btn__label {
     display: inline;
+  }
+  .onboarding-step-btn {
+    padding: 0.625rem 0.5rem;
+  }
+  .onboarding-step-btn__icon {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+  .onboarding-step-btn__label {
+    font-size: 0.625rem;
+  }
+  .onboarding-steps-nav__list {
+    gap: 0.25rem;
+  }
+  .onboarding-steps-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .onboarding-steps-nav::-webkit-scrollbar {
+    display: none;
   }
 }
 
 /* ── Card ──────── */
 
 .onboarding-card {
-  border: 1px solid rgba(0, 0, 0, 0.09);
-  border-radius: 16px;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-lg);
+  box-shadow: var(--onboarding-surface-raised);
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -154,8 +206,8 @@
 }
 
 .onboarding-card__header {
-  padding: 1.75rem 1.75rem 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.09);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--onboarding-border);
 }
 
 .onboarding-card__title {
@@ -164,7 +216,7 @@
   gap: 0.5rem;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1a1a18;
+  color: var(--onboarding-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -173,20 +225,20 @@
 .onboarding-card__title-icon {
   width: 1.25rem;
   height: 1.25rem;
-  color: #f5f4fe;
+  color: var(--onboarding-accent);
   flex-shrink: 0;
 }
 
 .onboarding-card__desc {
   font-size: 0.875rem;
-  color: #888780;
+  color: var(--onboarding-text-secondary);
+  margin-top: 0.25rem;
 }
 
 .onboarding-card__content {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding: 0.25rem 0;
 }
 
 /* ── Footer ────── */
@@ -196,6 +248,54 @@
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--onboarding-border);
+}
+
+.onboarding-footer__left-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-radius: var(--onboarding-radius-md);
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--onboarding-text-secondary);
+  background: var(--onboarding-accent-dim);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.onboarding-footer__left-btn:hover {
+  background: var(--onboarding-accent-dim);
+}
+
+.onboarding-footer__right-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-radius: var(--onboarding-radius-md);
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--onboarding-text-secondary);
+  background: var(--onboarding-accent-dim);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+.onboarding-footer__right-btn:hover {
+  background: var(--onboarding-accent-dim);
+}
+
+.onboarding-footer__saving-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--onboarding-text-secondary);
 }
 
 /* ── Button icons ── */

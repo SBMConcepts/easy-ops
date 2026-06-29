@@ -50,27 +50,29 @@ const ShiftsStep = ({ shifts, workRules, sites, onShiftsChange, onWorkRulesChang
   return (
     <div className="shifts-step">
       {/* Work Rules Section */}
-      <div className="shifts-step__rules">
-        <div className="form-section__title">
+      <div className="shifts-step__rules mb-2">
+        <div className="shifts-step__section-header">
           <Scale className="shifts-step__section-icon" />
-          <span>Compliance & Work Rules</span>
+          <span className="shifts-step__section-title">Compliance & Work Rules</span>
           <span className="shifts-step__bcea-tag">BCEA Compliant</span>
         </div>
 
-        <div className="shift-card__grid mb-6">
-          <div className="shift-card__field">
-            <Label>Weekly Hours Limit</Label>
+        <div className="shifts-step__rules-grid">
+          <div className="shift-card__row">
+            <Label className="shift-card__label">Weekly Hours Limit</Label>
             <Input
               type="number"
+              className="shift-card__input"
               value={workRules.weeklyHoursLimit}
               onChange={(e) => updateRule('weeklyHoursLimit', Number(e.target.value))}
             />
           </div>
-          <div className="shift-card__field">
-            <Label>Overtime Rate Multiplier</Label>
+          <div className="shift-card__row">
+            <Label className="shift-card__label">Overtime Multiplier</Label>
             <Input
               type="number"
               step="0.1"
+              className="shift-card__input"
               value={workRules.overtimeRate}
               onChange={(e) => updateRule('overtimeRate', Number(e.target.value))}
             />
@@ -80,73 +82,80 @@ const ShiftsStep = ({ shifts, workRules, sites, onShiftsChange, onWorkRulesChang
 
       {/* Shifts Section */}
       <div>
-        <div className="form-section__title flex items-center gap-1.5 font-semibold text-sm mb-3">
+        <div className="shifts-step__section-header mb-3">
           <Clock className="shifts-step__section-icon" />
-          <span>Standard Shifts</span>
+          <span className="shifts-step__section-title">Standard Shifts</span>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="shifts-step__cards-container">
           {shifts.map((shift, i) => (
-            <Card key={i} className="shift-card">
-              <CardContent className="shift-card__content relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shift-card__remove absolute top-2 right-2 text-destructive"
+            <Card key={i} className="shift-card relative">
+              <CardContent className="shift-card__content">
+                <button
+                  type="button"
+                  className="shift-card__remove absolute top-2 right-2"
                   onClick={() => onShiftsChange(shifts.filter((_, idx) => idx !== i))}
                 >
                   <Trash2 className="shift-card__remove-icon" />
-                </Button>
+                </button>
 
                 <div className="shift-card__grid">
-                  <div className="shift-card__field shift-card__field--full">
-                    <Label>Shift Name</Label>
+                  <div className="shift-card__row pr-8">
+                    <Label className="shift-card__label">Shift Name</Label>
                     <Input
+                      className="shift-card__input"
                       placeholder="Day Shift"
                       value={shift.name}
                       onChange={(e) => updateShift(i, 'name', e.target.value)}
                     />
                   </div>
 
-                  <div className="shift-card__field">
-                    <Label>Start Time</Label>
+                  <div className="shift-card__row">
+                    <Label className="shift-card__label">Start Time</Label>
                     <Input
                       type="time"
+                      className="shift-card__input"
                       value={shift.start_time}
                       onChange={(e) => updateShift(i, 'start_time', e.target.value)}
                     />
                   </div>
 
-                  <div className="shift-card__field">
-                    <Label>End Time</Label>
+                  <div className="shift-card__row">
+                    <Label className="shift-card__label">End Time</Label>
                     <Input
                       type="time"
+                      className="shift-card__input"
                       value={shift.end_time}
                       onChange={(e) => updateShift(i, 'end_time', e.target.value)}
                     />
                   </div>
 
-                  <div className="shift-card__field">
-                    <Label>Grace Period (minutes)</Label>
+                  <div className="shift-card__row">
+                    <Label className="shift-card__label">Grace Period (min)</Label>
                     <Input
                       type="number"
+                      className="shift-card__input"
                       value={shift.grace_period_minutes}
                       onChange={(e) => updateShift(i, 'grace_period_minutes', e.target.value)}
                     />
                   </div>
 
-                  <div className="shift-card__field">
-                    <Label>Associated Site</Label>
+                  <div className="shift-card__row">
+                    <Label className="shift-card__label">Associated Site</Label>
                     <Select
                       value={String(shift.site_index)}
                       onValueChange={(v) => updateShift(i, 'site_index', Number(v))}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="shift-card__select-trigger">
                         <SelectValue placeholder="Select site" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="shift-card__select-content">
                         {sites.map((s, si) => (
-                          <SelectItem key={si} value={String(si)}>
+                          <SelectItem
+                            key={si}
+                            value={String(si)}
+                            className="shift-card__select-content-item"
+                          >
                             {s.name || `Site ${si + 1}`}
                           </SelectItem>
                         ))}
@@ -160,8 +169,7 @@ const ShiftsStep = ({ shifts, workRules, sites, onShiftsChange, onWorkRulesChang
         </div>
       </div>
 
-      <Button
-        variant="outline"
+      <button
         onClick={() =>
           onShiftsChange([
             ...shifts,
@@ -174,10 +182,10 @@ const ShiftsStep = ({ shifts, workRules, sites, onShiftsChange, onWorkRulesChang
             },
           ])
         }
-        className="w-full mt-2"
+        className="shifts-step__add-btn"
       >
-        <Plus className="h-4 w-4 mr-2" /> Add Standard Shift
-      </Button>
+        <Plus className="shifts-step__add-btn-icon" /> Add Standard Shift
+      </button>
     </div>
   )
 }

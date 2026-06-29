@@ -161,65 +161,23 @@ export default function Onboarding() {
         <footer className="onboarding-footer">
           <button
             type="button"
+            className="onboarding-footer__left-btn"
             onClick={back}
             disabled={step === 0 || saving}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              padding: '0.55rem 1.15rem',
-              borderRadius: 'var(--onboarding-radius-sm)',
-              border: '1px solid var(--onboarding-border)',
-              background: 'var(--onboarding-surface)',
-              color: 'var(--onboarding-text-primary)',
-              cursor: step === 0 || saving ? 'not-allowed' : 'pointer',
-              opacity: step === 0 || saving ? 0.5 : 1,
-              fontSize: '0.8125rem',
-              fontWeight: 500,
-              transition: 'var(--onboarding-transition)',
-            }}
           >
             <ArrowLeft className="onboarding-btn-icon--left" /> Back
           </button>
 
           {step < LAST_STEP ? (
-            <button
-              type="button"
-              onClick={next}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '0.55rem 1.15rem',
-                borderRadius: 'var(--onboarding-radius-sm)',
-                border: '1px solid transparent',
-                background: 'var(--onboarding-accent)',
-                color: 'var(--onboarding-text-primary)',
-                cursor: 'pointer',
-                fontSize: '0.8125rem',
-                fontWeight: 500,
-                transition: 'var(--onboarding-transition)',
-              }}
-            >
+            <button type="button" className="onboarding-footer__right-btn" onClick={next}>
               Next <ArrowRight className="onboarding-btn-icon--right" />
             </button>
           ) : (
             <button
               type="button"
+              className="onboarding-footer__saving-indicator"
               onClick={handleSubmit}
               disabled={saving}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '0.55rem 1.25rem',
-                borderRadius: 'var(--onboarding-radius-sm)',
-                border: '1px solid transparent',
-                background: 'var(--onboarding-text-primary)',
-                color: 'var(--onboarding-surface)',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                opacity: saving ? 0.75 : 1,
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                transition: 'var(--onboarding-transition)',
-              }}
             >
               {saving ? (
                 <>
