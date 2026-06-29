@@ -33,6 +33,7 @@ const INDUSTRIES = [
   'Technology',
   'Other',
 ] as const
+
 const COUNTRIES = [
   'Botswana',
   'Ghana',
@@ -47,49 +48,57 @@ const CompanyStep = ({ data, onChange }: Props) => {
   const update = (field: keyof CompanyData, value: string) => onChange({ ...data, [field]: value })
 
   return (
-    <Card className="company-card">
-      <CardContent className="company-card__content">
-        <h2 className="text-xl font-bold mb-4">Company Profile</h2>
-        <div className="form-field mb-4">
-          <Label className="form-label--required">Legal Name</Label>
-          <Input
-            className="form-input"
-            value={data.name}
-            onChange={(e) => update('name', e.target.value)}
-          />
-        </div>
-        <div className="form-field mb-4">
-          <Label className="form-label--required">Industry</Label>
-          <Select value={data.industry} onValueChange={(v) => update('industry', v || '')}>
-            <SelectTrigger className="form-select-trigger">
-              <SelectValue placeholder="Select industry" />
-            </SelectTrigger>
-            <SelectContent>
-              {INDUSTRIES.map((i) => (
-                <SelectItem key={i} value={i}>
-                  {i}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="form-field">
-          <Label className="form-label--required">Country</Label>
-          <Select value={data.country} onValueChange={(v) => update('country', v || '')}>
-            <SelectTrigger className="form-select-trigger">
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              {COUNTRIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="company-step">
+      <Card className="company-card">
+        <CardContent className="company-card__content">
+          <div className="company-step__desc">
+            <h2 className="text-xl font-bold">Company Profile</h2>
+          </div>
+
+          <div className="company-card__row">
+            <Label className="company-card__label form-label--required">Legal Name</Label>
+            <Input
+              className="form-input"
+              value={data.name}
+              onChange={(e) => update('name', e.target.value)}
+            />
+          </div>
+
+          <div className="company-card__row">
+            <Label className="company-card__label form-label--required">Industry</Label>
+            <Select value={data.industry} onValueChange={(v) => update('industry', v || '')}>
+              <SelectTrigger className="form-select-trigger">
+                <SelectValue placeholder="Select industry" />
+              </SelectTrigger>
+              <SelectContent>
+                {INDUSTRIES.map((i) => (
+                  <SelectItem key={i} value={i}>
+                    {i}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="company-card__row">
+            <Label className="company-card__label form-label--required">Country</Label>
+            <Select value={data.country} onValueChange={(v) => update('country', v || '')}>
+              <SelectTrigger className="form-select-trigger">
+                <SelectValue placeholder="Select country" />
+              </SelectTrigger>
+              <SelectContent>
+                {COUNTRIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
+
 export default CompanyStep

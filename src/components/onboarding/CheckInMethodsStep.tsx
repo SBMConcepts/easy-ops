@@ -2,6 +2,8 @@ import { Label } from '../../components/ui/label'
 import { Switch } from '../../components/ui/switch'
 import { Input } from '../../components/ui/input'
 import { Card, CardContent } from '../../components/ui/card'
+import '../../styles/form.css'
+import '../../styles/checkinmethods.css'
 
 export interface CheckInSettings {
   methods: {
@@ -13,6 +15,7 @@ export interface CheckInSettings {
     defaultGeofenceRadius: number
   }
 }
+
 interface Props {
   data: CheckInSettings
   onChange: (d: CheckInSettings) => void
@@ -23,11 +26,11 @@ const CheckInMethodsStep = ({ data, onChange }: Props) => {
     onChange({ ...data, methods: { ...data.methods, [key]: val } })
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Validation Methods</h2>
+    <div className="checkin-step">
+      <h2 className="checkin-step__section-title text-xl font-bold mb-4">Validation Methods</h2>
       <div className="space-y-4">
-        <Card>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card className="method-card">
+          <CardContent className="method-card__content">
             <Label>QR Code Scanning</Label>
             <Switch
               checked={data.methods.qrEnabled}
@@ -35,8 +38,9 @@ const CheckInMethodsStep = ({ data, onChange }: Props) => {
             />
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center justify-between">
+
+        <Card className="method-card">
+          <CardContent className="method-card__content">
             <Label>Biometric Verification</Label>
             <Switch
               checked={data.methods.biometricEnabled}
@@ -44,8 +48,9 @@ const CheckInMethodsStep = ({ data, onChange }: Props) => {
             />
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center justify-between">
+
+        <Card className="method-card">
+          <CardContent className="method-card__content">
             <Label>Geofence Lock</Label>
             <Switch
               checked={data.methods.geofencingEnabled}
@@ -55,14 +60,14 @@ const CheckInMethodsStep = ({ data, onChange }: Props) => {
         </Card>
 
         {data.methods.geofencingEnabled && (
-          <div className="p-4 border rounded bg-muted/20">
+          <div className="form-field p-4 border rounded bg-muted/20">
             <Label>Default Global Radius (meters)</Label>
             <Input
               type="number"
               min={50}
               value={data.methods.defaultGeofenceRadius}
               onChange={(e) => update('defaultGeofenceRadius', Number(e.target.value))}
-              className="mt-2"
+              className="form-input mt-2"
             />
           </div>
         )}
@@ -70,4 +75,5 @@ const CheckInMethodsStep = ({ data, onChange }: Props) => {
     </div>
   )
 }
+
 export default CheckInMethodsStep

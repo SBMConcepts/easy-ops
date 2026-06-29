@@ -1,16 +1,5 @@
 import { Card, CardContent } from '../../components/ui/card'
-import {
-  Building2,
-  MapPin,
-  Users,
-  Clock,
-  QrCode,
-  Fingerprint,
-  MessageCircle,
-  PenLine,
-  Scale,
-  ShieldCheck,
-} from 'lucide-react'
+import { Building2, MapPin, QrCode, Fingerprint, MessageCircle, PenLine, Scale } from 'lucide-react'
 import type { CompanyData } from './CompanyStep'
 import type { SiteData } from './SitesStep'
 import type { DepartmentData } from './DepartmentsStep'
@@ -45,28 +34,22 @@ const METHOD_LABELS: Record<string, string> = {
   manualEnabled: 'Manual Entry',
 }
 
-const ReviewStep = ({
-  company,
-  sites,
-  departments,
-  roles,
-  shifts,
-  checkInMethods,
-  workRules,
-}: Props) => {
+const ReviewStep = ({ company, sites, departments, roles, shifts, checkInMethods }: Props) => {
   return (
     <div className="review-step space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-xl font-bold">Review Configuration</h2>
-        <p className="text-sm text-muted-foreground">Verify your structural workspace setup</p>
+        <p className="review-step__desc text-sm text-muted-foreground">
+          Verify your structural workspace setup
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Company Overview */}
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2">
-              <Building2 className="h-4 w-4" /> Company Details
+        <Card className="review-card">
+          <CardContent className="review-card__content space-y-3">
+            <div className="review-card__heading flex items-center gap-2 text-primary font-semibold border-b pb-2">
+              <Building2 className="review-card__heading-icon h-4 w-4" /> Company Details
             </div>
             <div className="text-sm space-y-1">
               <p>
@@ -83,10 +66,10 @@ const ReviewStep = ({
         </Card>
 
         {/* Operational Scope */}
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2">
-              <Scale className="h-4 w-4" /> Operational Scope
+        <Card className="review-card">
+          <CardContent className="review-card__content space-y-3">
+            <div className="review-card__heading flex items-center gap-2 text-primary font-semibold border-b pb-2">
+              <Scale className="review-card__heading-icon h-4 w-4" /> Operational Scope
             </div>
             <div className="text-sm space-y-1">
               <p>
@@ -109,12 +92,12 @@ const ReviewStep = ({
       </div>
 
       {/* Check-In Methods */}
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2">
-            <MapPin className="h-4 w-4" /> Clock-in Validation Methods
+      <Card className="review-card">
+        <CardContent className="review-card__content space-y-4">
+          <div className="review-card__heading flex items-center gap-2 text-primary font-semibold border-b pb-2">
+            <MapPin className="review-card__heading-icon h-4 w-4" /> Clock-in Validation Methods
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="review-methods grid grid-cols-2 sm:grid-cols-4 gap-3">
             {['qrEnabled', 'biometricEnabled', 'whatsappEnabled', 'manualEnabled'].map((key) => {
               const enabled = checkInMethods.methods[
                 key as keyof typeof checkInMethods.methods
@@ -123,7 +106,11 @@ const ReviewStep = ({
               return (
                 <div
                   key={key}
-                  className={`flex flex-col items-center p-3 rounded-lg border ${enabled ? 'bg-secondary/10 border-secondary' : 'bg-muted/30 border-transparent opacity-50'}`}
+                  className={`review-method flex flex-col items-center p-3 rounded-lg border ${
+                    enabled
+                      ? 'bg-secondary/10 border-secondary'
+                      : 'bg-muted/30 border-transparent opacity-50'
+                  }`}
                 >
                   <Icon
                     className={`h-6 w-6 mb-1 ${enabled ? 'text-secondary' : 'text-muted-foreground'}`}

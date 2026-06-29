@@ -10,11 +10,14 @@ import {
 } from '../../components/ui/select'
 import { Button } from '../../components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
+import '../../styles/form.css'
+import '../../styles/rolesstep.css'
 
 export interface RoleData {
   name: string
   base_role: 'admin' | 'manager' | 'supervisor' | 'employee'
 }
+
 interface Props {
   data: RoleData[]
   onChange: (data: RoleData[]) => void
@@ -35,12 +38,12 @@ const RolesStep = ({ data, onChange }: Props) => {
   }
 
   return (
-    <div>
+    <div className="roles-step">
       <h2 className="text-xl font-bold mb-4">Custom Roles</h2>
-      <div className="space-y-4">
+      <div className="roles-step__list space-y-4">
         {data.map((role, i) => (
-          <Card key={i} className="relative">
-            <CardContent className="p-4 grid grid-cols-2 gap-4">
+          <Card key={i} className="role-card relative">
+            <CardContent className="role-card__content p-4 grid grid-cols-2 gap-4">
               <Button
                 variant="ghost"
                 size="icon"
@@ -51,7 +54,11 @@ const RolesStep = ({ data, onChange }: Props) => {
               </Button>
               <div className="form-field">
                 <Label>Role Name (e.g. Shift Lead)</Label>
-                <Input value={role.name} onChange={(e) => update(i, 'name', e.target.value)} />
+                <Input
+                  className="form-input"
+                  value={role.name}
+                  onChange={(e) => update(i, 'name', e.target.value)}
+                />
               </div>
               <div className="form-field">
                 <Label>Base Permission Tier</Label>
@@ -59,7 +66,7 @@ const RolesStep = ({ data, onChange }: Props) => {
                   value={role.base_role}
                   onValueChange={(v) => update(i, 'base_role', v as RoleData['base_role'])}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="form-select-trigger">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -85,4 +92,5 @@ const RolesStep = ({ data, onChange }: Props) => {
     </div>
   )
 }
+
 export default RolesStep
