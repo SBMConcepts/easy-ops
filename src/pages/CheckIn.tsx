@@ -51,17 +51,14 @@ export default function CheckIn() {
 
   return (
     <div className="checkin-page">
-      <div className="checkin-card">
-        <div className="checkin-card__content">
-          <div className="text-center space-y-1 mb-2">
-            <h2 className="text-2xl font-bold text-dashboard-text-main tracking-tight">
-              Terminal Kiosk
-            </h2>
-            <p className="text-sm text-dashboard-text-muted">
-              Select validation method to clock in.
-            </p>
-          </div>
-
+      <div className="checkin-container">
+        <div className="checkin-header">
+          <h2 className="checkin-header__heading">Shift Gateway Terminal</h2>
+          <p className="checkin-header__subheading">
+            Log your shift hours, including standard and overtime hours.
+          </p>
+        </div>
+        <div className="checkin-card">
           <div className="checkin-method-grid">
             <button
               className={`checkin-method-btn ${selectedMethod === 'qr' ? 'checkin-method-btn--active' : ''}`}
@@ -83,13 +80,11 @@ export default function CheckIn() {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-dashboard-text-muted uppercase tracking-wider">
-                Standard Hours
-              </Label>
+          <div className="checkin-hours">
+            <div className="checkin-hours__row">
+              <Label className="checkin-hours__label">Standard Hours</Label>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dashboard-text-muted" />
+                <Clock className="checkin-hours__icon" />
                 <Input
                   type="number"
                   min="0"
@@ -97,16 +92,14 @@ export default function CheckIn() {
                   step="0.5"
                   value={hoursWorked}
                   onChange={(e) => setHoursWorked(e.target.value)}
-                  className="pl-9 bg-dashboard-bg"
+                  className="checkin-hours__input"
                 />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-dashboard-text-muted uppercase tracking-wider">
-                Overtime
-              </Label>
+            <div className="checkin-hours__row">
+              <Label className="checkin-hours__label">Overtime</Label>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dashboard-text-muted" />
+                <Clock className="checkin-hours__icon" />
                 <Input
                   type="number"
                   min="0"
@@ -114,14 +107,14 @@ export default function CheckIn() {
                   step="0.5"
                   value={overtime}
                   onChange={(e) => setOvertime(e.target.value)}
-                  className="pl-9 bg-dashboard-bg"
+                  className="checkin-hours__input"
                 />
               </div>
             </div>
           </div>
 
-          <Button
-            className="w-full h-12 text-md mt-4 font-semibold"
+          <button
+            className="checkin-log-btn"
             onClick={() => logAttendance.mutate()}
             disabled={logAttendance.isPending}
           >
@@ -131,13 +124,11 @@ export default function CheckIn() {
               <CheckCircle2 className="h-5 w-5 mr-2" />
             )}
             Log Today's Attendance
-          </Button>
+          </button>
 
           {attendanceHistory.length > 0 && (
             <div className="checkin-history mt-4">
-              <span className="text-xs font-semibold uppercase text-dashboard-text-muted tracking-wider mb-2">
-                Recent Entries
-              </span>
+              <span className="checkin-history__label">Recent Entries</span>
               {attendanceHistory.slice(0, 3).map((rec, i) => (
                 <div
                   key={i}
@@ -145,12 +136,8 @@ export default function CheckIn() {
                 >
                   <span className="font-medium text-dashboard-text-main">{rec.date}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-dashboard-text-muted font-semibold uppercase">
-                      {rec.method}
-                    </span>
-                    <span className="font-mono text-dashboard-text-main font-medium">
-                      {rec.hours_worked}h
-                    </span>
+                    <span className="checkin-history__method">{rec.method}</span>
+                    <span className="checkin-history__hours">{rec.hours_worked}h</span>
                   </div>
                 </div>
               ))}

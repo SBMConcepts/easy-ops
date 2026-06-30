@@ -35,15 +35,9 @@ const AppHeader = () => {
             <User className="h-4 w-4 icon-muted" style={{ color: 'var(--foreground)' }} />
             <span className="app-header-username">{user?.full_name}</span>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-            className="app-header-logout"
-            title="Sign out"
-          >
+          <button onClick={handleLogout} className="app-header-logout" title="Sign out">
             <LogOut className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
       )}
     </header>

@@ -22,6 +22,7 @@ interface NavItem {
   url: string
   icon: React.ElementType
   roles: OrgRole[]
+  tooltip?: string
 }
 
 const navItems: NavItem[] = [
@@ -30,42 +31,49 @@ const navItems: NavItem[] = [
     url: '/app',
     icon: LayoutDashboard,
     roles: ['owner', 'admin', 'member', 'viewer'],
+    tooltip: 'View your dashboard and key metrics',
   },
   {
     title: 'Check In / Out',
     url: '/app/check-in',
     icon: QrCode,
     roles: ['owner', 'admin', 'member', 'viewer'],
+    tooltip: 'Check in and out of work',
   },
   {
     title: 'Live Attendance',
     url: '/app/live-attendance',
     icon: BarChart3,
     roles: ['owner', 'admin', 'member'],
+    tooltip: 'View live attendance data',
   },
   {
     title: 'Staff Directory',
     url: '/app/employees',
     icon: Users,
     roles: ['owner', 'admin'],
+    tooltip: 'View and manage staff information',
   },
   {
     title: 'Sites & Depts',
     url: '/app/sites',
     icon: Building,
     roles: ['owner', 'admin', 'member'],
+    tooltip: 'Manage sites and departments',
   },
   {
     title: 'Compliance',
     url: '/app/compliance',
     icon: Shield,
     roles: ['owner', 'admin'],
+    tooltip: 'Manage compliance settings',
   },
   {
     title: 'Settings',
     url: '/app/settings',
     icon: Settings,
     roles: ['owner', 'admin', 'member', 'viewer'],
+    tooltip: 'Manage User settings',
   },
 ]
 
@@ -80,7 +88,7 @@ const AppSidebar = () => {
   const filteredItems = navItems.filter((item) => item.roles.includes(user?.role))
 
   return (
-    <Sidebar className="app-sidebar">
+    <Sidebar className="sidebar-nav">
       <SidebarHeader className="sidebar-header">
         <div
           className="sidebar-brand"
@@ -102,7 +110,7 @@ const AppSidebar = () => {
                     className={`sidebar-menu-button${location.pathname === item.url ? ' active' : ''}`}
                     isActive={location.pathname === item.url}
                     onClick={() => navigate(item.url)}
-                    tooltip={item.title}
+                    tooltip={{ children: item.tooltip, side: 'right' }}
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
