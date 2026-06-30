@@ -1,263 +1,207 @@
-/* ─── Settings Page ──────────────────────────────────────────────────── */
+@import './onboarding.css';
 
-.settings-main {
+.settings-page {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  gap: 0.5rem;
-}
-
-/* ── Tabs root — column layout so bar and content stack ── */
-.settings-tabs-root {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 0.5rem;
-}
-
-/* ── Tab bar ─────────────────────────────────────────── */
-.settings-tabs-list {
-  display: flex;
-  gap: 0.5rem;
-  background: transparent !important;
-  padding: 0;
-  height: auto;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0; /* never collapses when content grows */
-}
-
-.settings-tabs-trigger {
-  position: relative;
-  background: transparent !important;
-  box-shadow: none !important;
-  border-radius: var(--radius) !important;
-  border: 1px solid transparent !important;
-
-  margin-bottom: -1px; /* sits on top of the bar's bottom border */
-  padding: 0.5rem 0.875rem;
-  font-size: 0.875rem;
-  font-weight: 400;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition:
-    color 150ms ease,
-    border-color 150ms ease,
-    background 150ms ease;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-
-.settings-tabs-trigger:hover {
-  color: var(--foreground);
-  background: color-mix(in srgb, var(--muted) 70%, transparent) !important;
-  border-radius: var(--radius) var(--radius) 0 0 !important;
-}
-
-.settings-tabs-trigger[data-state='active'] {
-  color: var(--primary) !important;
-  font-weight: 600;
-  border: 2px solid var(--primary);
-  background: var(--card) !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-}
-
-/* ── Tab content wrapper — panels live here ────────────── */
-.settings-tabs-body {
-  width: 100%;
-  padding-top: 1.5rem;
-}
-
-/* ── Individual panel — each TabsContent ───────────────── */
-.settings-tab-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  /* Radix mounts/unmounts panels — no fixed height needed.
-     The tab bar above is flex-shrink: 0 so it never moves. */
-  margin-top: 0 !important; /* override any Radix default */
-  align-items: center;
-}
-
-.settings-tab-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.5rem;
-  max-width: min(600px, 100%);
-  width: 100%;
-}
-
-.settings-tab-card-header {
-  margin-top: 0;
-}
-
-.settings-tab-card-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.settings-tab-card-description {
-  font-size: 0.875rem;
-  font-weight: 400;
-  margin-top: 0;
-  margin-bottom: 0.75rem;
-  color: var(--muted-foreground);
-}
-
-/* ── Form grid ─────────────────────────────────────────── */
-.settings-form-grid {
-  display: grid;
   gap: 1rem;
-  grid-template-columns: 1fr;
-  max-width: 600px;
-  width: 100%;
 }
 
-@media (min-width: 768px) {
-  .settings-form-grid {
-    grid-template-columns: 280px 1fr;
-    width: 100%;
-  }
-}
-
-.settings-native-input {
-  width: 100%;
-  height: 2.25rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--primary);
-  background: transparent;
-  color: var(--foreground);
-  font-size: 0.875rem;
-  font-family: var(--font-family);
-  padding: 0 0.75rem;
-  outline: none;
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-}
-
-.settings-native-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 50%, transparent);
-}
-
-/* ── Save row ──────────────────────────────────────────── */
-.settings-save-row {
+.settings-header {
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  gap: 0.75rem;
-  max-width: 600px;
-  width: 100%;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.settings-save-btn {
+.settings-header__title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--onboarding-text-primary, #0f2d5c);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.settings-header__subtitle {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted, #64748b);
+  margin: 0;
+  font-weight: 500;
+}
+
+.settings-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-tab__nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.settings-tabs__nav-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  border-radius: var(--radius);
-  border: none;
-  cursor: pointer;
-  background: var(--primary);
-  color: white;
+  color: var(--onboarding-text-primary, #0f2d5c);
+  background: var(--onboarding-background, #f9fafb);
+  border: 1px solid var(--onboarding-border, #e1e6ed);
+  border-radius: var(--onboarding-radius-md);
+  transition:
+    background var(--onboarding-transition),
+    color var(--onboarding-transition),
+    border-color var(--onboarding-transition);
 }
 
-/* ── Role & access ─────────────────────────────────────── */
-.settings-role-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.settings-tabs__nav-trigger:active,
+.settings-tabs__nav-trigger[aria-selected='true'] {
+  background: var(--onboarding-text-primary);
+  color: var(--onboarding-background, #f9fafb);
+  border-color: var(--onboarding-border, #e1e6ed);
 }
 
-.settings-role-label {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-  margin: 0;
-}
-
-.settings-access-list {
-  font-size: 0.875rem;
-  color: var(--foreground);
-  padding-left: 1.25rem;
-  margin: 0;
+.settings-tabs__content {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  list-style: disc;
+  gap: 1rem;
 }
 
-.settings-team-count {
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border);
+.settings-card-tab {
+  background: var(--onboarding-background, #f9fafb);
+  border: 1px solid var(--onboarding-border, #e1e6ed);
+  border-radius: var(--onboarding-radius-lg, 16px);
+  box-shadow: var(--onboarding-shadow, 0 4px 24px -4px rgba(15, 45, 92, 0.08));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
 }
 
-.settings-team-count-text {
-  font-size: 0.875rem;
-  margin: 0;
-  color: var(--muted-foreground);
+.settings-card-tab__header {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--onboarding-border, #e1e6ed);
 }
 
-.settings-team-count-value {
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-/* ── Card title with icon ──────────────────────────────── */
-.settings-card-title {
+.settings-card-tab__title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--font-family);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--onboarding-text-primary);
+  margin: 0;
 }
 
-/* ── Activity list ─────────────────────────────────────── */
+.settings-card-tab__desc {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted, #64748b);
+  margin: 0;
+}
+
+.settings-card-tab__content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-card-tab__form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.settings-card-tab__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-card-tab__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--onboarding-text-primary, #0f2d5c);
+}
+
+.settings-card-tab__input {
+  background: var(--onboarding-background, #f9fafb);
+  border: 1px solid var(--onboarding-border, #e1e6ed);
+  border-radius: var(--onboarding-radius-md, 8px);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--onboarding-text-primary, #0f2d5c);
+}
+.settings-card-tab__input:focus {
+  border-color: var(--onboarding-border-focus);
+  box-shadow: var(--onboarding-accent-glow);
+}
+
+.settings-card-tab__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1.25rem;
+  border-top: 1px solid var(--onboarding-border, #e1e6ed);
+}
+
+.settings-card-tab__save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--onboarding-radius-md);
+  border: 1px solid var(--onboarding-border);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--onboarding-text-primary);
+  background: var(--onboarding-background);
+}
+
+.settings-card-tab__save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-card-tab__save-btn:hover:not(:disabled) {
+  color: var(--onboarding-accent);
+  border-color: var(--onboarding-accent);
+  background: var(--onboarding-accent-dim);
+}
+
 .settings-activity-list {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
 
 .settings-activity-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: var(--onboarding-radius-md);
+  background: var(--onboarding-background, #f9fafb);
 }
 
-.settings-activity-row:last-child {
-  border-bottom: none;
-}
-
-.settings-activity-date {
+.settings-activity-row__date {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--foreground);
-  margin: 0;
-  flex-shrink: 0;
+  color: var(--onboarding-text-primary, #0f2d5c);
 }
 
-.settings-activity-time {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-  margin: 0;
-}
-
-.settings-activity-hours {
+.settings-activity-row__method {
   font-size: 0.75rem;
-  font-family: ui-monospace, monospace;
-  color: var(--foreground);
+  font-weight: 600;
+  color: var(--onboarding-text-muted, #64748b);
+  text-transform: uppercase;
 }
 
-.settings-empty {
+.settings-activity-row__hours {
   font-size: 0.875rem;
-  color: var(--muted-foreground);
-  margin: 0;
+  font-family: var(--onboarding-font-mono, monospace);
+  font-weight: 500;
+  color: var(--onboarding-text-primary, #0f2d5c);
 }

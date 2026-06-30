@@ -1,13 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react'
 import { useOrgApi } from '../hooks/useOrgApi'
 import { useAuthRole } from '../contexts/AuthContext'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Badge } from '../components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import {
   Dialog,
@@ -26,6 +23,7 @@ import {
 } from '../components/ui/select'
 import { toast } from 'sonner'
 import { Building2, MapPin, Plus, Pencil, Trash2, Loader2, Search } from 'lucide-react'
+import '../styles/sitesanddepartments.css'
 
 interface SiteRow {
   id: string
@@ -36,488 +34,447 @@ interface SiteRow {
   geofence_radius_m: number | null
 }
 
-interface DepartmentRow {
+interface DeptRow {
   id: string
   name: string
   site_id: string | null
+  site_name?: string
 }
 
 export default function SitesAndDepartments() {
+  const { isOwner, isAdmin } = useAuthRole()
   const { apiFetch } = useOrgApi()
-  const { isAdmin, isOwner } = useAuthRole()
   const queryClient = useQueryClient()
 
-  // Role-tier gates. Writes require admin tier; destructive site deletes cascade
-  // to departments, so they require the owner tier.
-  const canManageSites = isAdmin
-  const canDeleteSites = isOwner
-  const canManageDepartments = isAdmin
-  const canManageAny = isAdmin
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState('sites')
 
-  const [activeTab, setActiveTab] = useState<'sites' | 'departments'>('sites')
-  const [siteSearch, setSiteSearch] = useState('')
-  const [deptSearch, setDeptSearch] = useState('')
-
-  const [siteDialogOpen, setSiteDialogOpen] = useState(false)
-  const [deptDialogOpen, setDeptDialogOpen] = useState(false)
-
-  const [editingSite, setEditingSite] = useState<SiteRow | null>(null)
-  const [editingDept, setEditingDept] = useState<DepartmentRow | null>(null)
-
+  // Modals state
+  const [siteModalOpen, setSiteModalOpen] = useState(false)
+  const [deptModalOpen, setDeptModalOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{
     kind: 'site' | 'department'
     id: string
     name: string
   } | null>(null)
 
-  const defaultSiteForm = {
-    name: '',
-    address: '',
-    latitude: '',
-    longitude: '',
-    geofence_radius_m: '150',
-  }
-  const defaultDeptForm = { name: '', site_id: '' }
+  // Form state
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [siteForm, setSiteForm] = useState<Partial<SiteRow>>({})
+  const [deptForm, setDeptForm] = useState<Partial<DeptRow>>({})
 
-  const [siteForm, setSiteForm] = useState(defaultSiteForm)
-  const [deptForm, setDeptForm] = useState(defaultDeptForm)
-
-  const { data: sites = [], isLoading: loadingSites } = useQuery({
-    queryKey: ['sites'],
-    queryFn: () => apiFetch<SiteRow[]>('org-sites'),
+  // Fetch Data
+  const { data: sites = [], isLoading: sitesLoading } = useQuery<SiteRow[]>({
+    queryKey: ['org_sites'],
+    queryFn: () => apiFetch('sites'),
   })
 
-  const { data: departments = [], isLoading: loadingDepts } = useQuery({
-    queryKey: ['departments'],
-    queryFn: () => apiFetch<DepartmentRow[]>('org-departments'),
+  const { data: depts = [], isLoading: deptsLoading } = useQuery<DeptRow[]>({
+    queryKey: ['org_departments'],
+    queryFn: () => apiFetch('departments'),
   })
 
-  const siteNameById = useMemo(() => new Map(sites.map((s) => [s.id, s.name])), [sites])
-
-  // ── Mutations ───────────────────────────────────────────────────────────────
+  // Mutations
   const saveSite = useMutation({
-    mutationFn: async (payload: typeof siteForm & { id?: string }) => {
-      const body = {
-        name: payload.name,
-        address: payload.address,
-        latitude: payload.latitude === '' ? null : Number(payload.latitude),
-        longitude: payload.longitude === '' ? null : Number(payload.longitude),
-        geofence_radius_m:
-          payload.geofence_radius_m === '' ? 150 : Number(payload.geofence_radius_m),
-      }
-      return apiFetch(payload.id ? `org-sites/${payload.id}` : 'org-sites', {
-        method: payload.id ? 'PATCH' : 'POST',
-        body: JSON.stringify(body),
-      })
+    mutationFn: async (data: Partial<SiteRow>) => {
+      if (editingId)
+        return apiFetch(`sites/${editingId}`, { method: 'PATCH', body: JSON.stringify(data) })
+      return apiFetch('sites', { method: 'POST', body: JSON.stringify(data) })
     },
     onSuccess: () => {
-      toast.success(editingSite ? 'Site updated' : 'Site created')
-      queryClient.invalidateQueries({ queryKey: ['sites'] })
-      closeSiteDialog()
+      queryClient.invalidateQueries({ queryKey: ['org_sites'] })
+      setSiteModalOpen(false)
+      toast.success(editingId ? 'Site updated' : 'Site created')
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to save site'),
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to save site')
+    },
   })
 
   const saveDept = useMutation({
-    mutationFn: async (payload: typeof deptForm & { id?: string }) => {
-      const body = { name: payload.name, site_id: payload.site_id || null }
-      return apiFetch(payload.id ? `org-departments/${payload.id}` : 'org-departments', {
-        method: payload.id ? 'PATCH' : 'POST',
-        body: JSON.stringify(body),
-      })
+    mutationFn: async (data: Partial<DeptRow>) => {
+      if (editingId)
+        return apiFetch(`departments/${editingId}`, { method: 'PATCH', body: JSON.stringify(data) })
+      return apiFetch('departments', { method: 'POST', body: JSON.stringify(data) })
     },
     onSuccess: () => {
-      toast.success(editingDept ? 'Department updated' : 'Department created')
-      queryClient.invalidateQueries({ queryKey: ['departments'] })
-      closeDeptDialog()
+      queryClient.invalidateQueries({ queryKey: ['org_departments'] })
+      setDeptModalOpen(false)
+      toast.success(editingId ? 'Department updated' : 'Department created')
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to save department'),
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to save department')
+    },
   })
 
   const deleteEntity = useMutation({
-    mutationFn: async (target: { kind: 'site' | 'department'; id: string }) => {
-      const path =
-        target.kind === 'site' ? `org-sites/${target.id}` : `org-departments/${target.id}`
-      return apiFetch(path, { method: 'DELETE' })
+    mutationFn: async ({ kind, id }: { kind: 'site' | 'department'; id: string }) => {
+      return apiFetch(`${kind}s/${id}`, { method: 'DELETE' })
     },
-    onSuccess: (_data, target) => {
-      toast.success(target.kind === 'site' ? 'Site deleted' : 'Department deleted')
-      queryClient.invalidateQueries({ queryKey: ['sites'] })
-      queryClient.invalidateQueries({ queryKey: ['departments'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['org_sites'] })
+      queryClient.invalidateQueries({ queryKey: ['org_departments'] })
       setDeleteTarget(null)
+      toast.success('Deleted successfully')
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to delete'),
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete')
+    },
   })
 
-  // ── Dialog helpers ────────────────────────────────────────────────────────
-  const openCreateSite = () => {
-    setEditingSite(null)
-    setSiteForm(defaultSiteForm)
-    setSiteDialogOpen(true)
-  }
-  const openEditSite = (site: SiteRow) => {
-    setEditingSite(site)
-    setSiteForm({
-      name: site.name,
-      address: site.address ?? '',
-      latitude: site.latitude?.toString() ?? '',
-      longitude: site.longitude?.toString() ?? '',
-      geofence_radius_m: site.geofence_radius_m?.toString() ?? '150',
-    })
-    setSiteDialogOpen(true)
-  }
-  const closeSiteDialog = () => {
-    setSiteDialogOpen(false)
-    setEditingSite(null)
-    setSiteForm(defaultSiteForm)
-  }
-
-  const openCreateDept = () => {
-    setEditingDept(null)
-    setDeptForm(defaultDeptForm)
-    setDeptDialogOpen(true)
-  }
-  const openEditDept = (dept: DepartmentRow) => {
-    setEditingDept(dept)
-    setDeptForm({ name: dept.name, site_id: dept.site_id ?? '' })
-    setDeptDialogOpen(true)
-  }
-  const closeDeptDialog = () => {
-    setDeptDialogOpen(false)
-    setEditingDept(null)
-    setDeptForm(defaultDeptForm)
-  }
-
-  const submitSite = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!siteForm.name.trim()) return toast.error('Site name is required')
-    saveSite.mutate({ ...siteForm, id: editingSite?.id })
-  }
-  const submitDept = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!deptForm.name.trim()) return toast.error('Department name is required')
-    saveDept.mutate({ ...deptForm, id: editingDept?.id })
-  }
-
-  // ── Filtering ───────────────────────────────────────────────────────────────
+  // Filtering
   const filteredSites = useMemo(
-    () => sites.filter((s) => s.name.toLowerCase().includes(siteSearch.toLowerCase())),
-    [sites, siteSearch]
+    () => sites.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    [sites, searchQuery]
   )
+
   const filteredDepts = useMemo(
-    () => departments.filter((d) => d.name.toLowerCase().includes(deptSearch.toLowerCase())),
-    [departments, deptSearch]
+    () => depts.filter((d) => d.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    [depts, searchQuery]
   )
+
+  const openSiteModal = (site?: SiteRow) => {
+    setEditingId(site?.id || null)
+    setSiteForm(
+      site || { name: '', address: '', latitude: null, longitude: null, geofence_radius_m: 200 }
+    )
+    setSiteModalOpen(true)
+  }
+
+  const openDeptModal = (dept?: DeptRow) => {
+    setEditingId(dept?.id || null)
+    setDeptForm(dept || { name: '', site_id: sites[0]?.id || '' })
+    setDeptModalOpen(true)
+  }
+
+  if (sitesLoading || deptsLoading) {
+    return (
+      <div className="sad-page flex items-center justify-center">
+        <Loader2 className="animate-spin text-dashboard-text-muted h-8 w-8" />
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground font-display">
-          Sites &amp; Departments
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {canManageAny
-            ? 'Manage operational locations and the departments assigned to them'
-            : 'View the operational locations and departments in your organisation'}
-        </p>
+    <div className="sad-page">
+      <div className="sad-header">
+        <h1 className="sad-header__title">Sites & Departments</h1>
+        <p className="sad-header__subtitle">Manage your operational infrastructure</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'sites' | 'departments')}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="sites" className="gap-2">
-            <MapPin className="h-4 w-4" /> Sites
+      {/* Stats Summary */}
+      <div className="sad-grid">
+        <div className="sad-card">
+          <div className="sad-card__content sad-stat">
+            <div className="sad-stat__icon-wrap sad-stat__icon-wrap--primary">
+              <MapPin size={24} />
+            </div>
+            <div className="sad-stat__info">
+              <p className="sad-stat__value">{sites.length}</p>
+              <p className="sad-stat__label">Active Sites</p>
+            </div>
+          </div>
+        </div>
+        <div className="sad-card">
+          <div className="sad-card__content sad-stat">
+            <div className="sad-stat__icon-wrap sad-stat__icon-wrap--primary">
+              <Building2 size={24} />
+            </div>
+            <div className="sad-stat__info">
+              <p className="sad-stat__value">{depts.length}</p>
+              <p className="sad-stat__label">Active Departments</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="sad-tabs">
+        <TabsList className="sad-tabs__nav">
+          <TabsTrigger value="sites" className="sad-tabs__nav-trigger">
+            Sites ({filteredSites.length})
           </TabsTrigger>
-          <TabsTrigger value="departments" className="gap-2">
-            <Building2 className="h-4 w-4" /> Departments
+          <TabsTrigger value="departments" className="sad-tabs__nav-trigger">
+            Departments ({filteredDepts.length})
           </TabsTrigger>
         </TabsList>
 
-        {/* ── Sites ─────────────────────────────────────────────────────────── */}
-        <TabsContent value="sites">
-          <Card className="border-border shadow-sm">
-            <CardHeader className="border-b border-border bg-muted/10">
-              <CardTitle className="flex items-center justify-between text-base font-semibold gap-4">
-                <span>Operational Sites</span>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={siteSearch}
-                      onChange={(e) => setSiteSearch(e.target.value)}
-                      placeholder="Search sites"
-                      className="pl-8 w-48"
-                    />
+        <TabsContent value="sites" className="sad-tabs__content">
+          <div className="sad-card-tab">
+            <div className="sad-card-tab__header ">
+              <div className="sad-card-tab__title">
+                <span className="sad-card-tab__title-text">Operational Sites</span>
+              </div>
+            </div>
+            <div className="sad-card-tab__actions">
+              <div className="sad-card-tab__search ">
+                <Search className="sad-card-tab__search-icon" />
+                <Input
+                  placeholder="Search sites..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="sad-card-tab__search-input"
+                />
+              </div>
+              {(isAdmin || isOwner) && (
+                <button className="sad-card-tab__add-btn" onClick={() => openSiteModal()}>
+                  Add Site
+                </button>
+              )}
+            </div>
+            <div className="sad-list">
+              {filteredSites.map((site) => (
+                <div key={site.id} className="sad-list__items">
+                  <div className="sad-list__item-content">
+                    <p className="sad-list__item-title">{site.name}</p>
+                    <p className="sad-list__item-subtitle">
+                      {site.address || 'No address specified'}
+                    </p>
                   </div>
-                  {canManageSites && (
-                    <Button size="sm" onClick={openCreateSite}>
-                      <Plus className="mr-1.5 h-4 w-4" /> Add Site
-                    </Button>
+                  {(isAdmin || isOwner) && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="sad-card-tab__edit-btn"
+                        onClick={() => openSiteModal(site)}
+                      >
+                        <Pencil className="h-4 w-4 text-dashboard-text-muted" />
+                      </button>
+                      <button
+                        className="sad-card-tab__delete-btn"
+                        onClick={() =>
+                          setDeleteTarget({ kind: 'site', id: site.id, name: site.name })
+                        }
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </button>
+                    </div>
                   )}
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 divide-y divide-border">
-              {loadingSites ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : filteredSites.length === 0 ? (
-                <p className="text-sm text-center text-muted-foreground py-12">No sites found.</p>
-              ) : (
-                filteredSites.map((site) => (
-                  <div
-                    key={site.id}
-                    className="flex items-center justify-between p-4 hover:bg-muted/5"
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold text-foreground">{site.name}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {site.address || 'No address'}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="font-mono text-xs">
-                        {site.geofence_radius_m}m geofence
-                      </Badge>
-                      {canManageSites && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => openEditSite(site)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {canDeleteSites && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() =>
-                            setDeleteTarget({ kind: 'site', id: site.id, name: site.name })
-                          }
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))
+              ))}
+              {filteredSites.length === 0 && (
+                <p className="sad-list__empty">No sites match your search.</p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
-        {/* ── Departments ──────────────────────────────────────────────────── */}
-        <TabsContent value="departments">
-          <Card className="border-border shadow-sm">
-            <CardHeader className="border-b border-border bg-muted/10">
-              <CardTitle className="flex items-center justify-between text-base font-semibold gap-4">
-                <span>Departments</span>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={deptSearch}
-                      onChange={(e) => setDeptSearch(e.target.value)}
-                      placeholder="Search departments"
-                      className="pl-8 w-48"
-                    />
+        <TabsContent value="departments" className="sad-tabs__content">
+          <div className="sad-card-tab">
+            <div className="sad-card-tab__header ">
+              <div className="sad-card-tab__title">
+                <span className="sad-card-tab__title-text">Operational Departments</span>
+              </div>
+            </div>
+            <div className="sad-card-tab__actions">
+              <div className="sad-card-tab__search ">
+                <Search className="sad-card-tab__search-icon" />
+                <Input
+                  placeholder="Search departments..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="sad-card-tab__search-input"
+                />
+              </div>
+              {(isAdmin || isOwner) && (
+                <button className="sad-card-tab__add-btn" onClick={() => openDeptModal()}>
+                  Add Department
+                </button>
+              )}
+            </div>
+            <div className="sad-list">
+              {filteredDepts.map((department) => (
+                <div key={department.id} className="sad-list__items">
+                  <div className="sad-list__item-content">
+                    <p className="sad-list__item-title">{department.name}</p>
+                    <p className="sad-list__item-subtitle">
+                      {department.site_name ||
+                        sites.find((s) => s.id === department.site_id)?.name ||
+                        'No site assigned'}
+                    </p>
                   </div>
-                  {canManageDepartments && (
-                    <Button size="sm" onClick={openCreateDept}>
-                      <Plus className="mr-1.5 h-4 w-4" /> Add Department
-                    </Button>
+                  {(isAdmin || isOwner) && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="sad-card-tab__edit-btn"
+                        onClick={() => openDeptModal(department)}
+                      >
+                        <Pencil className="h-4 w-4 text-dashboard-text-muted" />
+                      </button>
+                      <button
+                        className="sad-card-tab__delete-btn"
+                        onClick={() =>
+                          setDeleteTarget({
+                            kind: 'department',
+                            id: department.id,
+                            name: department.name,
+                          })
+                        }
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </button>
+                    </div>
                   )}
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 divide-y divide-border">
-              {loadingDepts ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : filteredDepts.length === 0 ? (
-                <p className="text-sm text-center text-muted-foreground py-12">
-                  No departments found.
-                </p>
-              ) : (
-                filteredDepts.map((dept) => (
-                  <div
-                    key={dept.id}
-                    className="flex items-center justify-between p-4 hover:bg-muted/5"
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold text-foreground">{dept.name}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />{' '}
-                        {dept.site_id
-                          ? (siteNameById.get(dept.site_id) ?? 'Unknown site')
-                          : 'Unassigned'}
-                      </p>
-                    </div>
-                    {canManageDepartments && (
-                      <div className="flex items-center gap-3">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => openEditDept(dept)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() =>
-                            setDeleteTarget({ kind: 'department', id: dept.id, name: dept.name })
-                          }
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))
+              ))}
+              {filteredDepts.length === 0 && (
+                <p className="sad-list__empty">No departments match your search.</p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
-      {/* ── Site dialog ───────────────────────────────────────────────────── */}
-      <Dialog open={siteDialogOpen} onOpenChange={(o) => (o ? null : closeSiteDialog())}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingSite ? 'Edit Site' : 'Add Site'}</DialogTitle>
-            <DialogDescription>
-              Sites are physical locations employees can be assigned to and clock in at.
-            </DialogDescription>
+      {/* ── Sites Modal ───────────────────────────────────────────── */}
+      <Dialog open={siteModalOpen} onOpenChange={setSiteModalOpen}>
+        <DialogContent className="sad-modal-content">
+          <DialogHeader className="sad-modal-header">
+            <DialogTitle className="sad-modal-title">
+              {editingId ? 'Edit Site' : 'Create New Site'}
+            </DialogTitle>
           </DialogHeader>
-          <form onSubmit={submitSite} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="site_name">Name *</Label>
+          <div className="space-y-4 py-4">
+            <div className="sad-modal__row">
+              <Label className="sad-modal-label">Site Name</Label>
               <Input
-                id="site_name"
-                value={siteForm.name}
-                onChange={(e) => setSiteForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="HQ Office"
+                className="sad-modal-input"
+                value={siteForm.name || ''}
+                onChange={(e) => setSiteForm({ ...siteForm, name: e.target.value })}
+                placeholder="e.g. Headquarters"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="site_address">Address</Label>
+            <div className="sad-modal__row">
+              <Label className="sad-modal-label">Address</Label>
               <Input
-                id="site_address"
-                value={siteForm.address}
-                onChange={(e) => setSiteForm((f) => ({ ...f, address: e.target.value }))}
-                placeholder="123 Main Rd, Cape Town"
+                className="sad-modal-input"
+                value={siteForm.address || ''}
+                onChange={(e) => setSiteForm({ ...siteForm, address: e.target.value })}
+                placeholder="123 Main St..."
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="site_lat">Latitude</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="sad-modal__row">
+                <Label className="sad-modal-label">Latitude</Label>
                 <Input
-                  id="site_lat"
-                  value={siteForm.latitude}
-                  onChange={(e) => setSiteForm((f) => ({ ...f, latitude: e.target.value }))}
-                  placeholder="-33.92"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="site_lng">Longitude</Label>
-                <Input
-                  id="site_lng"
-                  value={siteForm.longitude}
-                  onChange={(e) => setSiteForm((f) => ({ ...f, longitude: e.target.value }))}
-                  placeholder="18.42"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="site_geo">Geofence (m)</Label>
-                <Input
-                  id="site_geo"
-                  value={siteForm.geofence_radius_m}
+                  className="sad-modal-input"
+                  type="number"
+                  step="any"
+                  value={siteForm.latitude || ''}
                   onChange={(e) =>
-                    setSiteForm((f) => ({ ...f, geofence_radius_m: e.target.value }))
+                    setSiteForm({ ...siteForm, latitude: parseFloat(e.target.value) })
                   }
-                  placeholder="150"
+                />
+              </div>
+              <div className="sad-modal__row">
+                <Label className="sad-modal-label">Longitude</Label>
+                <Input
+                  className="sad-modal-input"
+                  type="number"
+                  step="any"
+                  value={siteForm.longitude || ''}
+                  onChange={(e) =>
+                    setSiteForm({
+                      ...siteForm,
+                      longitude: parseFloat(e.target.value),
+                    })
+                  }
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeSiteDialog}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saveSite.isPending}>
-                {saveSite.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editingSite ? 'Save Changes' : 'Create Site'}
-              </Button>
-            </DialogFooter>
-          </form>
+            <div className="sad-modal__row">
+              <Label className="sad-modal-label">Geofence Radius (meters)</Label>
+              <Input
+                className="sad-modal-input"
+                type="number"
+                step="any"
+                value={siteForm.geofence_radius_m ?? ''}
+                onChange={(e) =>
+                  setSiteForm({
+                    ...siteForm,
+                    geofence_radius_m: e.target.value === '' ? null : parseFloat(e.target.value),
+                  })
+                }
+                placeholder="200"
+              />
+            </div>
+          </div>
+          <DialogFooter className="sad-modal-footer">
+            <button className="sad-modal-cancel-btn" onClick={() => setSiteModalOpen(false)}>
+              Cancel
+            </button>
+            <button
+              className="sad-modal-save-btn"
+              onClick={() => saveSite.mutate(siteForm)}
+              disabled={saveSite.isPending}
+            >
+              {saveSite.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Site'}
+            </button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Department dialog ─────────────────────────────────────────────── */}
-      <Dialog open={deptDialogOpen} onOpenChange={(o) => (o ? null : closeDeptDialog())}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingDept ? 'Edit Department' : 'Add Department'}</DialogTitle>
-            <DialogDescription>
-              Departments group employees and can be linked to a site.
-            </DialogDescription>
+      {/* ── Department Modal ───────────────────────────────────────────── */}
+      <Dialog open={deptModalOpen} onOpenChange={setDeptModalOpen}>
+        <DialogContent className="sad-modal-content">
+          <DialogHeader className="sad-modal-header">
+            <DialogTitle className="sad-modal-title">
+              {editingId ? 'Edit Department' : 'Create Department'}
+            </DialogTitle>
           </DialogHeader>
-          <form onSubmit={submitDept} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="dept_name">Name *</Label>
+          <div className="space-y-4 py-4">
+            <div className="sad-modal__row">
+              <Label className="sad-modal-label">Department Name</Label>
               <Input
-                id="dept_name"
-                value={deptForm.name}
-                onChange={(e) => setDeptForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="Operations"
+                className="sad-modal-input"
+                value={deptForm.name || ''}
+                onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
+                placeholder="e.g. Logistics"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="dept_site">Site</Label>
+            <div className="sad-modal__row">
+              <Label className="sad-modal-label">Associated Site</Label>
               <Select
-                value={deptForm.site_id || 'none'}
-                onValueChange={(v) =>
-                  setDeptForm((f) => ({ ...f, site_id: v && v !== 'none' ? v : '' }))
-                }
+                value={deptForm.site_id || ''}
+                onValueChange={(v) => setDeptForm({ ...deptForm, site_id: v })}
               >
-                <SelectTrigger id="dept_site">
-                  <SelectValue placeholder="Select a site" />
+                <SelectTrigger className="sad-modal-select-trigger">
+                  <SelectValue className="sad-modal-select-value" placeholder="Select a site" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Unassigned</SelectItem>
+                <SelectContent className="sad-modal-select-content">
                   {sites.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
+                    <SelectItem className="sad-modal-select-item" key={s.id} value={s.id}>
                       {s.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeDeptDialog}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saveDept.isPending}>
-                {saveDept.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editingDept ? 'Save Changes' : 'Create Department'}
-              </Button>
-            </DialogFooter>
-          </form>
+          </div>
+          <DialogFooter className="sad-modal-footer">
+            <button className="sad-modal-cancel-btn" onClick={() => setDeptModalOpen(false)}>
+              Cancel
+            </button>
+            <button
+              className="sad-modal-save-btn"
+              onClick={() => saveDept.mutate(deptForm)}
+              disabled={saveDept.isPending}
+            >
+              {saveDept.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'Save Department'
+              )}
+            </button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Delete confirmation ───────────────────────────────────────────── */}
-      <Dialog open={!!deleteTarget} onOpenChange={(o) => (o ? null : setDeleteTarget(null))}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete {deleteTarget?.kind}</DialogTitle>
-            <DialogDescription>
+      {/* ── Delete Confirmation ───────────────────────────────────────────── */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <DialogContent className="sad-modal-content">
+          <DialogHeader className="sad-modal-header">
+            <DialogTitle className="sad-modal-title text-red-600">
+              Delete {deleteTarget?.kind}
+            </DialogTitle>
+            <DialogDescription className="sad-modal-description">
               Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? This action
               cannot be undone
               {deleteTarget?.kind === 'site'
@@ -525,21 +482,23 @@ export default function SitesAndDepartments() {
                 : '.'}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)}>
+          <DialogFooter className="sad-modal-footer">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
               Cancel
             </Button>
             <Button
-              type="button"
               variant="destructive"
-              disabled={deleteEntity.isPending}
               onClick={() =>
                 deleteTarget &&
                 deleteEntity.mutate({ kind: deleteTarget.kind, id: deleteTarget.id })
               }
+              disabled={deleteEntity.isPending}
             >
-              {deleteEntity.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete
+              {deleteEntity.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'Confirm Delete'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

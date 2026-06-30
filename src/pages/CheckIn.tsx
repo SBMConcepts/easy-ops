@@ -1,15 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
 import { useAttendanceRecords, attendanceKeys } from '../hooks/useOrgData'
 import { useDB } from '../contexts/DatabaseContext'
-import { toast } from 'sonner'
-import { QrCode, Fingerprint, MapPin, CheckCircle2, Loader2 } from 'lucide-react'
 import { useCurrentUser } from '../hooks/useCurrentUser'
+import { toast } from 'sonner'
+import { QrCode, Fingerprint, MapPin, CheckCircle2, Loader2, Clock } from 'lucide-react'
+import '../styles/checkin.css'
 
-const CheckIn = () => {
+export default function CheckIn() {
   const supabase = useDB()
   const { profile: currentUser } = useCurrentUser()
   const queryClient = useQueryClient()
@@ -19,161 +21,143 @@ const CheckIn = () => {
   const [hoursWorked, setHoursWorked] = useState('8')
   const [overtime, setOvertime] = useState('0')
 
-  // org_attendance is a daily aggregate (one row per user per day), so logging
-  // attendance inserts a record with the chosen method and the hours worked /
-  // overtime for the day rather than a clock-in/clock-out event pair.
   const logAttendance = useMutation({
     mutationFn: async () => {
-      if (!currentUser?.auth0_user_id || !currentUser?.org_id) {
-        throw new Error('User profile not loaded')
-      }
-      const hours = Number(hoursWorked)
-      const ot = Number(overtime)
-      if (!Number.isFinite(hours) || hours < 0) throw new Error('Enter valid hours worked')
-      if (!Number.isFinite(ot) || ot < 0) throw new Error('Enter valid overtime hours')
+      if (!currentUser?.auth0_user_id || !currentUser.org_id) throw new Error('Not initialized')
 
-      const { error } = await supabase.from('org_attendance').insert({
-        org_id: currentUser.org_id,
-        user_id: currentUser.auth0_user_id,
-        date: new Date().toISOString().slice(0, 10),
-        method: selectedMethod,
-        hours_worked: hours,
-        overtime: ot,
-      })
+      const dateStr = new Date().toISOString().split('T')[0]
+
+      const { error } = await supabase.from('org_attendance').upsert(
+        {
+          user_id: currentUser.auth0_user_id,
+          org_id: currentUser.org_id,
+          date: dateStr,
+          method: selectedMethod,
+          hours_worked: Number(hoursWorked) || 0,
+          overtime: Number(overtime) || 0,
+        },
+        { onConflict: 'user_id, date, organization_id' }
+      )
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: attendanceKeys.lists() })
-      toast.success(`Attendance logged via ${selectedMethod.toUpperCase()}`)
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.all })
+      toast.success('Attendance logged successfully!')
     },
-    onError: (err) =>
-      toast.error(err instanceof Error ? err.message : 'Attendance logging failure'),
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to log attendance')
+    },
   })
 
-  const processing = logAttendance.isPending
-
-  const methods = [
-    { id: 'qr' as const, label: 'QR Scan', icon: QrCode, desc: 'Stationary scanner check' },
-    {
-      id: 'biometric' as const,
-      label: 'Biometric',
-      icon: Fingerprint,
-      desc: 'On-device verification',
-    },
-    {
-      id: 'manual' as const,
-      label: 'Manual Check',
-      icon: MapPin,
-      desc: 'GPS geolocation fallback',
-    },
-  ]
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
   return (
-    <div className="max-w-md mx-auto space-y-6 pt-4">
-      <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Shift Gateway Terminal
-        </h1>
-        <p className="text-sm text-muted-foreground">Log shift hours for audit payroll logs</p>
-      </div>
-
-      <Card className="border-border shadow-sm">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-border pb-4">
-            <span className="text-sm font-medium text-muted-foreground">Check-in Method</span>
-            <Badge variant="outline" className="uppercase">
-              {selectedMethod}
-            </Badge>
+    <div className="checkin-page">
+      <div className="checkin-card">
+        <div className="checkin-card__content">
+          <div className="text-center space-y-1 mb-2">
+            <h2 className="text-2xl font-bold text-dashboard-text-main tracking-tight">
+              Terminal Kiosk
+            </h2>
+            <p className="text-sm text-dashboard-text-muted">
+              Select validation method to clock in.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3">
-            {methods.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setSelectedMethod(m.id)}
-                className={`flex items-center gap-4 rounded-lg border p-4 text-left transition-all ${
-                  selectedMethod === m.id
-                    ? 'border-secondary bg-secondary/5 ring-1 ring-secondary'
-                    : 'border-border hover:border-muted-foreground/30 bg-card'
-                }`}
-              >
-                <m.icon
-                  className={`h-6 w-6 shrink-0 ${selectedMethod === m.id ? 'text-secondary' : 'text-muted-foreground'}`}
-                />
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{m.label}</p>
-                  <p className="text-xs text-muted-foreground">{m.desc}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <label className="space-y-1">
-              <span className="text-xs font-medium text-muted-foreground">Hours worked</span>
-              <input
-                type="number"
-                min={0}
-                step="0.5"
-                value={hoursWorked}
-                onChange={(e) => setHoursWorked(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="space-y-1">
-              <span className="text-xs font-medium text-muted-foreground">Overtime hours</span>
-              <input
-                type="number"
-                min={0}
-                step="0.5"
-                value={overtime}
-                onChange={(e) => setOvertime(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
-              />
-            </label>
-          </div>
-
-          <div className="flex justify-center pt-2">
-            <Button
-              size="lg"
-              className="w-full text-md py-6 bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-sm"
-              onClick={() => logAttendance.mutate()}
-              disabled={processing}
+          <div className="checkin-method-grid">
+            <button
+              className={`checkin-method-btn ${selectedMethod === 'qr' ? 'checkin-method-btn--active' : ''}`}
+              onClick={() => setSelectedMethod('qr')}
             >
-              <CheckCircle2 className="h-5 w-5 mr-2" /> Log Today's Attendance
-            </Button>
+              <QrCode size={24} /> <span className="text-xs font-semibold">QR Code</span>
+            </button>
+            <button
+              className={`checkin-method-btn ${selectedMethod === 'biometric' ? 'checkin-method-btn--active' : ''}`}
+              onClick={() => setSelectedMethod('biometric')}
+            >
+              <Fingerprint size={24} /> <span className="text-xs font-semibold">Biometric</span>
+            </button>
+            <button
+              className={`checkin-method-btn ${selectedMethod === 'manual' ? 'checkin-method-btn--active' : ''}`}
+              onClick={() => setSelectedMethod('manual')}
+            >
+              <MapPin size={24} /> <span className="text-xs font-semibold">Manual</span>
+            </button>
           </div>
+
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-dashboard-text-muted uppercase tracking-wider">
+                Standard Hours
+              </Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dashboard-text-muted" />
+                <Input
+                  type="number"
+                  min="0"
+                  max="24"
+                  step="0.5"
+                  value={hoursWorked}
+                  onChange={(e) => setHoursWorked(e.target.value)}
+                  className="pl-9 bg-dashboard-bg"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-dashboard-text-muted uppercase tracking-wider">
+                Overtime
+              </Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dashboard-text-muted" />
+                <Input
+                  type="number"
+                  min="0"
+                  max="24"
+                  step="0.5"
+                  value={overtime}
+                  onChange={(e) => setOvertime(e.target.value)}
+                  className="pl-9 bg-dashboard-bg"
+                />
+              </div>
+            </div>
+          </div>
+
+          <Button
+            className="w-full h-12 text-md mt-4 font-semibold"
+            onClick={() => logAttendance.mutate()}
+            disabled={logAttendance.isPending}
+          >
+            {logAttendance.isPending ? (
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-5 w-5 mr-2" />
+            )}
+            Log Today's Attendance
+          </Button>
 
           {attendanceHistory.length > 0 && (
-            <div className="space-y-2 pt-2">
-              <span className="text-xs font-medium text-muted-foreground">Recent entries</span>
-              {attendanceHistory.slice(0, 5).map((rec) => (
+            <div className="checkin-history mt-4">
+              <span className="text-xs font-semibold uppercase text-dashboard-text-muted tracking-wider mb-2">
+                Recent Entries
+              </span>
+              {attendanceHistory.slice(0, 3).map((rec, i) => (
                 <div
-                  key={rec.id}
-                  className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-xs"
+                  key={i}
+                  className="flex justify-between items-center text-sm p-3 bg-dashboard-bg rounded-md border border-dashboard-border"
                 >
-                  <span className="font-medium text-foreground">{rec.date}</span>
-                  <span className="uppercase text-muted-foreground">{rec.method}</span>
-                  <span className="font-mono text-foreground">
-                    {rec.hours_worked}h{rec.overtime ? ` +${rec.overtime}h OT` : ''}
-                  </span>
+                  <span className="font-medium text-dashboard-text-main">{rec.date}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-dashboard-text-muted font-semibold uppercase">
+                      {rec.method}
+                    </span>
+                    <span className="font-mono text-dashboard-text-main font-medium">
+                      {rec.hours_worked}h
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
-
-export default CheckIn

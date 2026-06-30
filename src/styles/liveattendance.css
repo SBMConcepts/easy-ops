@@ -1,0 +1,56 @@
+@import './dashboard.css';
+/* ── Live Attendance (BEM) ───────────────────────────────── */
+.live-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: var(--dashboard-bg, #f8f9fb);
+  min-height: 100vh;
+}
+
+.live-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.live-card {
+  background: var(--dashboard-surface, #ffffff);
+  border: 1px solid var(--dashboard-border, #e1e6ed);
+  border-radius: var(--dashboard-radius-lg, 16px);
+  box-shadow: var(--dashboard-shadow);
+  overflow: hidden;
+}
+
+.live-card__header {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--dashboard-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.live-card__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.live-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--dashboard-border);
+  transition: background var(--dashboard-transition, 0.2s ease);
+}
+
+.live-row:hover {
+  background: rgba(15, 45, 92, 0.02);
+}
+
+.live-row:last-child {
+  border-bottom: none;
+}

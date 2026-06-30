@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
+import { useAttendanceRecords } from '../hooks/useOrgData'
 import {
   Select,
   SelectContent,
@@ -8,45 +8,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select'
-import { useAttendanceRecords } from '../hooks/useOrgData'
-import { MapPin, Loader2 } from 'lucide-react'
+import { MapPin, Loader2, Activity } from 'lucide-react'
+import '../styles/liveattendance.css'
 
-const LiveAttendance = () => {
+export default function LiveAttendance() {
   const [methodFilter, setMethodFilter] = useState('all')
-
-  // Safely scoped directly via database RLS.
   const { data: records = [], isLoading } = useAttendanceRecords()
 
-  // org_attendance has no site dimension; filter the daily aggregate by the
-  // check-in method instead.
   const methods = Array.from(new Set(records.map((r) => r.method)))
   const filteredRecords =
     methodFilter === 'all' ? records : records.filter((r) => r.method === methodFilter)
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="live-page">
+      <header className="live-header">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Live Tracking Dashboard
+          <h1 className="live-header__title text-2xl font-bold text-dashboard-text-main tracking-tight flex items-center gap-2">
+            <Activity className="h-6 w-6 text-dashboard-primary" /> Live Attendance
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Real-time attendance streams across active company zones
+          <p className="text-sm text-dashboard-text-muted mt-1">
+            Real-time tracking and monitoring.
           </p>
         </div>
-
-        <div className="w-full sm:w-48">
-          <Select value={methodFilter} onValueChange={(value) => setMethodFilter(value ?? 'all')}>
-            <SelectTrigger className="w-full border-border">
-              <SelectValue placeholder="All Methods" />
+        <div className="w-45">
+          <Select value={methodFilter} onValueChange={setMethodFilter as any}>
+            <SelectTrigger className="bg-dashboard-surface border-dashboard-border h-9">
+              <SelectValue placeholder="Filter by method" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Methods</SelectItem>
@@ -58,47 +45,50 @@ const LiveAttendance = () => {
             </SelectContent>
           </Select>
         </div>
-      </div>
+      </header>
 
-      <Card className="border-border shadow-sm">
-        <CardHeader className="border-b border-border bg-muted/10">
-          <CardTitle className="flex items-center justify-between text-base font-semibold">
-            <span>Active Record Logs</span>
-            <Badge variant="outline" className="font-mono text-xs">
-              Count: {filteredRecords.length}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 divide-y divide-border">
-          {filteredRecords.map((rec) => (
-            <div
-              key={rec.id}
-              className="flex items-center justify-between p-4 hover:bg-muted/5 transition-all"
-            >
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-foreground">
-                  Employee {rec.user_id?.slice(0, 8)}
-                </p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <MapPin className="h-3 w-3" /> Method: {rec.method.toUpperCase()} · {rec.date}
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-mono font-medium text-foreground">
+      <div className="live-card">
+        <div className="live-card__header">
+          <h2 className="text-md font-semibold text-dashboard-text-main">Today's Record Logs</h2>
+          <span className="px-2.5 py-1 text-xs font-semibold bg-dashboard-bg border border-dashboard-border rounded-full text-dashboard-text-muted">
+            Count: {filteredRecords.length}
+          </span>
+        </div>
+        <div className="live-card__content">
+          {isLoading ? (
+            <div className="flex justify-center p-12">
+              <Loader2 className="animate-spin text-dashboard-text-muted h-8 w-8" />
+            </div>
+          ) : filteredRecords.length > 0 ? (
+            filteredRecords.map((rec) => (
+              <div key={rec.id} className="live-row">
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-semibold text-dashboard-text-main">
+                    Employee {rec.user_id?.slice(0, 8)}
+                  </p>
+                  <p className="text-xs text-dashboard-text-muted flex items-center gap-1 font-medium">
+                    <MapPin className="h-3 w-3 text-dashboard-primary" /> {rec.method.toUpperCase()}{' '}
+                    · {rec.date}
+                  </p>
+                </div>
+                <span className="text-sm font-mono font-medium text-dashboard-text-main bg-dashboard-bg px-3 py-1.5 rounded-md border border-dashboard-border">
                   {rec.hours_worked}h{rec.overtime ? ` +${rec.overtime}h OT` : ''}
                 </span>
               </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+              <div className="h-12 w-12 rounded-full bg-dashboard-bg flex items-center justify-center mb-3">
+                <MapPin className="h-6 w-6 text-dashboard-text-muted/50" />
+              </div>
+              <p className="text-sm font-medium text-dashboard-text-main">No records found</p>
+              <p className="text-xs text-dashboard-text-muted mt-1">
+                No operational entries recorded today matching your filters.
+              </p>
             </div>
-          ))}
-          {filteredRecords.length === 0 && (
-            <p className="text-sm text-center text-muted-foreground py-12 bg-card">
-              No operational entries recorded today.
-            </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
-
-export default LiveAttendance
