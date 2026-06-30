@@ -40,17 +40,19 @@ const RolesStep = ({ data, onChange }: Props) => {
 
   return (
     <div className="roles-step">
-      <div>
-        <h2 className="text-xl font-bold mb-1">Custom Roles</h2>
-        <p className="roles-step__desc">Define specialized access tiers for your organization.</p>
+      <div className="roles-step__header">
+        <h2 className="roles-step__heading">Custom Roles</h2>
+        <p className="roles-step__subheading">
+          Define specialized access tiers for your organization.
+        </p>
       </div>
 
       <div className="roles-step__list">
         {data.map((role, i) => (
-          <Card key={i} className="role-card relative">
-            <CardContent className="role-card__content grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Card key={i} className="role-card relative ">
+            <CardContent className="role-card__content ">
               <button
-                className="role-card__remove"
+                className="role-card__remove absolute top-2 right-2"
                 onClick={() => onChange(data.filter((_, idx) => idx !== i))}
               >
                 <Trash2 className="role-card__remove-icon " />
@@ -65,7 +67,7 @@ const RolesStep = ({ data, onChange }: Props) => {
                 />
               </div>
 
-              <div className="role-card__row pr-6">
+              <div className="role-card__row ">
                 <Label className="role-card__label">Base Permission Tier</Label>
                 <Select
                   value={role.base_role}

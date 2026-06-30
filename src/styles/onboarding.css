@@ -1,47 +1,61 @@
 /* onboarding.onboardings */
 
 /* ─── Tokens ──*/
+
+/*--
+Primary	#0f2d5c	Text headers, navigation bars, hero text Establishes enterprise trust
+Secondary	#2563eb	Links, active tab states, secondary buttons	Signals interactable tech elements
+Tertiary	#10b981	Main CTAs, conversion buttons, "Growth" charts	Drives user action via high-contrast green
+Muted Canvas	#f8f9fb	Main screen background, dashboard cards	Reduces cognitive load and eye strain
+Muted Text	#64748b	Subtitles, captions, disabled states	Creates clear typographic hierarchy
+--*/
 :root {
   /* Backgrounds & Surfaces */
-  --onboarding-background: #f5f4f0;
+  --onboarding-background: #f8f9fb;
   --onboarding-surface: #ffffff;
-  --onboarding-surface-raised: 0 2px 16px rgba(0, 0, 0, 0.06);
+  --onboarding-surface-raised: 0 4px 24px -4px rgba(15, 45, 92, 0.08);
 
   /* Borders */
-  --onboarding-border: rgba(0, 0, 0, 0.09);
-  --onboarding-border-focus: rgba(83, 74, 183, 0.4);
-  --onboarding-border-hover: rgba(0, 0, 0, 0.15);
-  --onboarding-border-error: #e11d48;
+  --onboarding-border: #e1e6ed;
+  --onboarding-border-focus: #279e8a;
+  --onboarding-border-hover: #1a9279;
+  --onboarding-border-error: #f03d3d;
 
-  /* Accents (from loginpage: #534ab7) */
-  --onboarding-accent: #534ab7;
-  --onboarding-accent-dim: rgba(83, 74, 183, 0.1);
-  --onboarding-accent-glow: 0 0 0 3px rgba(83, 74, 183, 0.2);
+  /* Accents (from loginpage: #10b981) */
+  --onboarding-accent: #10b981;
+  --onboarding-accent-dim: rgba(16, 185, 129, 0.1);
+  --onboarding-accent-glow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 
   /* Typography */
-  --onboarding-text-primary: #1a1a18;
-  --onboarding-text-secondary: #888780;
-  --onboarding-text-placeholder: #a09f98;
-  --onboarding-text-muted: #888780;
+  --onboarding-text-primary: #0f2d5c;
+  --onboarding-text-secondary: #2563eb;
+  --onboarding-text-accent: #10b981;
+  --onboarding-text-placeholder: #64748b;
+  --onboarding-text-muted: #64748b;
+  --onboarding-text-error: #f03d3d;
 
   /* Geometry */
-  --onboarding-radius-sm: 6px;
-  --onboarding-radius-md: 8px;
+  --onboarding-radius-sm: 8px;
+  --onboarding-radius-md: 12px;
   --onboarding-radius-lg: 16px;
+  --onboarding-radius-xl: 24px;
 
   --onboarding-transition: 0.2s ease;
+  /* Shadows */
+  --onboarding-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --onboarding-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --onboarding-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 /* ── Page shell ── */
 
 .onboarding-page {
-  min-height: 100dvh;
   background: var(--onboarding-background);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   box-sizing: border-box;
-  padding: 2rem 1rem;
+  padding: 0;
 }
 
 .onboarding-container {
@@ -65,13 +79,13 @@
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: #1a1a18;
+  color: var(--onboarding-text-primary);
   margin: 0 0 0 0.25rem;
 }
 
 .onboarding-subtitle {
   font-size: 0.875rem;
-  color: #888780;
+  color: var(--onboarding-text-muted);
   margin: 0;
 }
 
@@ -92,15 +106,20 @@
 /* ── Step navigation ── */
 
 .onboarding-steps-nav {
-  width: 100% !important;
-  max-width: 100% !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .onboarding-steps-nav__list {
-  display: flex !important;
-  flex-wrap: wrap;
+  display: flex;
   justify-content: center;
-  gap: 0.375rem;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0;
   margin: 0;
   list-style: none;
@@ -108,15 +127,17 @@
 
 .onboarding-step-btn {
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 0.75rem;
+  width: 100%;
+  gap: 0.5rem;
   padding: 0.625rem 0.75rem;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  font-size: 0.75rem;
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-sm);
+  font-size: 0.875rem;
   font-weight: 500;
-  background: transparent;
-  cursor: default;
+  color: var(--onboarding-text-secondary);
+  cursor: pointer;
   transition:
     background 150ms ease,
     border-color 150ms ease,
@@ -126,44 +147,62 @@
 }
 
 .onboarding-step-btn:focus-visible {
-  box-shadow: 0 0 0 2px hsl(#f5f4fe / 0.5);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
 /* Active — current step */
 .onboarding-step-btn--active {
-  background: #f5f4fe;
-  color: #1a1a18;
-  border-color: #f5f4fe;
+  background: var(--onboarding-surface);
+  color: var(--onboarding-text-primary);
+  border-color: var(--onboarding-border);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* Completed — clickable to go back */
 .onboarding-step-btn--completed {
-  background: #f5f4fe;
-  color: #1a1a18;
-  border-color: #f5f4fe;
+  background: var(--onboarding-surface);
+  color: var(--onboarding-text-primary);
+  border-color: var(--onboarding-border);
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .onboarding-step-btn--completed:hover {
-  background: #f5f4fe;
-  border-color: #f5f4fe;
+  background: var(--onboarding-surface);
+  border-color: var(--onboarding-border);
 }
 
 /* Upcoming — locked */
 .onboarding-step-btn--upcoming {
-  color: #888780;
+  color: var(--onboarding-text-muted);
   opacity: 0.5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
   cursor: not-allowed;
 }
 
 .onboarding-step-btn__icon {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 1rem;
+  height: 1rem;
   flex-shrink: 0;
 }
 
 .onboarding-step-btn__label {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: inherit;
 }
 
 @media (max-width: 480px) {
@@ -195,50 +234,43 @@
 /* ── Card ──────── */
 
 .onboarding-card {
-  background: var(--onboarding-surface);
-  border: 1px solid var(--onboarding-border);
-  border-radius: var(--onboarding-radius-lg);
-  box-shadow: var(--onboarding-surface-raised);
-  padding: 1.25rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
 .onboarding-card__header {
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--onboarding-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .onboarding-card__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--onboarding-text-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--onboarding-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .onboarding-card__title-icon {
   width: 1.25rem;
   height: 1.25rem;
-  color: var(--onboarding-accent);
   flex-shrink: 0;
 }
 
 .onboarding-card__desc {
   font-size: 0.875rem;
-  color: var(--onboarding-text-secondary);
-  margin-top: 0.25rem;
+  color: var(--onboarding-text-muted);
+  margin: 0;
 }
 
 .onboarding-card__content {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 /* ── Footer ────── */
@@ -248,45 +280,44 @@
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--onboarding-border);
+  padding: 1.5rem 0;
 }
 
 .onboarding-footer__left-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.25rem 0;
+  padding: 0.25rem 0.5rem;
   border-radius: var(--onboarding-radius-md);
   border: 1px solid transparent;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--onboarding-text-secondary);
-  background: var(--onboarding-accent-dim);
+  color: var(--onboarding-text-primary);
+  background: var(--onboarding-background);
   cursor: pointer;
   transition: background 150ms ease;
 }
 
 .onboarding-footer__left-btn:hover {
-  background: var(--onboarding-accent-dim);
+  background: var(--onboarding-surface-raised);
 }
 
 .onboarding-footer__right-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.25rem 0;
+  padding: 0.25rem 0.5rem;
   border-radius: var(--onboarding-radius-md);
   border: 1px solid transparent;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--onboarding-text-secondary);
-  background: var(--onboarding-accent-dim);
+  color: var(--onboarding-text-primary);
+  background: var(--onboarding-background);
   cursor: pointer;
   transition: background 150ms ease;
 }
 .onboarding-footer__right-btn:hover {
-  background: var(--onboarding-accent-dim);
+  background: var(--onboarding-surface-raised);
 }
 
 .onboarding-footer__saving-indicator {
@@ -295,7 +326,7 @@
   gap: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--onboarding-text-secondary);
+  color: var(--onboarding-text-primary);
 }
 
 /* ── Button icons ── */

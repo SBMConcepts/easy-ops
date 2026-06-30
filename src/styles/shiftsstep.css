@@ -6,35 +6,29 @@
 .shifts-step {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 /* ── Section headings ───────────────────────────────────── */
 
 .shifts-step__section-icon {
-  width: 0.875rem;
-  height: 0.875rem;
-  color: var(--onboarding-accent-muted);
+  width: 1.125rem;
+  height: 1.125rem;
   flex-shrink: 0;
 }
 
 /* ── Work rules section ─────────────────────────────────── */
 
 .shifts-step__section-header {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--onboarding-text-primary);
-  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .shifts-step__rules {
   display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--onboarding-text-primary);
-  margin: 0;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .shifts-step__section-title {
@@ -52,22 +46,24 @@
   border-radius: var(--onboarding-radius-md);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--onboarding-accent);
-  background: hsl(var(--onboarding-accent) / 0.08);
+  color: var(--onboarding-text-muted);
+  background: hsl(var(--onboarding-text-muted) / 0.08);
 }
 
 .shifts-step__rules-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 @media (max-width: 480px) {
   .shifts-step__rules-grid {
     grid-template-columns: 1fr;
   }
-  .shifts-step__rules-grid .form-field--full {
-    grid-column: 1;
+  .shifts-step__section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
 
@@ -76,13 +72,10 @@
 .shifts-step__shifts {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .shifts-step__shifts-title {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--onboarding-text-primary);
@@ -92,22 +85,22 @@
 .shifts-step__list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .shifts-step__cards-container {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 /* ── Shift card ─────────────────────────────────────────── */
 
 .shift-card {
-  background: var(--onboarding-surface);
+  background: var(--onboarding-background);
   border: 1px solid var(--onboarding-border);
-  border-radius: var(--onboarding-radius-lg);
-  box-shadow: var(--onboarding-surface-raised);
+  border-radius: var(--onboarding-radius-md);
+  box-shadow: var(--onboarding-shadow-md);
   transition:
     box-shadow var(--onboarding-transition),
     border-color var(--onboarding-transition);
@@ -115,14 +108,14 @@
 
 .shift-card:focus-within {
   border-color: var(--onboarding-border-focus);
-  box-shadow: var(--onboarding-surface-raised), var(--onboarding-accent-glow);
+  box-shadow: var(--onboarding-shadow-md), var(--onboarding-accent-glow);
 }
 
 .shift-card__content {
-  padding: 1rem 1.125rem !important;
+  padding: 1.125rem !important;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.875rem;
 }
 
 /* ── Card header ────────────────────────────────────────── */
@@ -134,25 +127,20 @@
 }
 
 .shift-card__icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--onboarding-accent);
   flex-shrink: 0;
 }
 
 .shift-card__name-preview {
   font-weight: 400;
   color: var(--onboarding-text-secondary);
-  font-size: 0.875rem;
-  max-width: 160px;
+  font-size: 0.8rem;
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.shift-card__header-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 /* Duration pill — computed from start/end times */
@@ -174,23 +162,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  padding: 0.25rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
   border-radius: var(--onboarding-radius-md);
-  color: var(--onboarding-text-muted);
+  background: transparent;
+  cursor: pointer;
+  color: var(--onboarding-text-error);
   transition:
     background var(--onboarding-transition),
     color var(--onboarding-transition);
 }
 
 .shift-card__remove:hover {
-  background: var(--onboarding-surface-raised);
-  color: var(--onboarding-text-primary);
+  background: var(--onboarding-border-error);
+  color: var(--onboarding-text-muted);
 }
 
 .shift-card__remove-icon {
-  width: 1rem;
-  height: 1rem;
+  width: 0.875rem;
+  height: 0.875rem;
   flex-shrink: 0;
 }
 
@@ -198,17 +189,13 @@
 .shift-card__row {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .shift-card__label {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--onboarding-text-primary);
-  letter-spacing: 0.01em;
 }
 
 .shift-card__input {
@@ -216,7 +203,7 @@
   padding: 0.75rem;
   border: 1px solid var(--onboarding-border);
   border-radius: var(--onboarding-radius-md);
-  background: var(--onboarding-surface);
+  background: var(--onboarding-background);
   color: var(--onboarding-text-primary);
   font-size: 0.875rem;
   transition:
@@ -224,12 +211,17 @@
     border-color var(--onboarding-transition);
 }
 
+.shift-card__input:focus {
+  border-color: var(--onboarding-border-focus);
+  box-shadow: var(--onboarding-accent-glow);
+}
+
 .shift-card__select {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--onboarding-border);
   border-radius: var(--onboarding-radius-md);
-  background: var(--onboarding-surface);
+  background: var(--onboarding-background);
   color: var(--onboarding-text-primary);
   font-size: 0.875rem;
   transition:
@@ -242,7 +234,7 @@
   padding: 0.75rem;
   border: 1px solid var(--onboarding-border);
   border-radius: var(--onboarding-radius-md);
-  background: var(--onboarding-surface);
+  background: var(--onboarding-background);
   color: var(--onboarding-text-primary);
   font-size: 0.875rem;
   transition:
@@ -260,7 +252,7 @@
 .shift-card__select-content-item {
   padding: 0.75rem;
   border-radius: var(--onboarding-radius-md);
-  background: var(--onboarding-surface);
+  background: var(--onboarding-background);
   color: var(--onboarding-text-primary);
   font-size: 0.875rem;
   transition:
@@ -274,43 +266,31 @@
   gap: 0.75rem;
 }
 
-.shift-card__field--full {
-  grid-column: 1 / -1;
-}
-
 @media (max-width: 480px) {
   .shift-card__grid {
     grid-template-columns: 1fr;
-  }
-  .shift-card__field--full {
-    grid-column: 1;
   }
 }
 
 /* ── Add button ─────────────────────────────────────────── */
 
 .shifts-step__add-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-radius: var(--onboarding-radius-md);
   border: 1px solid var(--onboarding-border);
-  background: var(--onboarding-surface);
-  color: var(--onboarding-text-muted);
   font-size: 0.875rem;
-  font-weight: 600;
-  transition:
-    background var(--onboarding-transition),
-    color var(--onboarding-transition),
-    border-color var(--onboarding-transition);
+  font-weight: 500;
+  color: var(--onboarding-text-primary);
+  background: var(--onboarding-background);
 }
 
 .shifts-step__add-btn:hover {
-  background: var(--onboarding-surface-raised);
-  color: var(--onboarding-text-primary);
-  border-color: var(--onboarding-border-focus);
+  color: var(--onboarding-accent);
+  border-color: var(--onboarding-accent);
+  background: var(--onboarding-accent-dim);
 }
 
 .shifts-step__add-btn-icon {

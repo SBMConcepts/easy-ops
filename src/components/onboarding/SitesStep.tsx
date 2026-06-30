@@ -118,8 +118,8 @@ const SitesStep = ({ data, onChange }: Props) => {
         ))}
       </div>
 
-      <button onClick={addSite} className="site-step__add-btn mt-2">
-        <Plus className="site-step__add-btn-icon mr-2" /> Add Site
+      <button onClick={addSite} className="site-step__add-btn ">
+        <Plus className="site-step__add-btn-icon" /> Add Site
       </button>
     </div>
   )

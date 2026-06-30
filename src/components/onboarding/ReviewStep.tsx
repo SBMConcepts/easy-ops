@@ -45,31 +45,29 @@ const METHOD_LABELS: Record<string, string> = {
 
 const ReviewStep = ({ company, sites, departments, roles, shifts, checkInMethods }: Props) => {
   return (
-    <div className="review-step space-y-6">
-      <div className="text-center mb-4">
-        <h2 className="text-xl font-bold">Review Configuration</h2>
-        <p className="review-step__desc">Verify your structural workspace setup</p>
+    <div className="review-step ">
+      <div className="review-step__header">
+        <h2 className="review-step__heading">Review Configuration</h2>
+        <p className="review-step__subheading">Verify your structural workspace setup</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Company Overview */}
         <Card className="review-card">
           <CardContent className="review-card__content">
-            <div className="review-card__heading border-b pb-2">
+            <div className="review-card__heading border-b pb-3 mb-1">
               <Building2 className="review-card__heading-icon" />
               <span className="review-card__heading--sub">Company Details</span>
             </div>
-            <div className="text-sm space-y-1.5 mt-1 text-muted-foreground">
-              <p>
-                <strong className="text-foreground font-medium">Name:</strong> {company.name || '—'}
+            <div className="review-card__body">
+              <p className="review-company__name">
+                <strong>Name:</strong> {company.name || '—'}
               </p>
-              <p>
-                <strong className="text-foreground font-medium">Industry:</strong>{' '}
-                {company.industry || '—'}
+              <p className="review-company__industry">
+                <strong>Industry:</strong> {company.industry || '—'}
               </p>
-              <p>
-                <strong className="text-foreground font-medium">Country:</strong>{' '}
-                {company.country || '—'}
+              <p className="review-company__country">
+                <strong>Country:</strong> {company.country || '—'}
               </p>
             </div>
           </CardContent>
@@ -78,26 +76,22 @@ const ReviewStep = ({ company, sites, departments, roles, shifts, checkInMethods
         {/* Operational Scope */}
         <Card className="review-card">
           <CardContent className="review-card__content">
-            <div className="review-card__heading border-b pb-2">
+            <div className="review-card__heading border-b pb-3 mb-1">
               <Scale className="review-card__heading-icon" />
               <span className="review-card__heading--sub">Operational Scope</span>
             </div>
-            <div className="text-sm space-y-1.5 mt-1 text-muted-foreground">
-              <p>
-                <strong className="text-foreground font-medium">Locations:</strong> {sites.length}{' '}
-                Active Sites
+            <div className="review-card__body">
+              <p className="review-company__name">
+                <strong>Locations:</strong> {sites.length} Active Sites
               </p>
-              <p>
-                <strong className="text-foreground font-medium">Departments:</strong>{' '}
-                {departments.length} Divisions
+              <p className="review-company__industry">
+                <strong>Departments:</strong> {departments.length} Divisions
               </p>
-              <p>
-                <strong className="text-foreground font-medium">Roles:</strong> {roles.length}{' '}
-                Custom Profiles
+              <p className="review-company__country">
+                <strong>Roles:</strong> {roles.length} Custom Profiles
               </p>
-              <p>
-                <strong className="text-foreground font-medium">Shifts:</strong> {shifts.length}{' '}
-                Schedules
+              <p className="review-company__country">
+                <strong>Shifts:</strong> {shifts.length} Schedules
               </p>
             </div>
           </CardContent>
@@ -107,17 +101,18 @@ const ReviewStep = ({ company, sites, departments, roles, shifts, checkInMethods
       {/* Role Summary (Using Badges) */}
       <Card className="review-card">
         <CardContent className="review-card__content">
-          <div className="review-card__heading border-b pb-2 mb-2">
+          <div className="review-card__heading border-b pb-3 mb-1">
             <Users className="review-card__heading-icon" />
             <span className="review-card__heading--sub">Configured Roles</span>
           </div>
-          <div className="review-roles flex flex-wrap gap-2">
+          <div className="review-roles">
             {roles.length === 0 ? (
-              <span className="text-xs text-muted-foreground">No custom roles defined.</span>
+              <span className="review-role">No custom roles defined.</span>
             ) : (
               roles.map((r, i) => (
                 <span key={i} className={`review-role-badge review-role-badge--${r.base_role}`}>
                   <span className="review-role-badge__name">{r.name}</span>
+                  <span className="review-role-badge__base">{r.base_role}</span>
                 </span>
               ))
             )}
@@ -143,7 +138,7 @@ const ReviewStep = ({ company, sites, departments, roles, shifts, checkInMethods
               if (!enabled) return null // Only show enabled in review
 
               return (
-                <div key={key} className="review-method bg-primary/5 ">
+                <div key={key} className="review-method review-method--on ">
                   <Icon className="review-method__icon " />
                   <span className="review-method__label">{METHOD_LABELS[key]}</span>
                 </div>
