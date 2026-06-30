@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { useAttendanceRecords } from '../../hooks/useOrgData'
 import { BarChart3 } from 'lucide-react'
 import { DashboardLoader, AttendanceRow } from './DashboardLoader'
@@ -11,20 +10,20 @@ const ManagerDashboard = () => {
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-heading-text">
-        <h1 className="dashboard-title">Manager Dashboard</h1>
-        <p className="dashboard-subtitle">Workforce monitoring and operational insights</p>
-      </div>
+      <header className="dashboard-header">
+        <h1 className="dashboard-header__title">Manager Dashboard</h1>
+        <p className="dashboard-header__subtitle">Workforce monitoring and operational insights.</p>
+      </header>
 
-      <Card className="shadow-card mt-6">
-        <CardHeader>
-          <CardTitle className="card-title-with-icon">
-            <BarChart3 className="icon-secondary mr-2 h-5 w-5" />
+      <div className="dashboard-card mt-6">
+        <div className="dashboard-card__header">
+          <h2 className="dashboard-card__title">
+            <BarChart3 className="dashboard-card__icon text-dashboard-secondary" />
             Attendance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="attendance-list">
+          </h2>
+        </div>
+        <div className="dashboard-card__content">
+          <div className="dashboard-list">
             {records.map((rec) => (
               <AttendanceRow
                 key={rec.id}
@@ -35,11 +34,11 @@ const ManagerDashboard = () => {
               />
             ))}
             {records.length === 0 && (
-              <p className="attendance-empty">No attendance records today.</p>
+              <p className="dashboard-list__empty">No attendance records today.</p>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

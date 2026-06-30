@@ -1,14 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { useAuth } from '../../contexts/AuthContext'
 import { useAttendanceRecords } from '../../hooks/useOrgData'
-import { Clock, CalendarDays } from 'lucide-react'
+import { Clock, CalendarDays, ClipboardList } from 'lucide-react'
 import { DashboardLoader, AttendanceRow } from './DashboardLoader'
 import '../../styles/dashboard.css'
 
 const EmployeeDashboard = () => {
   const { user } = useAuth()
-
-  // The Express API + Postgres RLS guarantees this only contains their own records
   const { data: records = [], isLoading } = useAttendanceRecords()
 
   if (isLoading) return <DashboardLoader />
@@ -18,48 +15,49 @@ const EmployeeDashboard = () => {
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-heading">
-        <div className="dashboard-heading-text">
-          <h1 className="dashboard-title">Welcome, {user?.full_name || 'User'}</h1>
-          <p className="dashboard-subtitle">Your personalized performance metric tracker</p>
+      <header className="dashboard-header">
+        <h1 className="dashboard-header__title">Welcome, {user?.full_name || 'User'}</h1>
+        <p className="dashboard-header__subtitle">Your personalized performance metric tracker.</p>
+      </header>
+
+      <div className="dashboard-grid dashboard-grid--2-col">
+        <div className="dashboard-card">
+          <div className="dashboard-card__content dashboard-stat">
+            <div className="dashboard-stat__icon-wrap dashboard-stat__icon-wrap--secondary">
+              <Clock size={24} />
+            </div>
+            <div className="dashboard-stat__info">
+              <p className="dashboard-stat__value">{totalHours.toFixed(1)}h</p>
+              <p className="dashboard-stat__label">Hours Worked</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="dashboard-card">
+          <div className="dashboard-card__content dashboard-stat">
+            <div className="dashboard-stat__icon-wrap dashboard-stat__icon-wrap--accent">
+              <CalendarDays size={24} />
+            </div>
+            <div className="dashboard-stat__info">
+              <p className="dashboard-stat__value">{overtimeHours.toFixed(1)}h</p>
+              <p className="dashboard-stat__label">Overtime Hours</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="dashboard-stat-grid dashboard-stat-grid-2">
-        <Card className="shadow-card">
-          <CardContent className="stat-card-content">
-            <div className="icon-container icon-secondary">
-              <Clock className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="stat-value">{totalHours.toFixed(1)}h</p>
-              <p className="stat-label">Hours Worked</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-card">
-          <CardContent className="stat-card-content">
-            <div className="icon-container icon-accent">
-              <CalendarDays className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="stat-value">{overtimeHours.toFixed(1)}h</p>
-              <p className="stat-label">Overtime Hours</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="shadow-card mt-6">
-        <CardHeader>
-          <CardTitle className="card-title-with-icon">My Shift Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="dashboard-card mt-6">
+        <div className="dashboard-card__header">
+          <h2 className="dashboard-card__title">
+            <ClipboardList className="dashboard-card__icon text-dashboard-primary" /> My Shift
+            Activity
+          </h2>
+        </div>
+        <div className="dashboard-card__content">
           {records.length === 0 ? (
-            <p className="attendance-empty">No shifts recorded during this payroll frame.</p>
+            <p className="dashboard-list__empty">No shifts recorded during this payroll frame.</p>
           ) : (
-            <div className="attendance-list">
+            <div className="dashboard-list">
               {records.map((rec) => (
                 <AttendanceRow
                   key={rec.id}
@@ -71,8 +69,8 @@ const EmployeeDashboard = () => {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,252 +1,175 @@
-/* ─── Shared Dashboard Styles ─────────────────────────────────────────────── */
+:root {
+  /* Backgrounds & Surfaces */
+  --dashboard-bg: #f8f9fb;
+  --dashboard-surface: #ffffff;
+  --dashboard-shadow: 0 4px 24px -4px rgba(15, 45, 92, 0.08);
 
-/* ── Page wrapper ──────────────────────────────────────────────────────────── */
+  /* Borders */
+  --dashboard-border: #e1e6ed;
 
+  /* Brand Accents */
+  --dashboard-primary: #0f2d5c; /* Enterprise Trust */
+  --dashboard-secondary: #2563eb; /* Tech Elements */
+  --dashboard-accent: #10b981; /* Growth / Actions */
+
+  /* Typography */
+  --dashboard-text-main: #0f2d5c;
+  --dashboard-text-muted: #64748b;
+
+  /* Geometry */
+  --dashboard-radius-md: 8px;
+  --dashboard-radius-lg: 16px;
+  --dashboard-transition: 0.2s ease;
+}
+
+/* ── Page Shell ───────────────────────────────────────── */
 .dashboard-page {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding: 2rem;
+  background: var(--dashboard-bg);
+  min-height: 100vh;
 }
 
-/* ── Page heading ──────────────────────────────────────────────────────────── */
-
-.dashboard-heading {
+/* ── Header ───────────────────────────────────────────── */
+.dashboard-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
-.dashboard-heading-text {
-}
-
-.dashboard-title {
-  font-size: 1.5rem;
+.dashboard-header__title {
+  font-size: 1.75rem;
   font-weight: 700;
-  color: var(--foreground);
-  margin: 0 0 0.2rem;
-  font-family: var(--font-family);
+  color: var(--dashboard-text-main);
+  margin: 0;
   letter-spacing: -0.02em;
 }
 
-/* Admin title gets primary colour */
-.dashboard-title--admin {
-  color: var(--primary);
-}
-
-.dashboard-subtitle {
+.dashboard-header__subtitle {
   font-size: 0.875rem;
-  color: var(--muted-foreground);
+  color: var(--dashboard-text-muted);
   margin: 0;
-}
-
-/* ── Stat grid ─────────────────────────────────────────────────────────────── */
-
-.dashboard-stat-grid {
-  display: grid;
-  gap: 1rem;
-}
-
-.dashboard-stat-grid--6 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.dashboard-stat-grid--4 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.dashboard-stat-grid--3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-@media (min-width: 768px) {
-  .dashboard-stat-grid--6 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .dashboard-stat-grid--4 {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .dashboard-stat-grid--6 {
-    grid-template-columns: repeat(6, 1fr);
-  }
-}
-
-/* ── Stat card (centred — admin) ───────────────────────────────────────────── */
-
-.stat-card-body--centered {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.5rem;
-}
-
-/* ── Stat card (row — manager / supervisor / employee) ─────────────────────── */
-
-.stat-card-body--row {
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-/* ── Stat card shared text ─────────────────────────────────────────────────── */
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--foreground);
-  margin: 0;
-  font-family: var(--font-family);
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-  margin: 0;
-}
-
-/* ── Icon colours ──────────────────────────────────────────────────────────── */
-
-.icon-primary {
-  color: var(--primary);
-}
-.icon-secondary {
-  color: var(--secondary);
-}
-.icon-accent {
-  color: var(--accent);
-}
-.icon-destructive {
-  color: var(--destructive);
-}
-
-/* ── Card header with icon ─────────────────────────────────────────────────── */
-
-.card-title-with-icon {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  font-family: var(--font-family);
-}
-
-/* ── Attendance list ───────────────────────────────────────────────────────── */
-
-.attendance-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.attendance-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.625rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.attendance-row:last-child {
-  border-bottom: none;
-}
-
-.attendance-row-left {
-}
-
-.attendance-name {
-  font-size: 0.875rem;
   font-weight: 500;
-  color: var(--foreground);
-  margin: 0 0 0.1rem;
 }
 
-.attendance-meta {
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-  margin: 0;
+/* ── Grids ────────────────────────────────────────────── */
+.dashboard-grid {
+  display: grid;
+  gap: 1.25rem;
 }
 
-.attendance-row-right {
+.dashboard-grid--2-col {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.dashboard-grid--3-col {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+/* ── Card Block ───────────────────────────────────────── */
+.dashboard-card {
+  background: var(--dashboard-surface);
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--dashboard-radius-lg);
+  box-shadow: var(--dashboard-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dashboard-card__header {
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--dashboard-border);
+}
+
+.dashboard-card__title {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  flex-shrink: 0;
-}
-
-.attendance-time {
-  font-size: 0.75rem;
-  color: var(--foreground);
-  font-family: ui-monospace, monospace;
-}
-
-.attendance-method {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: var(--muted-foreground);
-}
-
-.attendance-hours {
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-}
-
-.attendance-empty {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--dashboard-text-main);
   margin: 0;
 }
 
-/* ── Status badge colour helpers ───────────────────────────────────────────── */
-/* Applied via className on <Badge> — kept here for documentation */
-/*
-  present  → bg-secondary/10 text-secondary border-secondary/20
-  late     → bg-accent/10 text-accent-foreground border-accent/20
-  absent   → bg-destructive/10 text-destructive border-destructive/20
-  on_leave → bg-muted text-muted-foreground border-muted
-*/
-
-/* ── Content grid (two columns on md+) ────────────────────────────────────── */
-
-.dashboard-two-col {
-  display: grid;
-  gap: 1.5rem;
+.dashboard-card__icon {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
-@media (min-width: 768px) {
-  .dashboard-two-col {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.dashboard-card__content {
+  padding: 1.25rem;
 }
 
-/* ── Loading spinner ───────────────────────────────────────────────────────── */
+/* ── Stat Block ───────────────────────────────────────── */
+.dashboard-stat {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
 
-.dashboard-loader {
+.dashboard-stat__icon-wrap {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--dashboard-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem 0;
+  flex-shrink: 0;
 }
 
-.dashboard-spinner {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 9999px;
-  border: 2px solid transparent;
-  border-bottom-color: var(--primary);
-  animation: spin 0.7s linear infinite;
+.dashboard-stat__icon-wrap--primary {
+  background: rgba(15, 45, 92, 0.08);
+  color: var(--dashboard-primary);
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.dashboard-stat__icon-wrap--secondary {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--dashboard-secondary);
+}
+
+.dashboard-stat__icon-wrap--accent {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--dashboard-accent);
+}
+
+.dashboard-stat__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.dashboard-stat__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--dashboard-text-main);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.dashboard-stat__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--dashboard-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+/* ── List Block ───────────────────────────────────────── */
+.dashboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard-list__empty {
+  font-size: 0.875rem;
+  color: var(--dashboard-text-muted);
+  text-align: center;
+  padding: 2.5rem 0;
+  margin: 0;
 }

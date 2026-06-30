@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { useAttendanceRecords } from '../../hooks/useOrgData'
+import { UsersRound } from 'lucide-react'
 import { DashboardLoader, AttendanceRow } from './DashboardLoader'
 import '../../styles/dashboard.css'
 
@@ -10,19 +10,20 @@ const SupervisorDashboard = () => {
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-heading">
-        <div className="dashboard-heading-text">
-          <h1 className="dashboard-title">Supervisor Terminal</h1>
-          <p className="dashboard-subtitle">On-site tracking and team verification</p>
-        </div>
-      </div>
+      <header className="dashboard-header">
+        <h1 className="dashboard-header__title">Supervisor Terminal</h1>
+        <p className="dashboard-header__subtitle">On-site tracking and team verification.</p>
+      </header>
 
-      <Card className="shadow-card mt-6">
-        <CardHeader>
-          <CardTitle className="card-title-with-icon">Team Members</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="attendance-list">
+      <div className="dashboard-card mt-6">
+        <div className="dashboard-card__header">
+          <h2 className="dashboard-card__title">
+            <UsersRound className="dashboard-card__icon text-dashboard-primary" />
+            Team Members
+          </h2>
+        </div>
+        <div className="dashboard-card__content">
+          <div className="dashboard-list">
             {records.map((rec) => (
               <AttendanceRow
                 key={rec.id}
@@ -32,10 +33,12 @@ const SupervisorDashboard = () => {
                 hoursWorked={String(rec.hours_worked)}
               />
             ))}
-            {records.length === 0 && <p className="attendance-empty">No team records today.</p>}
+            {records.length === 0 && (
+              <p className="dashboard-list__empty">No team records verified today.</p>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
