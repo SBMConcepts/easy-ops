@@ -7,8 +7,35 @@ import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
+import type { Json } from '../types/supabase.js'
 
 const router = Router()
+
+// Default statutory thresholds (South African BCEA baselines).
+const DEFAULT_COMPLIANCE_CONFIG = {
+  max_ordinary_hours_per_week: 45,
+  max_overtime_hours_per_week: 10,
+  lookback_weeks: 12,
+}
+
+type ComplianceConfig = typeof DEFAULT_COMPLIANCE_CONFIG
+
+function readComplianceConfig(metadata: Record<string, unknown> | null): ComplianceConfig {
+  const workRules = (metadata?.workRules as Record<string, unknown> | undefined) ?? {}
+  const num = (value: unknown, fallback: number) =>
+    typeof value === 'number' && Number.isFinite(value) ? value : fallback
+  return {
+    max_ordinary_hours_per_week: num(
+      workRules.max_ordinary_hours_per_week ?? workRules.weeklyHoursLimit,
+      DEFAULT_COMPLIANCE_CONFIG.max_ordinary_hours_per_week
+    ),
+    max_overtime_hours_per_week: num(
+      workRules.max_overtime_hours_per_week,
+      DEFAULT_COMPLIANCE_CONFIG.max_overtime_hours_per_week
+    ),
+    lookback_weeks: num(workRules.lookback_weeks, DEFAULT_COMPLIANCE_CONFIG.lookback_weeks),
+  }
+}
 
 // Monday-based ISO week start (UTC) for a given date.
 function weekStart(dateStr: string): string {
@@ -87,6 +114,97 @@ router.get(
       pass_count: passCount,
       total_checks: totalChecks,
       violations,
+    })
+  }
+)
+
+// GET /api/compliance/config
+//
+// Returns the org's configured labour thresholds (stored in
+// organizations.metadata.workRules). Admin+ only.
+router.get(
+  '/api/compliance/config',
+  requireAuth,
+  requireOrg,
+  requireRole('admin'),
+  async (req: AuthedRequest, res: Response) => {
+    const { data: org, error } = await supabaseAdmin
+      .from('organizations')
+      .select('metadata')
+      .eq('auth0_org_id', req.orgId!)
+      .maybeSingle()
+
+    if (error) {
+      res.status(500).json({ error: error.message })
+      return
+    }
+
+    res.json(readComplianceConfig(org?.metadata as Record<string, unknown> | null))
+  }
+)
+
+// PUT /api/compliance/config
+//
+// Persists the org's labour thresholds into organizations.metadata.workRules,
+// keeping weeklyHoursLimit in sync so the summary endpoint reflects the change.
+// Admin+ only.
+router.put(
+  '/api/compliance/config',
+  requireAuth,
+  requireOrg,
+  requireRole('admin'),
+  async (req: AuthedRequest, res: Response) => {
+    const orgId = req.orgId!
+    const body = (req.body ?? {}) as Partial<ComplianceConfig>
+
+    const num = (value: unknown) =>
+      typeof value === 'number' && Number.isFinite(value) ? value : null
+    const maxOrdinary = num(body.max_ordinary_hours_per_week)
+    const maxOvertime = num(body.max_overtime_hours_per_week)
+    const lookback = num(body.lookback_weeks)
+
+    if (maxOrdinary === null || maxOvertime === null || lookback === null) {
+      res.status(400).json({ error: 'All compliance thresholds must be valid numbers.' })
+      return
+    }
+
+    const { data: currentOrg, error: readErr } = await supabaseAdmin
+      .from('organizations')
+      .select('metadata')
+      .eq('auth0_org_id', orgId)
+      .maybeSingle()
+    if (readErr) {
+      res.status(500).json({ error: readErr.message })
+      return
+    }
+
+    const metadata = (currentOrg?.metadata as Record<string, unknown> | null) ?? {}
+    const workRules = (metadata.workRules as Record<string, unknown> | undefined) ?? {}
+
+    const mergedMetadata = {
+      ...metadata,
+      workRules: {
+        ...workRules,
+        max_ordinary_hours_per_week: maxOrdinary,
+        max_overtime_hours_per_week: maxOvertime,
+        lookback_weeks: lookback,
+        weeklyHoursLimit: maxOrdinary,
+      },
+    }
+
+    const { error: updateErr } = await supabaseAdmin
+      .from('organizations')
+      .update({ metadata: mergedMetadata as Json, updated_at: new Date().toISOString() })
+      .eq('auth0_org_id', orgId)
+    if (updateErr) {
+      res.status(500).json({ error: updateErr.message })
+      return
+    }
+
+    res.json({
+      max_ordinary_hours_per_week: maxOrdinary,
+      max_overtime_hours_per_week: maxOvertime,
+      lookback_weeks: lookback,
     })
   }
 )

@@ -33,6 +33,7 @@ export interface CurrentUserProfile {
   // ── from public.users ──────────────────────────────────────────────────────
   profile_id: string // users.id (uuid surrogate)
   auth0_user_id: string // users.auth0_user_id (Auth0 sub)
+  auth0_org_id: string
   email: string
   full_name: string
   avatar_url: string | null

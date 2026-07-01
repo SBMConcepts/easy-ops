@@ -13,6 +13,8 @@ router.get('/api/session', requireAuth, (req: AuthedRequest, res: Response) => {
     sub: auth.sub,
     email: auth.email ?? null,
     org_id: auth.org_id ?? null,
+    auth0_org_id: auth.org_id ?? null,
+    org_status: auth.org_status ?? null,
     role: auth.role ?? null,
   })
 })

@@ -10,10 +10,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
-import { Button } from '../components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { toast } from 'sonner'
-import { Loader2, Save, User, Activity } from 'lucide-react'
+import { Loader2, Save, User, Activity, ShieldAlert } from 'lucide-react'
+import { ComplianceSettings } from '../components/ComplianceSettings'
 import '../styles/settings.css'
 
 const profileSchema = z.object({
@@ -95,8 +95,11 @@ export default function Settings() {
           <TabsTrigger value="profile" className="settings-tabs__nav-trigger">
             <User className="h-4 w-4" /> Profile
           </TabsTrigger>
-          <TabsTrigger value="activity" className="settings-tabs__nav-trigger">
-            <Activity className="h-4 w-4" /> Activity Log
+          <TabsTrigger value="attendance" className="settings-tabs__nav-trigger">
+            <Activity className="h-4 w-4" /> Attendance Log
+          </TabsTrigger>
+          <TabsTrigger value="compliance" className="settings-tabs__nav-trigger">
+            <ShieldAlert className="h-4 w-4" /> Compliance Settings
           </TabsTrigger>
         </TabsList>
 
@@ -171,7 +174,7 @@ export default function Settings() {
           </div>
         </TabsContent>
 
-        <TabsContent value="activity">
+        <TabsContent value="attendance">
           <div className="settings-card-tab">
             <div className="settings-card-tab__header">
               <h2 className="settings-card-tab__title">Attendance History</h2>
@@ -201,6 +204,10 @@ export default function Settings() {
               )}
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="compliance">
+          <ComplianceSettings />
         </TabsContent>
       </Tabs>
     </div>

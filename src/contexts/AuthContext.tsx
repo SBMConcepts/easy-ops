@@ -14,6 +14,7 @@ export type OrgRole = 'owner' | 'admin' | 'member' | 'viewer'
 // is the Auth0 org id (text).
 export interface AuthUser {
   id: string // users.id (uuid surrogate)
+  auth0_org_id: string
   auth0_user_id: string
   email: string
   full_name: string
@@ -44,7 +45,14 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: { id: '', auth0_user_id: '', full_name: '', email: '', role: 'owner' } as AuthUser,
+  user: {
+    id: '',
+    auth0_user_id: '',
+    auth0_org_id: '',
+    full_name: '',
+    email: '',
+    role: 'owner',
+  } as AuthUser,
   organization: {} as AuthOrganization,
   isAuthenticated: false,
   isLoading: true,
@@ -86,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser({
           id: profile.profile_id,
           auth0_user_id: profile.auth0_user_id,
+          auth0_org_id: profile.auth0_org_id,
           email: profile.email,
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
@@ -96,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setOrganization({
           id: profile.org_id,
           name: profile.org_name,
-          auth0_org_id: profile.org_auth0_id,
+          auth0_org_id: profile.auth0_org_id,
           status: profile.org_status,
           plan: profile.plan,
           logo_url: profile.org_logo,
