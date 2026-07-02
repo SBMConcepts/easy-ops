@@ -121,12 +121,13 @@ const WorkspaceShell = () => {
               <SettingsLayout />
             </ProtectedRoute>
           }
-        />
-        {/* Index route redirects /app/settings to /app/settings/profile */}
-        <Route index element={<Navigate to="app/settings" replace />} />
-        <Route path="app/settings/profile" element={<SettingsProfile />} />
-        <Route path="app/settings/attendance" element={<SettingsAttendance />} />
-        <Route path="app/settings/security" element={<SettingsSecurity />} />
+        >
+          {/* Redirect /app/settings to /app/settings/profile */}
+          <Route index element={<Navigate to="profile" replace />} />
+          <Route path="profile" element={<SettingsProfile />} />
+          <Route path="attendance" element={<SettingsAttendance />} />
+          <Route path="security" element={<SettingsSecurity />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<NotFound />} />
