@@ -18,10 +18,13 @@ import NotFound from './pages/NotFound'
 import Onboarding from './pages/Onboarding'
 import Reports from './pages/Reports'
 import ResetPassword from './pages/ResetPassword'
-import Settings from './pages/Settings'
+import SettingsLayout from './layouts/SettingsLayout'
 import SitesAndDepartments from './pages/SitesAndDepartments'
 import DashboardRouter from './pages/dashboard/DashboardRouter'
 import { DashboardLoader } from './pages/dashboard/DashboardLoader'
+import SettingsProfile from './pages/settings/SettingsProfile'
+import SettingsAttendance from './pages/settings/SettingsAttendance'
+import SettingsSecurity from './pages/settings/SettingsSecurity'
 
 const queryClient = new QueryClient()
 
@@ -58,7 +61,6 @@ const WorkspaceShell = () => {
       <Route element={<AppLayout />}>
         {/* Workspace default landing (DashboardRouter dynamically renders based on user.role) */}
         <Route index element={<DashboardRouter />} />
-
         {/* General Staff & Operator Views */}
         <Route
           path="check-in"
@@ -70,7 +72,6 @@ const WorkspaceShell = () => {
         />
         <Route path="onboarding" element={<Onboarding />} />
         <Route path="reports" element={<Reports />} />
-
         {/* Management & Administration Views with RBAC */}
         <Route
           path="employees-management"
@@ -112,14 +113,20 @@ const WorkspaceShell = () => {
             </ProtectedRoute>
           }
         />
+        {/* --- PERSONAL SETTINGS ROUTES --- */}
         <Route
           path="settings"
           element={
             <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
-              <Settings />
+              <SettingsLayout />
             </ProtectedRoute>
           }
         />
+        {/* Index route redirects /app/settings to /app/settings/profile */}
+        <Route index element={<Navigate to="profile" replace />} />
+        <Route path="profile" element={<SettingsProfile />} />
+        <Route path="attendance" element={<SettingsAttendance />} />
+        <Route path="security" element={<SettingsSecurity />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

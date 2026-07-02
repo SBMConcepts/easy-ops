@@ -2,18 +2,18 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
-import { useAuth } from '../contexts/AuthContext'
-import { useAttendanceRecords } from '../hooks/useOrgData'
-import { useOrgApi } from '../hooks/useOrgApi'
-import { currentUserKeys, useCurrentUser } from '../hooks/useCurrentUser'
+import { useAuth } from '../../contexts/AuthContext'
+import { useAttendanceRecords } from '../../hooks/useOrgData'
+import { useOrgApi } from '../../hooks/useOrgApi'
+import { currentUserKeys, useCurrentUser } from '../../hooks/useCurrentUser'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Input } from '../components/ui/input'
-import { Label } from '../components/ui/label'
-import { Textarea } from '../components/ui/textarea'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Textarea } from '../../components/ui/textarea'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { toast } from 'sonner'
 import { Loader2, Save, User, Activity, ShieldAlert } from 'lucide-react'
-import { ComplianceSettings } from '../components/ComplianceSettings'
+import { ComplianceSettings } from '../../components/ComplianceSettings'
 import '../styles/settings.css'
 
 const profileSchema = z.object({
@@ -86,8 +86,8 @@ export default function Settings() {
   return (
     <div className="settings-page">
       <div className="settings-header">
-        <h1 className="settings-header__title">Account Settings</h1>
-        <p className="settings-header__subtitle">Manage your personal profile and preferences</p>
+        <h1 className="settings-header__title">Personal Information</h1>
+        <p className="settings-header__subtitle">Update your contact details and emergency info.</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="settings-tabs">

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Badge } from '../components/ui/badge'
 import { useComplianceCheck } from '../hooks/useOrgData'
 import { Shield, FileCheck, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
+import { ComplianceSettings } from '../components/ComplianceSettings'
 
 const Compliance: React.FC = () => {
   const { data, isLoading } = useComplianceCheck()
@@ -26,10 +27,10 @@ const Compliance: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground font-display">
-          Compliance Management Hub
+          Workspace Compliance Overview
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Automated labor monitoring logs matching standard BCEA requirements
+          Configure organization-wide legal thresholds and working hours parameters.
         </p>
       </div>
 
@@ -122,6 +123,7 @@ const Compliance: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <ComplianceSettings />
     </div>
   )
 }
