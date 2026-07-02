@@ -1,9 +1,3 @@
-// POST /api/invitations
-//
-// Invites a person to the current organization: records a DB invitation
-// (org-scoped, unique per email) and sends an Auth0 organization invitation.
-// The incoming `role` is a job role; it is mapped to an access tier for the
-// invitation record. Admin+ only.
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
@@ -56,8 +50,6 @@ router.post(
             clientId,
           })) ?? null
       } catch (err) {
-        // DB invitation already recorded; surface a partial success so the UI
-        // can still show the pending invite even if the email send failed.
         console.error('Auth0 invitation send failed:', err)
       }
     }

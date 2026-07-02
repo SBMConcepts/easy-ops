@@ -1,9 +1,3 @@
-// Departments CRUD for the current organization (org_departments).
-//
-//   GET    /api/org-departments       — list (member+)
-//   POST   /api/org-departments       — create (admin+)
-//   PATCH  /api/org-departments/:id    — rename (admin+)
-//   DELETE /api/org-departments/:id    — delete (admin+)
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'

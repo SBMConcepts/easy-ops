@@ -1,9 +1,3 @@
-// POST /api/onboarding/complete
-//
-// Finalizes organization onboarding: updates org profile, persists departments,
-// sites, and job roles, and stores operational settings (work rules, check-in
-// methods, shifts) in organizations.metadata (no dedicated tables exist for
-// those in the schema). Admin+ only.
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
@@ -41,7 +35,6 @@ router.post(
     const body = (req.body ?? {}) as OnboardingBody
 
     try {
-      // 1. Update organization profile + operational settings (metadata).
       const { data: currentOrg } = await supabaseAdmin
         .from('organizations')
         .select('metadata')
@@ -70,7 +63,6 @@ router.post(
         .eq('auth0_org_id', orgId)
       if (orgErr) throw new Error(orgErr.message)
 
-      // 2. Departments.
       const departmentRows = (body.departments ?? [])
         .filter((d) => d.name?.trim())
         .map((d) => ({ org_id: orgId, department_name: d.name!.trim() }))
@@ -85,8 +77,6 @@ router.post(
         firstDepartmentId = depts?.[0]?.id ?? null
       }
 
-      // 3. Sites — require a department (NOT NULL). Attach to the first created
-      //    department, provisioning a "General" department if none were given.
       const siteInputs = (body.sites ?? []).filter((s) => s.name?.trim())
       if (siteInputs.length > 0) {
         if (!firstDepartmentId) {
@@ -112,7 +102,6 @@ router.post(
         }
       }
 
-      // 4. Job roles — only valid organization_role enum values are persisted.
       const roleNames = Array.from(
         new Set(
           (body.roles ?? [])

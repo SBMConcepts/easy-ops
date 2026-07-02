@@ -1,8 +1,5 @@
 // GET /api/compliance
-//
-// Returns a basic working-time compliance summary for the current org, derived
-// from org_attendance. Weekly ordinary-hours/overtime thresholds come from the
-// organization's stored work rules (organizations.metadata.workRules). Member+.
+
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
@@ -11,7 +8,6 @@ import type { Json } from '../types/supabase.js'
 
 const router = Router()
 
-// Default statutory thresholds (South African BCEA baselines).
 const DEFAULT_COMPLIANCE_CONFIG = {
   max_ordinary_hours_per_week: 45,
   max_overtime_hours_per_week: 10,
@@ -37,7 +33,6 @@ function readComplianceConfig(metadata: Record<string, unknown> | null): Complia
   }
 }
 
-// Monday-based ISO week start (UTC) for a given date.
 function weekStart(dateStr: string): string {
   const d = new Date(dateStr)
   const day = (d.getUTCDay() + 6) % 7 // 0 = Monday
@@ -118,10 +113,6 @@ router.get(
   }
 )
 
-// GET /api/compliance/config
-//
-// Returns the org's configured labour thresholds (stored in
-// organizations.metadata.workRules). Admin+ only.
 router.get(
   '/api/compliance/config',
   requireAuth,
@@ -143,11 +134,6 @@ router.get(
   }
 )
 
-// PUT /api/compliance/config
-//
-// Persists the org's labour thresholds into organizations.metadata.workRules,
-// keeping weeklyHoursLimit in sync so the summary endpoint reflects the change.
-// Admin+ only.
 router.put(
   '/api/compliance/config',
   requireAuth,

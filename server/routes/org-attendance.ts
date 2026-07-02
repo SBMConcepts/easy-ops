@@ -1,11 +1,3 @@
-// Daily attendance aggregate for the current organization (org_attendance).
-//
-//   GET  /api/org-attendance   — list attendance rows for the org (member+)
-//   POST /api/org-attendance   — record a daily attendance row for the caller
-//
-// org_attendance is a DAILY AGGREGATE (not an event log): one row per
-// (user, date) capturing the check-in method plus hours worked and overtime.
-// user_id references users.auth0_user_id, so it is the caller's Auth0 sub.
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'

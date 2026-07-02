@@ -13,9 +13,6 @@ const createAuthenticatedClient = (getToken: () => Promise<string | null>): Type
 
 const DatabaseContext = createContext<TypedSupabaseClient>(anonClient)
 
-// Resolve the Supabase RLS JWT from the backend session. On a Regular Web App
-// the browser no longer holds the Auth0 ID token, so the token is served by
-// GET /api/supabase-token (which reads it from the server-side session).
 const SUPABASE_TOKEN_URL = `${(import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')}/supabase-token`
 
 const fetchSupabaseToken = async (): Promise<string | null> => {
@@ -38,12 +35,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let cancelled = false
 
     const upgradeToAuthenticatedClient = async () => {
-      // Probe once on mount. Login is a full-page redirect, so the app remounts
-      // after auth with the session cookie present — a single probe is enough.
       const token = await fetchSupabaseToken()
       if (cancelled || !token) return
-      // Pass the fetcher (not the token) so the client re-reads a fresh token on
-      // each request, surviving token rotation.
+
       setAuthenticatedClient(createAuthenticatedClient(fetchSupabaseToken))
     }
 

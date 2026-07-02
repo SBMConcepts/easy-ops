@@ -1,6 +1,3 @@
-// Thin wrappers over the Auth0 Management API (auth0 SDK v5) used for
-// organization provisioning and membership management. Lazily instantiated so a
-// missing env var only throws when the client is actually used.
 import { ManagementClient } from 'auth0'
 
 let _mgmt: ManagementClient | undefined
@@ -31,16 +28,12 @@ export interface Auth0Org {
   display_name?: string
 }
 
-// The auth0 SDK v5 sometimes returns the resource directly and sometimes wraps
-// it in an ApiResponse `{ data }`. Normalise both shapes so reads never throw
-// "Cannot read properties of undefined".
 function unwrap<T>(res: T | { data: T }): T {
   return res && typeof res === 'object' && 'data' in (res as { data: T })
     ? (res as { data: T }).data
     : (res as T)
 }
 
-/** Create an Auth0 organization. `slug`/`name` is the URL-safe handle. */
 export async function createAuth0Org(
   displayName: string,
   slug: string,
@@ -58,11 +51,6 @@ export async function createAuth0Org(
   return { id: data.id, name: data.name, display_name: data.display_name }
 }
 
-/**
- * Resolve the database connection id to enable on new organizations. Prefers an
- * explicit `AUTH0_DB_CONNECTION_ID`; otherwise looks one up by name
- * (`AUTH0_DB_CONNECTION_NAME`) or falls back to the sole database connection.
- */
 async function resolveDbConnectionId(): Promise<string> {
   const explicitId = process.env.AUTH0_DB_CONNECTION_ID
   if (explicitId) return explicitId
@@ -89,14 +77,6 @@ async function resolveDbConnectionId(): Promise<string> {
   )
 }
 
-/**
- * Enable a database connection on an organization so users can log in and accept
- * invitations (which is a signup) under that org. Idempotent: skips if the
- * connection is already enabled. Auth0 requires `assign_membership_on_login` to
- * be true whenever `is_signup_enabled` is true; access is still gated by the
- * `org_members`/`invitations` tables in /api/auth/sync, which only grant a
- * membership when a real invitation (or prior membership) exists.
- */
 export async function enableOrgConnection(orgId: string): Promise<void> {
   const connectionId = await resolveDbConnectionId()
 
@@ -123,10 +103,6 @@ export async function enableOrgConnection(orgId: string): Promise<void> {
   })
 }
 
-/**
- * Add a user to an Auth0 organization and optionally assign organization roles.
- * `roles` are Auth0 role IDs; pass an empty array to skip role assignment.
- */
 export async function addOrgMember(
   orgId: string,
   userId: string,
@@ -138,7 +114,6 @@ export async function addOrgMember(
   }
 }
 
-/** Create an organization invitation, emailing the invitee. Returns its id. */
 export async function createOrgInvitation(params: {
   orgId: string
   inviterName: string

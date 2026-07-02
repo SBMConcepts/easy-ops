@@ -1,8 +1,3 @@
-// GET /api/org-lookup?slug=<slug>|?email=<email>
-//
-// Public, pre-auth helper that resolves an Auth0 organization id so the login
-// flow can pass `organization` to Auth0. Returns 404 when no match is found.
-// Never leaks more than the minimum needed to start an org-scoped login.
 import { Router, type Request, type Response } from 'express'
 
 import { supabaseAdmin } from '../lib/supabase-admin.js'

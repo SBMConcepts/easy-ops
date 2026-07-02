@@ -1,13 +1,3 @@
-// Sites CRUD for the current organization (org_sites).
-//
-//   GET    /api/org-sites           — list (member+)
-//   POST   /api/org-sites           — create (admin+)
-//   PATCH  /api/org-sites/:id        — update (admin+)
-//   DELETE /api/org-sites/:id        — delete (admin+)
-//
-// Field mapping (frontend <-> org_sites): name<->site_name, geofence_radius_m<->geo_radius.
-// org_sites.department_id is NOT NULL, so a site without an explicit department
-// is attached to an auto-provisioned "General" department.
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
@@ -16,7 +6,6 @@ import type { TablesUpdate } from '../types/supabase.js'
 
 const router = Router()
 
-// Resolve (or lazily create) a department to satisfy org_sites.department_id NOT NULL.
 async function ensureDefaultDepartment(orgId: string): Promise<string | null> {
   const { data: existing } = await supabaseAdmin
     .from('org_departments')

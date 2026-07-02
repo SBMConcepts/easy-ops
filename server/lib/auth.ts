@@ -1,15 +1,8 @@
 // Auth0 access-token verification for the Express API.
 //
-// Tokens are RS256 JWTs issued by Auth0. We verify the signature against the
-// tenant JWKS and validate audience + issuer. Custom claims (org_id, role) are
-// namespaced; the namespace must match the Auth0 Post-Login Action and the
-// database `org_id()` function (see supabase migration).
+
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose'
 
-// Namespace for custom claims. MUST match:
-//   - auth0/actions/post-login.js  (CLAIM_NS)
-//   - public.org_id() in the DB     (reads '<ns>org_id')
-//   - src/lib/auth0-config.ts        (AUTH0_CLAIM_NS)
 export const AUTH0_CLAIM_NS = 'https://easyops.us.auth0.com/'
 
 export interface Auth0Claims extends JWTPayload {

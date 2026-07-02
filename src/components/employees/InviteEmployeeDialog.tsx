@@ -83,8 +83,6 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
 
     setLoading(true)
     try {
-      // Send a single, secure payload to the Express backend.
-      // The backend will handle the Auth0 invitation ticket and DB inserts securely.
       const result = await apiFetch<InviteResponse>('invitations', {
         method: 'POST',
         body: JSON.stringify({
@@ -98,7 +96,6 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
 
       toast.success(`Invitation successfully dispatched to ${email}`)
 
-      // Auto-refresh the employee table behind the modal
       queryClient.invalidateQueries({ queryKey: ['workspace-employees'] })
 
       if (onInvited && result?.success) {
@@ -236,8 +233,6 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
     </Dialog>
   )
 }
-
-/* ── Auxiliary Sub-Components ────────────────────────────────────────────── */
 
 function ModalField({ label, children }: { label: string; children: React.ReactNode }) {
   return (

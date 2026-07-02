@@ -1,11 +1,3 @@
-// Job-role catalogue for the current organization (org_roles).
-//
-//   GET    /api/org-roles        — list job roles (member+)
-//   POST   /api/org-roles        — add a job role (admin+)
-//   DELETE /api/org-roles/:id     — remove a job role (admin+)
-//
-// `name` is the organization_role enum (admin|manager|supervisor|employee|owner)
-// describing a position in the org — distinct from the org_members access tier.
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'

@@ -1,7 +1,3 @@
-// Organization membership management (org_members).
-//   GET    /api/org-members        — list members of the current org (member+).
-//   POST   /api/org-members        — set a member's access tier (admin+).
-//   DELETE /api/org-members/:id     — remove a member by org_members.id (admin+).
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'

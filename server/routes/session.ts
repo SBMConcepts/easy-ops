@@ -1,5 +1,3 @@
-// GET /api/session — lightweight session echo for the authenticated caller.
-// Returns the verified token's identity + org claims without a DB round-trip.
 import { Router, type Response } from 'express'
 
 import { requireAuth, type AuthedRequest } from '../lib/auth-middleware.js'

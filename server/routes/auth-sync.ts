@@ -1,12 +1,3 @@
-// POST /api/auth/sync
-//
-// Called by the Auth0 Post-Login Action to mirror the authenticated identity
-// into Supabase and resolve the caller's access tier. Authenticated with a
-// shared secret header (x-api-key === AUTH0_SYNC_SECRET) since the Action runs
-// server-side in Auth0, not in the browser.
-//
-// Returns { role } — the org_members access tier — which the Action injects as
-// a namespaced custom claim on the issued token.
 import { Router, type Request, type Response } from 'express'
 
 import { supabaseAdmin } from '../lib/supabase-admin.js'
@@ -58,9 +49,6 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
 
   let role = 'admin' // default to owner/admin if no org context
   if (body.org_id) {
-    // Resolve the access tier. Prefer an explicit role hint from the token, but
-    // fall back to the pending invitation for this email — that is where the
-    // org creator ('owner') and invited employees get their intended role.
     let roleHint = body.role
     const { data: invite } = await supabaseAdmin
       .from('invitations')
@@ -79,10 +67,6 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
       roleHint = invite.role
     }
 
-    // Only provision/refresh a membership when the user was actually invited or
-    // already belongs to the org. The connection has assign_membership_on_login
-    // enabled (required for invitation signup), so without this gate any user
-    // initiating org-scoped login would otherwise be auto-added as a member.
     const { data: existingMember } = await supabaseAdmin
       .from('org_members')
       .select('role')

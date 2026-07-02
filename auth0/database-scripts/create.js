@@ -2,16 +2,6 @@
  * Auth0 Custom Database — CREATE script (sign up)
  * Connection: Username-Password-Authentication (custom database)
  *
- * Persists a new credential row in public.user_credentials with a bcrypt hash of
- * the password. The row's generated UUID becomes the user_id returned by Login /
- * Get User (and therefore the Auth0 subject "auth0|<id>").
- *
- * Application state (public.users, org_members) is NOT written here — it is
- * created/linked by POST /api/auth/sync from the post-login Action on first
- * login. Note: interactive signups are still gated by the pre-user-registration
- * Action (invitation/org required).
- *
- * Sandbox globals used: configuration, ValidationError.
  */
 function create(user, callback) {
   const bcrypt = require('bcrypt')

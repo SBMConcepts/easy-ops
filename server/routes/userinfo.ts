@@ -1,9 +1,3 @@
-// GET  /api/userinfo  — enriched profile for the current user + org.
-// PUT  /api/userinfo  — update the current user's own profile.
-//
-// The GET response is the canonical `CurrentUserProfile` contract consumed by
-// src/contexts/AuthContext.tsx and src/hooks/useCurrentUser.ts. `role` is the
-// org_members access tier (owner|admin|member|viewer).
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'

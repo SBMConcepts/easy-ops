@@ -2,9 +2,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { useMemo } from 'react'
 
-// On a Regular Web App the browser holds no Auth0 ID token, so the Supabase RLS
-// JWT is served by the backend session endpoint (GET /api/supabase-token). The
-// fetch override attaches a fresh token to every Supabase request.
 const SUPABASE_TOKEN_URL = `${(import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')}/supabase-token`
 
 export function useSupabase(): SupabaseClient {

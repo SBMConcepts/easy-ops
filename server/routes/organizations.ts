@@ -1,10 +1,3 @@
-// Organization intake + lookup for the current caller.
-//
-//   POST /api/organizations  — public intake: create the Auth0 organization
-//                              (source of the auth0_org_id primary key), mirror
-//                              it into Supabase, seed a subscription, and email
-//                              an organization invitation to the admin.
-//   GET  /api/organizations  — the authenticated caller's organization.
 import { Router, type Request, type Response } from 'express'
 
 import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'
@@ -13,8 +6,6 @@ import { createAuth0Org, createOrgInvitation, enableOrgConnection } from '../lib
 
 const router = Router()
 
-// organizations.plan allows only these values; anything else falls back to
-// 'free'. The requested plan is still recorded on the subscription row.
 const ORG_PLANS = new Set(['free', 'starter', 'pro', 'enterprise'])
 
 function slugify(input: string): string {
@@ -26,7 +17,6 @@ function slugify(input: string): string {
     .slice(0, 50)
 }
 
-// Public pre-signup intake — no auth required.
 router.post('/api/organizations', async (req: Request, res: Response) => {
   const body = (req.body ?? {}) as { orgName?: string; adminEmail?: string; plan?: string }
   const orgName = typeof body.orgName === 'string' ? body.orgName.trim() : ''
@@ -44,9 +34,6 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
   try {
     const auth0Org = await createAuth0Org(orgName, slug)
 
-    // Enable a database connection on the new org so the invited admin can set
-    // their password and log in under the organization. Without this, an Auth0
-    // org has zero enabled connections and org-scoped login fails.
     await enableOrgConnection(auth0Org.id)
 
     const { error: orgErr } = await supabaseAdmin.from('organizations').upsert(
@@ -61,10 +48,6 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     )
     if (orgErr) throw new Error(orgErr.message)
 
-    // Record the creator as the organization owner so that, on their first
-    // login, /api/auth/sync resolves their access tier from this invitation
-    // (instead of defaulting to 'viewer') and they land in the onboarding flow
-    // with full admin capabilities.
     const { error: inviteErr } = await supabaseAdmin
       .from('invitations')
       .upsert(
@@ -100,7 +83,6 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
   }
 })
 
-// The authenticated caller's organization.
 router.get(
   '/api/organizations',
   requireAuth,

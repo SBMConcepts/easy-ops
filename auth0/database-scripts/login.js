@@ -2,19 +2,7 @@
  * Auth0 Custom Database — LOGIN script (MANDATORY)
  * Connection: Username-Password-Authentication (custom database)
  *
- * Authenticates a user against public.user_credentials using bcrypt. Returns a
- * minimal OIDC profile; the user's tenant ROLE / ORG_ID are NOT resolved here —
- * the post-login Action overrides them from the database via /api/auth/sync.
  *
- * The returned `user_id` (the user_credentials.id UUID) becomes the Auth0
- * subject suffix, i.e. the final `sub` is "auth0|<user_id>". Login, Get User and
- * Create MUST agree on this id so the identity stays stable across logins.
- *
- * Connection Settings (Dashboard → DB connection → Custom Database → Settings):
- *   DATABASE_URL — Supabase TRANSACTION-mode pooler URL (port 6543), e.g.
- *     postgresql://postgres.[ref]:[pwd]@aws-[region].pooler.supabase.com:6543/postgres
- *
- * Sandbox globals used: configuration, WrongUsernameOrPasswordError.
  */
 function login(email, password, callback) {
   const bcrypt = require('bcrypt')

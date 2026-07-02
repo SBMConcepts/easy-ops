@@ -1,10 +1,3 @@
-// Subscription/billing for the current organization (subscriptions).
-//
-//   GET   /api/subscriptions   — the org's current subscription (member+)
-//   PATCH /api/subscriptions   — update plan/status (admin+)
-//
-// One organization may have multiple subscription rows over time; the most
-// recently created row is treated as current.
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
@@ -53,7 +46,6 @@ router.patch(
       return
     }
 
-    // Update the org's most recent subscription row.
     const { data: current } = await supabaseAdmin
       .from('subscriptions')
       .select('id')

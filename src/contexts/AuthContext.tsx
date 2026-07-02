@@ -3,15 +3,8 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useOrgApi } from '../hooks/useOrgApi'
 import type { CurrentUserProfile } from '../hooks/useCurrentUser'
 
-// Access tiers — mirror the org_members.role CHECK constraint
-// (owner > admin > member > viewer). These are the ONLY role values used for
-// gating across the workspace. Job roles (org_roles) are mapped down to these
-// tiers server-side (see server/lib/rbac.ts).
 export type OrgRole = 'owner' | 'admin' | 'member' | 'viewer'
-// Schema v2 identity shapes. Deliberately hand-written (not derived from the
-// generated Supabase Row types) so the context survives `supabase gen types`
-// against the organizations/org_members model. The org key (`id`/`auth0_org_id`)
-// is the Auth0 org id (text).
+
 export interface AuthUser {
   id: string // users.id (uuid surrogate)
   auth0_org_id: string
@@ -65,15 +58,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [user, setUser] = useState<AuthUser | null>(null)
   const [organization, setOrganization] = useState<AuthOrganization | null>(null)
-  // 'loading' until the backend session is probed; 'authed' once a valid session
-  // cookie is confirmed; 'anon' otherwise.
+
   const [status, setStatus] = useState<'loading' | 'authed' | 'anon'>('loading')
 
   useEffect(() => {
     let cancelled = false
 
     const boot = async () => {
-      // 1. Probe the server-side OIDC session. 401 → no session cookie.
       try {
         await apiFetch('/session')
       } catch {
@@ -85,8 +76,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return
       }
 
-      // 2. Authenticated — load the enriched profile + organization. This is the
-      //    single source of truth for identity across the workspace shell.
       try {
         const profile = await apiFetch<CurrentUserProfile>('/userinfo')
         if (cancelled) return
@@ -131,9 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [apiFetch])
 
   const login = useCallback(async (options?: { auth0OrgId?: string; invitation?: string }) => {
-    // The backend is the OAuth client; a full-page redirect to /api/login starts
-    // the server-side Authorization Code flow. Organization + invitation ride as
-    // query params so the login is scoped to the correct tenant.
     const params = new URLSearchParams()
     if (options?.auth0OrgId) params.set('organization', options.auth0OrgId)
     if (options?.invitation) params.set('invitation', options.invitation)
@@ -142,14 +128,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const logout = useCallback(() => {
-    // /api/logout clears the session cookie and ends the Auth0 session.
     window.location.href = '/api/logout'
   }, [])
 
   return (
     <AuthContext.Provider
       value={{
-        user: user || ({} as AuthUser), // Avoid spreading null into the context value before the first profile load completes
+        user: user || ({} as AuthUser),
         organization: organization || ({} as AuthOrganization),
         isAuthenticated: status === 'authed',
         isLoading: status === 'loading',
@@ -164,7 +149,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => useContext(AuthContext)
 
-// Role Helpers — access tiers (owner > admin > member > viewer).
 const ROLE_HIERARCHY: Record<OrgRole, number> = {
   viewer: 0,
   member: 1,
