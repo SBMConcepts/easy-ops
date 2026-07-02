@@ -14,7 +14,16 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from './ui/sidebar'
-import { LayoutDashboard, QrCode, Users, Settings, Shield, Building, BarChart3 } from 'lucide-react'
+import {
+  LayoutDashboard,
+  QrCode,
+  Users,
+  Settings,
+  Shield,
+  Building,
+  BarChart3,
+  CreditCard,
+} from 'lucide-react'
 import '../styles/appshell.css'
 
 interface NavItem {
@@ -49,7 +58,7 @@ const navItems: NavItem[] = [
   },
   {
     title: 'Staff Directory',
-    url: '/app/employees',
+    url: '/app/employees-management',
     icon: Users,
     roles: ['owner', 'admin'],
     tooltip: 'View and manage staff information',
@@ -60,6 +69,32 @@ const navItems: NavItem[] = [
     icon: Building,
     roles: ['owner', 'admin', 'member'],
     tooltip: 'Manage sites and departments',
+  },
+  //  Workspace General Settings
+  {
+    title: 'Workspace Settings',
+    url: '/app/workspace/general',
+    icon: Building,
+    roles: ['owner', 'admin'],
+    tooltip: 'Manage company profile and general settings',
+  },
+
+  //  Members (If replacing Employee Management, just update the URL of the existing one)
+  {
+    title: 'Team Members',
+    url: '/app/workspace/members',
+    icon: Users,
+    roles: ['owner', 'admin'],
+    tooltip: 'Manage users, invites, and roles',
+  },
+
+  //  Billing
+  {
+    title: 'Billing & Plan',
+    url: '/app/workspace/billing',
+    icon: CreditCard,
+    roles: ['owner'], // Often, only 'owner' handles billing, but you can add 'admin' if desired
+    tooltip: 'Manage subscription and invoices',
   },
   {
     title: 'Compliance',

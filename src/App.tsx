@@ -25,6 +25,9 @@ import { DashboardLoader } from './pages/dashboard/DashboardLoader'
 import SettingsProfile from './pages/settings/SettingsProfile'
 import SettingsAttendance from './pages/settings/SettingsAttendance'
 import SettingsSecurity from './pages/settings/SettingsSecurity'
+import WorkspaceGeneral from './pages/workspace/General'
+import WorkspaceBilling from './pages/workspace/Billing'
+import WorkspaceMembers from './pages/workspace/Members'
 
 const queryClient = new QueryClient()
 
@@ -113,6 +116,34 @@ const WorkspaceShell = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="workspace/general"
+          element={
+            <ProtectedRoute allowedRoles={['owner', 'admin']}>
+              <WorkspaceGeneral />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="workspace/billing"
+          element={
+            <ProtectedRoute allowedRoles={['owner', 'admin']}>
+              <WorkspaceBilling />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="workspace/members"
+          element={
+            <ProtectedRoute allowedRoles={['owner', 'admin']}>
+              <WorkspaceMembers />
+            </ProtectedRoute>
+          }
+        />
+
         {/* --- PERSONAL SETTINGS ROUTES --- */}
         <Route
           path="settings"
