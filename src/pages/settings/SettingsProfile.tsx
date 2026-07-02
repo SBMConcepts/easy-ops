@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { toast } from 'sonner'
 import { Loader2, Save, User, Activity, ShieldAlert } from 'lucide-react'
 import { ComplianceSettings } from '../../components/ComplianceSettings'
-import '../styles/settings.css'
+//import '../styles/settings.css'
 
 const profileSchema = z.object({
   full_name: z.string().trim().min(1, 'Name is required').max(100),
