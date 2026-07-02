@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import type { OrgRole } from '../contexts/AuthContext'
@@ -11,6 +11,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarHeader,
   SidebarFooter,
 } from './ui/sidebar'
@@ -23,6 +26,7 @@ import {
   Building,
   BarChart3,
   CreditCard,
+  ChevronRight,
 } from 'lucide-react'
 import '../styles/appshell.css'
 
@@ -70,32 +74,6 @@ const navItems: NavItem[] = [
     roles: ['owner', 'admin', 'member'],
     tooltip: 'Manage sites and departments',
   },
-  //  Workspace General Settings
-  {
-    title: 'Workspace Settings',
-    url: '/app/workspace/general',
-    icon: Building,
-    roles: ['owner', 'admin'],
-    tooltip: 'Manage company profile and general settings',
-  },
-
-  //  Members (If replacing Employee Management, just update the URL of the existing one)
-  {
-    title: 'Team Members',
-    url: '/app/workspace/members',
-    icon: Users,
-    roles: ['owner', 'admin'],
-    tooltip: 'Manage users, invites, and roles',
-  },
-
-  //  Billing
-  {
-    title: 'Billing & Plan',
-    url: '/app/workspace/billing',
-    icon: CreditCard,
-    roles: ['owner'], // Often, only 'owner' handles billing, but you can add 'admin' if desired
-    tooltip: 'Manage subscription and invoices',
-  },
   {
     title: 'Compliance',
     url: '/app/compliance',
@@ -112,6 +90,31 @@ const navItems: NavItem[] = [
   },
 ]
 
+// Organisation / Workspace administration — grouped under a collapsible section.
+const workspaceItems: NavItem[] = [
+  {
+    title: 'Workspace Settings',
+    url: '/app/workspace/general',
+    icon: Building,
+    roles: ['owner', 'admin'],
+    tooltip: 'Manage company profile and general settings',
+  },
+  {
+    title: 'Team Members',
+    url: '/app/workspace/members',
+    icon: Users,
+    roles: ['owner', 'admin'],
+    tooltip: 'Manage users, invites, and roles',
+  },
+  {
+    title: 'Billing & Plan',
+    url: '/app/workspace/billing',
+    icon: CreditCard,
+    roles: ['owner', 'admin'], // Often, only 'owner' handles billing, but you can add 'admin' if desired
+    tooltip: 'Manage subscription and invoices',
+  },
+]
+
 const AppSidebar = () => {
   const { user, organization } = useAuth()
   const location = useLocation()
@@ -121,6 +124,11 @@ const AppSidebar = () => {
 
   // Filter navigation items based on the user's role
   const filteredItems = navItems.filter((item) => item.roles.includes(user?.role))
+  const filteredWorkspaceItems = workspaceItems.filter((item) => item.roles.includes(user?.role))
+
+  // Keep the organisation group expanded when the user is inside one of its routes.
+  const isWorkspaceRoute = workspaceItems.some((item) => location.pathname.startsWith(item.url))
+  const [workspaceOpen, setWorkspaceOpen] = useState(isWorkspaceRoute)
 
   return (
     <Sidebar className="sidebar-nav">
@@ -152,6 +160,42 @@ const AppSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {filteredWorkspaceItems.length > 0 && (
+                <SidebarMenuItem className="sidebar-menu-item">
+                  <SidebarMenuButton
+                    className={`sidebar-menu-button${isWorkspaceRoute ? ' active' : ''}`}
+                    isActive={isWorkspaceRoute}
+                    onClick={() => setWorkspaceOpen((open) => !open)}
+                    tooltip={{ children: 'Organisation settings', side: 'right' }}
+                  >
+                    <Building className="h-4 w-4" />
+                    <span>Organisation Settings</span>
+                    <ChevronRight
+                      className={`ml-auto h-4 w-4 transition-transform ${
+                        workspaceOpen ? 'rotate-90' : ''
+                      }`}
+                    />
+                  </SidebarMenuButton>
+
+                  {workspaceOpen && (
+                    <SidebarMenuSub>
+                      {filteredWorkspaceItems.map((item) => (
+                        <SidebarMenuSubItem key={item.url}>
+                          <SidebarMenuSubButton
+                            className="cursor-pointer"
+                            isActive={location.pathname === item.url}
+                            onClick={() => navigate(item.url)}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  )}
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
