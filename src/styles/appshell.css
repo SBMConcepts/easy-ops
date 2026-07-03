@@ -131,6 +131,42 @@
   background: var(--onboarding-accent-dim);
 }
 
+.sidebar-menu-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.25rem 0;
+}
+
+.sidebar-menu-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--onboarding-text-primary);
+}
+
+.sidebar-menu-sub-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--onboarding-text-primary);
+  background: var(--onboarding-background);
+}
+
+.sidebar-menu-sub-button:hover {
+  color: var(--onboarding-text-accent);
+  background: var(--onboarding-accent-dim);
+}
+
+.sidebar-menu-sub-button.active {
+  color: var(--onboarding-text-accent);
+  background: var(--onboarding-accent-dim);
+}
+
 .sidebar-footer {
   padding: 1rem;
   border-top: 1px solid var(--onboarding-border) !important;

@@ -179,11 +179,11 @@ const AppSidebar = () => {
                   </SidebarMenuButton>
 
                   {workspaceOpen && (
-                    <SidebarMenuSub>
+                    <SidebarMenuSub className="sidebar-menu-sub">
                       {filteredWorkspaceItems.map((item) => (
-                        <SidebarMenuSubItem key={item.url}>
+                        <SidebarMenuSubItem className="sidebar-menu-sub-item" key={item.url}>
                           <SidebarMenuSubButton
-                            className="cursor-pointer"
+                            className={`sidebar-menu-sub-button${location.pathname === item.url ? ' active' : ''}`}
                             isActive={location.pathname === item.url}
                             onClick={() => navigate(item.url)}
                           >
