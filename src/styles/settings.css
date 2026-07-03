@@ -6,6 +6,12 @@
   gap: 1rem;
 }
 
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .settings-header {
   display: flex;
   flex-direction: column;
@@ -109,6 +115,22 @@
   gap: 1rem;
 }
 
+.settings-card-tab__feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.settings-card-tab__feature-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-card-tab__feature-text {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-primary, #0f2d5c);
+}
+
 .settings-card-tab__form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -138,6 +160,42 @@
 .settings-card-tab__input:focus {
   border-color: var(--onboarding-border-focus);
   box-shadow: var(--onboarding-accent-glow);
+}
+
+.settings-card-tab__select-trigger {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-md);
+  background: var(--onboarding-background);
+  color: var(--onboarding-text-primary);
+  font-size: 0.875rem;
+  transition:
+    box-shadow var(--onboarding-transition),
+    border-color var(--onboarding-transition);
+}
+
+.settings-card-tab__select-value {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-primary);
+}
+
+.settings-card-tab__select-content {
+  padding: 1.25rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-card-tab__select-item {
+  padding: 0.75rem;
+  border-radius: var(--onboarding-radius-md);
+  background: var(--onboarding-background);
+  color: var(--onboarding-text-primary);
+  font-size: 0.875rem;
+  transition:
+    box-shadow var(--onboarding-transition),
+    background-color var(--onboarding-transition);
 }
 
 .settings-card-tab__footer {
@@ -204,4 +262,36 @@
   font-family: var(--onboarding-font-mono, monospace);
   font-weight: 500;
   color: var(--onboarding-text-primary, #0f2d5c);
+}
+
+.settings-card-tab__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.settings-card-tab__table-header {
+  background: var(--onboarding-background, #f9fafb);
+  color: var(--onboarding-text-muted, #64748b);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  align-items: center;
+  text-align: left;
+}
+
+.settings-card-tab__table-row {
+  border-bottom: 1px solid var(--onboarding-border, #e1e6ed);
+}
+
+.settings-card-tab__table-cell {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--onboarding-text-primary, #0f2d5c);
+}
+
+.settings-card-tab__table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }

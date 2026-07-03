@@ -7,7 +7,8 @@ import { useMutation } from '@tanstack/react-query'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { toast } from 'sonner'
-import { Loader2, Save, Building } from 'lucide-react'
+import { Loader2, Save } from 'lucide-react'
+import '../../styles/settings.css'
 
 export default function WorkspaceGeneral() {
   const { organization } = useAuth()
@@ -55,50 +56,47 @@ export default function WorkspaceGeneral() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="settings-card-tab bg-white border rounded-lg p-6 shadow-sm">
-        <div className="settings-card-tab__header mb-6 flex items-center gap-3">
-          <Building className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <h2 className="settings-card-tab__title text-lg font-semibold">Workspace Profile</h2>
-            <p className="settings-card-tab__desc text-sm text-muted-foreground">
-              Manage your company name and core details.
-            </p>
-          </div>
+    <div className="settings-page">
+      <div className="settings-card-tab">
+        <div className="settings-header p-4">
+          <h2 className="settings-header__title">Workspace Profile</h2>
+          <p className="settings-header__subtitle ">Manage your company name and core details.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
-          <div className="space-y-2">
-            <Label>Company Name</Label>
-            <Input
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Industry</Label>
+        <div className="settings-card-tab__content">
+          <form onSubmit={handleSubmit} className="settings-card-tab__form-grid">
+            <div className="settings-card-tab__row">
+              <Label className="settings-card-tab__label ">Company Name</Label>
               <Input
+                className="settings-card-tab__input"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+
+            <div className="settings-card-tab__row">
+              <Label className="settings-card-tab__label ">Industry</Label>
+              <Input
+                className="settings-card-tab__input"
                 value={formData.industry}
                 onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
                 placeholder="e.g. Construction, Tech"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Country</Label>
+            <div className="settings-card-tab__row">
+              <Label className="settings-card-tab__label ">Country</Label>
               <Input
+                className="settings-card-tab__input"
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                 placeholder="e.g. South Africa"
               />
             </div>
-          </div>
-
-          <div className="pt-4 flex justify-end">
+          </form>
+          <div className="settings-card-tab__footer">
             <button
               type="submit"
-              className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              className="settings-card-tab__save-btn"
               disabled={saveConfig.isPending}
             >
               {saveConfig.isPending ? (
@@ -109,7 +107,7 @@ export default function WorkspaceGeneral() {
               Save Changes
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )

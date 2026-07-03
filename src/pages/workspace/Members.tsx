@@ -5,6 +5,16 @@ import { useOrgApi } from '../../hooks/useOrgApi'
 import { Input } from '../../components/ui/input'
 import { toast } from 'sonner'
 import { Loader2, Users, Mail, UserPlus, Shield, Trash2 } from 'lucide-react'
+import '../../styles/settings.css'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
 
 // Define the shape of a member
 interface Member {
@@ -51,108 +61,129 @@ export default function WorkspaceMembers() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="settings-page">
       <div className="flex items-center gap-3 mb-2">
-        <Users className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Team Members</h1>
-          <p className="text-muted-foreground text-sm">
+        <div className="settings-header">
+          <h1 className="settings-header__title">Team Members</h1>
+          <p className="settings-header__subtitle">
             Manage who has access to this workspace and their permissions.
           </p>
         </div>
       </div>
 
       {/* Invite Section */}
-      <div className="bg-white border rounded-lg p-6 shadow-sm">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-          Invite New Member
-        </h2>
-        <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3 items-end">
-          <div className="w-full sm:w-1/2 space-y-1">
-            <label className="text-xs font-medium">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="settings-card-tab">
+        <div className="settings-card-tab__header">
+          <h2 className="settings-card-tab__title">Invite New Member</h2>
+        </div>
+
+        <div className="settings-card-tab__content">
+          <form onSubmit={handleInvite} className="settings-card-tab__form-grid">
+            <div className="settings-card-tab__row ">
+              <Label className="settings-card-tab__label">Email Address</Label>
               <Input
                 type="email"
                 placeholder="colleague@company.com"
-                className="pl-9"
+                className="settings-card-tab__input"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
               />
             </div>
-          </div>
-          <div className="w-full sm:w-1/4 space-y-1">
-            <label className="text-xs font-medium">Role</label>
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as any)}
+            <div className="settings-card-tab__row">
+              <Label className="settings-card-tab__label">Role</Label>
+              <Select
+                value={inviteRole || ''}
+                onValueChange={(value) => setInviteRole(value as 'admin' | 'member' | 'viewer')}
+              >
+                <SelectTrigger className="settings-card-tab__select-trigger">
+                  <SelectValue
+                    className="settings-card-tab__select-value"
+                    placeholder="Select a role"
+                  />
+                </SelectTrigger>
+                <SelectContent className="settings-card-tab__select-content">
+                  <SelectItem className="settings-card-tab__select-item" value="admin">
+                    Admin
+                  </SelectItem>
+                  <SelectItem className="settings-card-tab__select-item" value="member">
+                    Member
+                  </SelectItem>
+                  <SelectItem className="settings-card-tab__select-item" value="viewer">
+                    Viewer
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </form>
+          <div className="settings-card-tab__footer">
+            <button
+              type="submit"
+              disabled={inviteMember.isPending}
+              className="settings-card-tab__save-btn"
+              onClick={handleInvite}
             >
-              <option value="admin">Admin</option>
-              <option value="member">Member</option>
-              <option value="viewer">Viewer</option>
-            </select>
+              {inviteMember.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <UserPlus className="h-4 w-4" />
+              )}
+              Send Invite
+            </button>
           </div>
-          <button
-            type="submit"
-            disabled={inviteMember.isPending}
-            className="flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 w-full sm:w-auto disabled:opacity-50"
-          >
-            {inviteMember.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <UserPlus className="h-4 w-4" />
-            )}
-            Send Invite
-          </button>
-        </form>
+        </div>
       </div>
 
       {/* Member List */}
-      <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-semibold">
-              <tr>
-                <th className="px-6 py-3">User</th>
-                <th className="px-6 py-3">Role</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+      <div className="settings-tabs__content">
+        <div className="settings-card-tab">
+          <Table className="settings-card-tab__table">
+            <TableHeader className="settings-card-tab__table-header">
+              <TableRow className=" settings-card-tab__table-row">
+                <TableCell className="settings-card-tab__table-cell">User</TableCell>
+                <TableCell className="settings-card-tab__table-cell">Role</TableCell>
+                <TableCell className="settings-card-tab__table-cell">Status</TableCell>
+                <TableCell className="settings-card-tab__table-cell text-right">Actions</TableCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="settings-card-tab__table-body">
               {isLoading ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                <TableRow className="settings-card-tab__table-row">
+                  <TableCell
+                    colSpan={4}
+                    className="settings-card-tab__table-cell text-center text-muted-foreground"
+                  >
                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : members.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                <TableRow className="settings-card-tab__table-row">
+                  <TableCell
+                    colSpan={4}
+                    className="settings-card-tab__table-cell text-center text-muted-foreground"
+                  >
                     No members found.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 members.map((member) => (
-                  <tr key={member.id} className="border-t">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-foreground">
-                        {member.full_name || 'Pending User'}
+                  <TableRow key={member.id} className="settings-card-tab__table-row">
+                    <TableCell className="settings-card-tab__table-cell">
+                      <div className="font-medium">{member.full_name || 'Pending User'}</div>
+                      <div className="settings-card-tab__table-cell text-muted-foreground">
+                        {member.email}
                       </div>
-                      <div className="text-muted-foreground">{member.email}</div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="settings-card-tab__table-cell">
                       <div className="flex items-center gap-1">
                         {member.role === 'owner' || member.role === 'admin' ? (
                           <Shield className="h-3 w-3 text-blue-500" />
                         ) : null}
                         <span className="capitalize">{member.role}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="settings-card-tab__table-cell">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        className={`settings-card-tab__table-cell ${
                           member.status === 'active'
                             ? 'bg-green-100 text-green-700'
                             : 'bg-amber-100 text-amber-700'
@@ -160,19 +191,19 @@ export default function WorkspaceMembers() {
                       >
                         {member.status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="settings-card-tab__table-cell text-right">
                       {member.role !== 'owner' && (
                         <button className="p-2 text-muted-foreground hover:text-destructive transition-colors">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
 import { toast } from 'sonner'
 import { Loader2, Save } from 'lucide-react'
-//import '../styles/settings.css'
+import '../../styles/settings.css'
 
 const profileSchema = z.object({
   full_name: z.string().trim().min(1, 'Name is required').max(100),
@@ -85,14 +85,18 @@ export default function SettingsProfile() {
         <p className="settings-card-tab__desc">Update your contact details and emergency info.</p>
       </div>
       <div className="settings-card-tab__content">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="settings-card-tab__form-grid">
           <div className="settings-card-tab__form-grid">
             <div className="settings-card-tab__row">
               <Label className="settings-card-tab__label">Full Name</Label>
               <Input
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className={errors.full_name ? 'border-red-500' : 'settings-card-tab__input'}
+                className={
+                  errors.full_name
+                    ? 'settings-card-tab__input border-red-500'
+                    : 'settings-card-tab__input'
+                }
               />
               {errors.full_name && <p className="text-xs text-red-500">{errors.full_name}</p>}
             </div>
@@ -105,7 +109,11 @@ export default function SettingsProfile() {
               <Input
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="settings-card-tab__input"
+                className={
+                  errors.phone
+                    ? 'settings-card-tab__input border-red-500'
+                    : 'settings-card-tab__input'
+                }
               />
             </div>
             <div className="settings-card-tab__row">
@@ -113,7 +121,11 @@ export default function SettingsProfile() {
               <Input
                 value={formData.emergency_contact}
                 onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })}
-                className="settings-card-tab__input"
+                className={
+                  errors.emergency_contact
+                    ? 'settings-card-tab__input border-red-500'
+                    : 'settings-card-tab__input'
+                }
               />
             </div>
             <div className="settings-card-tab__row ">
@@ -121,20 +133,23 @@ export default function SettingsProfile() {
               <Textarea
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="settings-card-tab__input"
+                className={
+                  errors.address
+                    ? 'settings-card-tab__input border-red-500'
+                    : 'settings-card-tab__input'
+                }
               />
             </div>
-          </div>
-
-          <div className="settings-card-tab__footer">
-            <button className="settings-card-tab__save-btn" disabled={saveProfile.isPending}>
-              {saveProfile.isPending ? (
-                <Loader2 className=" h-4 w-4 animate-spin" />
-              ) : (
-                <Save className=" h-4 w-4" />
-              )}
-              Save
-            </button>
+            <div className="settings-card-tab__footer">
+              <button className="settings-card-tab__save-btn" disabled={saveProfile.isPending}>
+                {saveProfile.isPending ? (
+                  <Loader2 className=" h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className=" h-4 w-4" />
+                )}
+                Save
+              </button>
+            </div>
           </div>
         </form>
       </div>
