@@ -16,6 +16,7 @@ import {
   SidebarMenuSubButton,
   SidebarHeader,
   SidebarFooter,
+  SidebarRail,
 } from './ui/sidebar'
 import {
   LayoutDashboard,
@@ -28,7 +29,6 @@ import {
   CreditCard,
   ChevronRight,
 } from 'lucide-react'
-import '../styles/appshell.css'
 
 interface NavItem {
   title: string
@@ -120,40 +120,50 @@ const AppSidebar = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const orgName = organization?.name
+  const orgName = organization?.name ?? 'EasyOps'
+  const role = user?.role
 
-  // Filter navigation items based on the user's role
-  const filteredItems = navItems.filter((item) => item.roles.includes(user?.role))
-  const filteredWorkspaceItems = workspaceItems.filter((item) => item.roles.includes(user?.role))
+  // Filter navigation items based on the user's role.
+  const filteredItems = navItems.filter((item) => !!role && item.roles.includes(role))
+  const filteredWorkspaceItems = workspaceItems.filter(
+    (item) => !!role && item.roles.includes(role)
+  )
 
   // Keep the organisation group expanded when the user is inside one of its routes.
   const isWorkspaceRoute = workspaceItems.some((item) => location.pathname.startsWith(item.url))
   const [workspaceOpen, setWorkspaceOpen] = useState(isWorkspaceRoute)
 
   return (
-    <Sidebar className="sidebar-nav">
-      <SidebarHeader className="sidebar-header">
-        <div
-          className="sidebar-brand"
-          onClick={() => navigate('/app')}
-          style={{ cursor: 'pointer' }}
-        >
-          <span className="sidebar-brand-name">{orgName}</span>
-        </div>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              tooltip={orgName}
+              onClick={() => navigate('/app')}
+              className="data-active:bg-transparent"
+            >
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <Building className="size-4" />
+              </div>
+              <span className="truncate text-base font-bold">{orgName}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="sidebar-group-label">Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="sidebar-menu">
+            <SidebarMenu>
               {filteredItems.map((item) => (
-                <SidebarMenuItem key={item.url} className="sidebar-menu-item">
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
-                    className={`sidebar-menu-button${location.pathname === item.url ? ' active' : ''}`}
                     isActive={location.pathname === item.url}
                     onClick={() => navigate(item.url)}
-                    tooltip={{ children: item.tooltip, side: 'right' }}
+                    tooltip={item.tooltip ?? item.title}
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
@@ -162,28 +172,26 @@ const AppSidebar = () => {
               ))}
 
               {filteredWorkspaceItems.length > 0 && (
-                <SidebarMenuItem className="sidebar-menu-item">
+                <SidebarMenuItem>
                   <SidebarMenuButton
-                    className={`sidebar-menu-button${isWorkspaceRoute ? ' active' : ''}`}
                     isActive={isWorkspaceRoute}
                     onClick={() => setWorkspaceOpen((open) => !open)}
-                    tooltip={{ children: 'Organisation settings', side: 'right' }}
+                    tooltip="Organisation settings"
                   >
                     <Building className="h-4 w-4" />
                     <span>Organisation Settings</span>
                     <ChevronRight
-                      className={`ml-auto h-4 w-4 transition-transform ${
+                      className={`ml-auto h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden ${
                         workspaceOpen ? 'rotate-90' : ''
                       }`}
                     />
                   </SidebarMenuButton>
 
                   {workspaceOpen && (
-                    <SidebarMenuSub className="sidebar-menu-sub">
+                    <SidebarMenuSub>
                       {filteredWorkspaceItems.map((item) => (
-                        <SidebarMenuSubItem className="sidebar-menu-sub-item" key={item.url}>
+                        <SidebarMenuSubItem key={item.url}>
                           <SidebarMenuSubButton
-                            className={`sidebar-menu-sub-button${location.pathname === item.url ? ' active' : ''}`}
                             isActive={location.pathname === item.url}
                             onClick={() => navigate(item.url)}
                           >
@@ -201,9 +209,13 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="sidebar-footer">
-        <p className="sidebar-footer-text">{orgName} · Powered by EasyOps</p>
+      <SidebarFooter>
+        <p className="px-2 text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
+          {orgName} · Powered by EasyOps
+        </p>
       </SidebarFooter>
+
+      <SidebarRail />
     </Sidebar>
   )
 }

@@ -1,4 +1,23 @@
 @import 'tailwindcss';
+
+/*
+ * shadcn sidebar theme tokens (Tailwind v4).
+ * Maps the EasyOps onboarding palette onto the color utilities the shadcn
+ * Sidebar component uses (bg-sidebar, text-sidebar-foreground, bg-sidebar-accent,
+ * border-sidebar-border, ring-sidebar-ring, ...) so the component themes itself
+ * natively — no hand-written override classes required.
+ */
+@theme {
+  --color-sidebar: #f8f9fb;
+  --color-sidebar-foreground: #0f2d5c;
+  --color-sidebar-primary: #10b981;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: rgba(16, 185, 129, 0.1);
+  --color-sidebar-accent-foreground: #10b981;
+  --color-sidebar-border: #e1e6ed;
+  --color-sidebar-ring: #279e8a;
+}
+
 :root {
   --background: #f8f9fb;
   --foreground: #141e2e;
