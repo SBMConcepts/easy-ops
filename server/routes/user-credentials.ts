@@ -1,10 +1,7 @@
 import { Router, type Response } from 'express'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-
-const credDb = supabaseAdmin as unknown as SupabaseClient
 
 const SAFE_COLUMNS = 'id, email, email_verified, status, created_at, updated_at, auth0_user_id'
 
@@ -13,7 +10,7 @@ const CREDENTIAL_STATUSES = new Set(['active', 'blocked', 'deleted'])
 const router = Router()
 
 router.get('/api/user-credentials/me', requireAuth, async (req: AuthedRequest, res: Response) => {
-  const { data, error } = await credDb
+  const { data, error } = await supabaseAdmin
     .from('user_credentials')
     .select(SAFE_COLUMNS)
     .eq('auth0_user_id', req.auth!.sub)
@@ -53,7 +50,7 @@ router.patch(
       return
     }
 
-    const { data, error } = await credDb
+    const { data, error } = await supabaseAdmin
       .from('user_credentials')
       .update({ status: body.status, updated_at: new Date().toISOString() })
       .eq('auth0_user_id', targetUserId)

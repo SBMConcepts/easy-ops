@@ -12,9 +12,12 @@ router.get(
   requireOrg,
   requireRole('member'),
   async (req: AuthedRequest, res: Response) => {
-    const { data, error } = await supabaseAdmin
+    // org_members.user_id stores users.id (UUID). There is NO FK from
+    // org_members to users in the DB, so a PostgREST embed (users(...)) cannot be
+    // resolved — join manually in two queries instead.
+    const { data: memberRows, error } = await supabaseAdmin
       .from('org_members')
-      .select('id, role, status, joined_at, user_id, users(id, email, full_name, avatar_url)')
+      .select('id, role, status, joined_at, user_id')
       .eq('org_id', req.orgId!)
       .order('joined_at', { ascending: true })
 
@@ -22,7 +25,38 @@ router.get(
       res.status(500).json({ error: error.message })
       return
     }
-    res.json({ members: data ?? [] })
+
+    const rows = memberRows ?? []
+    const userIds = rows
+      .map((m) => m.user_id)
+      .filter((id): id is string => typeof id === 'string' && id.length > 0)
+
+    const usersById = new Map<
+      string,
+      { id: string; email: string; full_name: string; avatar_url: string | null }
+    >()
+    if (userIds.length > 0) {
+      const { data: users, error: usersErr } = await supabaseAdmin
+        .from('users')
+        .select('id, email, full_name, avatar_url')
+        .in('id', userIds)
+      if (usersErr) {
+        res.status(500).json({ error: usersErr.message })
+        return
+      }
+      for (const u of users ?? []) usersById.set(u.id, u)
+    }
+
+    const members = rows.map((m) => ({
+      id: m.id,
+      role: m.role,
+      status: m.status,
+      joined_at: m.joined_at,
+      user_id: m.user_id,
+      users: m.user_id ? (usersById.get(m.user_id) ?? null) : null,
+    }))
+
+    res.json({ members })
   }
 )
 
