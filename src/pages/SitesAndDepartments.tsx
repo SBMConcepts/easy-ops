@@ -66,20 +66,20 @@ export default function SitesAndDepartments() {
   // Fetch Data
   const { data: sites = [], isLoading: sitesLoading } = useQuery<SiteRow[]>({
     queryKey: ['org_sites'],
-    queryFn: () => apiFetch('sites'),
+    queryFn: () => apiFetch('org-sites'),
   })
 
   const { data: depts = [], isLoading: deptsLoading } = useQuery<DeptRow[]>({
     queryKey: ['org_departments'],
-    queryFn: () => apiFetch('departments'),
+    queryFn: () => apiFetch('org-departments'),
   })
 
   // Mutations
   const saveSite = useMutation({
     mutationFn: async (data: Partial<SiteRow>) => {
       if (editingId)
-        return apiFetch(`sites/${editingId}`, { method: 'PATCH', body: JSON.stringify(data) })
-      return apiFetch('sites', { method: 'POST', body: JSON.stringify(data) })
+        return apiFetch(`org-sites/${editingId}`, { method: 'PATCH', body: JSON.stringify(data) })
+      return apiFetch('org-sites', { method: 'POST', body: JSON.stringify(data) })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['org_sites'] })
@@ -94,8 +94,11 @@ export default function SitesAndDepartments() {
   const saveDept = useMutation({
     mutationFn: async (data: Partial<DeptRow>) => {
       if (editingId)
-        return apiFetch(`departments/${editingId}`, { method: 'PATCH', body: JSON.stringify(data) })
-      return apiFetch('departments', { method: 'POST', body: JSON.stringify(data) })
+        return apiFetch(`org-departments/${editingId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(data),
+        })
+      return apiFetch('org-departments', { method: 'POST', body: JSON.stringify(data) })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['org_departments'] })
@@ -109,7 +112,7 @@ export default function SitesAndDepartments() {
 
   const deleteEntity = useMutation({
     mutationFn: async ({ kind, id }: { kind: 'site' | 'department'; id: string }) => {
-      return apiFetch(`${kind}s/${id}`, { method: 'DELETE' })
+      return apiFetch(`org-${kind}s/${id}`, { method: 'DELETE' })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['org_sites'] })

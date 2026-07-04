@@ -214,7 +214,7 @@ ALTER TABLE "public"."org_attendance" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."org_departments" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "org_id" "text" DEFAULT ''::"text" NOT NULL,
+    "auth0_org_id" "text" DEFAULT ''::"text" NOT NULL,
     "department_name" "text" DEFAULT ''::"text" NOT NULL,
     "created_at" timestamp with time zone DEFAULT ("now"() AT TIME ZONE 'utc'::"text") NOT NULL,
     "updated_at" timestamp with time zone DEFAULT ("now"() AT TIME ZONE 'utc'::"text") NOT NULL
@@ -226,11 +226,11 @@ ALTER TABLE "public"."org_departments" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."org_members" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "org_id" "text" NOT NULL,
-    "user_id" "uuid" NOT NULL,
+    "auth0_org_id" "text" DEFAULT ''::"text" NOT NULL,
     "role" "text" DEFAULT 'member'::"text" NOT NULL,
     "status" "text" DEFAULT 'active'::"text" NOT NULL,
     "joined_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "auth0_user_id" "text" DEFAULT ''::"text" NOT NULL,
     CONSTRAINT "org_members_role_check" CHECK (("role" = ANY (ARRAY['owner'::"text", 'admin'::"text", 'member'::"text", 'viewer'::"text"]))),
     CONSTRAINT "org_members_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'suspended'::"text"])))
 );
@@ -241,7 +241,7 @@ ALTER TABLE "public"."org_members" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."org_roles" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "org_id" "text" DEFAULT ''::"text" NOT NULL,
+    "auth0_org_id" "text" DEFAULT ''::"text" NOT NULL,
     "name" "public"."organization_role" NOT NULL
 );
 
@@ -252,7 +252,7 @@ ALTER TABLE "public"."org_roles" OWNER TO "postgres";
 CREATE TABLE IF NOT EXISTS "public"."org_sites" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "site_name" "text" DEFAULT ''::"text" NOT NULL,
-    "org_id" "text" DEFAULT ''::"text" NOT NULL,
+    "auth0_org_id" "text" DEFAULT ''::"text" NOT NULL,
     "department_id" "uuid" NOT NULL,
     "latitude" double precision NOT NULL,
     "longitude" double precision NOT NULL,
@@ -277,7 +277,7 @@ CREATE TABLE IF NOT EXISTS "public"."organizations" (
     "country" "text" DEFAULT ''::"text" NOT NULL,
     "logo_url" "text" DEFAULT ''::"text" NOT NULL,
     CONSTRAINT "organizations_plan_check" CHECK (("plan" = ANY (ARRAY['free'::"text", 'starter'::"text", 'pro'::"text", 'enterprise'::"text"]))),
-    CONSTRAINT "organizations_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'suspended'::"text", 'cancelled'::"text"])))
+    CONSTRAINT "organizations_status_check" CHECK (("status" = ANY (ARRAY['provisioning'::"text", 'active'::"text", 'suspended'::"text", 'cancelled'::"text"])))
 );
 
 
@@ -307,9 +307,26 @@ CREATE TABLE IF NOT EXISTS "public"."subscriptions" (
 ALTER TABLE "public"."subscriptions" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."user_credentials" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "email" "text" NOT NULL,
+    "password_hash" "text",
+    "email_verified" boolean DEFAULT false NOT NULL,
+    "status" "text" DEFAULT 'active'::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "auth0_user_id" "text" DEFAULT ''::"text" NOT NULL,
+    "auth0_org_id" "text" DEFAULT ''::"text" NOT NULL,
+    CONSTRAINT "user_credentials_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'blocked'::"text", 'deleted'::"text"])))
+);
+
+
+ALTER TABLE "public"."user_credentials" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."users" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "auth0_user_id" "text" NOT NULL,
+    "auth0_user_id" "text" DEFAULT ''::"text" NOT NULL,
     "email" "text" NOT NULL,
     "full_name" "text" DEFAULT ''::"text" NOT NULL,
     "avatar_url" "text",
@@ -353,12 +370,17 @@ ALTER TABLE ONLY "public"."org_departments"
 
 
 ALTER TABLE ONLY "public"."org_members"
-    ADD CONSTRAINT "org_members_org_id_user_id_key" UNIQUE ("org_id", "user_id");
+    ADD CONSTRAINT "org_members_org_id_user_id_key" UNIQUE ("auth0_org_id", "auth0_user_id");
 
 
 
 ALTER TABLE ONLY "public"."org_members"
     ADD CONSTRAINT "org_members_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."org_members"
+    ADD CONSTRAINT "org_members_user_id_key" UNIQUE ("auth0_user_id");
 
 
 
@@ -382,6 +404,41 @@ ALTER TABLE ONLY "public"."subscriptions"
 
 
 
+ALTER TABLE ONLY "public"."user_credentials"
+    ADD CONSTRAINT "user_credentials_auth0_org_id_key" UNIQUE ("auth0_org_id");
+
+
+
+ALTER TABLE ONLY "public"."user_credentials"
+    ADD CONSTRAINT "user_credentials_auth0_org_id_key1" UNIQUE ("auth0_org_id");
+
+
+
+ALTER TABLE ONLY "public"."user_credentials"
+    ADD CONSTRAINT "user_credentials_auth0_org_id_key2" UNIQUE ("auth0_org_id");
+
+
+
+ALTER TABLE ONLY "public"."user_credentials"
+    ADD CONSTRAINT "user_credentials_auth0_org_id_key3" UNIQUE ("auth0_org_id");
+
+
+
+ALTER TABLE ONLY "public"."user_credentials"
+    ADD CONSTRAINT "user_credentials_auth0_user_id_key" UNIQUE ("auth0_user_id");
+
+
+
+ALTER TABLE ONLY "public"."user_credentials"
+    ADD CONSTRAINT "user_credentials_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."users"
+    ADD CONSTRAINT "users_auth0_org_id_key" UNIQUE ("auth0_org_id");
+
+
+
 ALTER TABLE ONLY "public"."users"
     ADD CONSTRAINT "users_auth0_user_id_key" UNIQUE ("auth0_user_id");
 
@@ -400,15 +457,19 @@ CREATE INDEX "invitations_token_idx" ON "public"."invitations" USING "btree" ("t
 
 
 
-CREATE INDEX "org_members_org_id_idx" ON "public"."org_members" USING "btree" ("org_id");
+CREATE INDEX "org_members_org_id_active_idx" ON "public"."org_members" USING "btree" ("auth0_org_id") WHERE ("status" = 'active'::"text");
 
 
 
-CREATE INDEX "org_members_user_id_idx" ON "public"."org_members" USING "btree" ("user_id");
+CREATE INDEX "org_members_org_id_idx" ON "public"."org_members" USING "btree" ("auth0_org_id");
 
 
 
 CREATE INDEX "subscriptions_org_id_idx" ON "public"."subscriptions" USING "btree" ("org_id");
+
+
+
+CREATE UNIQUE INDEX "user_credentials_email_lower_key" ON "public"."user_credentials" USING "btree" ("lower"("email"));
 
 
 
@@ -442,22 +503,27 @@ ALTER TABLE ONLY "public"."org_attendance"
 
 
 ALTER TABLE ONLY "public"."org_departments"
-    ADD CONSTRAINT "org_departments_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."organizations"("auth0_org_id") ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT "org_departments_auth0_org_id_fkey" FOREIGN KEY ("auth0_org_id") REFERENCES "public"."organizations"("auth0_org_id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."org_members"
-    ADD CONSTRAINT "org_members_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."organizations"("auth0_org_id") ON DELETE CASCADE;
+    ADD CONSTRAINT "org_members_auth0_org_id_fkey" FOREIGN KEY ("auth0_org_id") REFERENCES "public"."organizations"("auth0_org_id") ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."org_members"
-    ADD CONSTRAINT "org_members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "org_members_auth0_user_id_fkey" FOREIGN KEY ("auth0_user_id") REFERENCES "public"."user_credentials"("auth0_user_id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."org_roles"
-    ADD CONSTRAINT "org_roles_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."organizations"("auth0_org_id") ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT "org_roles_auth0_org_id_fkey" FOREIGN KEY ("auth0_org_id") REFERENCES "public"."organizations"("auth0_org_id") ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."org_sites"
+    ADD CONSTRAINT "org_sites_auth0_org_id_fkey" FOREIGN KEY ("auth0_org_id") REFERENCES "public"."organizations"("auth0_org_id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 
@@ -466,13 +532,13 @@ ALTER TABLE ONLY "public"."org_sites"
 
 
 
-ALTER TABLE ONLY "public"."org_sites"
-    ADD CONSTRAINT "org_sites_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."organizations"("auth0_org_id") ON UPDATE CASCADE ON DELETE CASCADE;
-
-
-
 ALTER TABLE ONLY "public"."subscriptions"
     ADD CONSTRAINT "subscriptions_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."organizations"("auth0_org_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_credentials"
+    ADD CONSTRAINT "user_credentials_auth0_user_id_fkey" FOREIGN KEY ("auth0_user_id") REFERENCES "public"."users"("auth0_user_id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 
@@ -502,143 +568,48 @@ CREATE POLICY "org: members read own org" ON "public"."organizations" FOR SELECT
 ALTER TABLE "public"."org_attendance" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "org_attendance: members delete" ON "public"."org_attendance" FOR DELETE USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = "org_attendance"."user_id") AND ("om"."org_id" = "org_attendance"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['employee'::"text", 'admin'::"text", 'manager'::"text", 'supervisor'::"text", 'owner'::"text"])))))));
-
-
-
-CREATE POLICY "org_attendance: members insert" ON "public"."org_attendance" FOR INSERT WITH CHECK ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = "org_attendance"."user_id") AND ("om"."org_id" = "org_attendance"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['employee'::"text", 'admin'::"text", 'manager'::"text", 'supervisor'::"text", 'owner'::"text"])))))));
-
-
-
-CREATE POLICY "org_attendance: members read" ON "public"."org_attendance" FOR SELECT USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = "org_attendance"."user_id") AND ("om"."org_id" = "org_attendance"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['employee'::"text", 'admin'::"text", 'manager'::"text", 'supervisor'::"text", 'owner'::"text"])))))));
-
-
-
-CREATE POLICY "org_attendance: members update" ON "public"."org_attendance" FOR UPDATE USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = "org_attendance"."user_id") AND ("om"."org_id" = "org_attendance"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['employee'::"text", 'admin'::"text", 'manager'::"text", 'supervisor'::"text", 'owner'::"text"]))))))) WITH CHECK ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = "org_attendance"."user_id") AND ("om"."org_id" = "org_attendance"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['employee'::"text", 'admin'::"text", 'manager'::"text", 'supervisor'::"text", 'owner'::"text"])))))));
-
-
-
 ALTER TABLE "public"."org_departments" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "org_departments: admin/manager/owner delete" ON "public"."org_departments" FOR DELETE USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_departments"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])))))));
-
-
-
-CREATE POLICY "org_departments: admin/manager/owner insert" ON "public"."org_departments" FOR INSERT WITH CHECK ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_departments"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])))))));
-
-
-
-CREATE POLICY "org_departments: admin/manager/owner update" ON "public"."org_departments" FOR UPDATE USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_departments"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"]))))))) WITH CHECK ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_departments"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])))))));
-
-
-
-CREATE POLICY "org_departments: members read" ON "public"."org_departments" FOR SELECT USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_departments"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['employee'::"text", 'admin'::"text", 'manager'::"text", 'supervisor'::"text", 'owner'::"text"])))))));
-
 
 
 ALTER TABLE "public"."org_members" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "org_members: admins manage" ON "public"."org_members" USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."org_members" "om"
-     JOIN "public"."users" "u" ON (("u"."id" = "om"."user_id")))
-  WHERE (("om"."org_id" = "public"."org_id"()) AND ("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."role" = ANY (ARRAY['owner'::"text", 'admin'::"text"])))))));
-
-
-
-CREATE POLICY "org_members: members read own org" ON "public"."org_members" FOR SELECT USING (("org_id" = "public"."org_id"()));
+CREATE POLICY "org_members: members read own org" ON "public"."org_members" FOR SELECT USING (("auth0_org_id" = ( SELECT "u"."auth0_org_id"
+   FROM "public"."users" "u"
+  WHERE ("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text"))
+ LIMIT 1)));
 
 
 
 ALTER TABLE "public"."org_roles" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "org_roles: admin/manager/owner insert" ON "public"."org_roles" FOR INSERT WITH CHECK ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_roles"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])))))));
-
-
-
-CREATE POLICY "org_roles: admin/manager/owner update" ON "public"."org_roles" FOR UPDATE USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_roles"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"]))))))) WITH CHECK ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_roles"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])))))));
-
-
-
-CREATE POLICY "org_roles: members read" ON "public"."org_roles" FOR SELECT USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_roles"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['employee'::"text", 'admin'::"text", 'manager'::"text", 'supervisor'::"text", 'owner'::"text"])))))));
-
-
-
 ALTER TABLE "public"."org_sites" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "org_sites: admin/manager/owner delete" ON "public"."org_sites" FOR DELETE USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_sites"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])))))));
+CREATE POLICY "org_sites: admin/manager/owner delete" ON "public"."org_sites" FOR DELETE USING ((("auth0_org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
+   FROM "public"."org_members" "om"
+  WHERE (("om"."auth0_org_id" = "org_sites"."auth0_org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])) AND ("om"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")))))));
 
 
 
-CREATE POLICY "org_sites: admin/manager/owner insert" ON "public"."org_sites" FOR INSERT WITH CHECK ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_sites"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])))))));
+CREATE POLICY "org_sites: admin/manager/owner insert" ON "public"."org_sites" FOR INSERT WITH CHECK ((("auth0_org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
+   FROM "public"."org_members" "om"
+  WHERE (("om"."auth0_org_id" = "org_sites"."auth0_org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])) AND ("om"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")))))));
 
 
 
-CREATE POLICY "org_sites: admin/manager/owner update" ON "public"."org_sites" FOR UPDATE USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_sites"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"]))))))) WITH CHECK ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_sites"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])))))));
+CREATE POLICY "org_sites: admin/manager/owner update" ON "public"."org_sites" FOR UPDATE USING ((("auth0_org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
+   FROM "public"."org_members" "om"
+  WHERE (("om"."auth0_org_id" = "org_sites"."auth0_org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])) AND ("om"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text"))))))) WITH CHECK ((("auth0_org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
+   FROM "public"."org_members" "om"
+  WHERE (("om"."auth0_org_id" = "org_sites"."auth0_org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['admin'::"text", 'manager'::"text", 'owner'::"text"])) AND ("om"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")))))));
 
 
 
-CREATE POLICY "org_sites: members read" ON "public"."org_sites" FOR SELECT USING ((("org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
-   FROM ("public"."users" "u"
-     JOIN "public"."org_members" "om" ON (("om"."user_id" = "u"."id")))
-  WHERE (("u"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")) AND ("om"."org_id" = "org_sites"."org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['employee'::"text", 'admin'::"text", 'manager'::"text", 'supervisor'::"text", 'owner'::"text"])))))));
+CREATE POLICY "org_sites: members read" ON "public"."org_sites" FOR SELECT USING ((("auth0_org_id" = "public"."org_id"()) AND (EXISTS ( SELECT 1
+   FROM "public"."org_members" "om"
+  WHERE (("om"."auth0_org_id" = "org_sites"."auth0_org_id") AND ("om"."status" = 'active'::"text") AND ("om"."role" = ANY (ARRAY['employee'::"text", 'admin'::"text", 'manager'::"text", 'supervisor'::"text", 'owner'::"text"])) AND ("om"."auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")))))));
 
 
 
@@ -649,6 +620,25 @@ ALTER TABLE "public"."subscriptions" ENABLE ROW LEVEL SECURITY;
 
 
 CREATE POLICY "subscriptions: members read" ON "public"."subscriptions" FOR SELECT USING (("org_id" = "public"."org_id"()));
+
+
+
+ALTER TABLE "public"."user_credentials" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "user_credentials: delete own" ON "public"."user_credentials" FOR DELETE USING (("auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")));
+
+
+
+CREATE POLICY "user_credentials: insert own" ON "public"."user_credentials" FOR INSERT WITH CHECK (("auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")));
+
+
+
+CREATE POLICY "user_credentials: select own" ON "public"."user_credentials" FOR SELECT USING (("auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")));
+
+
+
+CREATE POLICY "user_credentials: update own" ON "public"."user_credentials" FOR UPDATE USING (("auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text"))) WITH CHECK (("auth0_user_id" = ("auth"."jwt"() ->> 'sub'::"text")));
 
 
 
@@ -888,6 +878,12 @@ GRANT ALL ON TABLE "public"."organizations" TO "service_role";
 GRANT ALL ON TABLE "public"."subscriptions" TO "anon";
 GRANT ALL ON TABLE "public"."subscriptions" TO "authenticated";
 GRANT ALL ON TABLE "public"."subscriptions" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."user_credentials" TO "anon";
+GRANT ALL ON TABLE "public"."user_credentials" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_credentials" TO "service_role";
 
 
 
