@@ -2,7 +2,8 @@ import { SidebarTrigger } from './ui/sidebar'
 import { Separator } from './ui/separator'
 import { useAuth } from '../contexts/AuthContext'
 import { Badge } from './ui/badge'
-import { LogOut, User } from 'lucide-react'
+import { Avatar } from './ui/avatar'
+import { LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/appshell.css'
 
@@ -31,7 +32,11 @@ const AppHeader = () => {
         <div className="app-header-right">
           <Badge className={roleBadgeColors[user.role]}>{user.role}</Badge>
           <div className="app-header-user">
-            <User className="h-4 w-4 icon-muted" style={{ color: 'var(--foreground)' }} />
+            <Avatar
+              src={user?.avatar_url}
+              name={user?.full_name}
+              className="h-7 w-7 text-[0.65rem]"
+            />
             <span className="app-header-username">{user?.full_name}</span>
           </div>
           <button onClick={handleLogout} className="app-header-logout" title="Sign out">

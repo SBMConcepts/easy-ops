@@ -229,6 +229,51 @@
   background: var(--onboarding-accent-dim);
 }
 
+.settings-card-tab__avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--onboarding-border, #e1e6ed);
+}
+
+.settings-card-tab__avatar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-card-tab__remove-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--onboarding-radius-md);
+  border: 1px solid var(--onboarding-border);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--destructive, #dc2626);
+  background: var(--onboarding-background);
+}
+
+.settings-card-tab__remove-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-card-tab__remove-btn:hover:not(:disabled) {
+  border-color: var(--destructive, #dc2626);
+  background: color-mix(in srgb, var(--destructive, #dc2626) 8%, transparent);
+}
+
+.settings-card-tab__avatar-hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--onboarding-text-secondary, #64748b);
+}
+
 .settings-activity-list {
   display: flex;
   flex-direction: column;

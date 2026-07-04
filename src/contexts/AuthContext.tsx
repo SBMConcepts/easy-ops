@@ -35,6 +35,7 @@ interface AuthContextType {
   isLoading: boolean
   login: (options?: { auth0OrgId?: string; invitation?: string }) => Promise<void>
   logout: () => void
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -51,6 +52,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: async () => {},
   logout: () => {},
+  refreshUser: async () => {},
 })
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -60,6 +62,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [organization, setOrganization] = useState<AuthOrganization | null>(null)
 
   const [status, setStatus] = useState<'loading' | 'authed' | 'anon'>('loading')
+
+  // Fetch the current profile from the backend and map it into auth/org state.
+  const loadProfile = useCallback(async () => {
+    const profile = await apiFetch<CurrentUserProfile>('/userinfo')
+
+    setUser({
+      id: profile.profile_id,
+      auth0_user_id: profile.auth0_user_id,
+      auth0_org_id: profile.auth0_org_id,
+      email: profile.email,
+      full_name: profile.full_name,
+      avatar_url: profile.avatar_url,
+      user_status: profile.user_status,
+      role: profile.role,
+    })
+
+    setOrganization({
+      id: profile.org_id,
+      name: profile.org_name,
+      auth0_org_id: profile.auth0_org_id,
+      status: profile.org_status,
+      plan: profile.plan,
+      logo_url: profile.org_logo,
+      country: profile.org_country,
+      industry: profile.org_industry,
+      slug: null,
+    })
+  }, [apiFetch])
+
+  const refreshUser = useCallback(async () => {
+    try {
+      await loadProfile()
+    } catch (err) {
+      console.error('Failed to refresh profile context:', err)
+    }
+  }, [loadProfile])
 
   useEffect(() => {
     let cancelled = false
@@ -77,31 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        const profile = await apiFetch<CurrentUserProfile>('/userinfo')
-        if (cancelled) return
-
-        setUser({
-          id: profile.profile_id,
-          auth0_user_id: profile.auth0_user_id,
-          auth0_org_id: profile.auth0_org_id,
-          email: profile.email,
-          full_name: profile.full_name,
-          avatar_url: profile.avatar_url,
-          user_status: profile.user_status,
-          role: profile.role,
-        })
-
-        setOrganization({
-          id: profile.org_id,
-          name: profile.org_name,
-          auth0_org_id: profile.auth0_org_id,
-          status: profile.org_status,
-          plan: profile.plan,
-          logo_url: profile.org_logo,
-          country: profile.org_country,
-          industry: profile.org_industry,
-          slug: null,
-        })
+        await loadProfile()
       } catch (err) {
         console.error('Failed to load profile context:', err)
         if (!cancelled) {
@@ -117,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       cancelled = true
     }
-  }, [apiFetch])
+  }, [apiFetch, loadProfile])
 
   const login = useCallback(async (options?: { auth0OrgId?: string; invitation?: string }) => {
     const params = new URLSearchParams()
@@ -140,6 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading: status === 'loading',
         login,
         logout,
+        refreshUser,
       }}
     >
       {children}

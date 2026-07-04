@@ -1,9 +1,37 @@
-import { Router, type Response } from 'express'
+import { Router, type NextFunction, type Response } from 'express'
+import multer from 'multer'
 
 import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 
 const router = Router()
+
+const AVATAR_BUCKET = 'avatars'
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024 // 2 MB
+const AVATAR_MIME_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+}
+
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: AVATAR_MAX_BYTES, files: 1 },
+}).single('avatar')
+
+// Sanitize the Auth0 subject into a safe storage path segment. Auth0 subjects
+// (e.g. "auth0|abc") contain characters Supabase storage keys reject, so the
+// same transform is mirrored in the storage RLS policies (see the
+// avatars_policies migration) using regexp_replace.
+function safeSubject(sub: string): string {
+  return sub.replace(/[^a-zA-Z0-9_-]/g, '_')
+}
+
+// Object layout: {auth0_org_id}/{sanitized_sub}/avatar.{ext} — the org is the
+// first folder segment and the user the second, matching the storage policies.
+function avatarFolder(orgId: string, sub: string): string {
+  return `${orgId}/${safeSubject(sub)}`
+}
 
 router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, res: Response) => {
   const sub = req.auth!.sub
@@ -91,5 +119,112 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
   }
   res.json({ ok: true, profile: data })
 })
+
+// Upload (or replace) the caller's profile avatar. Multipart field name: "avatar".
+router.post(
+  '/api/userinfo/avatar',
+  requireAuth,
+  requireOrg,
+  (req: AuthedRequest, res: Response, next: NextFunction) => {
+    avatarUpload(req, res, (err: unknown) => {
+      if (err) {
+        const isSize =
+          typeof err === 'object' &&
+          err !== null &&
+          (err as { code?: string }).code === 'LIMIT_FILE_SIZE'
+        res
+          .status(isSize ? 413 : 400)
+          .json({ error: isSize ? 'Image must be 2MB or smaller.' : 'Invalid file upload.' })
+        return
+      }
+      next()
+    })
+  },
+  async (req: AuthedRequest, res: Response) => {
+    const sub = req.auth!.sub
+    const orgId = req.orgId!
+    const file = req.file
+
+    if (!file) {
+      res.status(400).json({ error: 'No image file provided.' })
+      return
+    }
+
+    const ext = AVATAR_MIME_EXT[file.mimetype]
+    if (!ext) {
+      res.status(415).json({ error: 'Unsupported image type. Use JPEG, PNG, or WebP.' })
+      return
+    }
+
+    const folder = avatarFolder(orgId, sub)
+    const objectPath = `${folder}/avatar.${ext}`
+
+    const { error: uploadErr } = await supabaseAdmin.storage
+      .from(AVATAR_BUCKET)
+      .upload(objectPath, file.buffer, { contentType: file.mimetype, upsert: true })
+
+    if (uploadErr) {
+      res.status(500).json({ error: uploadErr.message })
+      return
+    }
+
+    // Remove stale variants left over from a previously uploaded format.
+    const staleObjects = Object.values(AVATAR_MIME_EXT)
+      .filter((e) => e !== ext)
+      .map((e) => `${folder}/avatar.${e}`)
+    if (staleObjects.length > 0) {
+      await supabaseAdmin.storage.from(AVATAR_BUCKET).remove(staleObjects)
+    }
+
+    const { data: pub } = supabaseAdmin.storage.from(AVATAR_BUCKET).getPublicUrl(objectPath)
+    // Cache-bust so the browser fetches the new image after a replace.
+    const avatarUrl = `${pub.publicUrl}?v=${Date.now()}`
+
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .update({ avatar_url: avatarUrl, last_seen_at: new Date().toISOString() })
+      .eq('auth0_user_id', sub)
+      .select('id, full_name, avatar_url, email')
+      .maybeSingle()
+
+    if (error) {
+      res.status(500).json({ error: error.message })
+      return
+    }
+    res.json({ ok: true, avatar_url: avatarUrl, profile: data })
+  }
+)
+
+// Remove the caller's profile avatar.
+router.delete(
+  '/api/userinfo/avatar',
+  requireAuth,
+  requireOrg,
+  async (req: AuthedRequest, res: Response) => {
+    const sub = req.auth!.sub
+    const orgId = req.orgId!
+    const folder = avatarFolder(orgId, sub)
+
+    const objects = Object.values(AVATAR_MIME_EXT).map((e) => `${folder}/avatar.${e}`)
+    const { error: removeErr } = await supabaseAdmin.storage.from(AVATAR_BUCKET).remove(objects)
+    if (removeErr) {
+      res.status(500).json({ error: removeErr.message })
+      return
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .update({ avatar_url: null, last_seen_at: new Date().toISOString() })
+      .eq('auth0_user_id', sub)
+      .select('id, full_name, avatar_url, email')
+      .maybeSingle()
+
+    if (error) {
+      res.status(500).json({ error: error.message })
+      return
+    }
+    res.json({ ok: true, avatar_url: null, profile: data })
+  }
+)
 
 export default router
