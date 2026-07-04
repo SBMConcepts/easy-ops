@@ -39,11 +39,16 @@ router.patch(
       return
     }
 
+    // Authorisation is by ORG MEMBERSHIP, not by the target's role: an admin/
+    // owner may manage the credential of ANY member of their org (member,
+    // manager, admin — anyone who was invited and enrolled). org_members is the
+    // authoritative membership table (users.auth0_org_id is only a primary-org
+    // hint and is unreliable for multi-org / pending-enrollment users).
     const { data: member } = await supabaseAdmin
-      .from('users')
+      .from('org_members')
       .select('auth0_user_id')
-      .eq('auth0_user_id', targetUserId)
       .eq('auth0_org_id', req.orgId!)
+      .eq('auth0_user_id', targetUserId)
       .maybeSingle()
     if (!member) {
       res.status(404).json({ error: 'User not found in this organization.' })
