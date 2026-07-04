@@ -12,13 +12,13 @@ router.get(
   requireOrg,
   requireRole('member'),
   async (req: AuthedRequest, res: Response) => {
-    // org_members.user_id stores users.id (UUID). There is NO FK from
-    // org_members to users in the DB, so a PostgREST embed (users(...)) cannot be
-    // resolved — join manually in two queries instead.
+    // org_members is keyed by auth0_user_id (the Auth0 `sub`). There is NO FK
+    // from org_members to users, so a PostgREST embed cannot be resolved — join
+    // manually against users on auth0_user_id in two queries instead.
     const { data: memberRows, error } = await supabaseAdmin
       .from('org_members')
-      .select('id, role, status, joined_at, user_id')
-      .eq('org_id', req.orgId!)
+      .select('id, role, status, joined_at, auth0_user_id')
+      .eq('auth0_org_id', req.orgId!)
       .order('joined_at', { ascending: true })
 
     if (error) {
@@ -27,34 +27,39 @@ router.get(
     }
 
     const rows = memberRows ?? []
-    const userIds = rows
-      .map((m) => m.user_id)
+    const authUserIds = rows
+      .map((m) => m.auth0_user_id)
       .filter((id): id is string => typeof id === 'string' && id.length > 0)
 
-    const usersById = new Map<
+    const usersBySub = new Map<
       string,
       { id: string; email: string; full_name: string; avatar_url: string | null }
     >()
-    if (userIds.length > 0) {
+    if (authUserIds.length > 0) {
       const { data: users, error: usersErr } = await supabaseAdmin
         .from('users')
-        .select('id, email, full_name, avatar_url')
-        .in('id', userIds)
+        .select('id, auth0_user_id, email, full_name, avatar_url')
+        .in('auth0_user_id', authUserIds)
       if (usersErr) {
         res.status(500).json({ error: usersErr.message })
         return
       }
-      for (const u of users ?? []) usersById.set(u.id, u)
+      for (const u of users ?? []) usersBySub.set(u.auth0_user_id, u)
     }
 
-    const members = rows.map((m) => ({
-      id: m.id,
-      role: m.role,
-      status: m.status,
-      joined_at: m.joined_at,
-      user_id: m.user_id,
-      users: m.user_id ? (usersById.get(m.user_id) ?? null) : null,
-    }))
+    const members = rows.map((m) => {
+      const u = m.auth0_user_id ? (usersBySub.get(m.auth0_user_id) ?? null) : null
+      return {
+        id: m.id,
+        role: m.role,
+        status: m.status,
+        joined_at: m.joined_at,
+        user_id: u?.id ?? null,
+        users: u
+          ? { id: u.id, email: u.email, full_name: u.full_name, avatar_url: u.avatar_url }
+          : null,
+      }
+    })
 
     res.json({ members })
   }
@@ -72,12 +77,25 @@ router.post(
       return
     }
 
+    // The client identifies the member by users.id (UUID); org_members is keyed
+    // by auth0_user_id, so resolve the Auth0 sub first.
+    const { data: targetUser } = await supabaseAdmin
+      .from('users')
+      .select('auth0_user_id')
+      .eq('id', body.user_id)
+      .maybeSingle()
+
+    if (!targetUser) {
+      res.status(404).json({ error: 'User not found.' })
+      return
+    }
+
     const { data, error } = await supabaseAdmin
       .from('org_members')
       .update({ role: body.role })
-      .eq('org_id', req.orgId!)
-      .eq('user_id', body.user_id)
-      .select('id, role, status, user_id')
+      .eq('auth0_org_id', req.orgId!)
+      .eq('auth0_user_id', targetUser.auth0_user_id)
+      .select('id, role, status, auth0_user_id')
       .maybeSingle()
 
     if (error) {
@@ -88,7 +106,7 @@ router.post(
       res.status(404).json({ error: 'Membership not found in this organization.' })
       return
     }
-    res.json(data)
+    res.json({ id: data.id, role: data.role, status: data.status, user_id: body.user_id })
   }
 )
 
@@ -101,7 +119,7 @@ router.delete(
     const { error } = await supabaseAdmin
       .from('org_members')
       .delete()
-      .eq('org_id', req.orgId!)
+      .eq('auth0_org_id', req.orgId!)
       .eq('id', String(req.params.id))
 
     if (error) {

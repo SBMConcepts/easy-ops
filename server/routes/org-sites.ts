@@ -10,7 +10,7 @@ async function ensureDefaultDepartment(orgId: string): Promise<string | null> {
   const { data: existing } = await supabaseAdmin
     .from('org_departments')
     .select('id')
-    .eq('org_id', orgId)
+    .eq('auth0_org_id', orgId)
     .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle()
@@ -18,7 +18,7 @@ async function ensureDefaultDepartment(orgId: string): Promise<string | null> {
 
   const { data: created } = await supabaseAdmin
     .from('org_departments')
-    .insert({ org_id: orgId, department_name: 'General' })
+    .insert({ auth0_org_id: orgId, department_name: 'General' })
     .select('id')
     .maybeSingle()
   return created?.id ?? null
@@ -62,7 +62,7 @@ router.get(
     const { data, error } = await supabaseAdmin
       .from('org_sites')
       .select('id, site_name, address, latitude, longitude, geo_radius, department_id')
-      .eq('org_id', req.orgId!)
+      .eq('auth0_org_id', req.orgId!)
       .order('site_name', { ascending: true })
     if (error) {
       res.status(500).json({ error: error.message })
@@ -91,7 +91,7 @@ router.post(
     const { data, error } = await supabaseAdmin
       .from('org_sites')
       .insert({
-        org_id: req.orgId!,
+        auth0_org_id: req.orgId!,
         site_name: body.name.trim(),
         address: body.address ?? '',
         latitude: body.latitude ?? 0,
@@ -127,7 +127,7 @@ router.patch(
     const { data, error } = await supabaseAdmin
       .from('org_sites')
       .update(update)
-      .eq('org_id', req.orgId!)
+      .eq('auth0_org_id', req.orgId!)
       .eq('id', String(req.params.id))
       .select('id, site_name, address, latitude, longitude, geo_radius, department_id')
       .maybeSingle()
@@ -152,7 +152,7 @@ router.delete(
     const { error } = await supabaseAdmin
       .from('org_sites')
       .delete()
-      .eq('org_id', req.orgId!)
+      .eq('auth0_org_id', req.orgId!)
       .eq('id', String(req.params.id))
     if (error) {
       res.status(500).json({ error: error.message })

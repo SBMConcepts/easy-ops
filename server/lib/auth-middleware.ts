@@ -81,22 +81,11 @@ async function resolveMemberRole(req: AuthedRequest): Promise<string | null> {
     return null
   }
 
-  const { data: user } = await supabaseAdmin
-    .from('users')
-    .select('id')
-    .eq('auth0_user_id', sub)
-    .maybeSingle()
-
-  if (!user) {
-    req.memberRole = null
-    return null
-  }
-
   const { data: member } = await supabaseAdmin
     .from('org_members')
     .select('role, status')
-    .eq('org_id', orgId)
-    .eq('user_id', user.id)
+    .eq('auth0_org_id', orgId)
+    .eq('auth0_user_id', sub)
     .maybeSingle()
 
   const role = member && member.status === 'active' ? member.role : null

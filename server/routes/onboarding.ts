@@ -65,7 +65,7 @@ router.post(
 
       const departmentRows = (body.departments ?? [])
         .filter((d) => d.name?.trim())
-        .map((d) => ({ org_id: orgId, department_name: d.name!.trim() }))
+        .map((d) => ({ auth0_org_id: orgId, department_name: d.name!.trim() }))
 
       let firstDepartmentId: string | null = null
       if (departmentRows.length > 0) {
@@ -82,14 +82,14 @@ router.post(
         if (!firstDepartmentId) {
           const { data: general } = await supabaseAdmin
             .from('org_departments')
-            .insert({ org_id: orgId, department_name: 'General' })
+            .insert({ auth0_org_id: orgId, department_name: 'General' })
             .select('id')
             .single()
           firstDepartmentId = general?.id ?? null
         }
         if (firstDepartmentId) {
           const siteRows = siteInputs.map((s) => ({
-            org_id: orgId,
+            auth0_org_id: orgId,
             site_name: s.name!.trim(),
             address: s.address ?? '',
             latitude: s.latitude ?? 0,
@@ -116,7 +116,7 @@ router.post(
       )
       if (roleNames.length > 0) {
         const roleRows = roleNames.map((name) => ({
-          org_id: orgId,
+          auth0_org_id: orgId,
           name: name as 'admin' | 'manager' | 'employee' | 'owner' | 'supervisor',
         }))
         const { error: roleErr } = await supabaseAdmin.from('org_roles').insert(roleRows)

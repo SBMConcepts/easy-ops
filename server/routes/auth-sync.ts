@@ -70,8 +70,8 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     const { data: existingMember } = await supabaseAdmin
       .from('org_members')
       .select('role')
-      .eq('org_id', body.org_id)
-      .eq('user_id', user.id)
+      .eq('auth0_org_id', body.org_id)
+      .eq('auth0_user_id', body.auth0_user_id)
       .maybeSingle()
 
     if (!invite && !existingMember) {
@@ -82,12 +82,12 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     role = jobRoleToTier(roleHint)
     const { error: memberErr } = await supabaseAdmin.from('org_members').upsert(
       {
-        org_id: body.org_id,
-        user_id: user.id,
+        auth0_org_id: body.org_id,
+        auth0_user_id: body.auth0_user_id,
         role,
         status: 'active',
       },
-      { onConflict: 'org_id,user_id' }
+      { onConflict: 'auth0_org_id,auth0_user_id' }
     )
     if (memberErr) {
       res.status(500).json({ error: memberErr.message })

@@ -28,8 +28,8 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     supabaseAdmin
       .from('org_members')
       .select('role, status, joined_at')
-      .eq('org_id', orgId)
-      .eq('user_id', user.id)
+      .eq('auth0_org_id', orgId)
+      .eq('auth0_user_id', sub)
       .maybeSingle(),
     supabaseAdmin
       .from('organizations')

@@ -144,30 +144,30 @@ export type Database = {
       }
       org_departments: {
         Row: {
+          auth0_org_id: string
           created_at: string
           department_name: string
           id: string
-          org_id: string
           updated_at: string
         }
         Insert: {
+          auth0_org_id?: string
           created_at?: string
           department_name?: string
           id?: string
-          org_id?: string
           updated_at?: string
         }
         Update: {
+          auth0_org_id?: string
           created_at?: string
           department_name?: string
           id?: string
-          org_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'org_departments_org_id_fkey'
-            columns: ['org_id']
+            foreignKeyName: 'org_departments_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
             referencedRelation: 'organizations'
             referencedColumns: ['auth0_org_id']
@@ -176,59 +176,66 @@ export type Database = {
       }
       org_members: {
         Row: {
+          auth0_org_id: string
+          auth0_user_id: string
           id: string
           joined_at: string
-          org_id: string
           role: string
           status: string
-          user_id: string | null
         }
         Insert: {
+          auth0_org_id?: string
+          auth0_user_id?: string
           id?: string
           joined_at?: string
-          org_id: string
           role?: string
           status?: string
-          user_id?: string | null
         }
         Update: {
+          auth0_org_id?: string
+          auth0_user_id?: string
           id?: string
           joined_at?: string
-          org_id?: string
           role?: string
           status?: string
-          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'org_members_org_id_fkey'
-            columns: ['org_id']
+            foreignKeyName: 'org_members_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
             referencedRelation: 'organizations'
             referencedColumns: ['auth0_org_id']
+          },
+          {
+            foreignKeyName: 'org_members_auth0_user_id_fkey'
+            columns: ['auth0_user_id']
+            isOneToOne: true
+            referencedRelation: 'user_credentials'
+            referencedColumns: ['auth0_user_id']
           },
         ]
       }
       org_roles: {
         Row: {
+          auth0_org_id: string
           id: string
           name: Database['public']['Enums']['organization_role']
-          org_id: string
         }
         Insert: {
+          auth0_org_id?: string
           id?: string
           name: Database['public']['Enums']['organization_role']
-          org_id?: string
         }
         Update: {
+          auth0_org_id?: string
           id?: string
           name?: Database['public']['Enums']['organization_role']
-          org_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'org_roles_org_id_fkey'
-            columns: ['org_id']
+            foreignKeyName: 'org_roles_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
             referencedRelation: 'organizations'
             referencedColumns: ['auth0_org_id']
@@ -238,48 +245,48 @@ export type Database = {
       org_sites: {
         Row: {
           address: string
+          auth0_org_id: string
           department_id: string
           geo_radius: number
           id: string
           latitude: number
           longitude: number
-          org_id: string
           site_name: string
         }
         Insert: {
           address?: string
+          auth0_org_id?: string
           department_id: string
           geo_radius: number
           id?: string
           latitude: number
           longitude: number
-          org_id?: string
           site_name?: string
         }
         Update: {
           address?: string
+          auth0_org_id?: string
           department_id?: string
           geo_radius?: number
           id?: string
           latitude?: number
           longitude?: number
-          org_id?: string
           site_name?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'org_sites_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
           {
             foreignKeyName: 'org_sites_department_id_fkey'
             columns: ['department_id']
             isOneToOne: false
             referencedRelation: 'org_departments'
             referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'org_sites_org_id_fkey'
-            columns: ['org_id']
-            isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['auth0_org_id']
           },
         ]
       }
@@ -365,36 +372,47 @@ export type Database = {
       }
       user_credentials: {
         Row: {
-          auth0_user_id: string | null
+          auth0_org_id: string
+          auth0_user_id: string
           created_at: string
           email: string
           email_verified: boolean
           id: string
-          password_hash: string
+          password_hash: string | null
           status: string
           updated_at: string
         }
         Insert: {
-          auth0_user_id?: string | null
+          auth0_org_id?: string
+          auth0_user_id?: string
           created_at?: string
           email: string
           email_verified?: boolean
           id?: string
-          password_hash: string
+          password_hash?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
-          auth0_user_id?: string | null
+          auth0_org_id?: string
+          auth0_user_id?: string
           created_at?: string
           email?: string
           email_verified?: boolean
           id?: string
-          password_hash?: string
+          password_hash?: string | null
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'user_credentials_auth0_user_id_fkey'
+            columns: ['auth0_user_id']
+            isOneToOne: true
+            referencedRelation: 'users'
+            referencedColumns: ['auth0_user_id']
+          },
+        ]
       }
       users: {
         Row: {
@@ -409,7 +427,7 @@ export type Database = {
         }
         Insert: {
           auth0_org_id?: string
-          auth0_user_id: string
+          auth0_user_id?: string
           avatar_url?: string | null
           created_at?: string
           email: string
@@ -431,7 +449,7 @@ export type Database = {
           {
             foreignKeyName: 'users_auth0_org_id_fkey'
             columns: ['auth0_org_id']
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: 'organizations'
             referencedColumns: ['auth0_org_id']
           },

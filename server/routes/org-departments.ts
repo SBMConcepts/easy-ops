@@ -14,7 +14,7 @@ router.get(
     const { data, error } = await supabaseAdmin
       .from('org_departments')
       .select('id, department_name, created_at')
-      .eq('org_id', req.orgId!)
+      .eq('auth0_org_id', req.orgId!)
       .order('department_name', { ascending: true })
     if (error) {
       res.status(500).json({ error: error.message })
@@ -37,7 +37,7 @@ router.post(
     }
     const { data, error } = await supabaseAdmin
       .from('org_departments')
-      .insert({ org_id: req.orgId!, department_name: body.name.trim() })
+      .insert({ auth0_org_id: req.orgId!, department_name: body.name.trim() })
       .select('id, department_name')
       .single()
     if (error) {
@@ -62,7 +62,7 @@ router.patch(
     const { data, error } = await supabaseAdmin
       .from('org_departments')
       .update({ department_name: body.name.trim(), updated_at: new Date().toISOString() })
-      .eq('org_id', req.orgId!)
+      .eq('auth0_org_id', req.orgId!)
       .eq('id', String(req.params.id))
       .select('id, department_name')
       .maybeSingle()
@@ -87,7 +87,7 @@ router.delete(
     const { error } = await supabaseAdmin
       .from('org_departments')
       .delete()
-      .eq('org_id', req.orgId!)
+      .eq('auth0_org_id', req.orgId!)
       .eq('id', String(req.params.id))
     if (error) {
       res.status(500).json({ error: error.message })
