@@ -47,6 +47,14 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     return
   }
 
+  // Reconcile the invite-time placeholder (see POST /api/invitations): now that
+  // the real profile row exists, drop the 'pending|<email>' row so it does not
+  // linger as a duplicate. Best-effort — a failure here must not block sync.
+  await supabaseAdmin
+    .from('users')
+    .delete()
+    .eq('auth0_user_id', `pending|${body.email.toLowerCase()}`)
+
   let role = 'admin' // default to owner/admin if no org context
   if (body.org_id) {
     let roleHint = body.role
