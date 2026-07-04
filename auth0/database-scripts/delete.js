@@ -3,8 +3,11 @@
  * Connection: Username-Password-Authentication (custom database)
  *
  * Removes the credential row from public.user_credentials when a user is deleted
- * in Auth0. Application state (public.users / org_members) is managed separately
- * and is intentionally NOT cascaded here.
+ * in Auth0. Under the current schema, org_members.auth0_user_id has a foreign key
+ * to user_credentials.auth0_user_id with ON DELETE CASCADE, so removing the
+ * credential row also removes the caller's org_members membership. The parent
+ * public.users row is NOT affected (user_credentials references users, not the
+ * reverse) and is managed separately.
  *
  * Signature is (id, callback) where `id` is the user_id previously returned by
  * Login / Get User (the user_credentials.id UUID, i.e. the Auth0 sub without the

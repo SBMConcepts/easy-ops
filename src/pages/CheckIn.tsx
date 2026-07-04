@@ -36,7 +36,7 @@ export default function CheckIn() {
           hours_worked: Number(hoursWorked) || 0,
           overtime: Number(overtime) || 0,
         },
-        { onConflict: 'user_id, date, organization_id' }
+        { onConflict: 'user_id, org_id, date' }
       )
       if (error) throw error
     },
