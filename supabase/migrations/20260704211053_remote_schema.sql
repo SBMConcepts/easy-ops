@@ -537,8 +537,11 @@ ALTER TABLE ONLY "public"."subscriptions"
 
 
 
-ALTER TABLE ONLY "public"."user_credentials"
-    ADD CONSTRAINT "user_credentials_auth0_user_id_fkey" FOREIGN KEY ("auth0_user_id") REFERENCES "public"."users"("auth0_user_id") ON UPDATE CASCADE ON DELETE CASCADE;
+-- REMOVED (inverted FK, breaks invitation signup): user_credentials is created by
+-- Auth0's custom-DB create.js BEFORE the public.users row exists, so this FK can
+-- never be satisfied at signup. See 20260705050000_drop_user_credentials_fk_recurring.sql.
+-- ALTER TABLE ONLY "public"."user_credentials"
+--     ADD CONSTRAINT "user_credentials_auth0_user_id_fkey" FOREIGN KEY ("auth0_user_id") REFERENCES "public"."users"("auth0_user_id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 

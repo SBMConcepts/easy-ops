@@ -1,33 +1,52 @@
-alter table "public"."user_credentials" add constraint "user_credentials_auth0_org_id_fkey" FOREIGN KEY (auth0_org_id) REFERENCES public.users(auth0_org_id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+-- REMOVED (inverted FK, breaks invitation signup): user_credentials.auth0_org_id
+-- referencing users(auth0_org_id) cannot be satisfied at signup (users row does
+-- not exist yet). See 20260705050000_drop_user_credentials_fk_recurring.sql.
+-- alter table "public"."user_credentials" add constraint "user_credentials_auth0_org_id_fkey" FOREIGN KEY (auth0_org_id) REFERENCES public.users(auth0_org_id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
 
-alter table "public"."user_credentials" validate constraint "user_credentials_auth0_org_id_fkey";
+-- alter table "public"."user_credentials" validate constraint "user_credentials_auth0_org_id_fkey";
 
 
-  create policy "avatars: users delete own"
+create policy "avatars: users delete own"
   on "storage"."objects"
   as permissive
-  for delete
+  for
+delete
   to authenticated
 using (((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[2] = (auth.jwt() ->> 'sub'::text))));
 
 
 
-  create policy "avatars: users update own"
+create policy "avatars: users update own"
   on "storage"."objects"
   as permissive
-  for update
+  for
+update
   to authenticated
 using (((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[2] = (auth.jwt() ->> 'sub'::text))))
-with check (((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[2] = (auth.jwt() ->> 'sub'::text))));
+with check
+(((bucket_id = 'avatars'::text) AND
+((storage.foldername
+(name))[2] =
+(auth.jwt
+() ->> 'sub'::text))));
 
 
 
-  create policy "avatars: users upload own"
+create policy "avatars: users upload own"
   on "storage"."objects"
   as permissive
-  for insert
+  for
+insert
   to authenticated
-with check (((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[2] = (auth.jwt() ->> 'sub'::text))));
+with check (((
+bucket_id
+=
+'avatars'
+::text) AND
+((storage.foldername
+(name))[2] =
+(auth.jwt
+() ->> 'sub'::text))));
 
 
 
