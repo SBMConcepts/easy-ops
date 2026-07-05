@@ -58,21 +58,17 @@ export function useSites() {
 
 // ── 2. Attendance Records (Direct via RLS) ──────────────────────────────────
 export function useAttendanceRecords() {
-  const supabase = useDB()
+  const { apiFetch } = useOrgApi()
   const { user } = useAuth()
 
   return useQuery({
     queryKey: attendanceKeys.lists(),
     queryFn: async () => {
-      // RLS scopes rows by JWT claims (own rows for members; all tenant rows for
-      // admins). org_attendance is a daily aggregate keyed by (user_id, date).
-      const { data, error } = await supabase
-        .from('org_attendance')
-        .select('*')
-        .order('date', { ascending: false })
-
-      if (error) throw error
-      return data ?? []
+      // org_attendance has RLS enabled with no policies, so the authenticated
+      // client sees nothing. Read the org's daily aggregate via the service-role
+      // Express endpoint instead.
+      const res = await apiFetch<{ attendance: AttendanceRow[] }>('org-attendance')
+      return res.attendance ?? []
     },
     enabled: !!user,
   })

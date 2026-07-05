@@ -58,14 +58,17 @@ router.post(
 
     const { data, error } = await supabaseAdmin
       .from('org_attendance')
-      .insert({
-        org_id: req.orgId!,
-        user_id: req.auth!.sub,
-        date: body.date,
-        method: body.method,
-        hours_worked: Number(body.hours_worked ?? 0),
-        overtime: Number(body.overtime ?? 0),
-      })
+      .upsert(
+        {
+          org_id: req.orgId!,
+          user_id: req.auth!.sub,
+          date: body.date,
+          method: body.method,
+          hours_worked: Number(body.hours_worked ?? 0),
+          overtime: Number(body.overtime ?? 0),
+        },
+        { onConflict: 'user_id,org_id,date' }
+      )
       .select('id, org_id, user_id, date, method, hours_worked, overtime, created_at')
       .single()
     if (error) {

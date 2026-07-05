@@ -5,14 +5,14 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { useAttendanceRecords, attendanceKeys } from '../hooks/useOrgData'
-import { useDB } from '../contexts/DatabaseContext'
+import { useOrgApi } from '../hooks/useOrgApi'
 import { useCurrentUser } from '../hooks/useCurrentUser'
 import { toast } from 'sonner'
 import { QrCode, Fingerprint, MapPin, CheckCircle2, Loader2, Clock } from 'lucide-react'
 import '../styles/checkin.css'
 
 export default function CheckIn() {
-  const supabase = useDB()
+  const { apiFetch } = useOrgApi()
   const { profile: currentUser } = useCurrentUser()
   const queryClient = useQueryClient()
 
@@ -27,18 +27,17 @@ export default function CheckIn() {
 
       const dateStr = new Date().toISOString().split('T')[0]
 
-      const { error } = await supabase.from('org_attendance').upsert(
-        {
-          user_id: currentUser.auth0_user_id,
-          org_id: currentUser.org_id,
+      // Writes go through the Express API (service-role); org_attendance has RLS
+      // enabled with no policies, so a direct authenticated-client insert is denied.
+      await apiFetch('org-attendance', {
+        method: 'POST',
+        body: JSON.stringify({
           date: dateStr,
           method: selectedMethod,
           hours_worked: Number(hoursWorked) || 0,
           overtime: Number(overtime) || 0,
-        },
-        { onConflict: 'user_id, org_id, date' }
-      )
-      if (error) throw error
+        }),
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: attendanceKeys.all })
