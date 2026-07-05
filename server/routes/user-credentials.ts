@@ -39,16 +39,15 @@ router.patch(
       return
     }
 
-    // Authorisation is by ORG MEMBERSHIP, not by the target's role: an admin/
-    // owner may manage the credential of ANY member of their org (member,
-    // manager, admin — anyone who was invited and enrolled). org_members is the
-    // authoritative membership table (users.auth0_org_id is only a primary-org
-    // hint and is unreliable for multi-org / pending-enrollment users).
+    // Resolve the target from the users table (the source of truth for a
+    // person's identity/data), scoped to the caller's org. user_credentials is
+    // then updated from that, and the membership status is propagated to
+    // org_members afterwards (users -> user_credentials -> org_members).
     const { data: member } = await supabaseAdmin
-      .from('org_members')
+      .from('users')
       .select('auth0_user_id')
-      .eq('auth0_org_id', req.orgId!)
       .eq('auth0_user_id', targetUserId)
+      .eq('auth0_org_id', req.orgId!)
       .maybeSingle()
     if (!member) {
       res.status(404).json({ error: 'User not found in this organization.' })
@@ -69,6 +68,16 @@ router.patch(
       res.status(404).json({ error: 'No credential record found for this user.' })
       return
     }
+
+    // Propagate the credential status to the membership. A blocked/deleted
+    // credential suspends org access; an active credential restores it.
+    const memberStatus = body.status === 'active' ? 'active' : 'suspended'
+    await supabaseAdmin
+      .from('org_members')
+      .update({ status: memberStatus })
+      .eq('auth0_org_id', req.orgId!)
+      .eq('auth0_user_id', targetUserId)
+
     res.json(data)
   }
 )

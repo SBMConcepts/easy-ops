@@ -45,7 +45,10 @@ const JOB_ROLE_TO_TIER: Record<string, AccessRole> = {
 
 /** Resolve a job role (or any incoming role string) to an access tier. */
 export function jobRoleToTier(jobRole: string | null | undefined): AccessRole {
-  if (!jobRole) return 'owner'
+  // The role is chosen by the inviter when an invitation is sent, so an unknown
+  // or missing role must NOT silently become 'owner'. Default to the least-
+  // privileged tier instead; 'owner' is only ever granted by an explicit role.
+  if (!jobRole) return 'member'
   if (isAccessRole(jobRole)) return jobRole
-  return JOB_ROLE_TO_TIER[jobRole] ?? 'owner'
+  return JOB_ROLE_TO_TIER[jobRole] ?? 'member'
 }
