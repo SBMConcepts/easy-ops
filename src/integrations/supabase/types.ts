@@ -603,9 +603,9 @@ export const Constants = {
     Enums: {
       attendance_status: ['present', 'late', 'absent', 'leave', 'holiday'],
       check_in_method: ['qr', 'biometric', 'whatsapp', 'manual', 'georefrence'],
-      organization_role: ['admin', 'manager', 'supervisor', 'employee', 'owner'],
+      organization_role: ['owner', 'admin', 'manager', 'member'],
       organization_status: ['provisioning', 'active', 'suspended', 'offboarding', 'archived'],
-      subscription_plan: ['free', 'growth', 'pro', 'enterprise'],
+      subscription_plan: ['free', 'starter', 'growth', 'pro', 'enterprise'],
       subscription_status: ['free', 'active', 'past_due', 'canceled'],
     },
   },

@@ -1,11 +1,10 @@
 // Role-based access control for the EasyOps multi-tenant backend.
 //
 // Access tiers map 1:1 to the `org_members.role` CHECK constraint in the
-// database (owner > admin > member > viewer). These are the ONLY values used
+// database (owner > admin > manager > member). These are the ONLY values used
 // for gating API access.
-//
-// Job roles (`org_roles.name`, the `organization_role` enum: admin, manager,
-// supervisor, employee, owner) describe a person's position in the org and are
+
+// Job roles (`org_roles.name`, the `organization_role` enum: admin, manager, owner) describe a person's position in the org and are
 // stored separately. When a job role needs to be resolved to an access tier
 // (e.g. accepting an invite, syncing membership), use `jobRoleToTier`.
 
