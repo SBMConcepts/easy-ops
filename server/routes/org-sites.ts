@@ -1,6 +1,11 @@
 import { Router, type Response } from 'express'
 
-import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth,
+  requireOrg,
+  requirePermission,
+  type AuthedRequest,
+} from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import type { TablesUpdate } from '../types/supabase.js'
 import { auth } from 'express-openid-connect'
@@ -62,7 +67,7 @@ router.get(
   '/api/org-sites',
   requireAuth,
   requireOrg,
-  requireRole('member'),
+  requirePermission('read:org_sites'),
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('org_sites')
@@ -83,7 +88,7 @@ router.post(
   '/api/org-sites',
   requireAuth,
   requireOrg,
-  requireRole('manager'),
+  requirePermission('write:org_sites'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as SiteBody
     if (!body.site_name?.trim()) {
@@ -122,7 +127,7 @@ router.patch(
   '/api/org-sites/:id',
   requireAuth,
   requireOrg,
-  requireRole('manager'),
+  requirePermission('write:org_sites'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as SiteBody
     const update: TablesUpdate<'org_sites'> = {}
@@ -158,7 +163,7 @@ router.delete(
   '/api/org-sites/:id',
   requireAuth,
   requireOrg,
-  requireRole('manager'),
+  requirePermission('delete:org_sites'),
   async (req: AuthedRequest, res: Response) => {
     const { error } = await supabaseAdmin
       .from('org_sites')

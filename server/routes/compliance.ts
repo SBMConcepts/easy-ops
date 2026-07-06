@@ -2,7 +2,13 @@
 
 import { Router, type Response } from 'express'
 
-import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth,
+  requireOrg,
+  requireRole,
+  requirePermission,
+  type AuthedRequest,
+} from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import type { Json } from '../types/supabase.js'
 
@@ -44,7 +50,7 @@ router.get(
   '/api/compliance',
   requireAuth,
   requireOrg,
-  requireRole('member'),
+  requirePermission('read:org_attendance'),
   async (req: AuthedRequest, res: Response) => {
     const orgId = req.orgId!
 
@@ -63,8 +69,8 @@ router.get(
 
     const { data: attendance, error } = await supabaseAdmin
       .from('org_attendance')
-      .select('user_id, date, hours_worked, overtime')
-      .eq('org_id', orgId)
+      .select('auth0_user_id, date, hours_worked, overtime')
+      .eq('auth0_org_id', orgId)
 
     if (error) {
       res.status(500).json({ error: error.message })
@@ -78,9 +84,9 @@ router.get(
     >()
     for (const row of attendance ?? []) {
       const ws = weekStart(row.date)
-      const key = `${row.user_id}:${ws}`
+      const key = `${row.auth0_user_id}:${ws}`
       const bucket = buckets.get(key) ?? {
-        employee_id: row.user_id,
+        employee_id: row.auth0_user_id,
         week_start: ws,
         ordinary_hours: 0,
         overtime_hours: 0,

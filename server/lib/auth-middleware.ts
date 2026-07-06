@@ -4,7 +4,7 @@
 //   attaches `req.auth` from the session's ID-token claims.
 // - requireOrg: ensures an org_id claim is present, attaches `req.orgId`.
 // - requireRole: ensures the caller's membership in the current org meets a
-//   minimum access tier (owner > admin > member > viewer).
+//   minimum access tier (owner > admin > manager > member).
 //
 // All routes scope their data access by `req.orgId`; tenancy is enforced in
 // code (the service-role Supabase client bypasses RLS).
@@ -17,6 +17,7 @@ import type { NextFunction, Request, Response } from 'express'
 import { AUTH0_CLAIM_NS, type Auth0Claims } from './auth.js'
 import { supabaseAdmin } from './supabase-admin.js'
 import { hasRequiredRole, type AccessRole } from './rbac.js'
+import { roleHasPermission, type Permission } from './permissions.js'
 
 export interface AuthedRequest extends Request {
   auth?: Auth0Claims
@@ -105,6 +106,58 @@ export function requireRole(minRole: AccessRole) {
       next()
     } catch {
       res.status(500).json({ error: 'Failed to verify membership role.' })
+    }
+  }
+}
+
+/**
+ * Require that the caller's role grants a specific `resource:action` scope in
+ * the current org. Scopes are derived from the DB-authoritative role via
+ * ROLE_PERMISSIONS, so this agrees with the Supabase RLS policies.
+ */
+export function requirePermission(permission: Permission) {
+  return async (req: AuthedRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const role = await resolveMemberRole(req)
+      if (!roleHasPermission(role, permission)) {
+        res.status(403).json({ error: `Requires '${permission}' permission.` })
+        return
+      }
+      next()
+    } catch {
+      res.status(500).json({ error: 'Failed to verify permission.' })
+    }
+  }
+}
+
+/** Require that the caller holds at least one of the given scopes. */
+export function requireAnyPermission(...permissions: Permission[]) {
+  return async (req: AuthedRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const role = await resolveMemberRole(req)
+      if (!permissions.some((p) => roleHasPermission(role, p))) {
+        res.status(403).json({ error: `Requires one of: ${permissions.join(', ')}.` })
+        return
+      }
+      next()
+    } catch {
+      res.status(500).json({ error: 'Failed to verify permission.' })
+    }
+  }
+}
+
+/** Require that the caller holds every one of the given scopes. */
+export function requireAllPermissions(...permissions: Permission[]) {
+  return async (req: AuthedRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const role = await resolveMemberRole(req)
+      if (!permissions.every((p) => roleHasPermission(role, p))) {
+        res.status(403).json({ error: `Requires all of: ${permissions.join(', ')}.` })
+        return
+      }
+      next()
+    } catch {
+      res.status(500).json({ error: 'Failed to verify permission.' })
     }
   }
 }

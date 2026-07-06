@@ -3,6 +3,7 @@ import { useAuth, useAuthRole } from '../../contexts/AuthContext'
 import { DashboardLoader } from './DashboardLoader'
 import AdminDashboard from './AdminDashboard'
 import EmployeeDashboard from './EmployeeDashboard'
+import ManagerDashboard from './ManagerDashboard'
 
 const DashboardRouter = () => {
   const { user, organization, isLoading } = useAuth()
@@ -23,8 +24,9 @@ const DashboardRouter = () => {
     case 'owner':
     case 'admin':
       return <AdminDashboard />
+    case 'manager':
+      return <ManagerDashboard />
     case 'member':
-    case 'viewer':
     default:
       return <EmployeeDashboard />
   }

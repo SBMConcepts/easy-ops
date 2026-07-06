@@ -1,217 +1,219 @@
-===============================================================================
- EasyOps — RBAC Reference (Access Tiers + Route Map)
-===============================================================================
- Model        : Access tiers (NOT fine-grained permissions). A caller's tier is
-                org_members.role, one of: owner > admin > member > viewer.
- Token claims : The Auth0 post-login Action injects `org_id` and `role` as
-                namespaced custom claims on the ID + access tokens.
- Namespace    : https://easyops.us.auth0.com/   (server/lib/auth.ts AUTH0_CLAIM_NS,
-                src/lib/auth0-config.ts, auth0/actions/post-login.js, DB org_id()).
- Enforcement  : backend  -> requireAuth + requireOrg + requireRole(minTier)
-                            (server/lib/auth-middleware.ts, server/lib/rbac.ts)
-                frontend -> <ProtectedRoute allowedRoles={[...]}>, useAuthRole()
-                DB        -> public.org_id() + Row-Level Security scope by org_id
+owner
+read:org_members — Read organization member rows for your org (any member role)
 
- NOTE: The earlier fine-grained model (public.role_permissions, app_permission
- enum, requirePermission(), has_permission()) was REMOVED in the schema v2
- refactor. Gating is now purely tier-based.
-===============================================================================
+write:org_members — Create/update organization member roles for your org (owner/admin/manager targets)
 
+delete:org_members — Remove organization members from your org (owner/admin targets)
 
-A. ACCESS TIERS  (org_members.role)
--------------------------------------------------------------------------------
-  Tier      Rank  Meaning
-  owner      3    Organization owner — full control.
-  admin      2    Administrator — manage members, sites, departments, billing.
-  member     1    Standard member — read org data, record own attendance.
-  viewer     0    Read-only.
+read:users — Read users that belong to your org
 
-  requireRole(min) / hasMinRole(min) pass when rank(role) >= rank(min).
+read:user_credentials — Read user credential profiles for users in your org
 
+write:user_credentials — Create/update your own user_credentials row
 
-B. JOB ROLES vs ACCESS TIERS
--------------------------------------------------------------------------------
-  Job roles (org_roles.name, the organization_role enum) describe a person's
-  POSITION and are distinct from access tiers. Mapping (rbac.ts jobRoleToTier):
+delete:user_credentials — Delete your own user_credentials row
 
-    job role      -> access tier
-    owner         -> owner
-    admin         -> admin
-    manager       -> admin
-    supervisor    -> member
-    employee      -> member
-    (unknown)     -> viewer
+read:organizations — Read organizations where you are a member
 
+write:organizations — Create/update the organization record if you are owner/admin of it (own record)
 
-C. ROUTE -> ACCESS MAP  (Express API; server/app.ts mount order)
--------------------------------------------------------------------------------
-  Public (no token)
-    POST   /api/organizations                 create org (pre-signup intake)
-    GET    /api/org-lookup                     resolve org by ?slug= or ?email=
+delete:organizations — Delete the organization record if you are owner/admin of it (own record)
 
-  Identity-provider webhook (x-api-key shared secret)
-    POST   /api/auth/sync                      Auth0 post-login Action
+read:org_roles — Read roles defined for your org
 
-  Authenticated, self (requireAuth [+ requireOrg])
-    GET    /api/health                         liveness (no auth)
-    GET    /api/session                        token echo
-    GET    /api/userinfo                       current user profile (+requireOrg)
-    PUT    /api/userinfo                        update own profile
-    GET    /api/organizations                  current organization (+requireOrg)
-    GET    /api/user-credentials/me            own credential status
+write:org_roles — Create/update roles if you are owner/admin/manager (target role is owner/admin/manager)
 
-  member+ (requireRole('member'))
-    GET    /api/org-members                    list members
-    GET    /api/org-sites                      list sites
-    GET    /api/org-departments               list departments
-    GET    /api/org-roles                      list job roles
-    GET    /api/org-attendance                 list attendance
-    POST   /api/org-attendance                 record OWN daily attendance
-    GET    /api/subscriptions                  current subscription
-    GET    /api/compliance                     BCEA compliance summary
+delete:org_roles — Delete roles if you are owner/admin
 
-  admin+ (requireRole('admin'))
-    POST   /api/onboarding/complete            finalize onboarding
-    POST   /api/org-members                    set a member's access tier
-    DELETE /api/org-members/:id                remove a member
-    POST   /api/invitations                    invite a person to the org
-    POST   /api/org-sites                      create site
-    PATCH  /api/org-sites/:id                  update site
-    DELETE /api/org-sites/:id                  delete site
-    POST   /api/org-departments               create department
-    PATCH  /api/org-departments/:id           rename department
-    DELETE /api/org-departments/:id           delete department
-    POST   /api/org-roles                      add a job role
-    DELETE /api/org-roles/:id                  remove a job role
-    PATCH  /api/subscriptions                  update plan/status
-    PATCH  /api/user-credentials/:auth0UserId/status
-                                               enable/disable a credential
-                                               (guarded to caller's org)
+read:subscriptions — Read subscription records for your org (owner/admin only)
 
-  SECURITY: /api/user-credentials never returns password_hash (the bcrypt store
-  used by the Auth0 custom-database scripts in auth0/database-scripts/).
+write:subscriptions — Create/update subscription records for your org (owner/admin only)
 
-  GAP: the frontend (src/hooks/useAccessRequestApi.ts) still calls
-    GET  /api/access-requests
-    POST /api/access-requests/approve-and-invite
-  but there is NO server route for these (the access_requests table is not part
-  of schema v2). Treat as unimplemented until reintroduced.
+delete:subscriptions — Delete subscription records for your org (owner/admin only)
 
+read:org_sites — Read org sites (admin/manager/owner create policies; members can read by your RLS)
 
-D. FRONTEND GATING  (src/App.tsx + useAuthRole)
--------------------------------------------------------------------------------
-  <ProtectedRoute allowedRoles={[...]}> redirects:
-    - unauthenticated            -> /login
-    - no organization (tenant)   -> /login
-    - admin + org provisioning   -> /app/onboarding
-    - role not in allowedRoles   -> /app
+write:org_sites — Create/update org sites (admin/manager/owner only)
 
-  Route                         allowedRoles
-    /app (index dashboard)      role-routed by DashboardRouter
-    /app/check-in               owner, admin, member, viewer
-    /app/live-attendance        owner, admin, member, viewer
-    /app/compliance             owner, admin, member, viewer
-    /app/sites                  owner, admin, member, viewer
-    /app/payroll                owner, admin, member, viewer
-    /app/settings               owner, admin, member, viewer
-    /app/employees-management   owner, admin
-    /app/onboarding             (no wrapper; redirect handled in ProtectedRoute)
-    /app/reports                (no wrapper)
+delete:org_sites — Delete org sites (admin/manager/owner only)
 
-  useAuthRole(): hasMinRole(tier), isOwner, isAdmin (>=admin), isMember (>=member).
-  SitesAndDepartments page hides create/edit/delete controls unless isAdmin
-  (canManageSites / canManageDepartments); reads are open to all tiers.
+read:org_departments — Read org departments (members can read)
 
+write:org_departments — Create/update org departments (admin/manager/owner only)
 
-E. AUTH0 SETUP CHECKLIST
--------------------------------------------------------------------------------
-  1. Custom API (Applications -> APIs), identifier = AUTH0_AUDIENCE. RBAC is not
-     required for tier gating, but the API must exist so access tokens are JWTs.
-  2. Post-login Action (auth0/actions/post-login.js) secrets:
-       BACKEND_URL        — Express server base URL
-       AUTH0_SYNC_SECRET  — must equal server AUTH0_SYNC_SECRET (x-api-key)
-     The Action calls POST /api/auth/sync, then injects `org_id` + `role` claims.
-  3. Claim namespace must match across the Action, frontend
-     (src/lib/auth0-config.ts AUTH0_CLAIM_NS) and server
-     (server/lib/auth.ts AUTH0_CLAIM_NS): https://easyops.us.auth0.com/
-  4. Organizations: each tenant is an Auth0 Organization; the org id is the
-     organizations.auth0_org_id primary key and the JWT `org_id` claim.
+delete:org_departments — Delete org departments (owners/admin only)
 
-  NOTE: Access tiers are a global capability layer. Tenant data isolation is
-  enforced by org_id + Postgres RLS — never rely on a tier alone for the
-  tenant boundary.
-===============================================================================
+read:org_attendance — Read attendance rows for your org (members)
 
+write:org_attendance — Insert/update attendance rows (admin/manager/owner only)
 
-F. CUSTOM API SCOPES (OPTIONAL)  — Applications -> APIs -> [API] -> Permissions
--------------------------------------------------------------------------------
-  Convention: verb:resource. These map 1:1 to the schema/routes above.
+delete:org_attendance — Delete attendance rows (owners/admin only)
 
-  IMPORTANT: enforcement today is ACCESS-TIER based (requireRole + DB checks),
-  NOT scopes. Loading these is optional — useful only if you later (a) surface
-  RBAC roles in the Auth0 dashboard, (b) gate scopes per machine-to-machine
-  client, or (c) move to permission-based middleware. If you adopt them, enable
-  "RBAC" + "Add Permissions in the Access Token" on the API and assign scopes to
-  Auth0 roles that mirror the tiers in section A.
+read:invitations — Read invitations for your org (owner/admin only)
 
-  Organizations & onboarding
-    create:organizations   Create a new organization (public provisioning)
-    read:organizations     View the current organization profile and settings
-    update:organizations   Update organization name, status, slug, metadata
-    manage:onboarding      Complete onboarding (sites/departments/roles + activate)
+write:invitations — Create/update invitations for your org (owner/admin only)
 
-  Members (org_members)
-    read:members           List members of the organization
-    create:members         Add a member and assign an access tier
-    update:members         Change a member's access tier or status
-    delete:members         Remove a member from the organization
+delete:invitations — Delete invitations for your org (owner/admin only)
 
-  Invitations
-    read:invitations       View pending and sent invitations
-    create:invitations     Invite a person to the organization
-    delete:invitations     Revoke a pending invitation
+read:audit_logs — Read audit logs for your org (owner/admin only)
 
-  Sites (org_sites)
-    read:sites             View organization sites
-    create:sites           Create a new site
-    update:sites           Update site details (address, geofence, etc.)
-    delete:sites           Delete a site
+write:audit_logs — Insert audit log entries for your org (any org member can insert)
 
-  Departments (org_departments)
-    read:departments       View departments
-    create:departments     Create a department
-    update:departments     Rename or update a department
-    delete:departments     Delete a department
+delete:audit_logs — Delete audit logs for your org (owner/admin only)
 
-  Job roles (org_roles)
-    read:roles             View the organization's job roles
-    create:roles           Add a job role
-    delete:roles           Remove a job role
+admin
+(Effective permissions match owner based on your current RLS policy role checks)
 
-  Attendance (org_attendance)
-    read:attendance        View attendance records (own or org-wide per tier)
-    create:attendance      Record a daily attendance entry
+read:org_members — Read organization member rows for your org (any member role)
 
-  Subscriptions & billing
-    read:subscriptions     View the current plan and billing status
-    update:subscriptions   Change plan, seats, or billing status
+write:org_members — Create/update organization member roles for your org (owner/admin/manager targets)
 
-  Compliance
-    read:compliance        View BCEA compliance summaries and violations
+delete:org_members — Remove organization members from your org (owner/admin targets)
 
-  User profile & credentials
-    read:profile           Read the current user's own profile
-    update:profile         Update the current user's own profile
-    read:credentials       Read own credential status (never the password hash)
-    manage:credentials     Enable/disable/block a user's login credential (admin)
+read:users — Read users that belong to your org
 
-  Audit logs (audit_logs)
-    read:audit-logs        View the organization's audit trail
+read:user_credentials — Read user credential profiles for users in your org
 
-  Suggested tier -> scope mapping (mirrors rbac.ts tiers)
-    viewer   all read:* scopes
-    member   viewer + create:attendance, read:profile, update:profile
-    admin    member + all create:*/update:*/delete:*, manage:onboarding,
-             manage:credentials, update:subscriptions
-    owner    admin + create:organizations (full control)
-===============================================================================
+write:user_credentials — Create/update your own user_credentials row
+
+delete:user_credentials — Delete your own user_credentials row
+
+read:organizations — Read organizations where you are a member
+
+write:organizations — Create/update the organization record if you are owner/admin of it (own record)
+
+delete:organizations — Delete the organization record if you are owner/admin of it (own record)
+
+read:org_roles — Read roles defined for your org
+
+write:org_roles — Create/update roles if you are owner/admin/manager (target role is owner/admin/manager)
+
+delete:org_roles — Delete roles if you are owner/admin
+
+read:subscriptions — Read subscription records for your org (owner/admin only)
+
+write:subscriptions — Create/update subscription records for your org (owner/admin only)
+
+delete:subscriptions — Delete subscription records for your org (owner/admin only)
+
+read:org_sites — Read org sites (members can read)
+
+write:org_sites — Create/update org sites (admin/manager/owner only)
+
+delete:org_sites — Delete org sites (admin/manager/owner only)
+
+read:org_departments — Read org departments (members can read)
+
+write:org_departments — Create/update org departments (admin/manager/owner only)
+
+delete:org_departments — Delete org departments (owners/admin only)
+
+read:org_attendance — Read attendance rows for your org (members)
+
+write:org_attendance — Insert/update attendance rows (admin/manager/owner only)
+
+delete:org_attendance — Delete attendance rows (owners/admin only)
+
+read:invitations — Read invitations for your org (owner/admin only)
+
+write:invitations — Create/update invitations for your org (owner/admin only)
+
+delete:invitations — Delete invitations for your org (owner/admin only)
+
+read:audit_logs — Read audit logs for your org (owner/admin only)
+
+write:audit_logs — Insert audit log entries for your org (any org member can insert)
+
+delete:audit_logs — Delete audit logs for your org (owner/admin only)
+
+manager
+read:org_members — Read organization member rows for your org (any member role)
+
+delete:org_members — (not allowed by your current RLS)
+
+write:org_members — (not allowed by your current RLS)
+
+read:users — Read users that belong to your org
+
+read:user_credentials — Read user credential profiles for users in your org
+
+write:user_credentials — Create/update your own user_credentials row
+
+delete:user_credentials — Delete your own user_credentials row
+
+read:organizations — Read organizations where you are a member
+
+read:org_roles — Read roles defined for your org (no write/delete for managers)
+
+read:org_sites — Read org sites (members can read)
+
+write:org_sites — Create/update org sites (admin/manager/owner only)
+
+delete:org_sites — Delete org sites (admin/manager/owner only)
+
+read:org_departments — Read org departments (members can read)
+
+write:org_departments — Create/update org departments (admin/manager/owner only)
+
+delete:org_departments — (not allowed by your current RLS)
+
+read:org_attendance — Read attendance rows for your org (members)
+
+write:org_attendance — Insert/update attendance rows (admin/manager/owner only)
+
+delete:org_attendance — (not allowed by your current RLS)
+
+read:invitations — (not allowed by your current RLS; invitations select is owner/admin only)
+
+write:invitations — (not allowed)
+
+delete:invitations — (not allowed)
+
+write:audit_logs — Insert audit log entries for your org (any org member can insert)
+
+read:audit_logs — (not allowed)
+
+delete:audit_logs — (not allowed)
+
+member
+read:org_members — Read organization member rows for your org (any member role)
+
+write:org_members — (not allowed by your current RLS)
+
+delete:org_members — (not allowed by your current RLS)
+
+read:users — Read users that belong to your org
+
+read:user_credentials — Read user credential profiles for users in your org
+
+write:user_credentials — Create/update your own user_credentials row
+
+delete:user_credentials — Delete your own user_credentials row
+
+read:organizations — Read organizations where you are a member
+
+read:org_roles — Read roles defined for your org
+
+read:org_sites — Read org sites
+
+read:org_departments — Read org departments
+
+read:org_attendance — Read attendance rows
+
+write:audit_logs — Insert audit log entries for your org (any org member can insert)
+
+read:audit_logs — (not allowed by your current RLS)
+
+delete:audit_logs — (not allowed by your current RLS)
+
+read:subscriptions — (not allowed; owner/admin only)
+
+write:subscriptions — (not allowed)
+
+delete:subscriptions — (not allowed)
+
+read:invitations — (not allowed; owner/admin only)
+
+write:invitations — (not allowed)
+
+delete:invitations — (not allowed)

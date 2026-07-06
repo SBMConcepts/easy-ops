@@ -1,6 +1,11 @@
 import { Router, type Response } from 'express'
 
-import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth,
+  requireOrg,
+  requirePermission,
+  type AuthedRequest,
+} from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { isAccessRole } from '../lib/rbac.js'
 import { auth } from 'express-openid-connect'
@@ -11,7 +16,7 @@ router.get(
   '/api/org-members',
   requireAuth,
   requireOrg,
-  requireRole('member'),
+  requirePermission('read:org_members'),
   async (req: AuthedRequest, res: Response) => {
     // org_members is keyed by auth0_user_id (the Auth0 `sub`). There is NO FK
     // from org_members to users, so a PostgREST embed cannot be resolved — join
@@ -84,7 +89,7 @@ router.post(
   '/api/org-members',
   requireAuth,
   requireOrg,
-  requireRole('manager'),
+  requirePermission('write:org_members'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { user_id?: string; role?: string }
     if (!body.user_id || !isAccessRole(body.role)) {
@@ -131,7 +136,7 @@ router.delete(
   '/api/org-members/:id',
   requireAuth,
   requireOrg,
-  requireRole('manager'),
+  requirePermission('delete:org_members'),
   async (req: AuthedRequest, res: Response) => {
     const { error } = await supabaseAdmin
       .from('org_members')

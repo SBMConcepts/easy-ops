@@ -27,7 +27,7 @@ const SupervisorDashboard = () => {
             {records.map((rec) => (
               <AttendanceRow
                 key={rec.id}
-                fullName={rec.user_id?.slice(0, 8)}
+                fullName={rec.auth0_user_id?.slice(0, 8)}
                 metaText={`${rec.method.toUpperCase()} · ${rec.date}`}
                 status={rec.method}
                 hoursWorked={String(rec.hours_worked)}

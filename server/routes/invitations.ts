@@ -1,6 +1,11 @@
 import { Router, type Response } from 'express'
 
-import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth,
+  requireOrg,
+  requirePermission,
+  type AuthedRequest,
+} from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { jobRoleToTier } from '../lib/rbac.js'
 import { createOrgInvitation } from '../lib/auth0-admin.js'
@@ -11,7 +16,7 @@ router.post(
   '/api/invitations',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requirePermission('write:invitations'),
   async (req: AuthedRequest, res: Response) => {
     const orgId = req.orgId!
     const body = (req.body ?? {}) as {

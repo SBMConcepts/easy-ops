@@ -541,16 +541,6 @@ with check ((auth0_org_id IN ( SELECT om.auth0_org_id
   WHERE ((om.auth0_user_id = (auth.jwt() ->> 'sub'::text)) AND (om.status = 'active'::text) AND (om.role = ANY (ARRAY['owner'::text, 'admin'::text, 'manager'::text, 'member'::text]))))));
 
 
-
-  create policy "Enable read access for all users"
-  on "public"."users"
-  as permissive
-  for select
-  to public
-using (true);
-
-
-
   create policy "users: members can view"
   on "public"."users"
   as permissive

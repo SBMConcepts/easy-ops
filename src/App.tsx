@@ -68,7 +68,7 @@ const WorkspaceShell = () => {
         <Route
           path="check-in"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
               <CheckIn />
             </ProtectedRoute>
           }
@@ -87,7 +87,7 @@ const WorkspaceShell = () => {
         <Route
           path="live-attendance"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
               <LiveAttendance />
             </ProtectedRoute>
           }
@@ -95,7 +95,7 @@ const WorkspaceShell = () => {
         <Route
           path="compliance"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
               <Compliance />
             </ProtectedRoute>
           }
@@ -103,7 +103,7 @@ const WorkspaceShell = () => {
         <Route
           path="sites"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
               <SitesAndDepartments />
             </ProtectedRoute>
           }
@@ -111,7 +111,7 @@ const WorkspaceShell = () => {
         <Route
           path="payroll"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
               <ComingSoon title="Payroll Export" />
             </ProtectedRoute>
           }
@@ -148,7 +148,7 @@ const WorkspaceShell = () => {
         <Route
           path="settings"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'member', 'viewer']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
               <SettingsLayout />
             </ProtectedRoute>
           }

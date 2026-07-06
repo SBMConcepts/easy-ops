@@ -4,7 +4,7 @@ import { useAuth, useAuthRole, type OrgRole } from '../contexts/AuthContext'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  // Access-tier gate: caller's role (owner|admin|member|viewer) must be listed.
+  // Access-tier gate: caller's role (owner|admin|manager|member) must be listed.
   allowedRoles?: OrgRole[]
 }
 

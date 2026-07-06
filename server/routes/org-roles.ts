@@ -1,6 +1,11 @@
 import { Router, type Response } from 'express'
 
-import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth,
+  requireOrg,
+  requirePermission,
+  type AuthedRequest,
+} from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import type { Database } from '../types/supabase.js'
 
@@ -18,7 +23,7 @@ router.get(
   '/api/org-roles',
   requireAuth,
   requireOrg,
-  requireRole('member'),
+  requirePermission('read:org_roles'),
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('org_roles')
@@ -37,7 +42,7 @@ router.post(
   '/api/org-roles',
   requireAuth,
   requireOrg,
-  requireRole('manager'),
+  requirePermission('write:org_roles'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { name?: string }
     if (!isJobRole(body.name)) {
@@ -63,7 +68,7 @@ router.delete(
   '/api/org-roles/:id',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requirePermission('delete:org_roles'),
   async (req: AuthedRequest, res: Response) => {
     const { error } = await supabaseAdmin
       .from('org_roles')

@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from '../components/ui/dialog'
 
-const ACCESS_ROLES = ['owner', 'admin', 'member', 'viewer'] as const
+const ACCESS_ROLES = ['owner', 'admin', 'manager', 'member'] as const
 type AccessRole = (typeof ACCESS_ROLES)[number]
 
 interface MemberUser {
@@ -34,7 +34,7 @@ interface MemberUser {
 
 interface MemberRow {
   id: string
-  role: string
+  role: AccessRole
   status: string
   joined_at: string | null
   user_id: string | null

@@ -27,6 +27,7 @@ exports.onExecutePostLogin = async (event, api) => {
 
   let role = fallbackRole
   const orgId = orgIdFromLogin
+  let permissions = []
 
   if (!backendUrl || !syncSecret) {
     console.warn('[post-login] BACKEND_URL or AUTH0_SYNC_SECRET not set — using fallback role/org')
@@ -52,6 +53,7 @@ exports.onExecutePostLogin = async (event, api) => {
           return null
         })
         if (data && data.role) role = data.role
+        if (data && Array.isArray(data.permissions)) permissions = data.permissions
       } else {
         const text = await res.text().catch(function () {
           return ''
@@ -73,6 +75,9 @@ exports.onExecutePostLogin = async (event, api) => {
     api.accessToken.setCustomClaim(CLAIM_NS + 'auth0_org_id', orgId)
   }
 
+  api.idToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
+  api.accessToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
+
   const supabaseJwtSecret = event.secrets && event.secrets.SUPABASE_JWT_SECRET
   if (!supabaseJwtSecret) {
     console.warn('[post-login] SUPABASE_JWT_SECRET not set — skipping supabase_jwt mint')
@@ -87,6 +92,7 @@ exports.onExecutePostLogin = async (event, api) => {
         auth0_org_id: orgId,
         auth0_user_id: event.user.user_id,
         user_role: role || null,
+        permissions: permissions,
         iat: nowSec,
         exp: nowSec + 60 * 60, // 1 hour
       },

@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 
 import { requireAuth, type AuthedRequest } from '../lib/auth-middleware.js'
 import { AUTH0_CLAIM_NS } from '../lib/auth.js'
+import { permissionsForRole } from '../lib/permissions.js'
 
 const router = Router()
 
@@ -31,6 +32,7 @@ router.get('/api/supabase-token', requireAuth, (req: AuthedRequest, res: Respons
       role: 'authenticated',
       org_id: req.auth?.org_id ?? null,
       user_role: req.auth?.role ?? null,
+      permissions: permissionsForRole(req.auth?.role),
       iat: nowSec,
       exp: nowSec + 60 * 60,
     },

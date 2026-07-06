@@ -18,7 +18,7 @@ const Reports = () => {
     const csvContent =
       'Date,Operator ID,Method,Hours,Overtime\n' +
       records
-        .map((r) => `${r.date},${r.user_id},${r.method},${r.hours_worked},${r.overtime}`)
+        .map((r) => `${r.date},${r.auth0_user_id},${r.method},${r.hours_worked},${r.overtime}`)
         .join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -74,7 +74,7 @@ const Reports = () => {
                     <tr key={rec.id} className="hover:bg-muted/5">
                       <td className="p-4 font-medium text-foreground">{rec.date}</td>
                       <td className="p-4 font-mono text-xs text-muted-foreground">
-                        {rec.user_id?.slice(0, 8)}
+                        {rec.auth0_user_id?.slice(0, 8)}
                       </td>
                       <td className="p-4">
                         <Badge variant="outline" className="text-xs uppercase">

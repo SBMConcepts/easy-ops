@@ -64,7 +64,7 @@ export default function LiveAttendance() {
               <div key={rec.id} className="live-row">
                 <div className="flex flex-col gap-1">
                   <p className="text-sm font-semibold text-dashboard-text-main">
-                    Employee {rec.user_id?.slice(0, 8)}
+                    Employee {rec.auth0_user_id?.slice(0, 8)}
                   </p>
                   <p className="text-xs text-dashboard-text-muted flex items-center gap-1 font-medium">
                     <MapPin className="h-3 w-3 text-dashboard-primary" /> {rec.method.toUpperCase()}{' '}

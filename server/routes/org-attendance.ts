@@ -1,6 +1,11 @@
 import { Router, type Response } from 'express'
 
-import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth,
+  requireOrg,
+  requirePermission,
+  type AuthedRequest,
+} from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import type { Database } from '../types/supabase.js'
 
@@ -24,7 +29,7 @@ router.get(
   '/api/org-attendance',
   requireAuth,
   requireOrg,
-  requireRole('member'),
+  requirePermission('read:org_attendance'),
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('org_attendance')
@@ -43,7 +48,7 @@ router.post(
   '/api/org-attendance',
   requireAuth,
   requireOrg,
-  requireRole('member'),
+  requirePermission('write:org_attendance'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as {
       auth0_org_id?: string

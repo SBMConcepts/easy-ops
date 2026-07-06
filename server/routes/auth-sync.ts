@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express'
 
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { hasRequiredRole, jobRoleToTier } from '../lib/rbac.js'
+import { permissionsForRole } from '../lib/permissions.js'
 
 const router = Router()
 
@@ -83,7 +84,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
       .maybeSingle()
 
     if (!invite && !existingMember) {
-      res.json({ ok: true, role: 'admin' })
+      res.json({ ok: true, role: 'admin', permissions: permissionsForRole('admin') })
       return
     }
 
@@ -103,7 +104,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     }
   }
 
-  res.json({ ok: true, role })
+  res.json({ ok: true, role, permissions: permissionsForRole(role) })
 })
 
 export default router

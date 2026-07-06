@@ -1,6 +1,11 @@
 import { Router, type Response } from 'express'
 
-import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth,
+  requireOrg,
+  requirePermission,
+  type AuthedRequest,
+} from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 
 const router = Router()
@@ -9,7 +14,7 @@ router.get(
   '/api/org-departments',
   requireAuth,
   requireOrg,
-  requireRole('member'),
+  requirePermission('read:org_departments'),
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('org_departments')
@@ -28,7 +33,7 @@ router.post(
   '/api/org-departments',
   requireAuth,
   requireOrg,
-  requireRole('manager'),
+  requirePermission('write:org_departments'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { name?: string }
     if (!body.name?.trim()) {
@@ -52,7 +57,7 @@ router.patch(
   '/api/org-departments/:id',
   requireAuth,
   requireOrg,
-  requireRole('manager'),
+  requirePermission('write:org_departments'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { name?: string }
     if (!body.name?.trim()) {
@@ -82,7 +87,7 @@ router.delete(
   '/api/org-departments/:id',
   requireAuth,
   requireOrg,
-  requireRole('manager'),
+  requirePermission('delete:org_departments'),
   async (req: AuthedRequest, res: Response) => {
     const { error } = await supabaseAdmin
       .from('org_departments')

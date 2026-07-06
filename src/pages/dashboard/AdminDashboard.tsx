@@ -8,7 +8,7 @@ const AdminDashboard = () => {
 
   if (loadingReport) return <DashboardLoader />
 
-  const uniqueEmployees = new Set(records.map((r) => r.user_id)).size
+  const uniqueEmployees = new Set(records.map((r) => r.auth0_user_id)).size
   const totalHours = records.reduce((sum, r) => sum + Number(r.hours_worked), 0)
   const totalOvertime = records.reduce((sum, r) => sum + Number(r.overtime), 0)
 
@@ -60,7 +60,7 @@ const AdminDashboard = () => {
             {records.slice(0, 6).map((rec) => (
               <AttendanceRow
                 key={rec.id}
-                fullName={rec.user_id?.slice(0, 8)}
+                fullName={rec.auth0_user_id?.slice(0, 8)}
                 metaText={`${rec.method.toUpperCase()} · ${rec.date}`}
                 status={rec.method}
                 hoursWorked={String(rec.hours_worked)}

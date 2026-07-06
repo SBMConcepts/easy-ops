@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth, useAuthRole } from '../../contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
 
 export function AdminRoute() {
@@ -16,7 +16,7 @@ export function AdminRoute() {
 
   // If logged in but NOT an admin, redirect them back to their personal profile
   // Alternatively, you could redirect them to a dedicated "403 Forbidden" page
-  if (user.role !== 'admin' && user.role !== 'owner') {
+  if (!['owner', 'admin'].includes(user.role)) {
     return <Navigate to="/settings/profile" replace />
   }
 

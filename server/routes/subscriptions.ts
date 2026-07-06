@@ -1,6 +1,11 @@
 import { Router, type Response } from 'express'
 
-import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
+import {
+  requireAuth,
+  requireOrg,
+  requirePermission,
+  type AuthedRequest,
+} from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import type { TablesUpdate } from '../types/supabase.js'
 
@@ -10,7 +15,7 @@ router.get(
   '/api/subscriptions',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requirePermission('read:subscriptions'),
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('subscriptions')
@@ -35,7 +40,7 @@ router.patch(
   '/api/subscriptions',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requirePermission('write:subscriptions'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { plan?: string; status?: string }
     const update: TablesUpdate<'subscriptions'> = {}
