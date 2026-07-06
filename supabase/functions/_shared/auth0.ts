@@ -8,6 +8,8 @@ export async function verifyAuth0(req: Request) {
     audience: Deno.env.get('AUTH0_AUDIENCE')!,
   })
   return payload as {
+    auth0_org_id: string
+    auth0_user_id: string
     sub: string
     org_id: string
     roles?: string[]

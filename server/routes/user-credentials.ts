@@ -3,7 +3,8 @@ import { Router, type Response } from 'express'
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 
-const SAFE_COLUMNS = 'id, email, email_verified, status, created_at, updated_at, auth0_user_id'
+const SAFE_COLUMNS =
+  'id, auth0_org_id, email, email_verified, status, created_at, updated_at, auth0_user_id'
 
 const CREDENTIAL_STATUSES = new Set(['active', 'blocked', 'deleted'])
 
@@ -30,7 +31,7 @@ router.patch(
   '/api/user-credentials/:auth0UserId/status',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requireRole('manager'),
   async (req: AuthedRequest, res: Response) => {
     const targetUserId = String(req.params.auth0UserId)
     const body = (req.body ?? {}) as { status?: string }
@@ -56,8 +57,14 @@ router.patch(
 
     const { data, error } = await supabaseAdmin
       .from('user_credentials')
-      .update({ status: body.status, updated_at: new Date().toISOString() })
+      .update({
+        auth0_org_id: req.orgId!,
+        auth0_user_id: targetUserId,
+        status: body.status,
+        updated_at: new Date().toISOString(),
+      })
       .eq('auth0_user_id', targetUserId)
+      .eq('auth0_org_id', req.orgId!)
       .select(SAFE_COLUMNS)
       .maybeSingle()
     if (error) {
@@ -74,9 +81,11 @@ router.patch(
     const memberStatus = body.status === 'active' ? 'active' : 'suspended'
     await supabaseAdmin
       .from('org_members')
-      .update({ status: memberStatus })
+      .update({ auth0_org_id: req.orgId!, auth0_user_id: targetUserId, status: memberStatus })
       .eq('auth0_org_id', req.orgId!)
       .eq('auth0_user_id', targetUserId)
+      .select('id, auth0_org_id, auth0_user_id, status')
+      .maybeSingle()
 
     res.json(data)
   }

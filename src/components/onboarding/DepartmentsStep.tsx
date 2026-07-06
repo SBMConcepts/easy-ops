@@ -79,7 +79,7 @@ const DepartmentsStep = ({ data, sites, onChange }: Props) => {
                           value={String(si)}
                           className="dept-card__select-content-item"
                         >
-                          {s.name || `Site ${si + 1}`}
+                          {`Site ${s.name}`}
                         </SelectItem>
                       ))}
                     </SelectContent>

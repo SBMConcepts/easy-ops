@@ -6,7 +6,7 @@ import type { Database } from '../types/supabase.js'
 
 type OrganizationRole = Database['public']['Enums']['organization_role']
 
-const JOB_ROLES = new Set<OrganizationRole>(['admin', 'manager', 'supervisor', 'employee', 'owner'])
+const JOB_ROLES = new Set<OrganizationRole>(['owner', 'admin', 'manager', 'member'])
 
 function isJobRole(value: unknown): value is OrganizationRole {
   return typeof value === 'string' && JOB_ROLES.has(value as OrganizationRole)
@@ -37,12 +37,12 @@ router.post(
   '/api/org-roles',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requireRole('manager'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { name?: string }
     if (!isJobRole(body.name)) {
       res.status(400).json({
-        error: 'name must be one of: admin, manager, supervisor, employee, owner.',
+        error: 'name must be one of: owner, admin, manager.',
       })
       return
     }

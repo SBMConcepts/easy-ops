@@ -44,7 +44,7 @@ function getByEmail(email, callback) {
       .trim()
       .toLowerCase()
     const sql =
-      'SELECT id, email, email_verified, status ' +
+      'SELECT id, auth0_org_id, auth0_user_id, email, email_verified, status ' +
       'FROM public.user_credentials WHERE lower(email) = $1 LIMIT 1'
 
     client.query(sql, [normalizedEmail], function (queryErr, result) {
@@ -61,6 +61,8 @@ function getByEmail(email, callback) {
 
       return callback(null, {
         user_id: row.id,
+        auth0_org_id: row.auth0_org_id,
+        auth0_user_id: row.auth0_user_id,
         email: row.email,
         email_verified: row.email_verified === true,
       })

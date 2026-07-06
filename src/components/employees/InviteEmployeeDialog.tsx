@@ -14,7 +14,7 @@ import {
 import { toast } from 'sonner'
 import { UserPlus, Loader2 } from 'lucide-react'
 
-export type AppRole = 'admin' | 'manager' | 'supervisor' | 'employee'
+export type AppRole = 'owner' | 'admin' | 'manager' | 'member'
 
 export interface NewEmployee {
   id?: string
@@ -50,7 +50,7 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
   // Form State
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<AppRole>('employee')
+  const [role, setRole] = useState<AppRole>('member')
   const [departmentId, setDepartmentId] = useState('')
   const [siteId, setSiteId] = useState('')
 
@@ -70,7 +70,7 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
   const resetForm = () => {
     setFullName('')
     setEmail('')
-    setRole('employee')
+    setRole('member')
     setDepartmentId('')
     setSiteId('')
   }
@@ -164,10 +164,10 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
                 onChange={(e) => setRole(e.target.value as AppRole)}
                 className="w-full bg-zinc-900 border border-zinc-700 text-zinc-100 text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block p-2.5 transition-colors"
               >
-                <option value="employee">Employee</option>
-                <option value="supervisor">Supervisor</option>
+                <option value="member">Member</option>
                 <option value="manager">Manager</option>
-                <option value="admin">Administrator</option>
+                <option value="admin">Admin</option>
+                <option value="owner">Owner</option>
               </select>
             </ModalField>
 

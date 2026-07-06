@@ -39,8 +39,9 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
 
   const { data: user, error: userErr } = await supabaseAdmin
     .from('users')
-    .select('id, auth0_user_id, email, full_name, avatar_url')
+    .select('id, auth0_org_id, auth0_user_id, email, full_name, avatar_url')
     .eq('auth0_user_id', sub)
+    .eq('auth0_org_id', orgId)
     .maybeSingle()
 
   if (userErr) {
@@ -67,7 +68,7 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     supabaseAdmin
       .from('subscriptions')
       .select('plan, status, current_period_end')
-      .eq('org_id', orgId)
+      .eq('auth0_org_id', orgId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -76,17 +77,17 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
   res.json({
     profile_id: user.id,
     auth0_user_id: user.auth0_user_id,
+    auth0_org_id: user.auth0_org_id,
     email: user.email,
     full_name: user.full_name,
     avatar_url: user.avatar_url,
     user_status: 'active',
-    org_id: orgId,
-    auth0_org_id: orgId,
-    role: member?.role ?? 'owner',
+    org_id: org?.auth0_org_id ?? null,
+    role: member?.role ?? 'member',
     membership_status: member?.status ?? 'active',
     joined_at: member?.joined_at ?? null,
     org_name: org?.name ?? '',
-    org_auth0_id: orgId,
+    org_auth0_id: org?.auth0_org_id ?? '',
     org_status: org?.status ?? 'active',
     org_logo: org?.logo_url || null,
     org_country: org?.country ?? '',
@@ -101,7 +102,13 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
   const sub = req.auth!.sub
   const body = (req.body ?? {}) as { full_name?: unknown }
 
-  const update: { full_name?: string; last_seen_at: string } = {
+  const update: {
+    auth0_org_id?: string
+    auth0_user_id?: string
+    email?: string
+    full_name?: string
+    last_seen_at: string
+  } = {
     last_seen_at: new Date().toISOString(),
   }
   if (typeof body.full_name === 'string') update.full_name = body.full_name
@@ -110,7 +117,7 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
     .from('users')
     .update(update)
     .eq('auth0_user_id', sub)
-    .select('id, full_name, avatar_url, email')
+    .select('id, auth0_org_id, auth0_user_id, full_name, avatar_url, email')
     .maybeSingle()
 
   if (error) {
@@ -184,7 +191,7 @@ router.post(
       .from('users')
       .update({ avatar_url: avatarUrl, last_seen_at: new Date().toISOString() })
       .eq('auth0_user_id', sub)
-      .select('id, full_name, avatar_url, email')
+      .select('id, auth0_org_id, auth0_user_id, full_name, avatar_url, email')
       .maybeSingle()
 
     if (error) {
@@ -216,7 +223,7 @@ router.delete(
       .from('users')
       .update({ avatar_url: null, last_seen_at: new Date().toISOString() })
       .eq('auth0_user_id', sub)
-      .select('id, full_name, avatar_url, email')
+      .select('id, auth0_org_id, auth0_user_id, full_name, avatar_url, email')
       .maybeSingle()
 
     if (error) {

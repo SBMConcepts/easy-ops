@@ -40,7 +40,7 @@ function login(email, password, callback) {
       .trim()
       .toLowerCase()
     const sql =
-      'SELECT id, email, password_hash, email_verified, status ' +
+      'SELECT id, auth0_org_id, auth0_user_id, email, password_hash, email_verified, status ' +
       'FROM public.user_credentials WHERE lower(email) = $1 LIMIT 1'
 
     client.query(sql, [normalizedEmail], function (queryErr, result) {
@@ -68,6 +68,8 @@ function login(email, password, callback) {
 
         return callback(null, {
           user_id: row.id,
+          auth0_org_id: row.auth0_org_id,
+          auth0_user_id: row.auth0_user_id,
           email: row.email,
           email_verified: row.email_verified === true,
         })

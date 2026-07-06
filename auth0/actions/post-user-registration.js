@@ -77,6 +77,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
       },
       body: JSON.stringify({
         auth0_user_id: event.user.user_id,
+        auth0_org_id: orgId,
         email: event.user.email,
         full_name: event.user.name || event.user.email,
         avatar_url: event.user.picture || null,

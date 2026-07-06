@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useOrgApi } from '../hooks/useOrgApi'
 import type { CurrentUserProfile } from '../hooks/useCurrentUser'
 
-export type OrgRole = 'owner' | 'admin' | 'member' | 'viewer'
+export type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 
 export interface AuthUser {
   id: string // users.id (uuid surrogate)
@@ -165,8 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => useContext(AuthContext)
 
 const ROLE_HIERARCHY: Record<OrgRole, number> = {
-  viewer: 0,
-  member: 1,
+  member: 0,
+  manager: 1,
   admin: 2,
   owner: 3,
 }
@@ -182,6 +182,7 @@ export const useAuthRole = () => {
   return {
     hasMinRole,
     isOwner: user?.role === 'owner',
+    isManager: hasMinRole('manager'),
     isAdmin: hasMinRole('admin'),
     isMember: hasMinRole('member'),
   }

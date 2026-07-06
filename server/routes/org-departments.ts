@@ -13,7 +13,7 @@ router.get(
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('org_departments')
-      .select('id, department_name, created_at')
+      .select('id, auth0_org_id, department_name, created_at')
       .eq('auth0_org_id', req.orgId!)
       .order('department_name', { ascending: true })
     if (error) {
@@ -28,7 +28,7 @@ router.post(
   '/api/org-departments',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requireRole('manager'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { name?: string }
     if (!body.name?.trim()) {
@@ -38,7 +38,7 @@ router.post(
     const { data, error } = await supabaseAdmin
       .from('org_departments')
       .insert({ auth0_org_id: req.orgId!, department_name: body.name.trim() })
-      .select('id, department_name')
+      .select('id, auth0_org_id, department_name')
       .single()
     if (error) {
       res.status(500).json({ error: error.message })
@@ -52,7 +52,7 @@ router.patch(
   '/api/org-departments/:id',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requireRole('manager'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { name?: string }
     if (!body.name?.trim()) {
@@ -64,7 +64,7 @@ router.patch(
       .update({ department_name: body.name.trim(), updated_at: new Date().toISOString() })
       .eq('auth0_org_id', req.orgId!)
       .eq('id', String(req.params.id))
-      .select('id, department_name')
+      .select('id, auth0_org_id, department_name')
       .maybeSingle()
     if (error) {
       res.status(500).json({ error: error.message })
@@ -82,7 +82,7 @@ router.delete(
   '/api/org-departments/:id',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requireRole('manager'),
   async (req: AuthedRequest, res: Response) => {
     const { error } = await supabaseAdmin
       .from('org_departments')

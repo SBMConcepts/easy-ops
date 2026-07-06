@@ -9,14 +9,14 @@
 // stored separately. When a job role needs to be resolved to an access tier
 // (e.g. accepting an invite, syncing membership), use `jobRoleToTier`.
 
-export type AccessRole = 'owner' | 'admin' | 'member' | 'viewer'
+export type AccessRole = 'owner' | 'admin' | 'manager' | 'member'
 
-export const ACCESS_ROLES: readonly AccessRole[] = ['owner', 'admin', 'member', 'viewer']
+export const ACCESS_ROLES: readonly AccessRole[] = ['owner', 'admin', 'manager', 'member']
 
 // Higher number = more privilege. Used by `hasRequiredRole`.
 const ROLE_TIERS: Record<AccessRole, number> = {
-  viewer: 0,
-  member: 1,
+  member: 0,
+  manager: 1,
   admin: 2,
   owner: 3,
 }
@@ -38,9 +38,8 @@ export function isAccessRole(value: unknown): value is AccessRole {
 const JOB_ROLE_TO_TIER: Record<string, AccessRole> = {
   owner: 'owner',
   admin: 'admin',
-  manager: 'admin',
-  supervisor: 'member',
-  employee: 'member',
+  manager: 'manager',
+  member: 'member',
 }
 
 /** Resolve a job role (or any incoming role string) to an access tier. */

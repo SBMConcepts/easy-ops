@@ -16,7 +16,7 @@ import '../../styles/rolesstep.css'
 
 export interface RoleData {
   name: string
-  base_role: 'admin' | 'manager' | 'supervisor' | 'employee'
+  base_role: 'owner' | 'admin' | 'manager' | 'member'
 }
 
 interface Props {
@@ -25,10 +25,10 @@ interface Props {
 }
 
 const BASE_ROLES = [
-  { value: 'admin', label: 'Admin', desc: 'Full system access' },
-  { value: 'manager', label: 'Manager', desc: 'Operational oversight' },
-  { value: 'supervisor', label: 'Supervisor', desc: 'Team-level access' },
-  { value: 'employee', label: 'Employee', desc: 'Self-service only' },
+  { value: 'owner', label: 'Owner', desc: 'Full system access' },
+  { value: 'admin', label: 'Admin', desc: 'Operational oversight' },
+  { value: 'manager', label: 'Manager', desc: 'Team-level access' },
+  { value: 'member', label: 'Member', desc: 'Self-service only' },
 ] as const
 
 const RolesStep = ({ data, onChange }: Props) => {
@@ -95,7 +95,7 @@ const RolesStep = ({ data, onChange }: Props) => {
       </div>
 
       <button
-        onClick={() => onChange([...data, { name: '', base_role: 'employee' }])}
+        onClick={() => onChange([...data, { name: '', base_role: 'member' }])}
         className="roles-step__add-btn"
       >
         <Plus className="h-4 w-4 mr-2" /> Add Custom Role

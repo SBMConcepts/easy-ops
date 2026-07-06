@@ -156,7 +156,7 @@ const ShiftsStep = ({ shifts, workRules, sites, onShiftsChange, onWorkRulesChang
                             value={String(si)}
                             className="shift-card__select-content-item"
                           >
-                            {s.name || `Site ${si + 1}`}
+                            {`Site ${s.name}`}
                           </SelectItem>
                         ))}
                       </SelectContent>

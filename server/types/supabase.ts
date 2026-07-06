@@ -11,45 +11,45 @@ export type Database = {
       audit_logs: {
         Row: {
           action: string
-          actor_user_id: string | null
+          auth0_user_id: string
           created_at: string
           diff: Json
           id: string
-          org_id: string
+          auth0_org_id: string
           resource_id: string | null
           resource_type: string | null
         }
         Insert: {
           action: string
-          actor_user_id?: string | null
+          auth0_user_id?: string
           created_at?: string
           diff?: Json
           id?: string
-          org_id: string
+          auth0_org_id?: string
           resource_id?: string | null
           resource_type?: string | null
         }
         Update: {
           action?: string
-          actor_user_id?: string | null
+          auth0_user_id?: string
           created_at?: string
           diff?: Json
           id?: string
-          org_id?: string
+          auth0_org_id?: string
           resource_id?: string | null
           resource_type?: string | null
         }
         Relationships: [
           {
             foreignKeyName: 'audit_logs_actor_user_id_fkey'
-            columns: ['actor_user_id']
+            columns: ['auth0_user_id']
             isOneToOne: false
             referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedColumns: ['auth0_user_id']
           },
           {
             foreignKeyName: 'audit_logs_org_id_fkey'
-            columns: ['org_id']
+            columns: ['auth0_org_id']
             isOneToOne: false
             referencedRelation: 'organizations'
             referencedColumns: ['auth0_org_id']
@@ -62,7 +62,7 @@ export type Database = {
           email: string
           expires_at: string
           id: string
-          org_id: string
+          auth0_org_id: string
           role: string
           token: string
         }
@@ -71,7 +71,7 @@ export type Database = {
           email: string
           expires_at?: string
           id?: string
-          org_id: string
+          auth0_org_id?: string
           role?: string
           token?: string
         }
@@ -80,14 +80,14 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
-          org_id?: string
+          auth0_org_id?: string
           role?: string
           token?: string
         }
         Relationships: [
           {
             foreignKeyName: 'invitations_org_id_fkey'
-            columns: ['org_id']
+            columns: ['auth0_org_id']
             isOneToOne: false
             referencedRelation: 'organizations'
             referencedColumns: ['auth0_org_id']
@@ -101,9 +101,9 @@ export type Database = {
           hours_worked: number
           id: string
           method: Database['public']['Enums']['check_in_method']
-          org_id: string
+          auth0_org_id: string
           overtime: number
-          user_id: string
+          auth0_user_id: string
         }
         Insert: {
           created_at?: string
@@ -111,9 +111,9 @@ export type Database = {
           hours_worked: number
           id?: string
           method: Database['public']['Enums']['check_in_method']
-          org_id?: string
+          auth0_org_id?: string
           overtime: number
-          user_id?: string
+          auth0_user_id?: string
         }
         Update: {
           created_at?: string
@@ -121,23 +121,23 @@ export type Database = {
           hours_worked?: number
           id?: string
           method?: Database['public']['Enums']['check_in_method']
-          org_id?: string
+          auth0_org_id?: string
           overtime?: number
-          user_id?: string
+          auth0_user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: 'org_attendance_org_id_fkey'
-            columns: ['org_id']
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: 'organizations'
+            referencedRelation: 'org_members'
             referencedColumns: ['auth0_org_id']
           },
           {
             foreignKeyName: 'org_attendance_user_id_fkey'
-            columns: ['user_id']
+            columns: ['auth0_user_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'org_members'
             referencedColumns: ['auth0_user_id']
           },
         ]
@@ -204,7 +204,7 @@ export type Database = {
             foreignKeyName: 'org_members_auth0_org_id_fkey'
             columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: 'organizations'
+            referencedRelation: 'user_credentials'
             referencedColumns: ['auth0_org_id']
           },
           {
@@ -337,7 +337,7 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           id: string
-          org_id: string
+          auth0_org_id: string
           plan: string
           status: string
           trial_ends_at: string | null
@@ -346,7 +346,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
-          org_id: string
+          auth0_org_id?: string
           plan: string
           status?: string
           trial_ends_at?: string | null
@@ -355,7 +355,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
-          org_id?: string
+          auth0_org_id?: string
           plan?: string
           status?: string
           trial_ends_at?: string | null
@@ -363,7 +363,7 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'subscriptions_org_id_fkey'
-            columns: ['org_id']
+            columns: ['auth0_org_id']
             isOneToOne: false
             referencedRelation: 'organizations'
             referencedColumns: ['auth0_org_id']
@@ -411,6 +411,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: 'users'
             referencedColumns: ['auth0_user_id']
+          },
+          {
+            foreignKeyName: 'user_credentials_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: true
+            referencedRelation: 'users'
+            referencedColumns: ['auth0_org_id']
           },
         ]
       }
@@ -465,7 +472,7 @@ export type Database = {
     Enums: {
       attendance_status: 'present' | 'late' | 'absent' | 'leave' | 'holiday'
       check_in_method: 'qr' | 'biometric' | 'whatsapp' | 'manual' | 'georefrence'
-      organization_role: 'admin' | 'manager' | 'supervisor' | 'employee' | 'owner'
+      organization_role: 'owner' | 'admin' | 'manager' | 'member'
       organization_status: 'provisioning' | 'active' | 'suspended' | 'offboarding' | 'archived'
       subscription_plan: 'free' | 'growth' | 'pro' | 'enterprise'
       subscription_status: 'free' | 'active' | 'past_due' | 'canceled'
@@ -596,7 +603,7 @@ export const Constants = {
     Enums: {
       attendance_status: ['present', 'late', 'absent', 'leave', 'holiday'],
       check_in_method: ['qr', 'biometric', 'whatsapp', 'manual', 'georefrence'],
-      organization_role: ['admin', 'manager', 'supervisor', 'employee', 'owner'],
+      organization_role: ['owner', 'admin', 'manager', 'member'],
       organization_status: ['provisioning', 'active', 'suspended', 'offboarding', 'archived'],
       subscription_plan: ['free', 'growth', 'pro', 'enterprise'],
       subscription_status: ['free', 'active', 'past_due', 'canceled'],

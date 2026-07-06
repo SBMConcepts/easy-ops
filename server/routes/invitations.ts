@@ -15,6 +15,8 @@ router.post(
   async (req: AuthedRequest, res: Response) => {
     const orgId = req.orgId!
     const body = (req.body ?? {}) as {
+      auth0_org_id?: string
+      auth0_user_id?: string
       email?: string
       full_name?: string
       role?: string
@@ -29,7 +31,7 @@ router.post(
 
     const { data: invitation, error } = await supabaseAdmin
       .from('invitations')
-      .upsert({ org_id: orgId, email, role: tier }, { onConflict: 'org_id,email' })
+      .upsert({ auth0_org_id: orgId, email, role: tier }, { onConflict: 'auth0_org_id,email' })
       .select('id, email, role')
       .single()
 
@@ -67,7 +69,7 @@ router.post(
         auth0InvitationId =
           (await createOrgInvitation({
             orgId,
-            inviterName: body.full_name?.trim() || 'EasyOps',
+            inviterName: body.full_name?.trim() ?? '',
             inviteeEmail: email,
             clientId,
           })) ?? null

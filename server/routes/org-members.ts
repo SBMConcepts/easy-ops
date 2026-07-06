@@ -3,6 +3,7 @@ import { Router, type Response } from 'express'
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { isAccessRole } from '../lib/rbac.js'
+import { auth } from 'express-openid-connect'
 
 const router = Router()
 
@@ -17,7 +18,7 @@ router.get(
     // manually against users on auth0_user_id in two queries instead.
     const { data: memberRows, error } = await supabaseAdmin
       .from('org_members')
-      .select('id, role, status, joined_at, auth0_user_id')
+      .select('id, auth0_org_id, role, status, joined_at, auth0_user_id')
       .eq('auth0_org_id', req.orgId!)
       .order('joined_at', { ascending: true })
 
@@ -33,12 +34,19 @@ router.get(
 
     const usersBySub = new Map<
       string,
-      { id: string; email: string; full_name: string; avatar_url: string | null }
+      {
+        id: string
+        auth0_user_id: string
+        auth0_org_id: string
+        email: string
+        full_name: string
+        avatar_url: string | null
+      }
     >()
     if (authUserIds.length > 0) {
       const { data: users, error: usersErr } = await supabaseAdmin
         .from('users')
-        .select('id, auth0_user_id, email, full_name, avatar_url')
+        .select('id, auth0_user_id, auth0_org_id, email, full_name, avatar_url')
         .in('auth0_user_id', authUserIds)
       if (usersErr) {
         res.status(500).json({ error: usersErr.message })
@@ -56,7 +64,14 @@ router.get(
         joined_at: m.joined_at,
         user_id: u?.id ?? null,
         users: u
-          ? { id: u.id, email: u.email, full_name: u.full_name, avatar_url: u.avatar_url }
+          ? {
+              id: u.id,
+              auth0_user_id: u.auth0_user_id,
+              auth0_org_id: u.auth0_org_id,
+              email: u.email,
+              full_name: u.full_name,
+              avatar_url: u.avatar_url,
+            }
           : null,
       }
     })
@@ -69,7 +84,7 @@ router.post(
   '/api/org-members',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requireRole('manager'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { user_id?: string; role?: string }
     if (!body.user_id || !isAccessRole(body.role)) {
@@ -81,8 +96,10 @@ router.post(
     // by auth0_user_id, so resolve the Auth0 sub first.
     const { data: targetUser } = await supabaseAdmin
       .from('users')
-      .select('auth0_user_id')
+      .select('id, auth0_user_id, auth0_org_id')
       .eq('id', body.user_id)
+      .eq('auth0_org_id', req.orgId!)
+      .neq('auth0_user_id', req.auth?.sub || '') // ensure the user is not trying to add themselves
       .maybeSingle()
 
     if (!targetUser) {
@@ -114,7 +131,7 @@ router.delete(
   '/api/org-members/:id',
   requireAuth,
   requireOrg,
-  requireRole('admin'),
+  requireRole('manager'),
   async (req: AuthedRequest, res: Response) => {
     const { error } = await supabaseAdmin
       .from('org_members')

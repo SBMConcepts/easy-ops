@@ -10,12 +10,12 @@ router.get(
   '/api/subscriptions',
   requireAuth,
   requireOrg,
-  requireRole('member'),
+  requireRole('admin'),
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('subscriptions')
-      .select('id, org_id, plan, status, current_period_end, trial_ends_at, created_at')
-      .eq('org_id', req.orgId!)
+      .select('id, auth0_org_id, plan, status, current_period_end, trial_ends_at, created_at')
+      .eq('auth0_org_id', req.orgId!)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -49,7 +49,7 @@ router.patch(
     const { data: current } = await supabaseAdmin
       .from('subscriptions')
       .select('id')
-      .eq('org_id', req.orgId!)
+      .eq('auth0_org_id', req.orgId!)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -62,7 +62,7 @@ router.patch(
       .from('subscriptions')
       .update(update)
       .eq('id', current.id)
-      .select('id, org_id, plan, status, current_period_end, trial_ends_at, created_at')
+      .select('id, auth0_org_id, plan, status, current_period_end, trial_ends_at, created_at')
       .maybeSingle()
     if (error) {
       res.status(500).json({ error: error.message })

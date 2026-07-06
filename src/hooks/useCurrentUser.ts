@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { useOrgApi } from './useOrgApi'
 
-type OrgRole = 'owner' | 'admin' | 'member' | 'viewer'
+type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 type MembershipStatus = 'active' | 'suspended'
 
 export interface CurrentUserProfile {
@@ -68,8 +68,8 @@ export function useCurrentUser() {
   return {
     profile,
 
-    role: profile?.role ?? null,
-    membershipStatus: profile?.membership_status ?? null,
+    role: profile?.role,
+    membershipStatus: profile?.membership_status,
     isMembershipActive: profile?.membership_status === 'active',
 
     isLoading: isAuthLoading || query.isLoading,

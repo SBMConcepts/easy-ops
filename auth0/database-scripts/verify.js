@@ -43,7 +43,7 @@ function verify(email, callback) {
       .toLowerCase()
     const sql =
       'UPDATE public.user_credentials ' +
-      'SET email_verified = true, updated_at = now() ' +
+      'SET email_verified = true, auth0_org_id = auth0_org_id, updated_at = now() ' +
       'WHERE lower(email) = $1 AND status <> $2'
 
     client.query(sql, [normalizedEmail, 'deleted'], function (queryErr, result) {

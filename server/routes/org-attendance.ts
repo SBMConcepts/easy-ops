@@ -28,8 +28,8 @@ router.get(
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('org_attendance')
-      .select('id, org_id, user_id, date, method, hours_worked, overtime, created_at')
-      .eq('org_id', req.orgId!)
+      .select('id, auth0_org_id, auth0_user_id, date, method, hours_worked, overtime, created_at')
+      .eq('auth0_org_id', req.orgId!)
       .order('date', { ascending: false })
     if (error) {
       res.status(500).json({ error: error.message })
@@ -46,6 +46,8 @@ router.post(
   requireRole('member'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as {
+      auth0_org_id?: string
+      auth0_user_id?: string
       date?: string
       method?: string
       hours_worked?: number
@@ -60,16 +62,16 @@ router.post(
       .from('org_attendance')
       .upsert(
         {
-          org_id: req.orgId!,
-          user_id: req.auth!.sub,
+          auth0_org_id: req.orgId!,
+          auth0_user_id: req.auth?.sub,
           date: body.date,
           method: body.method,
           hours_worked: Number(body.hours_worked ?? 0),
           overtime: Number(body.overtime ?? 0),
         },
-        { onConflict: 'user_id,org_id,date' }
+        { onConflict: 'auth0_user_id,auth0_org_id,date' }
       )
-      .select('id, org_id, user_id, date, method, hours_worked, overtime, created_at')
+      .select('id, auth0_org_id, auth0_user_id, date, method, hours_worked, overtime, created_at')
       .single()
     if (error) {
       res.status(500).json({ error: error.message })

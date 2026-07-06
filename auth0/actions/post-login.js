@@ -43,7 +43,7 @@ exports.onExecutePostLogin = async (event, api) => {
           email: event.user.email,
           full_name: event.user.name || event.user.email,
           avatar_url: event.user.picture || null,
-          org_id: orgIdFromLogin,
+          auth0_org_id: orgIdFromLogin,
           role: fallbackRole,
         }),
       })
@@ -69,8 +69,8 @@ exports.onExecutePostLogin = async (event, api) => {
   }
 
   if (orgId) {
-    api.idToken.setCustomClaim(CLAIM_NS + 'org_id', orgId)
-    api.accessToken.setCustomClaim(CLAIM_NS + 'org_id', orgId)
+    api.idToken.setCustomClaim(CLAIM_NS + 'auth0_org_id', orgId)
+    api.accessToken.setCustomClaim(CLAIM_NS + 'auth0_org_id', orgId)
   }
 
   const supabaseJwtSecret = event.secrets && event.secrets.SUPABASE_JWT_SECRET
@@ -84,7 +84,8 @@ exports.onExecutePostLogin = async (event, api) => {
         email: event.user.email,
         aud: 'authenticated',
         role: 'authenticated',
-        org_id: orgId || null,
+        auth0_org_id: orgId,
+        auth0_user_id: event.user.user_id,
         user_role: role || null,
         iat: nowSec,
         exp: nowSec + 60 * 60, // 1 hour

@@ -6,7 +6,7 @@ import { createAuth0Org, createOrgInvitation, enableOrgConnection } from '../lib
 
 const router = Router()
 
-const ORG_PLANS = new Set(['free', 'starter', 'pro', 'enterprise'])
+const ORG_PLANS = new Set(['free', 'starter', 'growth', 'pro', 'enterprise'])
 
 function slugify(input: string): string {
   return input
@@ -51,14 +51,14 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     const { error: inviteErr } = await supabaseAdmin
       .from('invitations')
       .upsert(
-        { org_id: auth0Org.id, email: adminEmail, role: 'owner' },
-        { onConflict: 'org_id,email' }
+        { auth0_org_id: auth0Org.id, email: adminEmail, role: 'owner' },
+        { onConflict: 'auth0_org_id,email' }
       )
     if (inviteErr) throw new Error(inviteErr.message)
 
     await supabaseAdmin.from('subscriptions').insert({
-      org_id: auth0Org.id,
-      plan: requestedPlan,
+      auth0_org_id: auth0Org.id,
+      plan: orgPlan,
       status: 'trialing',
       trial_ends_at: new Date(Date.now() + 14 * 86400000).toISOString(),
     })

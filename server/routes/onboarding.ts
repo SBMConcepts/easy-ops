@@ -7,7 +7,7 @@ import type { Json, TablesUpdate } from '../types/supabase.js'
 const router = Router()
 
 // Valid organization_role enum values for org_roles.name.
-const JOB_ROLES = new Set(['admin', 'manager', 'employee', 'owner', 'supervisor'])
+const JOB_ROLES = new Set(['owner', 'admin', 'manager', 'member'])
 
 interface OnboardingBody {
   company?: { name?: string; country?: string; industry?: string }
@@ -18,7 +18,7 @@ interface OnboardingBody {
     longitude?: number | null
     geofence_radius_m?: number | null
   }>
-  departments?: Array<{ name?: string; site_id?: string | null }>
+  departments?: Array<{ name?: string; site_name?: string | null }>
   roles?: Array<{ name?: string; base_role?: string }>
   shifts?: unknown[]
   workRules?: Record<string, unknown>
@@ -107,8 +107,10 @@ router.post(
           (body.roles ?? [])
             .map((r) => {
               const normalized = (r.base_role ?? r.name ?? '').toLowerCase()
-              if (normalized === 'member') return 'employee'
-              if (normalized === 'viewer') return 'supervisor'
+              if (normalized === 'member') return 'member'
+              if (normalized === 'manager') return 'manager'
+              if (normalized === 'admin') return 'admin'
+              if (normalized === 'owner') return 'owner'
               return normalized
             })
             .filter((name) => JOB_ROLES.has(name))
@@ -117,7 +119,7 @@ router.post(
       if (roleNames.length > 0) {
         const roleRows = roleNames.map((name) => ({
           auth0_org_id: orgId,
-          name: name as 'admin' | 'manager' | 'employee' | 'owner' | 'supervisor',
+          name: name as 'admin' | 'manager' | 'member' | 'owner',
         }))
         const { error: roleErr } = await supabaseAdmin.from('org_roles').insert(roleRows)
         if (roleErr) throw new Error(roleErr.message)

@@ -13,7 +13,7 @@ export interface AccessRequestRow {
   status: string
   created_at: string
 }
-export type OrgRole = 'owner' | 'admin' | 'member' | 'viewer'
+export type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 
 export type ApproveAndInviteBody = {
   requestId: string

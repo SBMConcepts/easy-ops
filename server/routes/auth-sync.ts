@@ -17,7 +17,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     email?: string
     full_name?: string
     avatar_url?: string | null
-    org_id?: string
+    auth0_org_id?: string
     role?: string
   }
 
@@ -34,12 +34,12 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
         email: body.email,
         full_name: body.full_name ?? '',
         avatar_url: body.avatar_url ?? null,
-        auth0_org_id: body.org_id ?? '',
+        auth0_org_id: body.auth0_org_id,
         last_seen_at: new Date().toISOString(),
       },
       { onConflict: 'auth0_user_id' }
     )
-    .select('id')
+    .select('auth0_user_id, email, full_name, avatar_url, auth0_org_id')
     .single()
 
   if (userErr || !user) {
@@ -56,12 +56,12 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     .eq('auth0_user_id', `pending|${body.email.toLowerCase()}`)
 
   let role = 'admin' // default to owner/admin if no org context
-  if (body.org_id) {
+  if (body.auth0_org_id) {
     let roleHint = body.role
     const { data: invite } = await supabaseAdmin
       .from('invitations')
       .select('role')
-      .eq('org_id', body.org_id)
+      .eq('auth0_org_id', body.auth0_org_id)
       .eq('email', body.email.toLowerCase())
       .maybeSingle()
     // The invitation carries the provisioning-time intent — the org creator is
@@ -78,7 +78,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     const { data: existingMember } = await supabaseAdmin
       .from('org_members')
       .select('role')
-      .eq('auth0_org_id', body.org_id)
+      .eq('auth0_org_id', body.auth0_org_id)
       .eq('auth0_user_id', body.auth0_user_id)
       .maybeSingle()
 
@@ -90,7 +90,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     role = jobRoleToTier(roleHint)
     const { error: memberErr } = await supabaseAdmin.from('org_members').upsert(
       {
-        auth0_org_id: body.org_id,
+        auth0_org_id: body.auth0_org_id,
         auth0_user_id: body.auth0_user_id,
         role,
         status: 'active',

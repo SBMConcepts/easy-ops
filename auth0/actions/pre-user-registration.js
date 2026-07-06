@@ -53,6 +53,6 @@ exports.onExecutePreUserRegistration = async (event, api) => {
     query.organization ||
     body.organization
   if (orgId) {
-    api.user.setAppMetadata('org_id', orgId)
+    api.user.setAppMetadata('auth0_org_id', orgId)
   }
 }
