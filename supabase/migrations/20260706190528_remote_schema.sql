@@ -112,17 +112,6 @@ alter table "public"."org_attendance" add constraint "org_attendance_auth0_user_
 
 alter table "public"."org_attendance" validate constraint "org_attendance_auth0_user_id_fkey";
 
-alter table "public"."subscriptions" add constraint "subscriptions_auth0_org_id_fkey" FOREIGN KEY (auth0_org_id) REFERENCES public.organizations(auth0_org_id) ON DELETE CASCADE not valid;
-
-alter table "public"."subscriptions" validate constraint "subscriptions_auth0_org_id_fkey";
-
-alter table "public"."user_credentials" add constraint "user_credentials_auth0_org_id_fkey" FOREIGN KEY (auth0_org_id) REFERENCES public.organizations(auth0_org_id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
-
-alter table "public"."user_credentials" validate constraint "user_credentials_auth0_org_id_fkey";
-
-alter table "public"."user_credentials" add constraint "user_credentials_auth0_user_id_fkey" FOREIGN KEY (auth0_user_id) REFERENCES public.users(auth0_user_id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
-
-alter table "public"."user_credentials" validate constraint "user_credentials_auth0_user_id_fkey";
 
 alter table "public"."users" add constraint "users_auth0_org_id_fkey1" FOREIGN KEY (auth0_org_id) REFERENCES public.organizations(auth0_org_id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
 
