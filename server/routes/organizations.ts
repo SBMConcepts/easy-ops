@@ -51,7 +51,7 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     const { error: inviteErr } = await supabaseAdmin
       .from('invitations')
       .upsert(
-        { auth0_org_id: auth0Org.id, email: adminEmail, role: 'owner' },
+        { auth0_org_id: auth0Org.id, email: adminEmail, role: 'admin' },
         { onConflict: 'auth0_org_id,email' }
       )
     if (inviteErr) throw new Error(inviteErr.message)
