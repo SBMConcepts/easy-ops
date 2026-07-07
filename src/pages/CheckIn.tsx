@@ -33,7 +33,7 @@ export default function CheckIn() {
 
       // Writes go through the Express API (service-role); org_attendance has RLS
       // enabled with no policies, so a direct authenticated-client insert is denied.
-      await apiFetch('org-attendance', {
+      await apiFetch('org_attendance', {
         method: 'POST',
         body: JSON.stringify({
           date: dateStr,
