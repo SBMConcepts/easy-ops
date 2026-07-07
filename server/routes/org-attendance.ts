@@ -26,7 +26,7 @@ function isCheckInMethod(value: unknown): value is CheckInMethod {
 const router = Router()
 
 router.get(
-  '/api/org_attendance',
+  '/api/org-attendance',
   requireAuth,
   requireOrg,
   requirePermission('read:org_attendance'),
@@ -45,7 +45,7 @@ router.get(
 )
 
 router.post(
-  '/api/org_attendance',
+  '/api/org-attendance',
   requireAuth,
   requireOrg,
   requirePermission('write:org_attendance'),
