@@ -67,7 +67,7 @@ export function useAttendanceRecords() {
       // org_attendance has RLS enabled with no policies, so the authenticated
       // client sees nothing. Read the org's daily aggregate via the service-role
       // Express endpoint instead.
-      const res = await apiFetch<{ attendance: AttendanceRow[] }>('org_attendance')
+      const res = await apiFetch<{ attendance: AttendanceRow[] }>('org-attendance')
       return res.attendance ?? []
     },
     enabled: !!user,
