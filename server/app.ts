@@ -30,6 +30,12 @@ import { notFoundHandler, errorHandler } from './lib/error-handler.js'
 
 const app = express()
 
+// Disable ETag/conditional responses for the JSON API. Tenant data is dynamic
+// and per-request; a 304 (Not Modified, empty body) on a react-query refetch
+// would be treated as an error by the client's apiFetch (non-2xx). Always
+// return a fresh 200 with the payload instead.
+app.disable('etag')
+
 // Trust the reverse proxy (Vercel / Render) for correct client IP + protocol.
 app.set('trust proxy', 1)
 
