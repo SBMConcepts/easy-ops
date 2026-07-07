@@ -34,6 +34,12 @@ router.post(
 
     const tier = jobRoleToTier(body.role)
 
+    // Auth0's organization invitation API requires a NON-EMPTY inviter.name.
+    // The Team Members page only sends { email, role }, so fall back to the
+    // authenticated caller's identity (never an empty string, which Auth0
+    // rejects — silently breaking the invitation email).
+    const inviterName = req.auth?.email || 'EasyOps'
+
     const { data: invitation, error } = await supabaseAdmin
       .from('invitations')
       .upsert({ auth0_org_id: orgId, email, role: tier }, { onConflict: 'auth0_org_id,email' })
@@ -67,20 +73,34 @@ router.post(
       return
     }
 
-    let auth0InvitationId: string | null = null
+    // The whole point of an invitation is the Auth0 email; without a client id
+    // it cannot be sent, so treat a missing config as a hard error rather than
+    // silently creating a Supabase row that never triggers an email.
     const clientId = process.env.AUTH0_CLIENT_ID
-    if (clientId) {
-      try {
-        auth0InvitationId =
-          (await createOrgInvitation({
-            orgId,
-            inviterName: body.full_name?.trim() ?? '',
-            inviteeEmail: email,
-            clientId,
-          })) ?? null
-      } catch (err) {
-        console.error('Auth0 invitation send failed:', err)
-      }
+    if (!clientId) {
+      res.status(500).json({
+        error:
+          'Auth0 client is not configured (AUTH0_CLIENT_ID); the invitation email cannot be sent.',
+      })
+      return
+    }
+
+    let auth0InvitationId: string | null = null
+    try {
+      auth0InvitationId =
+        (await createOrgInvitation({
+          orgId,
+          inviterName,
+          inviteeEmail: email,
+          clientId,
+        })) ?? null
+    } catch (err) {
+      console.error('Auth0 invitation send failed:', err)
+      const message = err instanceof Error ? err.message : 'Unknown Auth0 error.'
+      res.status(502).json({
+        error: `The invitation was saved but the email could not be sent: ${message}`,
+      })
+      return
     }
 
     res.status(201).json({

@@ -34,6 +34,7 @@ export default function WorkspaceMembers() {
   const canInvite = hasPermission('write:invitations')
 
   const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteName, setInviteName] = useState('')
   const [inviteRole, setInviteRole] = useState<'admin' | 'manager' | 'member'>('member')
 
   // Fetch Team Members from the org-members endpoint and map to the row shape.
@@ -63,12 +64,13 @@ export default function WorkspaceMembers() {
     mutationFn: async () => {
       return apiFetch('invitations', {
         method: 'POST',
-        body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+        body: JSON.stringify({ email: inviteEmail, full_name: inviteName, role: inviteRole }),
       })
     },
     onSuccess: () => {
       toast.success(`Invitation sent to ${inviteEmail}`)
       setInviteEmail('')
+      setInviteName('')
       queryClient.invalidateQueries({ queryKey: ['workspace-members'] })
     },
     onError: (err: any) => toast.error(err.message || 'Failed to send invitation'),
@@ -93,66 +95,76 @@ export default function WorkspaceMembers() {
 
       {/* Invite Section */}
       {canInvite && (
-      <div className="settings-card-tab">
-        <div className="settings-card-tab__header">
-          <h2 className="settings-card-tab__title">Invite New Member</h2>
-        </div>
+        <div className="settings-card-tab">
+          <div className="settings-card-tab__header">
+            <h2 className="settings-card-tab__title">Invite New Member</h2>
+          </div>
 
-        <div className="settings-card-tab__content">
-          <form onSubmit={handleInvite} className="settings-card-tab__form-grid">
-            <div className="settings-card-tab__row ">
-              <Label className="settings-card-tab__label">Email Address</Label>
-              <Input
-                type="email"
-                placeholder="colleague@company.com"
-                className="settings-card-tab__input"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-              />
-            </div>
-            <div className="settings-card-tab__row">
-              <Label className="settings-card-tab__label">Role</Label>
-              <Select
-                value={inviteRole || ''}
-                onValueChange={(value) => setInviteRole(value as 'admin' | 'manager' | 'member')}
+          <div className="settings-card-tab__content">
+            <form onSubmit={handleInvite} className="settings-card-tab__form-grid">
+              <div className="settings-card-tab__row ">
+                <Label className="settings-card-tab__label">Full Name</Label>
+                <Input
+                  type="text"
+                  placeholder="Jane Doe"
+                  className="settings-card-tab__input"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                />
+              </div>
+              <div className="settings-card-tab__row ">
+                <Label className="settings-card-tab__label">Email Address</Label>
+                <Input
+                  type="email"
+                  placeholder="colleague@company.com"
+                  className="settings-card-tab__input"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                />
+              </div>
+              <div className="settings-card-tab__row">
+                <Label className="settings-card-tab__label">Role</Label>
+                <Select
+                  value={inviteRole || ''}
+                  onValueChange={(value) => setInviteRole(value as 'admin' | 'manager' | 'member')}
+                >
+                  <SelectTrigger className="settings-card-tab__select-trigger">
+                    <SelectValue
+                      className="settings-card-tab__select-value"
+                      placeholder="Select a role"
+                    />
+                  </SelectTrigger>
+                  <SelectContent className="settings-card-tab__select-content">
+                    <SelectItem className="settings-card-tab__select-item" value="admin">
+                      Admin
+                    </SelectItem>
+                    <SelectItem className="settings-card-tab__select-item" value="manager">
+                      Manager
+                    </SelectItem>
+                    <SelectItem className="settings-card-tab__select-item" value="member">
+                      Member
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </form>
+            <div className="settings-card-tab__footer">
+              <button
+                type="submit"
+                disabled={inviteMember.isPending}
+                className="settings-card-tab__save-btn"
+                onClick={handleInvite}
               >
-                <SelectTrigger className="settings-card-tab__select-trigger">
-                  <SelectValue
-                    className="settings-card-tab__select-value"
-                    placeholder="Select a role"
-                  />
-                </SelectTrigger>
-                <SelectContent className="settings-card-tab__select-content">
-                  <SelectItem className="settings-card-tab__select-item" value="admin">
-                    Admin
-                  </SelectItem>
-                  <SelectItem className="settings-card-tab__select-item" value="manager">
-                    Manager
-                  </SelectItem>
-                  <SelectItem className="settings-card-tab__select-item" value="member">
-                    Member
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                {inviteMember.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <UserPlus className="h-4 w-4" />
+                )}
+                Send Invite
+              </button>
             </div>
-          </form>
-          <div className="settings-card-tab__footer">
-            <button
-              type="submit"
-              disabled={inviteMember.isPending}
-              className="settings-card-tab__save-btn"
-              onClick={handleInvite}
-            >
-              {inviteMember.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <UserPlus className="h-4 w-4" />
-              )}
-              Send Invite
-            </button>
           </div>
         </div>
-      </div>
       )}
 
       {/* Member List */}
