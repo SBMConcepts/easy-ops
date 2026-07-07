@@ -7,6 +7,7 @@ import { Label } from '../components/ui/label'
 import { useAttendanceRecords, attendanceKeys } from '../hooks/useOrgData'
 import { useOrgApi } from '../hooks/useOrgApi'
 import { useCurrentUser } from '../hooks/useCurrentUser'
+import { useAuthRole } from '../contexts/AuthContext'
 import { toast } from 'sonner'
 import { QrCode, Fingerprint, MapPin, CheckCircle2, Loader2, Clock } from 'lucide-react'
 import '../styles/checkin.css'
@@ -14,7 +15,10 @@ import '../styles/checkin.css'
 export default function CheckIn() {
   const { apiFetch } = useOrgApi()
   const { profile: currentUser } = useCurrentUser()
+  const { hasPermission } = useAuthRole()
   const queryClient = useQueryClient()
+
+  const canLog = hasPermission('write:org_attendance')
 
   const { data: attendanceHistory = [], isLoading } = useAttendanceRecords()
   const [selectedMethod, setSelectedMethod] = useState<'qr' | 'biometric' | 'manual'>('qr')
@@ -115,7 +119,7 @@ export default function CheckIn() {
           <button
             className="checkin-log-btn"
             onClick={() => logAttendance.mutate()}
-            disabled={logAttendance.isPending}
+            disabled={logAttendance.isPending || !canLog}
           >
             {logAttendance.isPending ? (
               <Loader2 className="h-5 w-5 mr-2 animate-spin" />
@@ -124,6 +128,12 @@ export default function CheckIn() {
             )}
             Log Today's Attendance
           </button>
+
+          {!canLog && (
+            <p className="text-xs text-dashboard-text-muted mt-2 text-center">
+              Attendance for your account is recorded by a manager or administrator.
+            </p>
+          )}
 
           {attendanceHistory.length > 0 && (
             <div className="checkin-history mt-4">

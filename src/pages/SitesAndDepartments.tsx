@@ -42,9 +42,14 @@ interface DeptRow {
 }
 
 export default function SitesAndDepartments() {
-  const { isOwner, isAdmin } = useAuthRole()
+  const { hasPermission } = useAuthRole()
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
+
+  const canWriteSites = hasPermission('write:org_sites')
+  const canDeleteSites = hasPermission('delete:org_sites')
+  const canWriteDepts = hasPermission('write:org_departments')
+  const canDeleteDepts = hasPermission('delete:org_departments')
 
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('sites')
@@ -218,7 +223,7 @@ export default function SitesAndDepartments() {
                   className="sad-card-tab__search-input"
                 />
               </div>
-              {(isAdmin || isOwner) && (
+              {canWriteSites && (
                 <button className="sad-card-tab__add-btn" onClick={() => openSiteModal()}>
                   Add Site
                 </button>
@@ -233,22 +238,26 @@ export default function SitesAndDepartments() {
                       {site.address || 'No address specified'}
                     </p>
                   </div>
-                  {(isAdmin || isOwner) && (
+                  {(canWriteSites || canDeleteSites) && (
                     <div className="flex items-center gap-2">
-                      <button
-                        className="sad-card-tab__edit-btn"
-                        onClick={() => openSiteModal(site)}
-                      >
-                        <Pencil className="h-4 w-4 text-dashboard-text-muted" />
-                      </button>
-                      <button
-                        className="sad-card-tab__delete-btn"
-                        onClick={() =>
-                          setDeleteTarget({ kind: 'site', id: site.id, name: site.name })
-                        }
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </button>
+                      {canWriteSites && (
+                        <button
+                          className="sad-card-tab__edit-btn"
+                          onClick={() => openSiteModal(site)}
+                        >
+                          <Pencil className="h-4 w-4 text-dashboard-text-muted" />
+                        </button>
+                      )}
+                      {canDeleteSites && (
+                        <button
+                          className="sad-card-tab__delete-btn"
+                          onClick={() =>
+                            setDeleteTarget({ kind: 'site', id: site.id, name: site.name })
+                          }
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -277,7 +286,7 @@ export default function SitesAndDepartments() {
                   className="sad-card-tab__search-input"
                 />
               </div>
-              {(isAdmin || isOwner) && (
+              {canWriteDepts && (
                 <button className="sad-card-tab__add-btn" onClick={() => openDeptModal()}>
                   Add Department
                 </button>
@@ -294,26 +303,30 @@ export default function SitesAndDepartments() {
                         'No site assigned'}
                     </p>
                   </div>
-                  {(isAdmin || isOwner) && (
+                  {(canWriteDepts || canDeleteDepts) && (
                     <div className="flex items-center gap-2">
-                      <button
-                        className="sad-card-tab__edit-btn"
-                        onClick={() => openDeptModal(department)}
-                      >
-                        <Pencil className="h-4 w-4 text-dashboard-text-muted" />
-                      </button>
-                      <button
-                        className="sad-card-tab__delete-btn"
-                        onClick={() =>
-                          setDeleteTarget({
-                            kind: 'department',
-                            id: department.id,
-                            name: department.name,
-                          })
-                        }
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </button>
+                      {canWriteDepts && (
+                        <button
+                          className="sad-card-tab__edit-btn"
+                          onClick={() => openDeptModal(department)}
+                        >
+                          <Pencil className="h-4 w-4 text-dashboard-text-muted" />
+                        </button>
+                      )}
+                      {canDeleteDepts && (
+                        <button
+                          className="sad-card-tab__delete-btn"
+                          onClick={() =>
+                            setDeleteTarget({
+                              kind: 'department',
+                              id: department.id,
+                              name: department.name,
+                            })
+                          }
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

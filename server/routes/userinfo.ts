@@ -3,6 +3,7 @@ import multer from 'multer'
 
 import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
+import { permissionsForRole } from '../lib/permissions.js'
 
 const router = Router()
 
@@ -84,6 +85,7 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     user_status: 'active',
     org_id: org?.auth0_org_id ?? null,
     role: member?.role ?? 'member',
+    permissions: permissionsForRole(member?.role ?? 'member'),
     membership_status: member?.status ?? 'active',
     joined_at: member?.joined_at ?? null,
     org_name: org?.name ?? '',

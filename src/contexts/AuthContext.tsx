@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useOrgApi } from '../hooks/useOrgApi'
 import type { CurrentUserProfile } from '../hooks/useCurrentUser'
+import type { Permission } from '../lib/permissions'
 
 export type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 
@@ -14,6 +15,7 @@ export interface AuthUser {
   avatar_url: string | null
   user_status: string
   role: OrgRole
+  permissions: Permission[]
 }
 
 export interface AuthOrganization {
@@ -76,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       avatar_url: profile.avatar_url,
       user_status: profile.user_status,
       role: profile.role,
+      permissions: profile.permissions ?? [],
     })
 
     setOrganization({
@@ -179,8 +182,15 @@ export const useAuthRole = () => {
     return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[required]
   }
 
+  // Scope-based gate that matches the server (requirePermission) and RLS
+  // (has_permission). Prefer this over role tiers for action gating.
+  const hasPermission = (permission: Permission) => {
+    return !!user?.permissions?.includes(permission)
+  }
+
   return {
     hasMinRole,
+    hasPermission,
     isOwner: user?.role === 'owner',
     isManager: hasMinRole('manager'),
     isAdmin: hasMinRole('admin'),

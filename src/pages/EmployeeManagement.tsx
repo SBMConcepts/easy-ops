@@ -44,10 +44,11 @@ interface MemberRow {
 export default function EmployeeManagement() {
   const { apiFetch } = useOrgApi()
   const { profile } = useCurrentUser()
-  const { isAdmin, isOwner } = useAuthRole()
+  const { hasPermission } = useAuthRole()
   const queryClient = useQueryClient()
 
-  const canManage = isAdmin || isOwner
+  const canChangeRole = hasPermission('write:org_members')
+  const canRemove = hasPermission('delete:org_members')
   const [removeTarget, setRemoveTarget] = useState<MemberRow | null>(null)
 
   const {
@@ -108,7 +109,8 @@ export default function EmployeeManagement() {
       {members.map((member) => {
         const displayName = member.users?.full_name || member.users?.email || 'Unknown user'
         const isCurrentUser = !!profile?.profile_id && member.user_id === profile.profile_id
-        const canActOnMember = canManage && !isCurrentUser
+        const canChangeMemberRole = canChangeRole && !isCurrentUser
+        const canRemoveMember = canRemove && !isCurrentUser
 
         return (
           <div
@@ -128,7 +130,7 @@ export default function EmployeeManagement() {
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground capitalize">{member.status}</span>
 
-              {canActOnMember && member.user_id ? (
+              {canChangeMemberRole && member.user_id ? (
                 <Select
                   value={member.role}
                   onValueChange={(role) =>
@@ -151,7 +153,7 @@ export default function EmployeeManagement() {
                 <span className="text-xs font-medium uppercase">{member.role}</span>
               )}
 
-              {canActOnMember && (
+              {canRemoveMember && (
                 <Button
                   variant="destructive"
                   size="sm"

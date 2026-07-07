@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useOrgApi } from '../../hooks/useOrgApi'
+import { useAuthRole } from '../../contexts/AuthContext'
 import { Input } from '../../components/ui/input'
 import { toast } from 'sonner'
 import { Loader2, Users, Mail, UserPlus, Shield, Trash2 } from 'lucide-react'
@@ -21,21 +22,40 @@ interface Member {
   id: string
   email: string
   full_name: string
-  role: 'owner' | 'admin' | 'member' | 'viewer'
+  role: 'owner' | 'admin' | 'manager' | 'member'
   status: 'active' | 'invited'
 }
 
 export default function WorkspaceMembers() {
   const { apiFetch } = useOrgApi()
+  const { hasPermission } = useAuthRole()
   const queryClient = useQueryClient()
 
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
+  const canInvite = hasPermission('write:invitations')
 
-  // Fetch Team Members
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState<'admin' | 'manager' | 'member'>('member')
+
+  // Fetch Team Members from the org-members endpoint and map to the row shape.
   const { data: members = [], isLoading } = useQuery<Member[]>({
     queryKey: ['workspace-members'],
-    queryFn: () => apiFetch('users'), // Assuming this returns users in the current org
+    queryFn: async () => {
+      const { members } = await apiFetch<{
+        members: Array<{
+          id: string
+          role: Member['role']
+          status: string
+          users: { email: string; full_name: string } | null
+        }>
+      }>('org-members')
+      return members.map((m) => ({
+        id: m.id,
+        email: m.users?.email ?? '',
+        full_name: m.users?.full_name ?? '',
+        role: m.role,
+        status: m.status === 'active' ? 'active' : 'invited',
+      }))
+    },
   })
 
   // Invite Member Mutation
@@ -72,6 +92,7 @@ export default function WorkspaceMembers() {
       </div>
 
       {/* Invite Section */}
+      {canInvite && (
       <div className="settings-card-tab">
         <div className="settings-card-tab__header">
           <h2 className="settings-card-tab__title">Invite New Member</h2>
@@ -93,7 +114,7 @@ export default function WorkspaceMembers() {
               <Label className="settings-card-tab__label">Role</Label>
               <Select
                 value={inviteRole || ''}
-                onValueChange={(value) => setInviteRole(value as 'admin' | 'member' | 'viewer')}
+                onValueChange={(value) => setInviteRole(value as 'admin' | 'manager' | 'member')}
               >
                 <SelectTrigger className="settings-card-tab__select-trigger">
                   <SelectValue
@@ -105,11 +126,11 @@ export default function WorkspaceMembers() {
                   <SelectItem className="settings-card-tab__select-item" value="admin">
                     Admin
                   </SelectItem>
+                  <SelectItem className="settings-card-tab__select-item" value="manager">
+                    Manager
+                  </SelectItem>
                   <SelectItem className="settings-card-tab__select-item" value="member">
                     Member
-                  </SelectItem>
-                  <SelectItem className="settings-card-tab__select-item" value="viewer">
-                    Viewer
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -132,6 +153,7 @@ export default function WorkspaceMembers() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Member List */}
       <div className="settings-tabs__content">

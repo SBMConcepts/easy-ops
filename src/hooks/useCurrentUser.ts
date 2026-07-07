@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { useOrgApi } from './useOrgApi'
+import type { Permission } from '../lib/permissions'
 
 type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 type MembershipStatus = 'active' | 'suspended'
@@ -16,6 +17,7 @@ export interface CurrentUserProfile {
 
   org_id: string
   role: OrgRole
+  permissions: Permission[]
   membership_status: MembershipStatus
   joined_at: string
 
