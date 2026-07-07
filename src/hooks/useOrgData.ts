@@ -86,3 +86,51 @@ export function useComplianceCheck() {
     staleTime: 1000 * 60 * 5,
   })
 }
+
+// ── 4. Departments & Job Titles (via Express) ───────────────────────────────
+export interface DepartmentRow {
+  id: string
+  name: string
+  site_id: string | null
+}
+
+export interface JobRoleRow {
+  id: string
+  name: string
+  base_role: string | null
+}
+
+export const departmentsKeys = {
+  all: ['org_departments'] as const,
+}
+
+export const rolesKeys = {
+  all: ['org_roles'] as const,
+}
+
+export function useDepartments() {
+  const { apiFetch } = useOrgApi()
+  const { user } = useAuth()
+
+  return useQuery<DepartmentRow[]>({
+    queryKey: departmentsKeys.all,
+    queryFn: () => apiFetch('org-departments'),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 10,
+  })
+}
+
+export function useRoles() {
+  const { apiFetch } = useOrgApi()
+  const { user } = useAuth()
+
+  return useQuery<JobRoleRow[]>({
+    queryKey: rolesKeys.all,
+    queryFn: async () => {
+      const res = await apiFetch<{ roles: JobRoleRow[] }>('org-roles')
+      return res.roles ?? []
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 10,
+  })
+}

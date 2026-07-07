@@ -41,6 +41,15 @@ interface DeptRow {
   site_name?: string
 }
 
+interface RoleRow {
+  id: string
+  name: string
+  base_role: string | null
+}
+
+// Sentinel for the "no access tier" option (Radix Select cannot use an empty value).
+const NO_BASE = '__none__'
+
 export default function SitesAndDepartments() {
   const { hasPermission } = useAuthRole()
   const { apiFetch } = useOrgApi()
@@ -50,6 +59,8 @@ export default function SitesAndDepartments() {
   const canDeleteSites = hasPermission('delete:org_sites')
   const canWriteDepts = hasPermission('write:org_departments')
   const canDeleteDepts = hasPermission('delete:org_departments')
+  const canWriteRoles = hasPermission('write:org_roles')
+  const canDeleteRoles = hasPermission('delete:org_roles')
 
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('sites')
@@ -57,8 +68,9 @@ export default function SitesAndDepartments() {
   // Modals state
   const [siteModalOpen, setSiteModalOpen] = useState(false)
   const [deptModalOpen, setDeptModalOpen] = useState(false)
+  const [roleModalOpen, setRoleModalOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{
-    kind: 'site' | 'department'
+    kind: 'site' | 'department' | 'role'
     id: string
     name: string
   } | null>(null)
@@ -67,6 +79,7 @@ export default function SitesAndDepartments() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [siteForm, setSiteForm] = useState<Partial<SiteRow>>({})
   const [deptForm, setDeptForm] = useState<Partial<DeptRow>>({})
+  const [roleForm, setRoleForm] = useState<Partial<RoleRow>>({})
 
   // Fetch Data
   const { data: sites = [], isLoading: sitesLoading } = useQuery<SiteRow[]>({
@@ -77,6 +90,14 @@ export default function SitesAndDepartments() {
   const { data: depts = [], isLoading: deptsLoading } = useQuery<DeptRow[]>({
     queryKey: ['org_departments'],
     queryFn: () => apiFetch('org-departments'),
+  })
+
+  const { data: roles = [], isLoading: rolesLoading } = useQuery<RoleRow[]>({
+    queryKey: ['org_roles'],
+    queryFn: async () => {
+      const res = await apiFetch<{ roles: RoleRow[] }>('org-roles')
+      return res.roles ?? []
+    },
   })
 
   // Mutations
@@ -115,13 +136,27 @@ export default function SitesAndDepartments() {
     },
   })
 
+  const saveRole = useMutation({
+    mutationFn: async (data: Partial<RoleRow>) =>
+      apiFetch('org-roles', { method: 'POST', body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['org_roles'] })
+      setRoleModalOpen(false)
+      toast.success('Job title created')
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to save job title')
+    },
+  })
+
   const deleteEntity = useMutation({
-    mutationFn: async ({ kind, id }: { kind: 'site' | 'department'; id: string }) => {
+    mutationFn: async ({ kind, id }: { kind: 'site' | 'department' | 'role'; id: string }) => {
       return apiFetch(`org-${kind}s/${id}`, { method: 'DELETE' })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['org_sites'] })
       queryClient.invalidateQueries({ queryKey: ['org_departments'] })
+      queryClient.invalidateQueries({ queryKey: ['org_roles'] })
       setDeleteTarget(null)
       toast.success('Deleted successfully')
     },
@@ -141,6 +176,11 @@ export default function SitesAndDepartments() {
     [depts, searchQuery]
   )
 
+  const filteredRoles = useMemo(
+    () => roles.filter((r) => r.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    [roles, searchQuery]
+  )
+
   const openSiteModal = (site?: SiteRow) => {
     setEditingId(site?.id || null)
     setSiteForm(
@@ -155,7 +195,12 @@ export default function SitesAndDepartments() {
     setDeptModalOpen(true)
   }
 
-  if (sitesLoading || deptsLoading) {
+  const openRoleModal = () => {
+    setRoleForm({ name: '', base_role: null })
+    setRoleModalOpen(true)
+  }
+
+  if (sitesLoading || deptsLoading || rolesLoading) {
     return (
       <div className="sad-page flex items-center justify-center">
         <Loader2 className="animate-spin text-dashboard-text-muted h-8 w-8" />
@@ -203,6 +248,9 @@ export default function SitesAndDepartments() {
           </TabsTrigger>
           <TabsTrigger value="departments" className="sad-tabs__nav-trigger">
             Departments ({filteredDepts.length})
+          </TabsTrigger>
+          <TabsTrigger value="roles" className="sad-tabs__nav-trigger">
+            Job Titles ({filteredRoles.length})
           </TabsTrigger>
         </TabsList>
 
@@ -333,6 +381,59 @@ export default function SitesAndDepartments() {
               ))}
               {filteredDepts.length === 0 && (
                 <p className="sad-list__empty">No departments match your search.</p>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="roles" className="sad-tabs__content">
+          <div className="sad-card-tab">
+            <div className="sad-card-tab__header ">
+              <div className="sad-card-tab__title">
+                <span className="sad-card-tab__title-text">Job Titles</span>
+              </div>
+            </div>
+            <div className="sad-card-tab__actions">
+              <div className="sad-card-tab__search ">
+                <Search className="sad-card-tab__search-icon" />
+                <Input
+                  placeholder="Search job titles..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="sad-card-tab__search-input"
+                />
+              </div>
+              {canWriteRoles && (
+                <button className="sad-card-tab__add-btn" onClick={() => openRoleModal()}>
+                  Add Job Title
+                </button>
+              )}
+            </div>
+            <div className="sad-list">
+              {filteredRoles.map((role) => (
+                <div key={role.id} className="sad-list__items">
+                  <div className="sad-list__item-content">
+                    <p className="sad-list__item-title">{role.name}</p>
+                    <p className="sad-list__item-subtitle">
+                      {role.base_role ? `Access tier: ${role.base_role}` : 'No access tier'}
+                    </p>
+                  </div>
+                  {canDeleteRoles && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="sad-card-tab__delete-btn"
+                        onClick={() =>
+                          setDeleteTarget({ kind: 'role', id: role.id, name: role.name })
+                        }
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {filteredRoles.length === 0 && (
+                <p className="sad-list__empty">No job titles match your search.</p>
               )}
             </div>
           </div>
@@ -478,6 +579,61 @@ export default function SitesAndDepartments() {
               ) : (
                 'Save Department'
               )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Job Title Modal ───────────────────────────────────────────── */}
+      <Dialog open={roleModalOpen} onOpenChange={setRoleModalOpen}>
+        <DialogContent className="sad-modal-content">
+          <DialogHeader className="sad-modal-header">
+            <DialogTitle className="sad-modal-title">Create Job Title</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="sad-modal__row">
+              <Label className="sad-modal-label">Title</Label>
+              <Input
+                className="sad-modal-input"
+                value={roleForm.name || ''}
+                onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })}
+                placeholder="e.g. Site Supervisor"
+              />
+            </div>
+            <div className="sad-modal__row">
+              <Label className="sad-modal-label">Access Tier (optional)</Label>
+              <Select
+                value={roleForm.base_role ?? NO_BASE}
+                onValueChange={(v) =>
+                  setRoleForm({ ...roleForm, base_role: v === NO_BASE ? null : v })
+                }
+              >
+                <SelectTrigger className="sad-modal-select-trigger">
+                  <SelectValue className="sad-modal-select-value" placeholder="None" />
+                </SelectTrigger>
+                <SelectContent className="sad-modal-select-content">
+                  <SelectItem className="sad-modal-select-item" value={NO_BASE}>
+                    None
+                  </SelectItem>
+                  {['owner', 'admin', 'manager', 'member'].map((tier) => (
+                    <SelectItem className="sad-modal-select-item" key={tier} value={tier}>
+                      {tier}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="sad-modal-footer">
+            <button className="sad-modal-cancel-btn" onClick={() => setRoleModalOpen(false)}>
+              Cancel
+            </button>
+            <button
+              className="sad-modal-save-btn"
+              onClick={() => saveRole.mutate(roleForm)}
+              disabled={saveRole.isPending}
+            >
+              {saveRole.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Job Title'}
             </button>
           </DialogFooter>
         </DialogContent>

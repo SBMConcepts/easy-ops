@@ -8,6 +8,7 @@ import {
 } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { isAccessRole } from '../lib/rbac.js'
+import type { TablesUpdate } from '../types/supabase.js'
 import { auth } from 'express-openid-connect'
 
 const router = Router()
@@ -23,7 +24,9 @@ router.get(
     // manually against users on auth0_user_id in two queries instead.
     const { data: memberRows, error } = await supabaseAdmin
       .from('org_members')
-      .select('id, auth0_org_id, role, status, joined_at, auth0_user_id')
+      .select(
+        'id, auth0_org_id, role, status, joined_at, auth0_user_id, department_id, site_id, job_role_id'
+      )
       .eq('auth0_org_id', req.orgId!)
       .order('joined_at', { ascending: true })
 
@@ -60,6 +63,25 @@ router.get(
       for (const u of users ?? []) usersBySub.set(u.auth0_user_id, u)
     }
 
+    // Resolve assignment labels (department / site / job title) for display.
+    // These are small per-org lookup tables, so fetch each once and map by id.
+    const [deptsRes, sitesRes, rolesRes] = await Promise.all([
+      supabaseAdmin
+        .from('org_departments')
+        .select('id, department_name')
+        .eq('auth0_org_id', req.orgId!),
+      supabaseAdmin.from('org_sites').select('id, site_name').eq('auth0_org_id', req.orgId!),
+      supabaseAdmin.from('org_roles').select('id, name').eq('auth0_org_id', req.orgId!),
+    ])
+    const firstErr = deptsRes.error ?? sitesRes.error ?? rolesRes.error
+    if (firstErr) {
+      res.status(500).json({ error: firstErr.message })
+      return
+    }
+    const deptById = new Map((deptsRes.data ?? []).map((d) => [d.id, d.department_name]))
+    const siteById = new Map((sitesRes.data ?? []).map((s) => [s.id, s.site_name]))
+    const roleById = new Map((rolesRes.data ?? []).map((r) => [r.id, r.name]))
+
     const members = rows.map((m) => {
       const u = m.auth0_user_id ? (usersBySub.get(m.auth0_user_id) ?? null) : null
       return {
@@ -68,6 +90,12 @@ router.get(
         status: m.status,
         joined_at: m.joined_at,
         user_id: u?.id ?? null,
+        department_id: m.department_id,
+        department_name: m.department_id ? (deptById.get(m.department_id) ?? null) : null,
+        site_id: m.site_id,
+        site_name: m.site_id ? (siteById.get(m.site_id) ?? null) : null,
+        job_role_id: m.job_role_id,
+        job_role_name: m.job_role_id ? (roleById.get(m.job_role_id) ?? null) : null,
         users: u
           ? {
               id: u.id,
@@ -91,9 +119,19 @@ router.post(
   requireOrg,
   requirePermission('write:org_members'),
   async (req: AuthedRequest, res: Response) => {
-    const body = (req.body ?? {}) as { user_id?: string; role?: string }
-    if (!body.user_id || !isAccessRole(body.role)) {
-      res.status(400).json({ error: 'user_id and a valid access role are required.' })
+    const body = (req.body ?? {}) as {
+      user_id?: string
+      role?: string
+      department_id?: string | null
+      site_id?: string | null
+      job_role_id?: string | null
+    }
+    if (!body.user_id) {
+      res.status(400).json({ error: 'user_id is required.' })
+      return
+    }
+    if (body.role !== undefined && !isAccessRole(body.role)) {
+      res.status(400).json({ error: 'role must be a valid access role.' })
       return
     }
 
@@ -112,12 +150,58 @@ router.post(
       return
     }
 
+    // Build the update from the provided fields only. Department/site/job-title
+    // references must belong to this org before they can be assigned; a null
+    // value clears the assignment.
+    const update: TablesUpdate<'org_members'> = {}
+    if (body.role !== undefined) update.role = body.role
+
+    const belongsToOrg = async (
+      table: 'org_departments' | 'org_sites' | 'org_roles',
+      id: string
+    ): Promise<boolean> => {
+      const { data } = await supabaseAdmin
+        .from(table)
+        .select('id')
+        .eq('auth0_org_id', req.orgId!)
+        .eq('id', id)
+        .maybeSingle()
+      return Boolean(data)
+    }
+
+    if ('department_id' in body) {
+      if (body.department_id && !(await belongsToOrg('org_departments', body.department_id))) {
+        res.status(400).json({ error: 'department_id does not belong to this organization.' })
+        return
+      }
+      update.department_id = body.department_id ?? null
+    }
+    if ('site_id' in body) {
+      if (body.site_id && !(await belongsToOrg('org_sites', body.site_id))) {
+        res.status(400).json({ error: 'site_id does not belong to this organization.' })
+        return
+      }
+      update.site_id = body.site_id ?? null
+    }
+    if ('job_role_id' in body) {
+      if (body.job_role_id && !(await belongsToOrg('org_roles', body.job_role_id))) {
+        res.status(400).json({ error: 'job_role_id does not belong to this organization.' })
+        return
+      }
+      update.job_role_id = body.job_role_id ?? null
+    }
+
+    if (Object.keys(update).length === 0) {
+      res.status(400).json({ error: 'No updatable fields provided.' })
+      return
+    }
+
     const { data, error } = await supabaseAdmin
       .from('org_members')
-      .update({ role: body.role })
+      .update(update)
       .eq('auth0_org_id', req.orgId!)
       .eq('auth0_user_id', targetUser.auth0_user_id)
-      .select('id, role, status, auth0_user_id')
+      .select('id, role, status, auth0_user_id, department_id, site_id, job_role_id')
       .maybeSingle()
 
     if (error) {
@@ -128,7 +212,15 @@ router.post(
       res.status(404).json({ error: 'Membership not found in this organization.' })
       return
     }
-    res.json({ id: data.id, role: data.role, status: data.status, user_id: body.user_id })
+    res.json({
+      id: data.id,
+      role: data.role,
+      status: data.status,
+      user_id: body.user_id,
+      department_id: data.department_id,
+      site_id: data.site_id,
+      job_role_id: data.job_role_id,
+    })
   }
 )
 

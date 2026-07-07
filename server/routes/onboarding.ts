@@ -6,7 +6,7 @@ import type { Json, TablesUpdate } from '../types/supabase.js'
 
 const router = Router()
 
-// Valid organization_role enum values for org_roles.name.
+// Valid access tiers for org_roles.base_role (org_roles.name is free-form).
 const JOB_ROLES = new Set(['owner', 'admin', 'manager', 'member'])
 
 interface OnboardingBody {
@@ -102,26 +102,29 @@ router.post(
         }
       }
 
-      const roleNames = Array.from(
-        new Set(
-          (body.roles ?? [])
-            .map((r) => {
-              const normalized = (r.base_role ?? r.name ?? '').toLowerCase()
-              if (normalized === 'member') return 'member'
-              if (normalized === 'manager') return 'manager'
-              if (normalized === 'admin') return 'admin'
-              if (normalized === 'owner') return 'owner'
-              return normalized
-            })
-            .filter((name) => JOB_ROLES.has(name))
-        )
-      )
-      if (roleNames.length > 0) {
-        const roleRows = roleNames.map((name) => ({
-          auth0_org_id: orgId,
-          name: name as 'admin' | 'manager' | 'member' | 'owner',
-        }))
-        const { error: roleErr } = await supabaseAdmin.from('org_roles').insert(roleRows)
+      // org_roles are free-form job titles. `name` is the title (kept as-is);
+      // `base_role` optionally maps the title down to an access tier and must be
+      // one of the known tiers when present.
+      const seen = new Set<string>()
+      const roleRows = (body.roles ?? [])
+        .map((r) => {
+          const name = typeof r.name === 'string' ? r.name.trim() : ''
+          const base = typeof r.base_role === 'string' ? r.base_role.trim().toLowerCase() : ''
+          return { name, base_role: JOB_ROLES.has(base) ? base : null }
+        })
+        .filter((r) => {
+          if (!r.name) return false
+          const key = r.name.toLowerCase()
+          if (seen.has(key)) return false // matches the (auth0_org_id, lower(name)) unique index
+          seen.add(key)
+          return true
+        })
+      if (roleRows.length > 0) {
+        const { error: roleErr } = await supabaseAdmin
+          .from('org_roles')
+          .insert(
+            roleRows.map((r) => ({ auth0_org_id: orgId, name: r.name, base_role: r.base_role }))
+          )
         if (roleErr) throw new Error(roleErr.message)
       }
 

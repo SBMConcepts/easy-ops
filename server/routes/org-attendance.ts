@@ -33,7 +33,9 @@ router.get(
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('org_attendance')
-      .select('id, auth0_org_id, auth0_user_id, date, method, hours_worked, overtime, created_at')
+      .select(
+        'id, auth0_org_id, auth0_user_id, date, method, hours_worked, overtime, created_at, department_id, site_id'
+      )
       .eq('auth0_org_id', req.orgId!)
       .order('date', { ascending: false })
     if (error) {
@@ -63,6 +65,16 @@ router.post(
       return
     }
 
+    // Inherit the member's assigned department & site so the attendance record
+    // captures where they checked in. Resolved server-side from the membership,
+    // never trusted from the request body.
+    const { data: membership } = await supabaseAdmin
+      .from('org_members')
+      .select('department_id, site_id')
+      .eq('auth0_org_id', req.orgId!)
+      .eq('auth0_user_id', req.auth?.sub ?? '')
+      .maybeSingle()
+
     const { data, error } = await supabaseAdmin
       .from('org_attendance')
       .upsert(
@@ -73,10 +85,14 @@ router.post(
           method: body.method,
           hours_worked: Number(body.hours_worked ?? 0),
           overtime: Number(body.overtime ?? 0),
+          department_id: membership?.department_id ?? null,
+          site_id: membership?.site_id ?? null,
         },
         { onConflict: 'auth0_user_id,auth0_org_id,date' }
       )
-      .select('id, auth0_org_id, auth0_user_id, date, method, hours_worked, overtime, created_at')
+      .select(
+        'id, auth0_org_id, auth0_user_id, date, method, hours_worked, overtime, created_at, department_id, site_id'
+      )
       .single()
     if (error) {
       res.status(500).json({ error: error.message })

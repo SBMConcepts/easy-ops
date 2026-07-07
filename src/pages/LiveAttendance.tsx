@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
-import { useAttendanceRecords } from '../hooks/useOrgData'
+import { useAttendanceRecords, useSites, useDepartments } from '../hooks/useOrgData'
 import {
   Select,
   SelectContent,
@@ -14,6 +14,10 @@ import '../styles/liveattendance.css'
 export default function LiveAttendance() {
   const [methodFilter, setMethodFilter] = useState('all')
   const { data: records = [], isLoading } = useAttendanceRecords()
+  const { data: sites = [] } = useSites()
+  const { data: departments = [] } = useDepartments()
+  const siteName = (id: string | null) => (id ? sites.find((s) => s.id === id)?.site_name : null)
+  const deptName = (id: string | null) => (id ? departments.find((d) => d.id === id)?.name : null)
 
   const methods = Array.from(new Set(records.map((r) => r.method)))
   const filteredRecords =
@@ -69,6 +73,8 @@ export default function LiveAttendance() {
                   <p className="text-xs text-dashboard-text-muted flex items-center gap-1 font-medium">
                     <MapPin className="h-3 w-3 text-dashboard-primary" /> {rec.method.toUpperCase()}{' '}
                     · {rec.date}
+                    {rec.site_id && ` · ${siteName(rec.site_id) ?? 'Unknown site'}`}
+                    {rec.department_id && ` · ${deptName(rec.department_id) ?? 'Unknown dept'}`}
                   </p>
                 </div>
                 <span className="text-sm font-mono font-medium text-dashboard-text-main bg-dashboard-bg px-3 py-1.5 rounded-md border border-dashboard-border">

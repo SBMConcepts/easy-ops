@@ -57,10 +57,10 @@ const AdminDashboard = () => {
         </div>
         <div className="dashboard-card__content">
           <div className="dashboard-list">
-            {records.slice(0, 6).map((rec) => (
+            {records.map((rec) => (
               <AttendanceRow
                 key={rec.id}
-                fullName={rec.auth0_user_id?.slice(0, 8)}
+                fullName={rec.auth0_user_id}
                 metaText={`${rec.method.toUpperCase()} · ${rec.date}`}
                 status={rec.method}
                 hoursWorked={String(rec.hours_worked)}

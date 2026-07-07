@@ -7,15 +7,7 @@ import {
   type AuthedRequest,
 } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import type { Database } from '../types/supabase.js'
-
-type OrganizationRole = Database['public']['Enums']['organization_role']
-
-const JOB_ROLES = new Set<OrganizationRole>(['owner', 'admin', 'manager', 'member'])
-
-function isJobRole(value: unknown): value is OrganizationRole {
-  return typeof value === 'string' && JOB_ROLES.has(value as OrganizationRole)
-}
+import { isAccessRole } from '../lib/rbac.js'
 
 const router = Router()
 
@@ -27,7 +19,7 @@ router.get(
   async (req: AuthedRequest, res: Response) => {
     const { data, error } = await supabaseAdmin
       .from('org_roles')
-      .select('id, name')
+      .select('id, name, base_role')
       .eq('auth0_org_id', req.orgId!)
       .order('name', { ascending: true })
     if (error) {
@@ -44,19 +36,29 @@ router.post(
   requireOrg,
   requirePermission('write:org_roles'),
   async (req: AuthedRequest, res: Response) => {
-    const body = (req.body ?? {}) as { name?: string }
-    if (!isJobRole(body.name)) {
-      res.status(400).json({
-        error: 'name must be one of: owner, admin, manager.',
-      })
+    const body = (req.body ?? {}) as { name?: string; base_role?: string | null }
+    const name = typeof body.name === 'string' ? body.name.trim() : ''
+    if (!name) {
+      res.status(400).json({ error: 'name is required.' })
+      return
+    }
+    // base_role is optional; when present it maps this job title down to an
+    // access tier and must be one of the known tiers.
+    if (body.base_role != null && !isAccessRole(body.base_role)) {
+      res.status(400).json({ error: 'base_role must be one of: owner, admin, manager, member.' })
       return
     }
     const { data, error } = await supabaseAdmin
       .from('org_roles')
-      .insert({ auth0_org_id: req.orgId!, name: body.name })
-      .select('id, name')
+      .insert({ auth0_org_id: req.orgId!, name, base_role: body.base_role ?? null })
+      .select('id, name, base_role')
       .single()
     if (error) {
+      // 23505 = unique_violation on (auth0_org_id, lower(name)).
+      if (error.code === '23505') {
+        res.status(409).json({ error: 'A role with that name already exists.' })
+        return
+      }
       res.status(500).json({ error: error.message })
       return
     }

@@ -21,9 +21,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../components/ui/dialog'
+import { Label } from '../components/ui/label'
+import { useSites, useDepartments, useRoles } from '../hooks/useOrgData'
 
 const ACCESS_ROLES = ['owner', 'admin', 'manager', 'member'] as const
 type AccessRole = (typeof ACCESS_ROLES)[number]
+
+// Sentinel for the "unassigned" option (Radix Select cannot use an empty value).
+const NONE = '__none__'
 
 interface MemberUser {
   id: string
@@ -38,6 +43,12 @@ interface MemberRow {
   status: string
   joined_at: string | null
   user_id: string | null
+  department_id: string | null
+  department_name: string | null
+  site_id: string | null
+  site_name: string | null
+  job_role_id: string | null
+  job_role_name: string | null
   users: MemberUser | null
 }
 
@@ -50,6 +61,16 @@ export default function EmployeeManagement() {
   const canChangeRole = hasPermission('write:org_members')
   const canRemove = hasPermission('delete:org_members')
   const [removeTarget, setRemoveTarget] = useState<MemberRow | null>(null)
+  const [assignTarget, setAssignTarget] = useState<MemberRow | null>(null)
+  const [assignForm, setAssignForm] = useState({
+    department_id: NONE,
+    site_id: NONE,
+    job_role_id: NONE,
+  })
+
+  const { data: sites = [] } = useSites()
+  const { data: departments = [] } = useDepartments()
+  const { data: roles = [] } = useRoles()
 
   const {
     data: members = [],
@@ -92,6 +113,51 @@ export default function EmployeeManagement() {
     },
   })
 
+  const assignMember = useMutation({
+    mutationFn: async (vars: {
+      userId: string
+      department_id: string | null
+      site_id: string | null
+      job_role_id: string | null
+    }) =>
+      apiFetch('org-members', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: vars.userId,
+          department_id: vars.department_id,
+          site_id: vars.site_id,
+          job_role_id: vars.job_role_id,
+        }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['org-members'] })
+      setAssignTarget(null)
+      toast.success('Assignment updated')
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to update assignment')
+    },
+  })
+
+  const openAssign = (member: MemberRow) => {
+    setAssignForm({
+      department_id: member.department_id ?? NONE,
+      site_id: member.site_id ?? NONE,
+      job_role_id: member.job_role_id ?? NONE,
+    })
+    setAssignTarget(member)
+  }
+
+  const submitAssign = () => {
+    if (!assignTarget?.user_id) return
+    assignMember.mutate({
+      userId: assignTarget.user_id,
+      department_id: assignForm.department_id === NONE ? null : assignForm.department_id,
+      site_id: assignForm.site_id === NONE ? null : assignForm.site_id,
+      job_role_id: assignForm.job_role_id === NONE ? null : assignForm.job_role_id,
+    })
+  }
+
   if (isLoading) {
     return <div className="text-center text-sm text-muted-foreground p-6">Loading members…</div>
   }
@@ -125,6 +191,11 @@ export default function EmployeeManagement() {
               {member.users?.email && (
                 <div className="text-xs text-muted-foreground">{member.users.email}</div>
               )}
+              <div className="text-xs text-muted-foreground">
+                {[member.job_role_name, member.department_name, member.site_name]
+                  .filter(Boolean)
+                  .join(' · ') || 'No department / site / title assigned'}
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
@@ -153,6 +224,17 @@ export default function EmployeeManagement() {
                 <span className="text-xs font-medium uppercase">{member.role}</span>
               )}
 
+              {canChangeMemberRole && member.user_id && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openAssign(member)}
+                  disabled={assignMember.isPending}
+                >
+                  Assign
+                </Button>
+              )}
+
               {canRemoveMember && (
                 <Button
                   variant="destructive"
@@ -171,6 +253,88 @@ export default function EmployeeManagement() {
       {members.length === 0 && (
         <div className="text-center text-sm text-muted-foreground p-6">No members found.</div>
       )}
+
+      <Dialog open={!!assignTarget} onOpenChange={(open) => !open && setAssignTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign member</DialogTitle>
+            <DialogDescription>
+              Set the department, site and job title for{' '}
+              <strong>
+                {assignTarget?.users?.full_name || assignTarget?.users?.email || 'this member'}
+              </strong>
+              . These appear on their profile and are stamped onto their attendance.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Department</Label>
+              <Select
+                value={assignForm.department_id}
+                onValueChange={(v) => setAssignForm((f) => ({ ...f, department_id: v ?? NONE }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Unassigned</SelectItem>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Site</Label>
+              <Select
+                value={assignForm.site_id}
+                onValueChange={(v) => setAssignForm((f) => ({ ...f, site_id: v ?? NONE }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a site" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Unassigned</SelectItem>
+                  {sites.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.site_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Job title</Label>
+              <Select
+                value={assignForm.job_role_id}
+                onValueChange={(v) => setAssignForm((f) => ({ ...f, job_role_id: v ?? NONE }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a job title" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Unassigned</SelectItem>
+                  {roles.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignTarget(null)}>
+              Cancel
+            </Button>
+            <Button onClick={submitAssign} disabled={assignMember.isPending}>
+              {assignMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!removeTarget} onOpenChange={(open) => !open && setRemoveTarget(null)}>
         <DialogContent>
