@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import '../styles/topnavbar.css'
 import DemoModal from './DemoModal'
-import { useNavigate } from 'react-router'
+import { useNavigate, useLocation } from 'react-router'
 import { Button } from './ui/button'
 
 const NAV_ITEMS = [
@@ -18,6 +18,7 @@ type NavId = (typeof NAV_ITEMS)[number]['id']
 export default function TopNavBar() {
   const [activeItem, setActiveItem] = useState<NavId | null>(null)
   const navigate = useNavigate()
+  const location = useLocation()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const navRef = useRef<HTMLDivElement>(null)
   const isClickScrolling = useRef(false)
@@ -68,10 +69,7 @@ export default function TopNavBar() {
     return () => observer.disconnect()
   }, [])
 
-  const handleNavClick = (id: NavId) => {
-    setActiveItem(id)
-    setDrawerOpen(false)
-
+  const scrollToSection = (id: NavId) => {
     const section = document.getElementById(id)
     if (!section) return
 
@@ -85,6 +83,20 @@ export default function TopNavBar() {
     setTimeout(() => {
       isClickScrolling.current = false
     }, 800)
+  }
+
+  const handleNavClick = (id: NavId) => {
+    setActiveItem(id)
+    setDrawerOpen(false)
+
+    // Nav sections only exist on the home page. When on another route,
+    // navigate home first and let Index scroll to the target section.
+    if (location.pathname !== '/') {
+      navigate('/', { state: { scrollTo: id } })
+      return
+    }
+
+    scrollToSection(id)
   }
 
   return (
