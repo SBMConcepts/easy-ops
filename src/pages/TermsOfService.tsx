@@ -34,11 +34,11 @@ const VERSIONS: TermsVersion[] = [
       },
       {
         heading: '3. Subscriptions & Billing',
-        body: 'Paid plans are billed in advance on a recurring basis. Fees are non-refundable except as required by law. We may change pricing with reasonable prior notice ahead of your next billing cycle.',
+        body: 'Paid plans are billed in advance on a recurring basis (monthly and or annually) per active user, assigned feature and opted add-ons. Fees are non-refundable except as required by law. We may change pricing with reasonable prior notice ahead of your next billing cycle.',
       },
       {
         heading: '4. Acceptable Use',
-        body: 'You may not misuse the service, attempt to gain unauthorised access, reverse engineer the platform, or use it to violate any applicable law, including the Protection of Personal Information Act, 2013 (POPIA).',
+        body: 'You may not misuse the service, attempt to gain unauthorised access, reverse engineer the platform, or use it to violate any applicable law, including the Protection of Personal Information Act, 2013 (POPIA) and Basic Conditions of Employment Act, no. 75 of 1997.',
       },
       {
         heading: '5. Limitation of Liability',
@@ -46,7 +46,7 @@ const VERSIONS: TermsVersion[] = [
       },
       {
         heading: '6. Termination',
-        body: 'You may cancel your subscription at any time. We may suspend or terminate access for breach of these Terms. Upon termination, your right to use the service ceases immediately.',
+        body: 'You may cancel your subscription at any time. We may suspend or terminate access for breach of these Terms after reasonable notice. Upon termination, your right to use the service ceases immediately.',
       },
     ],
   },

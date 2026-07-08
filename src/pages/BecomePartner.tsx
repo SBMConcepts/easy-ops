@@ -24,7 +24,7 @@ const PARTNER_TYPES = [
   {
     icon: Users,
     title: 'Events & Community Collaborations',
-    desc: 'Partner with us on events, workshops, and community programmes that champion better workforce management in South Africa.',
+    desc: 'Non-profits, community events and social-impact partners collaborating on shared programmes.',
   },
 ]
 

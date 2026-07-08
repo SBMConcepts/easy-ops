@@ -56,7 +56,7 @@ export default function Footer() {
       <div className="footer__main">
         <div className="footer__brand">
           <div className="footer__logo">
-            <span className="footer__logo-eazy">Eazy</span>
+            <span className="footer__logo-eazy">Easy</span>
             <span className="footer__logo-ops">Ops</span>
           </div>
           <p className="footer__tagline">

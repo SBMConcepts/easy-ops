@@ -30,7 +30,7 @@ const VERSIONS: PolicyVersion[] = [
       },
       {
         heading: '2. Information We Collect',
-        body: 'We collect account details, organisation information, attendance records, device identifiers, and usage data. Where you use biometric or QR-based check-in, the associated verification data is processed solely to record attendance.',
+        body: 'We collect account details, organisation information, attendance records, technical data (IP address, device, browser), and usage data. Where you use biometric or QR-based check-in, the associated verification data is processed solely to record attendance.',
       },
       {
         heading: '3. How We Use Your Information',

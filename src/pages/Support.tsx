@@ -42,6 +42,16 @@ const FAQS: Faq[] = [
     answer:
       'Our support team is available at support@easyops.co.za. You can also browse this FAQ for quick answers to the most common questions about the platform.',
   },
+  {
+    question: 'Can I integrate EasyOps with my payroll system?',
+    answer:
+      'Yes. You can export payroll-ready reports (CSV / Excel) directly, and we offer integrations with common South African payroll providers on the Growth and Enterprise plans.',
+  },
+  {
+    question: 'Is my biometric data secure?',
+    answer:
+      'Biometric templates are stored on the local device where possible, and any server-side templates are encrypted at rest. We do not share biometric data with third parties.',
+  },
 ]
 
 export default function Support() {
@@ -100,7 +110,7 @@ export default function Support() {
             </p>
             <a className="company-btn company-btn--primary" href="mailto:support@easyops.co.za">
               <Mail aria-hidden="true" style={{ width: '1rem', height: '1rem' }} />
-              Contact Support
+              support@easyops.co.za
             </a>
           </div>
         </div>
