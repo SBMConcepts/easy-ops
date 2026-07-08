@@ -1,0 +1,439 @@
+/* =============================================================================
+   COMPANY PAGES  —  shared layout for Contact, Careers, Privacy, Terms,
+   Support and Become-a-Partner. Built on the --onboarding-* tokens
+   defined in onboarding.css (import onboarding.css alongside this file).
+   ============================================================================= */
+
+/* ── Page shell ── */
+.company-page {
+  background: var(--onboarding-background);
+  min-height: 60vh;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Space Grotesk', Arial, sans-serif;
+  color: var(--onboarding-text-primary);
+}
+
+.company-container {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  box-sizing: border-box;
+}
+
+/* ── Page header ── */
+.company-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.company-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  background: var(--onboarding-accent-dim);
+  color: var(--onboarding-text-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.company-title {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--onboarding-text-primary);
+  margin: 0;
+}
+
+.company-subtitle {
+  font-size: 0.95rem;
+  color: var(--onboarding-text-muted);
+  margin: 0 auto;
+  max-width: 42rem;
+  line-height: 1.7;
+}
+
+/* ── Generic card ── */
+.company-card {
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-lg);
+  box-shadow: var(--onboarding-surface-raised);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition:
+    border-color var(--onboarding-transition),
+    transform var(--onboarding-transition);
+}
+
+.company-card__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--onboarding-radius-md);
+  background: var(--onboarding-accent-dim);
+  color: var(--onboarding-text-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.company-card__icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.company-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--onboarding-text-primary);
+  margin: 0;
+}
+
+.company-card__desc {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.company-card__link {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--onboarding-text-secondary);
+  text-decoration: none;
+  transition: color var(--onboarding-transition);
+}
+
+.company-card__link:hover {
+  color: var(--onboarding-accent);
+}
+
+/* ── Card grid ── */
+.company-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .company-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .company-grid--3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── Primary / secondary buttons ── */
+.company-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--onboarding-radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition:
+    background var(--onboarding-transition),
+    border-color var(--onboarding-transition),
+    color var(--onboarding-transition);
+  font-family: inherit;
+}
+
+.company-btn--primary {
+  background: var(--onboarding-accent);
+  color: #ffffff;
+}
+
+.company-btn--primary:hover {
+  background: var(--onboarding-border-hover);
+}
+
+.company-btn--ghost {
+  background: var(--onboarding-surface);
+  border-color: var(--onboarding-border);
+  color: var(--onboarding-text-primary);
+}
+
+.company-btn--ghost:hover {
+  border-color: var(--onboarding-border-focus);
+  color: var(--onboarding-text-accent);
+}
+
+/* ── Careers — job list ── */
+.company-jobs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.company-job {
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-lg);
+  box-shadow: var(--onboarding-surface-raised);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 720px) {
+  .company-job {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.company-job__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.company-job__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--onboarding-text-primary);
+  margin: 0;
+}
+
+.company-job__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.company-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: var(--onboarding-background);
+  border: 1px solid var(--onboarding-border);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--onboarding-text-muted);
+}
+
+/* ── Version selector (Privacy / Terms) ── */
+.company-version {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-lg);
+  box-shadow: var(--onboarding-surface-raised);
+}
+
+.company-version__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--onboarding-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.company-version__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.company-version__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--onboarding-radius-sm);
+  border: 1px solid var(--onboarding-border);
+  background: var(--onboarding-surface);
+  color: var(--onboarding-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color var(--onboarding-transition),
+    background var(--onboarding-transition),
+    color var(--onboarding-transition);
+}
+
+.company-version__btn:hover {
+  border-color: var(--onboarding-border-focus);
+}
+
+.company-version__btn--active {
+  background: var(--onboarding-accent-dim);
+  border-color: var(--onboarding-border-focus);
+  color: var(--onboarding-text-accent);
+}
+
+.company-version__badge {
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  background: var(--onboarding-accent);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* ── Legal / policy document ── */
+.company-doc {
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-lg);
+  box-shadow: var(--onboarding-surface-raised);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.company-doc__meta {
+  font-size: 0.8rem;
+  color: var(--onboarding-text-muted);
+  margin: 0;
+}
+
+.company-doc__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.company-doc__heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--onboarding-text-primary);
+  margin: 0;
+}
+
+.company-doc__text {
+  font-size: 0.9rem;
+  color: var(--onboarding-text-muted);
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* ── Support — FAQ accordion ── */
+.company-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.company-faq__item {
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-lg);
+  box-shadow: var(--onboarding-surface-raised);
+  overflow: hidden;
+}
+
+.company-faq__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.125rem 1.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--onboarding-text-primary);
+  text-align: left;
+  transition: color var(--onboarding-transition);
+}
+
+.company-faq__trigger:hover {
+  color: var(--onboarding-text-accent);
+}
+
+.company-faq__chevron {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  color: var(--onboarding-text-muted);
+  transition: transform var(--onboarding-transition);
+}
+
+.company-faq__chevron--open {
+  transform: rotate(180deg);
+  color: var(--onboarding-text-accent);
+}
+
+.company-faq__answer {
+  padding: 0 1.25rem 1.25rem;
+  font-size: 0.9rem;
+  color: var(--onboarding-text-muted);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ── Partner CTA banner ── */
+.company-cta {
+  background: var(--onboarding-text-primary);
+  border-radius: var(--onboarding-radius-xl);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.company-cta__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.company-cta__text {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  max-width: 38rem;
+  line-height: 1.7;
+}
+
+@media (min-width: 768px) {
+  .company-container {
+    padding: 4rem 2rem 5rem;
+  }
+
+  .company-title {
+    font-size: 2.5rem;
+  }
+}

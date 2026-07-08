@@ -18,6 +18,12 @@ import NotFound from './pages/NotFound'
 import Onboarding from './pages/Onboarding'
 import Reports from './pages/Reports'
 import ResetPassword from './pages/ResetPassword'
+import ContactUs from './pages/ContactUs'
+import Careers from './pages/Careers'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
+import Support from './pages/Support'
+import BecomePartner from './pages/BecomePartner'
 import SettingsLayout from './layouts/SettingsLayout'
 import SitesAndDepartments from './pages/SitesAndDepartments'
 import DashboardRouter from './pages/dashboard/DashboardRouter'
@@ -40,6 +46,12 @@ const MarketingRoutes = () => (
     <Route path="/register" element={<Register />} />
     <Route path="/login" element={<Login />} />
     <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/contact" element={<ContactUs />} />
+    <Route path="/careers" element={<Careers />} />
+    <Route path="/privacy" element={<PrivacyPolicy />} />
+    <Route path="/terms" element={<TermsOfService />} />
+    <Route path="/support" element={<Support />} />
+    <Route path="/partner" element={<BecomePartner />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 )
