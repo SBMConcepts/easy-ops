@@ -79,10 +79,12 @@ const PricingSection = () => {
           className="pricing-header"
         >
           <span className="pricing-subtitle">Pricing</span>
-          <h2 className="pricing-title">Simple, transparent pricing that scales with you</h2>
+          <h2 className="pricing-title">
+            Select a plan that will empower your organisations growth
+          </h2>
           <p className="pricing-description">
-            Price = (Employees × Cost per Employee) + Package Base Price. No hidden fees, cancel
-            anytime.
+            Each plan is designed to provide the right level of support and features for your
+            business, ensuring you can manage your workforce effectively and efficiently.
           </p>
         </motion.div>
 
