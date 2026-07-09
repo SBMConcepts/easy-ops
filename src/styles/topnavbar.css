@@ -24,7 +24,7 @@
   border-bottom: 1px solid var(--onboarding-border);
   box-shadow: var(--onboarding-shadow-md);
   box-sizing: border-box;
-  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 .top-navbar-container {
@@ -89,7 +89,7 @@
   background: none;
   border: none;
   color: var(--onboarding-text-primary);
-  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
@@ -139,7 +139,7 @@
 
 .top-navbar-button-text {
   color: var(--onboarding-surface);
-  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
@@ -239,7 +239,7 @@
   padding: 12px 8px;
   border-radius: 8px;
   color: var(--onboarding-text-primary);
-  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
@@ -281,7 +281,7 @@
 
 .top-navbar-drawer-button-text {
   color: var(--onboarding-text-primary);
-  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 16px;
   font-weight: 600;
   white-space: nowrap;

@@ -5,10 +5,10 @@
   width: 100%;
   flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
   background: rgba(41, 174, 160, 0.05);
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 .benefits-header {
@@ -30,6 +30,7 @@
   font-size: 1rem;
   color: var(--onboarding-text-accent);
   margin: 0;
+  font-weight: 700;
 }
 
 /* ── Content wrapper: stacks vertically on mobile ── */
