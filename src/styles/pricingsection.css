@@ -1,16 +1,20 @@
 @import '../styles/onboarding.css';
 
 .pricing-section {
+  background: var(--onboarding-background);
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  padding: 2rem;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem 1rem;
 }
 
 .pricing-container {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  width: 100%;
 }
 
 .pricing-header {
@@ -23,7 +27,7 @@
 .pricing-subtitle {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--onboarding-text-muted);
+  color: var(--onboarding-text-accent);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -33,7 +37,7 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--onboarding-text-primary);
-  margin: 0;
+  margin: 0 0 0 0.25rem;
 }
 
 .pricing-description {
@@ -46,24 +50,34 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
+  padding: 1rem 1rem 1rem 1rem;
 }
 
 .pricing-card-wrapper {
+  position: relative;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
 }
 
 .pricing-card {
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  gap: 0.75rem;
 }
 
 .pricing-card-highlighted {
-  border-color: var(--onboarding-border-accent);
+  border-color: var(--onboarding-border-focus);
   box-shadow: var(--onboarding-shadow-md);
-  background-color: var(--onboarding-card);
+  background-color: var(--onboarding-surface-raised);
   transform: scale(1.02);
 }
 
@@ -71,42 +85,51 @@
   border-color: var(--onboarding-border);
 }
 .pricing-card-standard:hover {
-  border-color: var(--onboarding-border-accent);
+  border-color: var(--onboarding-border-hover);
   box-shadow: var(--onboarding-shadow-md);
 }
 
 .pricing-badge {
   position: absolute;
-  top: -0.75rem;
-  left: 50%;
+  top: -0.475rem;
+  left: 75%;
   transform: translateX(-50%);
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 9999px;
-  background: linear-gradient(90deg, var(--onboarding-accent), var(--onboarding-accent-hover));
-  color: var(--onboarding-text-accent);
+  background: var(--onboarding-accent);
+  color: var(--onboarding-surface);
   box-shadow: var(--onboarding-shadow-md);
+  border: 1px solid var(--onboarding-accent);
+  white-space: nowrap;
 }
 
 .pricing-card-header {
-  margin-bottom: 1.5rem;
+  padding: 1.75rem 1.75rem 0;
+  margin-bottom: 1rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .pricing-card-title {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--onboarding-text-primary);
-  margin: 0;
+  margin: 0 0 0.25rem;
 }
+
 .pricing-card-description {
   font-size: 0.875rem;
   color: var(--onboarding-text-muted);
-  margin-top: 0.25rem;
+  margin: 0;
 }
 
 .pricing-card-pricing {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .pricing-card-price-container {
@@ -116,7 +139,7 @@
 }
 
 .pricing-card-price {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--onboarding-text-primary);
 }
@@ -127,16 +150,15 @@
 }
 
 .pricing-card-yearly {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--onboarding-text-muted);
-  margin-top: 0.25rem;
 }
 
 .pricing-card-features {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .pricing-card-feature {
@@ -154,49 +176,12 @@
   color: var(--onboarding-accent);
 }
 
-.pricing-card-cta {
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-align: center;
-  transition: all 0.3s ease-in-out;
-}
-
-.pricing-card-cta-highlighted {
-  background: linear-gradient(90deg, var(--onboarding-accent), var(--onboarding-accent-glow));
-  color: var(--onboarding-text-accent);
-}
-
-.pricing-card-cta-standard {
-  background-color: var(--onboarding-accent);
-  color: var(--onboarding-text-accent);
-}
-
-.pricing-card-cta-standard:hover {
-  background-color: var(--onboarding-accent-dim);
-}
-
-.pricing-card-cta-highlighted:hover {
-  opacity: 0.9;
-}
-
 .pricing-roi-strip {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 1rem;
-  background-color: var(--onboarding-accent);
-  color: var(--onboarding-text-accent);
-  font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 0.5rem;
-}
-
-.pricing-roi-strip a {
-  color: var(--onboarding-text-accent);
-  text-decoration: underline;
+  background-color: var(--onboarding-background);
 }
 
 .pricing-roi-card {
@@ -206,7 +191,7 @@
   padding: 1rem;
   border-radius: 0.5rem;
   background-color: var(--onboarding-background);
-  border: 1px solid var(--onboarding-border);
+  border: 1px solid var(--onboarding-border-focus);
 }
 
 .pricing-roi-content {
@@ -216,13 +201,14 @@
 }
 
 .pricing-roi-text {
-  font-size: 0.875rem;
-  color: var(--onboarding-text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .pricing-roi-title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--onboarding-text-primary);
 }
 
@@ -232,12 +218,13 @@
 }
 
 .pricing-roi-amount {
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--onboarding-text-primary);
 }
 
 .pricing-roi-value {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--onboarding-text-primary);
+  color: var(--onboarding-accent);
 }

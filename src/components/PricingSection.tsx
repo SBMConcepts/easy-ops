@@ -127,18 +127,6 @@ const PricingSection = () => {
                     </li>
                   ))}
                 </ul>
-
-                <button
-                  className={cn(
-                    'pricing-card-cta',
-                    plan.highlighted ? 'pricing-card-cta-highlighted' : 'pricing-card-cta-standard'
-                  )}
-                >
-                  <Link to={`/get-started?plan=${encodeURIComponent(plan.name)}`}>
-                    {plan.cta}
-                    <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </button>
               </Card>
             </motion.div>
           ))}

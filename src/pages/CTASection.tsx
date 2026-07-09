@@ -1,9 +1,9 @@
 'use client'
 import { ArrowRight, Phone } from 'lucide-react'
-import '../styles/ctasection.css'
 import DemoModal from '../components/DemoModal'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import '../styles/ctasection.css'
 
 const CTASection = () => {
   const [modalOpen, setModalOpen] = useState(false)
@@ -19,19 +19,20 @@ const CTASection = () => {
         >
           <div className="cta-content">
             <div className="cta-heading-and-supporting-text">
-              <p className="cta-heading">Ready to Transform Your Workforce Management?</p>
+              <h3 className="cta-heading">Ready to Transform Your Workforce Management?</h3>
 
               <p className="cta-supporting-text">
                 Join businesses across South Africa that trust EasyOps to streamline operations,
-                ensure compliance, and keep their teams happy.
+                ensure compliance, and keep your workforce engaged and productive.
               </p>
             </div>
 
             <div className="cta-actions">
-              <button className="cta-gst-button" onClick={() => (window.location.href = '/login')}>
-                <div className="cta-gst-button-text">Get Started Today</div>
-
-                <ArrowRight className="cta-arrow-right" />
+              <button
+                className="cta-gst-button"
+                onClick={() => (window.location.href = '/register')}
+              >
+                Get Started Today
               </button>
 
               <button
@@ -39,8 +40,7 @@ const CTASection = () => {
                 aria-label="Request A Demo"
                 onClick={() => setModalOpen(true)}
               >
-                <div className="cta-request-demo-text">Request A Demo</div>
-                <Phone className="cta-request-demo-icon" />
+                Request A Demo
               </button>
             </div>
           </div>

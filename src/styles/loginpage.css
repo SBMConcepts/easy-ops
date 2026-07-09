@@ -12,12 +12,6 @@
   padding: 2rem 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .login-page {
-    background: #1a1a18;
-  }
-}
-
 /* Centre column */
 .login-content-column {
   width: 100%;
@@ -41,12 +35,6 @@
   margin: 0 0 0.25rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .login-brand-title {
-    color: #f0ede6;
-  }
-}
-
 .login-brand-subtitle {
   font-size: 0.875rem;
   color: #888780;
@@ -59,14 +47,6 @@
   border: 1px solid rgba(0, 0, 0, 0.09);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
   background: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-card {
-    background: #242420;
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
-  }
 }
 
 .login-card-content {
@@ -86,12 +66,6 @@
   color: #1a1a18;
   margin: 0 0 0.25rem;
   text-align: center;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-card-title {
-    color: #f0ede6;
-  }
 }
 
 .login-card-description {
@@ -134,17 +108,6 @@
   transform: translateY(0);
 }
 
-@media (prefers-color-scheme: dark) {
-  .login-mode-btn {
-    background: #2c2c28;
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-  .login-mode-btn:hover {
-    background: #333330;
-    border-color: rgba(255, 255, 255, 0.16);
-  }
-}
-
 .login-mode-btn--featured {
   border-color: #3c3489;
   background: #f5f4fe;
@@ -155,16 +118,6 @@
   background: #eeedfe;
 }
 
-@media (prefers-color-scheme: dark) {
-  .login-mode-btn--featured {
-    border-color: #534ab7;
-    background: #26215c55;
-  }
-  .login-mode-btn--featured:hover {
-    background: #26215c88;
-  }
-}
-
 .login-mode-icon {
   grid-row: 1 / 3;
   align-self: center;
@@ -172,20 +125,8 @@
   margin-top: 2px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .login-mode-icon {
-    color: #b4b2a9;
-  }
-}
-
 .login-mode-btn--featured .login-mode-icon {
   color: #534ab7;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-mode-btn--featured .login-mode-icon {
-    color: #afa9ec;
-  }
 }
 
 .login-mode-label {
@@ -195,20 +136,8 @@
   display: block;
 }
 
-@media (prefers-color-scheme: dark) {
-  .login-mode-label {
-    color: #f0ede6;
-  }
-}
-
 .login-mode-btn--featured .login-mode-label {
   color: #3c3489;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-mode-btn--featured .login-mode-label {
-    color: #cecbf6;
-  }
 }
 
 .login-mode-sub {
@@ -235,12 +164,6 @@
 
 .login-back-btn:hover {
   color: #1a1a18;
-}
-
-@media (prefers-color-scheme: dark) {
-  .login-back-btn:hover {
-    color: #f0ede6;
-  }
 }
 
 /* ── Flow header ──────────────────────────────────────────── */
