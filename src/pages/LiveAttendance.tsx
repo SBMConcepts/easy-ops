@@ -25,70 +25,68 @@ export default function LiveAttendance() {
 
   return (
     <div className="live-page">
-      <header className="live-header">
-        <div>
-          <h1 className="live-header__title text-2xl font-bold text-dashboard-text-main tracking-tight flex items-center gap-2">
-            <Activity className="h-6 w-6 text-dashboard-primary" /> Live Attendance
+      <div className="live-header">
+        <div className="live-header__title-container">
+          <h1 className="live-header__title">
+            <Activity className="h-6 w-6" /> Live Attendance
           </h1>
-          <p className="text-sm text-dashboard-text-muted mt-1">
-            Real-time tracking and monitoring.
-          </p>
+          <p className="live-header__subtitle">Real-time tracking and monitoring.</p>
         </div>
         <div className="w-45">
           <Select value={methodFilter} onValueChange={setMethodFilter as any}>
-            <SelectTrigger className="bg-dashboard-surface border-dashboard-border h-9">
-              <SelectValue placeholder="Filter by method" />
+            <SelectTrigger className="live-header__select-trigger">
+              <SelectValue className="live-header__select-value" placeholder="Filter by method" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Methods</SelectItem>
+            <SelectContent className="live-header__select-content">
+              <SelectItem className="live-header__select-item" value="all">
+                All Methods
+              </SelectItem>
               {methods.map((m) => (
-                <SelectItem key={m} value={m}>
+                <SelectItem className="live-header__select-item" key={m} value={m}>
                   {m.toUpperCase()}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-      </header>
+      </div>
 
       <div className="live-card">
         <div className="live-card__header">
-          <h2 className="text-md font-semibold text-dashboard-text-main">Today's Record Logs</h2>
-          <span className="px-2.5 py-1 text-xs font-semibold bg-dashboard-bg border border-dashboard-border rounded-full text-dashboard-text-muted">
-            Count: {filteredRecords.length}
-          </span>
+          <h2 className="live-card__title">Today's Record Logs</h2>
+          <span className="live-card__count">Count: {filteredRecords.length}</span>
         </div>
         <div className="live-card__content">
           {isLoading ? (
-            <div className="flex justify-center p-12">
-              <Loader2 className="animate-spin text-dashboard-text-muted h-8 w-8" />
+            <div className="live-card__loading">
+              <Loader2 className="live-card__loader" />
             </div>
           ) : filteredRecords.length > 0 ? (
             filteredRecords.map((rec) => (
               <div key={rec.id} className="live-row">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-semibold text-dashboard-text-main">
+                <div className="live-row__details">
+                  <p className="live-row__details-name">
                     Employee {rec.auth0_user_id?.slice(0, 8)}
                   </p>
-                  <p className="text-xs text-dashboard-text-muted flex items-center gap-1 font-medium">
+                  <p className="live-row__details-meta">
                     <MapPin className="h-3 w-3 text-dashboard-primary" /> {rec.method.toUpperCase()}{' '}
                     · {rec.date}
                     {rec.site_id && ` · ${siteName(rec.site_id) ?? 'Unknown site'}`}
                     {rec.department_id && ` · ${deptName(rec.department_id) ?? 'Unknown dept'}`}
                   </p>
                 </div>
-                <span className="text-sm font-mono font-medium text-dashboard-text-main bg-dashboard-bg px-3 py-1.5 rounded-md border border-dashboard-border">
+                <span className="live-row__hours">
                   {rec.hours_worked}h{rec.overtime ? ` +${rec.overtime}h OT` : ''}
                 </span>
               </div>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-              <div className="h-12 w-12 rounded-full bg-dashboard-bg flex items-center justify-center mb-3">
+            <div className="live-row__no-records">
+              <div className="live-row__no-records-icon">
                 <MapPin className="h-6 w-6 text-dashboard-text-muted/50" />
               </div>
-              <p className="text-sm font-medium text-dashboard-text-main">No records found</p>
-              <p className="text-xs text-dashboard-text-muted mt-1">
+              <p className="live-row__no-records-title">No records found</p>
+              <p className="live-row__no-records-subtitle">
                 No operational entries recorded today matching your filters.
               </p>
             </div>

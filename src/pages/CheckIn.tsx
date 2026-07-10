@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { useAttendanceRecords, attendanceKeys } from '../hooks/useOrgData'
@@ -11,6 +10,13 @@ import { useAuthRole } from '../contexts/AuthContext'
 import { toast } from 'sonner'
 import { QrCode, Fingerprint, MapPin, CheckCircle2, Loader2, Clock } from 'lucide-react'
 import '../styles/checkin.css'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function CheckIn() {
   const { apiFetch } = useOrgApi()
@@ -86,65 +92,41 @@ export default function CheckIn() {
           <div className="checkin-hours">
             <div className="checkin-hours__row">
               <Label className="checkin-hours__label">Standard Hours</Label>
-              <div className="relative">
-                <Clock className="checkin-hours__icon" />
-                <Input
-                  type="number"
-                  min="0"
-                  max="24"
-                  step="0.5"
-                  value={hoursWorked}
-                  onChange={(e) => setHoursWorked(e.target.value)}
-                  className="checkin-hours__input"
-                />
-              </div>
+              <Select value={hoursWorked} onValueChange={(value) => setHoursWorked(value ?? '0')}>
+                <SelectTrigger className="checkin-hours__select-trigger">
+                  <SelectValue className="checkin-hours__select-value" placeholder="Select hours" />
+                </SelectTrigger>
+                <SelectContent className="checkin-hours__select-content">
+                  {Array.from({ length: 25 }, (_, i) => (
+                    <SelectItem className="checkin-hours__select-item" key={i} value={String(i)}>
+                      {i}h
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="checkin-hours__row">
               <Label className="checkin-hours__label">Overtime</Label>
-              <div className="relative">
-                <Clock className="checkin-hours__icon" />
-                <Input
-                  type="number"
-                  min="0"
-                  max="24"
-                  step="0.5"
-                  value={overtime}
-                  onChange={(e) => setOvertime(e.target.value)}
-                  className="checkin-hours__input"
-                />
-              </div>
+
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                step="0.5"
+                value={overtime}
+                onChange={(e) => setOvertime(e.target.value)}
+                className="checkin-hours__input"
+              />
             </div>
           </div>
-
-          <button
-            className="checkin-log-btn"
-            onClick={() => logAttendance.mutate()}
-            disabled={logAttendance.isPending || !canLog}
-          >
-            {logAttendance.isPending ? (
-              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-            ) : (
-              <CheckCircle2 className="h-5 w-5 mr-2" />
-            )}
-            Log Today's Attendance
-          </button>
-
-          {!canLog && (
-            <p className="text-xs text-dashboard-text-muted mt-2 text-center">
-              Attendance for your account is recorded by a manager or administrator.
-            </p>
-          )}
 
           {attendanceHistory.length > 0 && (
             <div className="checkin-history mt-4">
               <span className="checkin-history__label">Recent Entries</span>
               {attendanceHistory.slice(0, 3).map((rec, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between items-center text-sm p-3 bg-dashboard-bg rounded-md border border-dashboard-border"
-                >
-                  <span className="font-medium text-dashboard-text-main">{rec.date}</span>
-                  <div className="flex items-center gap-3">
+                <div key={i} className="checkin-history__row">
+                  <span className="checkin-history__date">{rec.date}</span>
+                  <div className="checkin-history__details">
                     <span className="checkin-history__method">{rec.method}</span>
                     <span className="checkin-history__hours">{rec.hours_worked}h</span>
                   </div>
@@ -152,6 +134,26 @@ export default function CheckIn() {
               ))}
             </div>
           )}
+
+          <div className="checkin-log-btn-container">
+            {!canLog && (
+              <p className="checkin-log-btn-warning">
+                Attendance for your account is recorded by a manager or administrator.
+              </p>
+            )}
+            <button
+              className="checkin-log-btn"
+              onClick={() => logAttendance.mutate()}
+              disabled={logAttendance.isPending || !canLog}
+            >
+              {logAttendance.isPending ? (
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-5 w-5 mr-2" />
+              )}
+              Log Today's Attendance
+            </button>
+          </div>
         </div>
       </div>
     </div>

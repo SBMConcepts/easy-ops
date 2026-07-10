@@ -32,6 +32,8 @@ import {
   leaveKeys,
 } from '../hooks/useOrgData'
 
+import '../styles/employeemanagement.css'
+
 const ACCESS_ROLES = ['owner', 'admin', 'manager', 'member'] as const
 type AccessRole = (typeof ACCESS_ROLES)[number]
 
@@ -270,7 +272,7 @@ export default function EmployeeManagement() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="employee-management-page">
       {members.map((member) => {
         const displayName = member.users?.full_name || member.users?.email || 'Unknown user'
         const isCurrentUser = !!profile?.profile_id && member.user_id === profile.profile_id
@@ -278,27 +280,24 @@ export default function EmployeeManagement() {
         const canRemoveMember = canRemove && !isCurrentUser
 
         return (
-          <div
-            key={member.id}
-            className="flex items-center justify-between p-4 border rounded-lg bg-card"
-          >
-            <div className="flex-1">
-              <div className="font-semibold text-sm">
+          <div key={member.id} className="employee-management-row">
+            <div className="employee-management-info">
+              <div className="employee-management-name">
                 {displayName}
-                {isCurrentUser && <span className="ml-2 text-xs text-muted-foreground">(You)</span>}
+                {isCurrentUser && <span className="employee-management-you">(You)</span>}
               </div>
               {member.users?.email && (
-                <div className="text-xs text-muted-foreground">{member.users.email}</div>
+                <div className="employee-management-email">{member.users.email}</div>
               )}
-              <div className="text-xs text-muted-foreground">
+              <div className="employee-management-meta">
                 {[member.job_role_name, member.department_name, member.site_name]
                   .filter(Boolean)
                   .join(' · ') || 'No department / site / title assigned'}
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground capitalize">{member.status}</span>
+            <div className="employee-management-actions">
+              <span className="employee-management-status">{member.status}</span>
 
               {canChangeMemberRole && member.user_id ? (
                 <Select
@@ -308,41 +307,43 @@ export default function EmployeeManagement() {
                   }
                   disabled={changeRole.isPending}
                 >
-                  <SelectTrigger className="h-8 w-28 text-xs">
+                  <SelectTrigger className="employee-management-role-select-trigger">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {ACCESS_ROLES.map((role) => (
-                      <SelectItem key={role} value={role} className="text-xs capitalize">
+                      <SelectItem
+                        key={role}
+                        value={role}
+                        className="employee-management-role-select-item"
+                      >
                         {role}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               ) : (
-                <span className="text-xs font-medium uppercase">{member.role}</span>
+                <span className="employee-management-role">{member.role}</span>
               )}
 
               {canChangeMemberRole && member.user_id && (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
+                  className="employee-management-assign-button"
                   onClick={() => openAssign(member)}
                   disabled={assignMember.isPending}
                 >
                   Assign
-                </Button>
+                </button>
               )}
 
               {canRemoveMember && (
-                <Button
-                  variant="destructive"
-                  size="sm"
+                <button
+                  className="employee-management-remove-button"
                   onClick={() => setRemoveTarget(member)}
                   disabled={removeMember.isPending}
                 >
                   Remove
-                </Button>
+                </button>
               )}
             </div>
           </div>
@@ -350,7 +351,7 @@ export default function EmployeeManagement() {
       })}
 
       {members.length === 0 && (
-        <div className="text-center text-sm text-muted-foreground p-6">No members found.</div>
+        <div className="employee-management-no-members">No members found.</div>
       )}
 
       <Dialog open={!!assignTarget} onOpenChange={(open) => !open && setAssignTarget(null)}>
@@ -367,7 +368,7 @@ export default function EmployeeManagement() {
           </DialogHeader>
           <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto">
             <div className="space-y-1">
-              <Label className="text-xs">Employee / Payroll Code</Label>
+              <Label className="employee-management-label">Employee / Payroll Code</Label>
               <Input
                 value={assignForm.employee_code}
                 onChange={(e) => setAssignForm((f) => ({ ...f, employee_code: e.target.value }))}
@@ -375,12 +376,12 @@ export default function EmployeeManagement() {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Department</Label>
+              <Label className="employee-management-label">Department</Label>
               <Select
                 value={assignForm.department_id}
                 onValueChange={(v) => setAssignForm((f) => ({ ...f, department_id: v ?? NONE }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="employee-management-select-trigger">
                   <SelectValue placeholder="Select a department" />
                 </SelectTrigger>
                 <SelectContent>
@@ -394,12 +395,12 @@ export default function EmployeeManagement() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Site</Label>
+              <Label className="employee-management-label">Site</Label>
               <Select
                 value={assignForm.site_id}
                 onValueChange={(v) => setAssignForm((f) => ({ ...f, site_id: v ?? NONE }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="employee-management-select-trigger">
                   <SelectValue placeholder="Select a site" />
                 </SelectTrigger>
                 <SelectContent>
@@ -413,18 +414,23 @@ export default function EmployeeManagement() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Job title</Label>
+              <Label className="employee-management-label">Job title</Label>
               <Select
                 value={assignForm.job_role_id}
                 onValueChange={(v) => setAssignForm((f) => ({ ...f, job_role_id: v ?? NONE }))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a job title" />
+                <SelectTrigger className="employee-management-select-trigger">
+                  <SelectValue
+                    className="employee-management-select-value"
+                    placeholder="Select a job title"
+                  />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>Unassigned</SelectItem>
+                <SelectContent className="employee-management-select-content">
+                  <SelectItem className="employee-management-select-item" value={NONE}>
+                    Unassigned
+                  </SelectItem>
                   {roles.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
+                    <SelectItem key={r.id} className="employee-management-select-item" value={r.id}>
                       {r.name}
                     </SelectItem>
                   ))}
@@ -432,20 +438,29 @@ export default function EmployeeManagement() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Direct manager / supervisor</Label>
+              <Label className="employee-management-label">Direct manager / supervisor</Label>
               <Select
                 value={assignForm.manager_id}
                 onValueChange={(v) => setAssignForm((f) => ({ ...f, manager_id: v ?? NONE }))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a manager" />
+                <SelectTrigger className="employee-management-select-trigger">
+                  <SelectValue
+                    className="employee-management-select-value"
+                    placeholder="Select a manager"
+                  />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>Unassigned</SelectItem>
+                <SelectContent className="employee-management-select-content">
+                  <SelectItem className="employee-management-select-item" value={NONE}>
+                    Unassigned
+                  </SelectItem>
                   {members
                     .filter((m) => m.id !== assignTarget?.id)
                     .map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
+                      <SelectItem
+                        key={m.id}
+                        className="employee-management-select-item"
+                        value={m.id}
+                      >
                         {m.users?.full_name || m.users?.email || 'Unknown'}
                       </SelectItem>
                     ))}
@@ -453,7 +468,7 @@ export default function EmployeeManagement() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Employment type</Label>
+              <Label className="employee-management-label">Employment type</Label>
               <Select
                 value={assignForm.employment_type}
                 onValueChange={(v) => setAssignForm((f) => ({ ...f, employment_type: v ?? NONE }))}
@@ -472,7 +487,7 @@ export default function EmployeeManagement() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Shift schedule</Label>
+              <Label className="employee-management-label">Shift schedule</Label>
               <Select
                 value={assignForm.shift_id}
                 onValueChange={(v) => setAssignForm((f) => ({ ...f, shift_id: v ?? NONE }))}
@@ -493,10 +508,10 @@ export default function EmployeeManagement() {
 
             {canManageLeave && (
               <div className="space-y-2 border-t pt-3">
-                <Label className="text-xs font-semibold">Leave balances (days)</Label>
+                <Label className="employee-management-label">Leave balances (days)</Label>
                 {LEAVE_TYPES.map((t) => (
                   <div key={t.key} className="space-y-1">
-                    <Label className="text-xs">{t.label}</Label>
+                    <Label className="employee-management-label">{t.label}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -510,16 +525,20 @@ export default function EmployeeManagement() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAssignTarget(null)}>
+            <button className="employee-management-button" onClick={() => setAssignTarget(null)}>
               Cancel
-            </Button>
-            <Button onClick={submitAssign} disabled={assignMember.isPending || saveLeave.isPending}>
+            </button>
+            <button
+              className="employee-management-button"
+              onClick={submitAssign}
+              disabled={assignMember.isPending || saveLeave.isPending}
+            >
               {assignMember.isPending || saveLeave.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 'Save'
               )}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -537,16 +556,16 @@ export default function EmployeeManagement() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRemoveTarget(null)}>
+            <button className="employee-management-button" onClick={() => setRemoveTarget(null)}>
               Cancel
-            </Button>
-            <Button
-              variant="destructive"
+            </button>
+            <button
+              className="employee-management-button employee-management-remove-button"
               onClick={() => removeTarget && removeMember.mutate(removeTarget.id)}
               disabled={removeMember.isPending}
             >
               {removeMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm'}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,0 +1,118 @@
+@import './onboarding.css';
+
+.employee-management-page {
+  background: var(--onboarding-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.employee-management-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.employee-management-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.employee-management-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--onboarding-text-primary);
+}
+.employee-management-you {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted);
+  margin-left: 0.5rem;
+}
+
+.employee-management-email {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted);
+}
+
+.employee-management-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.employee-management-status {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted);
+}
+.employee-management-select-trigger {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--onboarding-border);
+  border-radius: 0.375rem;
+  background-color: var(--onboarding-bg);
+  color: var(--onboarding-text-primary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.employee-management-role-select-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.employee-management-role {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted);
+}
+
+.employee-management-assign-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  background-color: var(--onboarding-primary);
+  color: var(--onboarding-text-on-primary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+
+.employee-management-remove-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  background-color: var(--onboarding-destructive);
+  color: var(--onboarding-text-on-destructive);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+
+.employee-management-no-members {
+  font-size: 1rem;
+  color: var(--onboarding-text-muted);
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.employee-management-label {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.employee-management-select-value {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-primary);
+}
+
+.employee-management-select-content {
+  background-color: var(--onboarding-background);
+  border: 1px solid var(--onboarding-border);
+  border-radius: 0.375rem;
+  box-shadow: var(--onboarding-shadow-md);
+  margin-top: 0.25rem;
+}
