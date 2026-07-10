@@ -1,5 +1,4 @@
 'use client'
-import { ArrowRight, Phone } from 'lucide-react'
 import DemoModal from '../components/DemoModal'
 import { useState } from 'react'
 import { motion } from 'framer-motion'

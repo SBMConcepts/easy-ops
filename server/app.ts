@@ -5,6 +5,7 @@ import { auth } from 'express-openid-connect'
 // 1. Public (pre-auth / intake) — no token required
 import organizationsRouter from './routes/organizations.js'
 import orgLookupRouter from './routes/org-lookup.js'
+import demoRequestRouter from './routes/demo-request.js'
 
 // 2. Identity-provider webhook (Auth0 Action) — x-api-key shared-secret auth
 import authSyncRouter from './routes/auth-sync.js'
@@ -105,6 +106,7 @@ app.get('/api/login', (req: Request, res: Response) => {
 // 1. Public endpoints (no auth)
 app.use(organizationsRouter)
 app.use(orgLookupRouter)
+app.use(demoRequestRouter)
 
 // 2. Identity-provider webhook (x-api-key)
 app.use(authSyncRouter)
