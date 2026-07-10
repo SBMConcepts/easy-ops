@@ -6,6 +6,11 @@ import type { Permission } from '../lib/permissions'
 type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 type MembershipStatus = 'active' | 'suspended'
 
+export interface LeaveBalance {
+  leave_type: string
+  balance_days: number
+}
+
 export interface CurrentUserProfile {
   profile_id: string
   auth0_user_id: string
@@ -14,6 +19,15 @@ export interface CurrentUserProfile {
   full_name: string
   avatar_url: string | null
   user_status: string
+
+  // Identity & contact (persisted on the users row)
+  first_name: string
+  last_name: string
+  mobile_number: string | null
+  national_id: string | null
+  id_type: 'sa_id' | 'passport' | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
 
   org_id: string
   role: OrgRole
@@ -31,6 +45,8 @@ export interface CurrentUserProfile {
   plan: string | null
   billing_status: string | null
   current_period_end: string | null
+
+  leave_balances: LeaveBalance[]
 
   seat_cap?: number | null
   assigned_site_id?: string | null

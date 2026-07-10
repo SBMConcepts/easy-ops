@@ -20,7 +20,13 @@ interface OnboardingBody {
   }>
   departments?: Array<{ name?: string; site_name?: string | null }>
   roles?: Array<{ name?: string; base_role?: string }>
-  shifts?: unknown[]
+  shifts?: Array<{
+    name?: string
+    start_time?: string | null
+    end_time?: string | null
+    grace_period_minutes?: number | null
+    weekly_hours?: number | null
+  }>
   workRules?: Record<string, unknown>
   checkInMethods?: Record<string, unknown>
 }
@@ -126,6 +132,33 @@ router.post(
             roleRows.map((r) => ({ auth0_org_id: orgId, name: r.name, base_role: r.base_role }))
           )
         if (roleErr) throw new Error(roleErr.message)
+      }
+
+      // org_shifts hold the standard working-hours / shift schedules members can
+      // be assigned to. Deduped by lower(name) to satisfy the per-org unique
+      // index. Also mirrored in organizations.metadata.shifts above.
+      const seenShifts = new Set<string>()
+      const shiftRows = (body.shifts ?? [])
+        .map((s) => ({
+          name: typeof s.name === 'string' ? s.name.trim() : '',
+          start_time: s.start_time ? String(s.start_time) : null,
+          end_time: s.end_time ? String(s.end_time) : null,
+          grace_period_minutes:
+            typeof s.grace_period_minutes === 'number' ? s.grace_period_minutes : 0,
+          weekly_hours: typeof s.weekly_hours === 'number' ? s.weekly_hours : null,
+        }))
+        .filter((s) => {
+          if (!s.name) return false
+          const key = s.name.toLowerCase()
+          if (seenShifts.has(key)) return false
+          seenShifts.add(key)
+          return true
+        })
+      if (shiftRows.length > 0) {
+        const { error: shiftErr } = await supabaseAdmin
+          .from('org_shifts')
+          .insert(shiftRows.map((s) => ({ auth0_org_id: orgId, ...s })))
+        if (shiftErr) throw new Error(shiftErr.message)
       }
 
       res.json({ ok: true })

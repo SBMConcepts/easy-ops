@@ -40,6 +40,12 @@ export const ALL_PERMISSIONS = [
   'read:org_attendance',
   'write:org_attendance',
   'delete:org_attendance',
+  'read:org_shifts',
+  'write:org_shifts',
+  'delete:org_shifts',
+  'read:org_leave',
+  'write:org_leave',
+  'delete:org_leave',
   'read:invitations',
   'write:invitations',
   'delete:invitations',
@@ -68,6 +74,10 @@ const MANAGER_PERMISSIONS: readonly Permission[] = [
   'write:org_departments',
   'read:org_attendance',
   'write:org_attendance',
+  'read:org_shifts',
+  'write:org_shifts',
+  'delete:org_shifts',
+  'read:org_leave',
   'write:audit_logs',
 ]
 
@@ -84,6 +94,8 @@ const MEMBER_PERMISSIONS: readonly Permission[] = [
   'read:org_sites',
   'read:org_departments',
   'read:org_attendance',
+  'read:org_shifts',
+  'read:org_leave',
   'write:audit_logs',
 ]
 

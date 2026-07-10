@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
@@ -22,10 +22,32 @@ import {
   DialogTitle,
 } from '../components/ui/dialog'
 import { Label } from '../components/ui/label'
-import { useSites, useDepartments, useRoles } from '../hooks/useOrgData'
+import { Input } from '../components/ui/input'
+import {
+  useSites,
+  useDepartments,
+  useRoles,
+  useShifts,
+  useLeaveBalances,
+  leaveKeys,
+} from '../hooks/useOrgData'
 
 const ACCESS_ROLES = ['owner', 'admin', 'manager', 'member'] as const
 type AccessRole = (typeof ACCESS_ROLES)[number]
+
+const EMPLOYMENT_TYPES = [
+  { value: 'permanent', label: 'Permanent' },
+  { value: 'contract', label: 'Contract' },
+  { value: 'part_time', label: 'Part-Time' },
+  { value: 'temporary', label: 'Temporary' },
+  { value: 'shift_worker', label: 'Shift Worker' },
+] as const
+
+const LEAVE_TYPES = [
+  { key: 'annual', label: 'Annual Leave' },
+  { key: 'sick', label: 'Sick Leave' },
+  { key: 'family_responsibility', label: 'Family Responsibility' },
+] as const
 
 // Sentinel for the "unassigned" option (Radix Select cannot use an empty value).
 const NONE = '__none__'
@@ -49,6 +71,12 @@ interface MemberRow {
   site_name: string | null
   job_role_id: string | null
   job_role_name: string | null
+  employee_code: string | null
+  employment_type: string | null
+  shift_id: string | null
+  shift_name: string | null
+  manager_id: string | null
+  manager_name: string | null
   users: MemberUser | null
 }
 
@@ -60,17 +88,41 @@ export default function EmployeeManagement() {
 
   const canChangeRole = hasPermission('write:org_members')
   const canRemove = hasPermission('delete:org_members')
+  const canManageLeave = hasPermission('write:org_leave')
   const [removeTarget, setRemoveTarget] = useState<MemberRow | null>(null)
   const [assignTarget, setAssignTarget] = useState<MemberRow | null>(null)
   const [assignForm, setAssignForm] = useState({
     department_id: NONE,
     site_id: NONE,
     job_role_id: NONE,
+    shift_id: NONE,
+    manager_id: NONE,
+    employment_type: NONE,
+    employee_code: '',
+  })
+  const [leaveForm, setLeaveForm] = useState<Record<string, string>>({
+    annual: '0',
+    sick: '0',
+    family_responsibility: '0',
   })
 
   const { data: sites = [] } = useSites()
   const { data: departments = [] } = useDepartments()
   const { data: roles = [] } = useRoles()
+  const { data: shifts = [] } = useShifts()
+  const { data: leaveBalances } = useLeaveBalances(
+    canManageLeave ? assignTarget?.user_id : undefined
+  )
+
+  // Sync the fetched leave balances into the editable form when they load.
+  useEffect(() => {
+    if (leaveBalances) {
+      const next: Record<string, string> = { annual: '0', sick: '0', family_responsibility: '0' }
+      for (const b of leaveBalances) next[b.leave_type] = String(b.balance_days)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLeaveForm(next)
+    }
+  }, [leaveBalances])
 
   const {
     data: members = [],
@@ -119,6 +171,10 @@ export default function EmployeeManagement() {
       department_id: string | null
       site_id: string | null
       job_role_id: string | null
+      shift_id: string | null
+      manager_id: string | null
+      employment_type: string | null
+      employee_code: string | null
     }) =>
       apiFetch('org-members', {
         method: 'POST',
@@ -127,15 +183,31 @@ export default function EmployeeManagement() {
           department_id: vars.department_id,
           site_id: vars.site_id,
           job_role_id: vars.job_role_id,
+          shift_id: vars.shift_id,
+          manager_id: vars.manager_id,
+          employment_type: vars.employment_type,
+          employee_code: vars.employee_code,
         }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['org-members'] })
-      setAssignTarget(null)
-      toast.success('Assignment updated')
     },
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : 'Failed to update assignment')
+    },
+  })
+
+  const saveLeave = useMutation({
+    mutationFn: async (vars: {
+      userId: string
+      balances: Array<{ leave_type: string; balance_days: number }>
+    }) =>
+      apiFetch('org-leave', {
+        method: 'PUT',
+        body: JSON.stringify({ user_id: vars.userId, balances: vars.balances }),
+      }),
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to update leave balances')
     },
   })
 
@@ -144,18 +216,45 @@ export default function EmployeeManagement() {
       department_id: member.department_id ?? NONE,
       site_id: member.site_id ?? NONE,
       job_role_id: member.job_role_id ?? NONE,
+      shift_id: member.shift_id ?? NONE,
+      manager_id: member.manager_id ?? NONE,
+      employment_type: member.employment_type ?? NONE,
+      employee_code: member.employee_code ?? '',
     })
+    setLeaveForm({ annual: '0', sick: '0', family_responsibility: '0' })
     setAssignTarget(member)
   }
 
-  const submitAssign = () => {
+  const submitAssign = async () => {
     if (!assignTarget?.user_id) return
-    assignMember.mutate({
-      userId: assignTarget.user_id,
-      department_id: assignForm.department_id === NONE ? null : assignForm.department_id,
-      site_id: assignForm.site_id === NONE ? null : assignForm.site_id,
-      job_role_id: assignForm.job_role_id === NONE ? null : assignForm.job_role_id,
-    })
+    const userId = assignTarget.user_id
+    try {
+      await assignMember.mutateAsync({
+        userId,
+        department_id: assignForm.department_id === NONE ? null : assignForm.department_id,
+        site_id: assignForm.site_id === NONE ? null : assignForm.site_id,
+        job_role_id: assignForm.job_role_id === NONE ? null : assignForm.job_role_id,
+        shift_id: assignForm.shift_id === NONE ? null : assignForm.shift_id,
+        manager_id: assignForm.manager_id === NONE ? null : assignForm.manager_id,
+        employment_type: assignForm.employment_type === NONE ? null : assignForm.employment_type,
+        employee_code:
+          assignForm.employee_code.trim() === '' ? null : assignForm.employee_code.trim(),
+      })
+      if (canManageLeave) {
+        await saveLeave.mutateAsync({
+          userId,
+          balances: LEAVE_TYPES.map((t) => ({
+            leave_type: t.key,
+            balance_days: Number(leaveForm[t.key]) || 0,
+          })),
+        })
+        queryClient.invalidateQueries({ queryKey: leaveKeys.member(userId) })
+      }
+      setAssignTarget(null)
+      toast.success('Member updated')
+    } catch {
+      // Errors surfaced via the individual mutation onError handlers.
+    }
   }
 
   if (isLoading) {
@@ -259,14 +358,22 @@ export default function EmployeeManagement() {
           <DialogHeader>
             <DialogTitle>Assign member</DialogTitle>
             <DialogDescription>
-              Set the department, site and job title for{' '}
+              Set the employment details for{' '}
               <strong>
                 {assignTarget?.users?.full_name || assignTarget?.users?.email || 'this member'}
               </strong>
               . These appear on their profile and are stamped onto their attendance.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-1">
+              <Label className="text-xs">Employee / Payroll Code</Label>
+              <Input
+                value={assignForm.employee_code}
+                onChange={(e) => setAssignForm((f) => ({ ...f, employee_code: e.target.value }))}
+                placeholder="e.g. EMP-00123"
+              />
+            </div>
             <div className="space-y-1">
               <Label className="text-xs">Department</Label>
               <Select
@@ -324,13 +431,94 @@ export default function EmployeeManagement() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Direct manager / supervisor</Label>
+              <Select
+                value={assignForm.manager_id}
+                onValueChange={(v) => setAssignForm((f) => ({ ...f, manager_id: v ?? NONE }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a manager" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Unassigned</SelectItem>
+                  {members
+                    .filter((m) => m.id !== assignTarget?.id)
+                    .map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.users?.full_name || m.users?.email || 'Unknown'}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Employment type</Label>
+              <Select
+                value={assignForm.employment_type}
+                onValueChange={(v) => setAssignForm((f) => ({ ...f, employment_type: v ?? NONE }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select employment type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Unassigned</SelectItem>
+                  {EMPLOYMENT_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Shift schedule</Label>
+              <Select
+                value={assignForm.shift_id}
+                onValueChange={(v) => setAssignForm((f) => ({ ...f, shift_id: v ?? NONE }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a shift" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Unassigned</SelectItem>
+                  {shifts.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {canManageLeave && (
+              <div className="space-y-2 border-t pt-3">
+                <Label className="text-xs font-semibold">Leave balances (days)</Label>
+                {LEAVE_TYPES.map((t) => (
+                  <div key={t.key} className="space-y-1">
+                    <Label className="text-xs">{t.label}</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.5"
+                      value={leaveForm[t.key]}
+                      onChange={(e) => setLeaveForm((f) => ({ ...f, [t.key]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignTarget(null)}>
               Cancel
             </Button>
-            <Button onClick={submitAssign} disabled={assignMember.isPending}>
-              {assignMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+            <Button onClick={submitAssign} disabled={assignMember.isPending || saveLeave.isPending}>
+              {assignMember.isPending || saveLeave.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'Save'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

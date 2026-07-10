@@ -4,6 +4,7 @@ import multer from 'multer'
 import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { permissionsForRole } from '../lib/permissions.js'
+import type { TablesUpdate } from '../types/supabase.js'
 
 const router = Router()
 
@@ -40,7 +41,9 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
 
   const { data: user, error: userErr } = await supabaseAdmin
     .from('users')
-    .select('id, auth0_org_id, auth0_user_id, email, full_name, avatar_url')
+    .select(
+      'id, auth0_org_id, auth0_user_id, email, full_name, avatar_url, first_name, last_name, mobile_number, national_id, id_type, address, emergency_contact_name, emergency_contact_phone'
+    )
     .eq('auth0_user_id', sub)
     .eq('auth0_org_id', orgId)
     .maybeSingle()
@@ -54,26 +57,32 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     return
   }
 
-  const [{ data: member }, { data: org }, { data: subscription }] = await Promise.all([
-    supabaseAdmin
-      .from('org_members')
-      .select('role, status, joined_at')
-      .eq('auth0_org_id', orgId)
-      .eq('auth0_user_id', sub)
-      .maybeSingle(),
-    supabaseAdmin
-      .from('organizations')
-      .select('auth0_org_id, name, slug, status, logo_url, country, industry')
-      .eq('auth0_org_id', orgId)
-      .maybeSingle(),
-    supabaseAdmin
-      .from('subscriptions')
-      .select('plan, status, current_period_end')
-      .eq('auth0_org_id', orgId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ])
+  const [{ data: member }, { data: org }, { data: subscription }, { data: leaveRows }] =
+    await Promise.all([
+      supabaseAdmin
+        .from('org_members')
+        .select('role, status, joined_at')
+        .eq('auth0_org_id', orgId)
+        .eq('auth0_user_id', sub)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('organizations')
+        .select('auth0_org_id, name, slug, status, logo_url, country, industry')
+        .eq('auth0_org_id', orgId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('subscriptions')
+        .select('plan, status, current_period_end')
+        .eq('auth0_org_id', orgId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('org_leave_balances')
+        .select('leave_type, balance_days')
+        .eq('auth0_org_id', orgId)
+        .eq('auth0_user_id', sub),
+    ])
 
   res.json({
     profile_id: user.id,
@@ -82,6 +91,14 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     email: user.email,
     full_name: user.full_name,
     avatar_url: user.avatar_url,
+    first_name: user.first_name ?? '',
+    last_name: user.last_name ?? '',
+    mobile_number: user.mobile_number ?? null,
+    national_id: user.national_id ?? null,
+    id_type: user.id_type ?? null,
+    address: user.address ?? null,
+    emergency_contact_name: user.emergency_contact_name ?? null,
+    emergency_contact_phone: user.emergency_contact_phone ?? null,
     user_status: 'active',
     org_id: org?.auth0_org_id ?? null,
     role: member?.role ?? 'member',
@@ -97,23 +114,61 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     plan: subscription?.plan ?? null,
     billing_status: subscription?.status ?? null,
     current_period_end: subscription?.current_period_end ?? null,
+    leave_balances: (leaveRows ?? []).map((r) => ({
+      leave_type: r.leave_type,
+      balance_days: Number(r.balance_days),
+    })),
   })
 })
 
 router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Response) => {
   const sub = req.auth!.sub
-  const body = (req.body ?? {}) as { full_name?: unknown }
+  const body = (req.body ?? {}) as {
+    full_name?: unknown
+    first_name?: unknown
+    last_name?: unknown
+    mobile_number?: unknown
+    national_id?: unknown
+    id_type?: unknown
+    address?: unknown
+    emergency_contact_name?: unknown
+    emergency_contact_phone?: unknown
+  }
 
-  const update: {
-    auth0_org_id?: string
-    auth0_user_id?: string
-    email?: string
-    full_name?: string
-    last_seen_at: string
-  } = {
+  const update: TablesUpdate<'users'> = {
     last_seen_at: new Date().toISOString(),
   }
   if (typeof body.full_name === 'string') update.full_name = body.full_name
+  if (typeof body.first_name === 'string') update.first_name = body.first_name
+  if (typeof body.last_name === 'string') update.last_name = body.last_name
+
+  // Nullable contact fields: empty string clears them.
+  const nullableText = (v: unknown): string | null | undefined => {
+    if (v === undefined) return undefined
+    if (v === null || v === '') return null
+    return typeof v === 'string' ? v : undefined
+  }
+  const mobile = nullableText(body.mobile_number)
+  if (mobile !== undefined) update.mobile_number = mobile
+  const nationalId = nullableText(body.national_id)
+  if (nationalId !== undefined) update.national_id = nationalId
+  const address = nullableText(body.address)
+  if (address !== undefined) update.address = address
+  const ecName = nullableText(body.emergency_contact_name)
+  if (ecName !== undefined) update.emergency_contact_name = ecName
+  const ecPhone = nullableText(body.emergency_contact_phone)
+  if (ecPhone !== undefined) update.emergency_contact_phone = ecPhone
+
+  if ('id_type' in body) {
+    if (body.id_type === null || body.id_type === '') {
+      update.id_type = null
+    } else if (body.id_type === 'sa_id' || body.id_type === 'passport') {
+      update.id_type = body.id_type
+    } else {
+      res.status(400).json({ error: "id_type must be 'sa_id' or 'passport'." })
+      return
+    }
+  }
 
   const { data, error } = await supabaseAdmin
     .from('users')
@@ -123,6 +178,10 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
     .maybeSingle()
 
   if (error) {
+    if (error.code === '23505') {
+      res.status(409).json({ error: 'That mobile number is already in use.' })
+      return
+    }
     res.status(500).json({ error: error.message })
     return
   }

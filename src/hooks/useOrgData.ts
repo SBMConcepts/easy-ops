@@ -134,3 +134,62 @@ export function useRoles() {
     staleTime: 1000 * 60 * 10,
   })
 }
+
+// ── 5. Shifts (standard working hours / schedules, via Express) ─────────────
+export interface ShiftRow {
+  id: string
+  name: string
+  start_time: string | null
+  end_time: string | null
+  grace_period_minutes: number
+  weekly_hours: number | null
+}
+
+export const shiftsKeys = {
+  all: ['org_shifts'] as const,
+}
+
+export function useShifts() {
+  const { apiFetch } = useOrgApi()
+  const { user } = useAuth()
+
+  return useQuery<ShiftRow[]>({
+    queryKey: shiftsKeys.all,
+    queryFn: async () => {
+      const res = await apiFetch<{ shifts: ShiftRow[] }>('org-shifts')
+      return res.shifts ?? []
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 10,
+  })
+}
+
+// ── 6. Leave balances (via Express) ─────────────────────────────────────────
+export interface LeaveBalanceRow {
+  leave_type: string
+  balance_days: number
+  updated_at: string | null
+}
+
+export const leaveKeys = {
+  all: ['org_leave'] as const,
+  member: (userId: string) => ['org_leave', userId] as const,
+}
+
+// Fetch a specific member's leave balances (admin view). Pass the target
+// users.id; the caller must hold write:org_leave to read another member.
+export function useLeaveBalances(userId: string | null | undefined) {
+  const { apiFetch } = useOrgApi()
+
+  return useQuery<LeaveBalanceRow[]>({
+    queryKey: leaveKeys.member(userId ?? ''),
+    queryFn: async () => {
+      const res = await apiFetch<{ balances: LeaveBalanceRow[] }>(
+        `org-leave?user_id=${encodeURIComponent(userId!)}`
+      )
+      return res.balances ?? []
+    },
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 5,
+  })
+}

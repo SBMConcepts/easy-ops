@@ -47,6 +47,15 @@ interface RoleRow {
   base_role: string | null
 }
 
+interface ShiftRow {
+  id: string
+  name: string
+  start_time: string | null
+  end_time: string | null
+  grace_period_minutes: number
+  weekly_hours: number | null
+}
+
 // Sentinel for the "no access tier" option (Radix Select cannot use an empty value).
 const NO_BASE = '__none__'
 
@@ -61,6 +70,8 @@ export default function SitesAndDepartments() {
   const canDeleteDepts = hasPermission('delete:org_departments')
   const canWriteRoles = hasPermission('write:org_roles')
   const canDeleteRoles = hasPermission('delete:org_roles')
+  const canWriteShifts = hasPermission('write:org_shifts')
+  const canDeleteShifts = hasPermission('delete:org_shifts')
 
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('sites')
@@ -69,8 +80,9 @@ export default function SitesAndDepartments() {
   const [siteModalOpen, setSiteModalOpen] = useState(false)
   const [deptModalOpen, setDeptModalOpen] = useState(false)
   const [roleModalOpen, setRoleModalOpen] = useState(false)
+  const [shiftModalOpen, setShiftModalOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{
-    kind: 'site' | 'department' | 'role'
+    kind: 'site' | 'department' | 'role' | 'shift'
     id: string
     name: string
   } | null>(null)
@@ -80,6 +92,7 @@ export default function SitesAndDepartments() {
   const [siteForm, setSiteForm] = useState<Partial<SiteRow>>({})
   const [deptForm, setDeptForm] = useState<Partial<DeptRow>>({})
   const [roleForm, setRoleForm] = useState<Partial<RoleRow>>({})
+  const [shiftForm, setShiftForm] = useState<Partial<ShiftRow>>({})
 
   // Fetch Data
   const { data: sites = [], isLoading: sitesLoading } = useQuery<SiteRow[]>({
@@ -97,6 +110,14 @@ export default function SitesAndDepartments() {
     queryFn: async () => {
       const res = await apiFetch<{ roles: RoleRow[] }>('org-roles')
       return res.roles ?? []
+    },
+  })
+
+  const { data: shifts = [], isLoading: shiftsLoading } = useQuery<ShiftRow[]>({
+    queryKey: ['org_shifts'],
+    queryFn: async () => {
+      const res = await apiFetch<{ shifts: ShiftRow[] }>('org-shifts')
+      return res.shifts ?? []
     },
   })
 
@@ -149,14 +170,37 @@ export default function SitesAndDepartments() {
     },
   })
 
+  const saveShift = useMutation({
+    mutationFn: async (data: Partial<ShiftRow>) => {
+      if (editingId)
+        return apiFetch(`org-shifts/${editingId}`, { method: 'PATCH', body: JSON.stringify(data) })
+      return apiFetch('org-shifts', { method: 'POST', body: JSON.stringify(data) })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['org_shifts'] })
+      setShiftModalOpen(false)
+      toast.success(editingId ? 'Shift updated' : 'Shift created')
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to save shift')
+    },
+  })
+
   const deleteEntity = useMutation({
-    mutationFn: async ({ kind, id }: { kind: 'site' | 'department' | 'role'; id: string }) => {
+    mutationFn: async ({
+      kind,
+      id,
+    }: {
+      kind: 'site' | 'department' | 'role' | 'shift'
+      id: string
+    }) => {
       return apiFetch(`org-${kind}s/${id}`, { method: 'DELETE' })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['org_sites'] })
       queryClient.invalidateQueries({ queryKey: ['org_departments'] })
       queryClient.invalidateQueries({ queryKey: ['org_roles'] })
+      queryClient.invalidateQueries({ queryKey: ['org_shifts'] })
       setDeleteTarget(null)
       toast.success('Deleted successfully')
     },
@@ -181,6 +225,11 @@ export default function SitesAndDepartments() {
     [roles, searchQuery]
   )
 
+  const filteredShifts = useMemo(
+    () => shifts.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    [shifts, searchQuery]
+  )
+
   const openSiteModal = (site?: SiteRow) => {
     setEditingId(site?.id || null)
     setSiteForm(
@@ -200,7 +249,21 @@ export default function SitesAndDepartments() {
     setRoleModalOpen(true)
   }
 
-  if (sitesLoading || deptsLoading || rolesLoading) {
+  const openShiftModal = (shift?: ShiftRow) => {
+    setEditingId(shift?.id || null)
+    setShiftForm(
+      shift || {
+        name: '',
+        start_time: '',
+        end_time: '',
+        grace_period_minutes: 0,
+        weekly_hours: null,
+      }
+    )
+    setShiftModalOpen(true)
+  }
+
+  if (sitesLoading || deptsLoading || rolesLoading || shiftsLoading) {
     return (
       <div className="sad-page flex items-center justify-center">
         <Loader2 className="animate-spin text-dashboard-text-muted h-8 w-8" />
@@ -251,6 +314,9 @@ export default function SitesAndDepartments() {
           </TabsTrigger>
           <TabsTrigger value="roles" className="sad-tabs__nav-trigger">
             Job Titles ({filteredRoles.length})
+          </TabsTrigger>
+          <TabsTrigger value="shifts" className="sad-tabs__nav-trigger">
+            Shifts ({filteredShifts.length})
           </TabsTrigger>
         </TabsList>
 
@@ -434,6 +500,72 @@ export default function SitesAndDepartments() {
               ))}
               {filteredRoles.length === 0 && (
                 <p className="sad-list__empty">No job titles match your search.</p>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="shifts" className="sad-tabs__content">
+          <div className="sad-card-tab">
+            <div className="sad-card-tab__header ">
+              <div className="sad-card-tab__title">
+                <span className="sad-card-tab__title-text">Shift Schedules</span>
+              </div>
+            </div>
+            <div className="sad-card-tab__actions">
+              <div className="sad-card-tab__search ">
+                <Search className="sad-card-tab__search-icon" />
+                <Input
+                  placeholder="Search shifts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="sad-card-tab__search-input"
+                />
+              </div>
+              {canWriteShifts && (
+                <button className="sad-card-tab__add-btn" onClick={() => openShiftModal()}>
+                  Add Shift
+                </button>
+              )}
+            </div>
+            <div className="sad-list">
+              {filteredShifts.map((shift) => (
+                <div key={shift.id} className="sad-list__items">
+                  <div className="sad-list__item-content">
+                    <p className="sad-list__item-title">{shift.name}</p>
+                    <p className="sad-list__item-subtitle">
+                      {shift.start_time && shift.end_time
+                        ? `${shift.start_time} – ${shift.end_time}`
+                        : 'No times set'}
+                      {shift.weekly_hours != null ? ` · ${shift.weekly_hours}h/week` : ''}
+                    </p>
+                  </div>
+                  {(canWriteShifts || canDeleteShifts) && (
+                    <div className="flex items-center gap-2">
+                      {canWriteShifts && (
+                        <button
+                          className="sad-card-tab__edit-btn"
+                          onClick={() => openShiftModal(shift)}
+                        >
+                          <Pencil className="h-4 w-4 text-dashboard-text-muted" />
+                        </button>
+                      )}
+                      {canDeleteShifts && (
+                        <button
+                          className="sad-card-tab__delete-btn"
+                          onClick={() =>
+                            setDeleteTarget({ kind: 'shift', id: shift.id, name: shift.name })
+                          }
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {filteredShifts.length === 0 && (
+                <p className="sad-list__empty">No shifts match your search.</p>
               )}
             </div>
           </div>
@@ -634,6 +766,95 @@ export default function SitesAndDepartments() {
               disabled={saveRole.isPending}
             >
               {saveRole.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Job Title'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Shift Modal ───────────────────────────────────────────── */}
+      <Dialog open={shiftModalOpen} onOpenChange={setShiftModalOpen}>
+        <DialogContent className="sad-modal-content">
+          <DialogHeader className="sad-modal-header">
+            <DialogTitle className="sad-modal-title">
+              {editingId ? 'Edit Shift' : 'Create Shift'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="sad-modal__row">
+              <Label className="sad-modal-label">Shift Name</Label>
+              <Input
+                className="sad-modal-input"
+                value={shiftForm.name || ''}
+                onChange={(e) => setShiftForm({ ...shiftForm, name: e.target.value })}
+                placeholder="e.g. Morning Shift"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="sad-modal__row">
+                <Label className="sad-modal-label">Start Time</Label>
+                <Input
+                  className="sad-modal-input"
+                  type="time"
+                  value={shiftForm.start_time || ''}
+                  onChange={(e) => setShiftForm({ ...shiftForm, start_time: e.target.value })}
+                />
+              </div>
+              <div className="sad-modal__row">
+                <Label className="sad-modal-label">End Time</Label>
+                <Input
+                  className="sad-modal-input"
+                  type="time"
+                  value={shiftForm.end_time || ''}
+                  onChange={(e) => setShiftForm({ ...shiftForm, end_time: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="sad-modal__row">
+                <Label className="sad-modal-label">Grace Period (minutes)</Label>
+                <Input
+                  className="sad-modal-input"
+                  type="number"
+                  min={0}
+                  value={shiftForm.grace_period_minutes ?? 0}
+                  onChange={(e) =>
+                    setShiftForm({
+                      ...shiftForm,
+                      grace_period_minutes:
+                        e.target.value === '' ? 0 : parseInt(e.target.value, 10),
+                    })
+                  }
+                />
+              </div>
+              <div className="sad-modal__row">
+                <Label className="sad-modal-label">Weekly Hours</Label>
+                <Input
+                  className="sad-modal-input"
+                  type="number"
+                  min={0}
+                  step="0.5"
+                  value={shiftForm.weekly_hours ?? ''}
+                  onChange={(e) =>
+                    setShiftForm({
+                      ...shiftForm,
+                      weekly_hours: e.target.value === '' ? null : parseFloat(e.target.value),
+                    })
+                  }
+                  placeholder="e.g. 45"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="sad-modal-footer">
+            <button className="sad-modal-cancel-btn" onClick={() => setShiftModalOpen(false)}>
+              Cancel
+            </button>
+            <button
+              className="sad-modal-save-btn"
+              onClick={() => saveShift.mutate(shiftForm)}
+              disabled={saveShift.isPending}
+            >
+              {saveShift.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Shift'}
             </button>
           </DialogFooter>
         </DialogContent>
