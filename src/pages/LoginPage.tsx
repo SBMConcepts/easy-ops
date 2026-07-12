@@ -67,9 +67,7 @@ const LoginPage = () => {
                   <span className="w-full border-t border-black/10 " />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-sidebar-primary-foreground px-3 text-[#888780] font-medium">
-                    New to EasyOps?
-                  </span>
+                  <span className="px-3  text-[#888780] font-medium">New to EasyOps?</span>
                 </div>
               </div>
 
