@@ -1,36 +1,41 @@
 @import './onboarding.css';
 
 .benefits-sections {
-  display: flex;
   width: 100%;
+  display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  background: rgba(41, 174, 160, 0.05);
-  padding: 0;
-  box-sizing: border-box;
   font-family: 'Space Grotesk', sans-serif;
+  box-sizing: border-box;
+  padding: 48px 16px 40px;
+  background: rgba(41, 174, 160, 0.05);
 }
 
 .benefits-header {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  text-align: start;
+  align-items: center;
+  gap: 32px;
 }
 
 .benefits-title {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  margin: 0;
   color: var(--onboarding-text-primary);
-  margin: 0 0 0 0.25rem;
+  text-align: center;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 32px;
 }
 
 .benefits-subtitle {
-  font-size: 1rem;
-  color: var(--onboarding-text-accent);
   margin: 0;
-  font-weight: 700;
+  color: var(--onboarding-text-accent);
+  text-align: center;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
 }
 
 /* ── Content wrapper: stacks vertically on mobile ── */
@@ -38,33 +43,38 @@
   display: flex;
   width: 100%;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: flex-start;
-  gap: 24px;
+  gap: 0;
 }
 
 .benefits-content {
   display: flex;
   width: 100%;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: flex-start;
   gap: 24px;
-  padding: 0 0 32px;
+  padding: 32px 16px 40px;
+  border-bottom: 1px solid var(--onboarding-border-focus);
 }
 
 .benefits-text-and-supporting {
   display: flex;
+  width: 100%;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: flex-start;
-  gap: 4px;
+  gap: 8px;
 }
 
 .benefits-text-supporting {
-  align-self: stretch;
-  color: var(--onboarding-text-primary);
+  margin: 0;
+  color: var(--onboarding-text-muted);
+  text-align: left;
   font-size: 14px;
-  font-weight: 500;
+  font-style: normal;
   line-height: 24px;
-  letter-spacing: -0.44px;
 }
 
 /* ── Check items: single column on mobile ── */
@@ -82,7 +92,6 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
-  flex: 1 0 0;
 }
 
 .benefits-check-item-text {
@@ -120,27 +129,29 @@
   display: flex;
   width: 100%;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: flex-start;
   gap: 24px;
-  padding: 0 0 32px;
+  padding: 32px 16px 40px;
 }
 
 .investment-summary-heading-and-supporting {
   display: flex;
+  width: 100%;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: flex-start;
-  gap: 4px;
+  gap: 8px;
 }
 
 .investment-summary-heading {
-  align-self: stretch;
+  margin: 0;
   color: var(--onboarding-text-primary);
-  font-family: 'Space Grotesk';
-  font-size: 20px;
+  text-align: left;
+  font-size: 24px;
   font-style: normal;
   font-weight: 700;
-  line-height: 28px;
-  letter-spacing: -0.44px;
+  line-height: 32px;
 }
 
 .investment-summary-check-items-wrap {
@@ -157,7 +168,6 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
-  flex: 1 0 0;
 }
 
 .investment-summary-check-item-text {
@@ -185,7 +195,7 @@
 
 .investment-summary-feature-2 {
   align-self: stretch;
-  color: var(--onboarding-text-primary);
+  color: var(--onboarding-text-muted);
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
@@ -194,143 +204,62 @@
 
 .investment-summary-supporting-text {
   align-self: stretch;
-  color: var(--onboarding-text-primary);
+  color: var(--onboarding-text-muted);
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
   line-height: 24px;
 }
 
-/* ── TABLET  (768px – 1023px) ─────────────────────────────────────────────── */
-@media (min-width: 768px) and (max-width: 1023px) {
+/* ── TABLET  (641px – 1007px) ─────────────────────────────────────────────── */
+@media (min-width: 641px) and (max-width: 1007px) {
   .benefits-sections {
     padding: 48px 32px 40px;
-    gap: 16px;
   }
 
-  .benefits-heading-wrapper {
-    gap: 8px;
+  .benefits-header {
+    gap: 40px;
   }
 
   .benefits-title {
     font-size: 28px;
-    letter-spacing: -0.56px;
     line-height: 36px;
   }
 
   .benefits-subtitle {
-    font-size: 14px;
-    line-height: 24px;
+    font-size: 16px;
+    line-height: 26px;
   }
 
   .benefits-content-wrapper {
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    gap: 0;
+    gap: 40px;
   }
 
   .benefits-content {
     padding: 32px 32px 40px;
-    border-bottom: none;
-    border-right: 1px solid var(--gray-200, #eaecf0);
-    flex: 1 0 0;
-    min-width: 0;
-  }
-
-  .benefits-text-and-supporting {
-    gap: 8px;
-  }
-
-  .benefits-text {
-    font-size: 20px;
-    letter-spacing: -0.4px;
-  }
-
-  .benefits-text-supporting {
-    font-size: 14px;
-    line-height: 24px;
-  }
-
-  /* Two columns for check items on tablet */
-  .benefits-check-items-wrap {
-    flex-direction: row;
-    gap: 16px;
-  }
-
-  .benefits-check-icon {
-    width: 20px;
-    height: 20px;
-  }
-
-  .benefits-text-2 {
-    font-size: 14px;
-    line-height: 24px;
-  }
-
-  .investment-summary-heading {
-    font-size: 20px;
-    letter-spacing: -0.4px;
-  }
-
-  .investment-summary-feature-1,
-  .investment-summary-feature-2,
-  .investment-summary-supporting-text {
-    font-size: 14px;
-    line-height: 24px;
-  }
-}
-
-/* ── STANDARD LAPTOP / DESKTOP  (1024px – 1439px) ─────────────────────────── */
-@media (min-width: 1024px) and (max-width: 1439px) {
-  .benefits-sections {
-    padding: 64px 48px 56px;
     gap: 24px;
   }
 
-  .benefits-heading-wrapper {
+  .benefits-text-and-supporting {
     gap: 16px;
   }
 
-  .benefits-title {
-    font-size: 32px;
-    letter-spacing: -0.64px;
-    line-height: 40px;
+  .benefits-text-supporting {
+    font-size: 16px;
+    line-height: 26px;
   }
 
-  .benefits-subtitle {
-    font-size: 15px;
-    line-height: 24px;
-  }
-
-  .benefits-content-wrapper {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 0;
-  }
-
-  .benefits-content {
-    padding: 32px 32px 40px;
-    border-bottom: none;
-    border-right: 1px solid var(--gray-200, #eaecf0);
-    flex: 1 0 0;
-    min-width: 0;
-  }
-
-  .benefits-text {
-    font-size: 24px;
-    letter-spacing: -0.48px;
-  }
-
+  /* ── Check items: single column on mobile ── */
   .benefits-check-items-wrap {
-    flex-direction: row;
     gap: 24px;
   }
 
   .benefits-check-items {
+    gap: 24px;
+  }
+
+  .benefits-check-item-text {
     gap: 16px;
-    flex: 1 0 0;
   }
 
   .benefits-check-icon {
@@ -338,82 +267,205 @@
     height: 24px;
   }
 
+  .benefits-text-wrap {
+    flex: 1 0 0;
+  }
+
   .benefits-text-2 {
-    font-size: 15px;
-    line-height: 24px;
+    font-size: 16px;
+    line-height: 26px;
   }
 
-  .benefits-text-supporting {
-    font-size: 15px;
-    line-height: 24px;
-  }
-
+  /* ── Investment summary ── */
   .investment-summary-content {
     padding: 32px 32px 40px;
-    width: auto;
-    flex: 1 0 0;
-    min-width: 0;
+    gap: 24px;
+  }
+
+  .investment-summary-heading-and-supporting {
+    gap: 16px;
   }
 
   .investment-summary-heading {
-    font-size: 32px;
-    letter-spacing: -0.64px;
-    line-height: 40px;
+    font-size: 28px;
+    line-height: 36px;
   }
 
   .investment-summary-check-items-wrap {
     gap: 24px;
   }
 
-  .investment-summary-feature-1,
-  .investment-summary-feature-2,
+  .investment-summary-check-items {
+    gap: 24px;
+  }
+
+  .investment-summary-check-item-text {
+    gap: 16px;
+  }
+
+  .investment-summary-text-wrap {
+    flex: 1 0 0;
+  }
+
+  .investment-summary-feature-1 {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
+  .investment-summary-feature-2 {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
   .investment-summary-supporting-text {
-    font-size: 15px;
-    line-height: 24px;
+    font-size: 16px;
+    line-height: 26px;
+  }
+}
+
+/* ── STANDARD LAPTOP / DESKTOP  1008px – 1439px)─────────────────────────────────────────────── */
+@media (min-width: 1008px) and (max-width: 1439px) {
+  .benefits-sections {
+    padding: 48px 32px 40px;
+  }
+
+  .benefits-header {
+    gap: 32px;
+  }
+
+  .benefits-title {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .benefits-subtitle {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
+  .benefits-content-wrapper {
+    gap: 32px;
+  }
+
+  .benefits-content {
+    padding: 32px 32px 40px;
+    gap: 24px;
+  }
+
+  .benefits-text-and-supporting {
+    gap: 16px;
+  }
+
+  .benefits-text-supporting {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
+  /* ── Check items: single column on mobile ── */
+  .benefits-check-items-wrap {
+    gap: 24px;
+  }
+
+  .benefits-check-items {
+    gap: 24px;
+  }
+
+  .benefits-check-item-text {
+    gap: 16px;
+  }
+
+  .benefits-check-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .benefits-text-wrap {
+    flex: 1 0 0;
+  }
+
+  .benefits-text-2 {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
+  /* ── Investment summary ── */
+  .investment-summary-content {
+    padding: 32px 32px 40px;
+    gap: 24px;
+  }
+
+  .investment-summary-heading-and-supporting {
+    gap: 16px;
+  }
+
+  .investment-summary-heading {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .investment-summary-check-items-wrap {
+    gap: 24px;
+  }
+
+  .investment-summary-check-items {
+    gap: 24px;
+  }
+
+  .investment-summary-check-item-text {
+    gap: 16px;
+  }
+
+  .investment-summary-text-wrap {
+    flex: 1 0 0;
+  }
+
+  .investment-summary-feature-1 {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
+  .investment-summary-feature-2 {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
+  .investment-summary-supporting-text {
+    font-size: 16px;
+    line-height: 26px;
   }
 }
 
 /* ── LARGE DESKTOP  (≥ 1440px) ───────────────────────────────────────────── */
 @media (min-width: 1440px) {
   .benefits-sections {
-    padding: 64px 64px 56px;
-    gap: 24px;
+    padding: 48px 32px 40px;
   }
 
-  .benefits-heading-wrapper {
-    gap: 16px;
+  .benefits-header {
+    gap: 32px;
   }
 
   .benefits-title {
-    font-size: 36px;
-    letter-spacing: -0.72px;
-    line-height: 44px;
+    font-size: 28px;
+    line-height: 36px;
   }
 
   .benefits-subtitle {
-    font-size: 16px;
+    font-size: 22px;
     line-height: 26px;
   }
 
   .benefits-content-wrapper {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 0;
+    gap: 32px;
   }
 
   .benefits-content {
-    padding: 32px 40px 40px;
-    border-bottom: none;
-    border-right: 1px solid var(--onboarding-border-focus);
-    flex: 1 0 0;
-    min-width: 0;
+    padding: 32px 32px 40px;
+    gap: 24px;
   }
 
-  .benefits-text {
-    font-size: 36px;
-    letter-spacing: -0.72px;
-    line-height: 44px;
+  .benefits-text-and-supporting {
+    gap: 16px;
   }
 
   .benefits-text-supporting {
@@ -421,14 +473,17 @@
     line-height: 26px;
   }
 
+  /* ── Check items: single column on mobile ── */
   .benefits-check-items-wrap {
-    flex-direction: row;
-    gap: 32px;
+    gap: 24px;
   }
 
   .benefits-check-items {
+    gap: 24px;
+  }
+
+  .benefits-check-item-text {
     gap: 16px;
-    flex: 1 0 0;
   }
 
   .benefits-check-icon {
@@ -436,37 +491,58 @@
     height: 24px;
   }
 
+  .benefits-text-wrap {
+    flex: 1 0 0;
+  }
+
   .benefits-text-2 {
-    font-size: 16px;
+    font-size: 18px;
     line-height: 26px;
   }
 
+  /* ── Investment summary ── */
   .investment-summary-content {
-    padding: 32px 40px 40px;
-    width: auto;
-    flex: 1 0 0;
-    min-width: 0;
+    padding: 32px 32px 40px;
+    gap: 24px;
+  }
+
+  .investment-summary-heading-and-supporting {
+    gap: 16px;
   }
 
   .investment-summary-heading {
-    font-size: 36px;
-    letter-spacing: -0.72px;
-    line-height: 44px;
+    font-size: 28px;
+    line-height: 36px;
   }
 
   .investment-summary-check-items-wrap {
-    gap: 32px;
+    gap: 24px;
   }
 
   .investment-summary-check-items {
+    gap: 24px;
+  }
+
+  .investment-summary-check-item-text {
     gap: 16px;
+  }
+
+  .investment-summary-text-wrap {
     flex: 1 0 0;
   }
 
-  .investment-summary-feature-1,
-  .investment-summary-feature-2,
+  .investment-summary-feature-1 {
+    font-size: 18px;
+    line-height: 26px;
+  }
+
+  .investment-summary-feature-2 {
+    font-size: 18px;
+    line-height: 26px;
+  }
+
   .investment-summary-supporting-text {
-    font-size: 16px;
+    font-size: 18px;
     line-height: 26px;
   }
 }

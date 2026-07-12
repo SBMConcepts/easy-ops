@@ -90,18 +90,11 @@ export default function Features() {
         <div className="features-content">
           <div className="features-heading-and-text-wrapper">
             <div className="features-heading-and-text">
-              <div
-                className="features-subheading"
-                style={{ textTransform: 'uppercase', letterSpacing: '1px' }}
-              >
-                Features
-              </div>
-              <h2 className="features-heading" style={{ fontSize: '2.5rem', color: '#10294C' }}>
-                Everything You Need to Manage Your Workforce
-              </h2>
+              <div className="features-subheading">Features</div>
+              <h2 className="features-heading">Everything You Need to Manage Your Workforce</h2>
             </div>
 
-            <p className="features-supporting-text" style={{ maxWidth: '800px' }}>
+            <p className="features-supporting-text">
               From attendance tracking to payroll compliance, EasyOps gives South African businesses
               the tools to operate efficiently.
             </p>
@@ -113,64 +106,14 @@ export default function Features() {
             const Icon = item.icon
 
             return (
-              <article
-                className="feature-card"
-                key={item.title}
-                style={{
-                  alignItems: 'flex-start' /* Overrides center alignment to match image */,
-                  textAlign: 'left',
-                  border: '1px solid #e1e6ed',
-                  boxShadow: '0 4px 24px -4px rgba(15, 45, 92, 0.04)',
-                  padding: '32px 24px',
-                }}
-              >
-                <div
-                  className="featured-icon"
-                  style={{
-                    backgroundColor: 'rgba(41, 174, 160, 0.1)',
-                    borderRadius: '12px',
-                    width: '56px',
-                    height: '56px',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    display: 'flex',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <Icon
-                    className="feature-icon-svg"
-                    style={{ color: '#29aea0', width: '28px', height: '28px' }}
-                    aria-hidden="true"
-                  />
+              <article className="feature-card" key={item.title}>
+                <div className="featured-icon">
+                  <Icon className="feature-icon-svg" aria-hidden="true" />
                 </div>
 
-                <div
-                  className="features-text-and-supporting"
-                  style={{
-                    alignItems: 'flex-start',
-                    gap: '12px',
-                  }}
-                >
-                  <h3
-                    className="features-text"
-                    style={{
-                      textAlign: 'left',
-                      fontSize: '1.125rem',
-                      color: '#0f2d5c',
-                    }}
-                  >
-                    {item.title}
-                  </h3>
-                  <p
-                    className="features-text-wrapper"
-                    style={{
-                      textAlign: 'left',
-                      color: '#64748b',
-                      lineHeight: '1.6',
-                    }}
-                  >
-                    {item.description}
-                  </p>
+                <div className="features-text-and-supporting">
+                  <h3 className="features-text">{item.title}</h3>
+                  <p className="features-text-wrapper">{item.description}</p>
                 </div>
               </article>
             )

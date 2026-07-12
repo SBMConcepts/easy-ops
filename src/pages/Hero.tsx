@@ -9,7 +9,6 @@ import heroWorkers from '../assets/hero-workers.jpg'
 
 import '../styles/hero.css'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Button } from '../components/ui/button'
 import { useCallback, useEffect, useState } from 'react'
 
 const stats = [

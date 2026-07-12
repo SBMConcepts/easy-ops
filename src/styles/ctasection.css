@@ -1,54 +1,58 @@
 @import './onboarding.css';
 
 .cta-section {
-  display: flex;
   width: 100%;
+  display: flex;
   flex-direction: column;
-  align-items: center;
+  font-family: 'Space Grotesk', sans-serif;
   box-sizing: border-box;
+  padding: 48px 16px 40px;
   background: rgba(41, 174, 160, 0.05);
 }
 
 .cta-container {
-  max-width: 48rem;
   display: flex;
+  width: 100%;
   flex-direction: column;
-  gap: 2rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0;
 }
 
 .cta-content {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
-  align-items: center;
   width: 100%;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 24px;
 }
 
 .cta-heading-and-supporting-text {
   display: flex;
+  width: 100%;
   flex-direction: column;
-  gap: 0.5rem;
-  text-align: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .cta-heading {
+  margin: 0;
+  color: var(--onboarding-text-primary);
   font-size: 24px;
   font-style: normal;
   font-weight: 700;
   line-height: 32px;
-  letter-spacing: -0.48px;
-  color: var(--onboarding-text-primary);
-  margin: 0;
 }
 
 .cta-supporting-text {
+  margin: 0;
   color: var(--onboarding-text-muted);
   font-size: 14px;
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 24px;
-  letter-spacing: -0.28px;
-  margin: 0;
 }
 
 /* Buttons: full-width and stacked on mobile */
@@ -57,6 +61,7 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  padding: 0;
 }
 
 .cta-gst-button {
@@ -69,14 +74,15 @@
   background: var(--onboarding-accent);
   cursor: pointer;
   box-shadow: var(--onboarding-shadow-md);
-  color: var(--onboarding-background);
+  color: var(--onboarding-surface);
   font-size: 1rem;
   font-weight: 700;
 }
 
 .cta-gst-button:hover {
   background: var(--onboarding-accent-hover);
-  color: var(--onboarding-text-primary);
+  color: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border-hover);
 }
 
 .cta-request-demo-button {
@@ -95,21 +101,21 @@
 }
 
 .cta-request-demo-button:hover {
-  background: var(--onboarding-surface-raised);
-  color: var(--onboarding-text-primary);
+  background: var(--onboarding-text-primary);
+  color: var(--onboarding-surface);
   border: 1px solid var(--onboarding-border-hover);
 }
 
-/* ── TABLET  (768px – 1023px) ─────────────────────────────────────────────── */
-@media (min-width: 768px) and (max-width: 1023px) {
+/* ── TABLET  (641px – 1007px) ─────────────────────────────────────────────── */
+@media (min-width: 641px) and (max-width: 1007px) {
   .cta-section {
-    padding: 48px 32px 56px;
-    min-height: 280px;
+    padding: 48px 32px 40px;
+    min-height: 320px;
   }
 
   .cta-container {
-    padding: 0;
-    gap: 28px;
+    padding: 0 24px;
+    gap: 32px;
   }
 
   .cta-content {
@@ -117,13 +123,14 @@
   }
 
   .cta-heading-and-supporting-text {
-    max-width: 560px;
+    max-width: 680px;
     align-self: center;
     gap: 16px;
   }
 
   .cta-heading {
     font-size: 28px;
+    line-height: 36px;
     letter-spacing: -0.56px;
   }
 
@@ -132,50 +139,54 @@
     line-height: 26px;
   }
 
-  /* Buttons side-by-side on tablet */
   .cta-actions {
-    flex-direction: row;
-    align-items: flex-start;
-    width: auto;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
   }
 
-  .cta-gst-button,
+  .cta-gst-button {
+    width: 100%;
+  }
+
+  .cta-gst-button:hover {
+    background: var(--onboarding-accent-hover);
+    color: var(--onboarding-surface);
+    border: 1px solid var(--onboarding-border-hover);
+  }
+
   .cta-request-demo-button {
-    width: auto;
+    width: 100%;
   }
 
-  .cta-gst-button-text,
-  .cta-request-demo-text {
-    font-size: 16px;
-  }
-
-  .cta-arrow-right,
-  .cta-request-demo-icon {
-    width: 22px;
-    height: 22px;
+  .cta-request-demo-button:hover {
+    background: var(--onboarding-text-primary);
+    color: var(--onboarding-surface);
+    border: 1px solid var(--onboarding-border-hover);
   }
 }
 
-/* ── STANDARD LAPTOP / DESKTOP  (1024px – 1439px) ─────────────────────────── */
-@media (min-width: 1024px) and (max-width: 1439px) {
+/* ── STANDARD LAPTOP / DESKTOP  1008px – 1439px)─────────────────────────────────────────────── */
+@media (min-width: 1008px) and (max-width: 1439px) {
   .cta-section {
-    padding: 64px 48px 56px;
+    padding: 64px 32px 56px;
     min-height: 320px;
   }
 
   .cta-container {
     padding: 0 32px;
-    gap: 32px;
+    gap: 40px;
   }
 
   .cta-content {
-    gap: 40px;
+    gap: 32px;
   }
 
   .cta-heading-and-supporting-text {
     max-width: 680px;
     align-self: center;
-    gap: 18px;
+    gap: 16px;
   }
 
   .cta-heading {
@@ -191,82 +202,93 @@
 
   .cta-actions {
     flex-direction: row;
-    align-items: flex-start;
-    gap: 12px;
-    width: auto;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
   }
 
-  .cta-gst-button,
+  .cta-gst-button {
+    width: 100%;
+    padding: 12px 24px;
+  }
+
+  .cta-gst-button:hover {
+    background: var(--onboarding-accent-hover);
+    color: var(--onboarding-surface);
+    border: 1px solid var(--onboarding-border-hover);
+  }
+
   .cta-request-demo-button {
-    width: auto;
+    width: 100%;
+    padding: 12px 24px;
   }
 
-  .cta-gst-button-text,
-  .cta-request-demo-text {
-    font-size: 18px;
-  }
-
-  .cta-arrow-right,
-  .cta-request-demo-icon {
-    width: 24px;
-    height: 24px;
+  .cta-request-demo-button:hover {
+    background: var(--onboarding-text-primary);
+    color: var(--onboarding-surface);
+    border: 1px solid var(--onboarding-border-hover);
   }
 }
 
 /* ── LARGE DESKTOP  (≥ 1440px) ───────────────────────────────────────────── */
 @media (min-width: 1440px) {
   .cta-section {
-    padding: 80px 64px 72px;
-    min-height: 360px;
+    padding: 64px 32px 56px;
+    min-height: 320px;
   }
 
   .cta-container {
-    padding: 0 48px;
+    padding: 0 32px;
     gap: 40px;
   }
 
   .cta-content {
-    gap: 48px;
+    gap: 32px;
   }
 
   .cta-heading-and-supporting-text {
-    width: 768px;
+    max-width: 680px;
     align-self: center;
-    gap: 20px;
+    gap: 16px;
   }
 
   .cta-heading {
-    font-size: 36px;
-    line-height: 44px;
-    letter-spacing: -0.72px;
+    font-size: 32px;
+    line-height: 40px;
+    letter-spacing: -0.64px;
   }
 
   .cta-supporting-text {
-    font-size: 20px;
-    line-height: 30px;
+    font-size: 18px;
+    line-height: 28px;
   }
 
   .cta-actions {
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
     gap: 16px;
-    width: auto;
+    width: 100%;
   }
 
-  .cta-gst-button,
+  .cta-gst-button {
+    width: 100%;
+    padding: 12px 24px;
+  }
+
+  .cta-gst-button:hover {
+    background: var(--onboarding-accent-hover);
+    color: var(--onboarding-surface);
+    border: 1px solid var(--onboarding-border-hover);
+  }
+
   .cta-request-demo-button {
-    width: auto;
-    padding: 14px 24px;
+    width: 100%;
+    padding: 12px 24px;
   }
 
-  .cta-gst-button-text,
-  .cta-request-demo-text {
-    font-size: 18px;
-  }
-
-  .cta-arrow-right,
-  .cta-request-demo-icon {
-    width: 26px;
-    height: 26px;
+  .cta-request-demo-button:hover {
+    background: var(--onboarding-text-primary);
+    color: var(--onboarding-surface);
+    border: 1px solid var(--onboarding-border-hover);
   }
 }
