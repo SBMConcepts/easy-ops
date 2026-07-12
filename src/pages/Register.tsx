@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { Loader2, Check, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { useOrgApi } from '../hooks/useOrgApi'
-import '../styles/loginpage.css'
+import '../styles/register.css'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 
 type BillingPlan = 'free' | 'starter' | 'growth' | 'pro' | 'enterprise'
 
@@ -52,6 +54,14 @@ export default function Register() {
   })
   const [submitting, setSubmitting] = useState(false)
 
+  const handleBack = () => {
+    if (step === 1) {
+      navigate('/login')
+    } else {
+      setStep(1)
+    }
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
@@ -77,119 +87,122 @@ export default function Register() {
   }
 
   return (
-    <div className="login-page">
-      {/* We expand the max-width for Step 1 so the 3 cards have room to breathe */}
-      <div className="login-content-column" style={{ maxWidth: step === 1 ? '980px' : '520px' }}>
-        {/* Back navigation button matching standard workflow styling */}
-        <button type="button" className="login-back-btn" onClick={() => navigate('/login')}>
-          <ArrowLeft size={14} /> Back to login
+    <div className="register-page">
+      {/* Header: back button + title/subtitle live here, above everything else */}
+      <div className="register-header">
+        <button type="button" className="register-back-btn" onClick={handleBack}>
+          <ArrowLeft size={16} /> {step === 1 ? 'Back' : 'Back to plans'}
         </button>
-        {step === 1 ? (
-          <div className="login-brand-block">
-            <h1 className="login-brand-title">Select your operational capacity</h1>
-            <p className="login-brand-subtitle">Choose a plan that fits your workforce size.</p>
 
-            <div className="login-plans mt-6 flex flex-col gap-4 sm:flex-row ">
-              {PACKAGES.map((pkg) => {
-                const isSelected = form.plan === pkg.id
-                // Split the price strings into amount and period to use the proper CSS classes
-                const priceAmount = pkg.price.includes('/') ? pkg.price.split('/')[0] : pkg.price
-                const pricePeriod = pkg.price.includes('/') ? `/${pkg.price.split('/')[1]}` : ''
-
-                return (
-                  <div
-                    key={pkg.id}
-                    className={`login-plan-card flex-1 ${isSelected ? 'selected' : ''}`}
-                    onClick={() => setForm({ ...form, plan: pkg.id })}
-                  >
-                    {isSelected && <span className="login-plan-badge">Selected</span>}
-
-                    <div className="login-plan-name">{pkg.name}</div>
-
-                    <div className="login-plan-price">
-                      <span className="login-plan-amount">{priceAmount}</span>
-                      {pricePeriod && <span className="login-plan-period">{pricePeriod}</span>}
-                    </div>
-
-                    <ul className="login-plan-features mt-4 flex flex-col gap-2 text-sm">
-                      {pkg.features.map((f, i) => (
-                        <li key={i}>
-                          <Check size={14} /> {f}
-                        </li>
-                      ))}
-                    </ul>
-
-                    <button
-                      className="login-button mt-4 w-full text-sm font-semibold "
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setForm({ ...form, plan: pkg.id })
-                        setStep(2)
-                      }}
-                    >
-                      {pkg.name}
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
+        {step === 1 && (
+          <div className="register-header-copy">
+            <h1 className="register-brand-title">Select your operational capacity</h1>
+            <p className="register-brand-subtitle">Choose a plan that fits your workforce size.</p>
           </div>
-        ) : (
-          <div className="login-card">
-            <div className="login-card-content">
-              <button type="button" className="login-back-btn" onClick={() => setStep(1)}>
-                <ArrowLeft size={14} /> Back to plans
-              </button>
+        )}
+      </div>
 
-              <div className="login-flow-header">
-                <h2 className="login-flow-title">Create your workspace</h2>
-                <p className="login-flow-desc">
+      {step === 1 ? (
+        // Plans render in a grid that spans the full width of the page, independent
+        // of the narrower column used for the step-2 form below.
+        <div className="register-plans-section">
+          <div className="register-plans">
+            {PACKAGES.map((pkg) => {
+              const isSelected = form.plan === pkg.id
+              // Split the price strings into amount and period to use the proper CSS classes
+              const priceAmount = pkg.price.includes('/') ? pkg.price.split('/')[0] : pkg.price
+              const pricePeriod = pkg.price.includes('/') ? `/${pkg.price.split('/')[1]}` : ''
+
+              return (
+                <div
+                  key={pkg.id}
+                  className={`register-plan-card ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setForm({ ...form, plan: pkg.id })}
+                >
+                  {isSelected && <span className="register-plan-badge">Selected</span>}
+
+                  <div className="register-plan-name">{pkg.name}</div>
+
+                  <div className="register-plan-price">
+                    <span className="register-plan-amount">{priceAmount}</span>
+                    {pricePeriod && <span className="register-plan-period">{pricePeriod}</span>}
+                  </div>
+
+                  <ul className="register-plan-features">
+                    {pkg.features.map((f, i) => (
+                      <li className="register-plan-feature" key={i}>
+                        <Check className="register-plan-feature-icon" size={14} /> {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    className="register-button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setForm({ ...form, plan: pkg.id })
+                      setStep(2)
+                    }}
+                  >
+                    {pkg.name}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="register-content-column">
+          <div className="register-card">
+            <div className="register-card-content">
+              <div className="register-flow-header">
+                <h2 className="register-flow-title">Create your workspace</h2>
+                <p className="register-flow-desc">
                   You will receive an email invitation to set up your workspace and credentials.
                 </p>
               </div>
 
               {/* Pill displaying the plan selected in Step 1 */}
-              <div className="login-selected-plan mb-6">
-                <span className="login-selected-plan-label">Selected Plan</span>
-                <span className="login-selected-plan-name">
+              <div className="register-selected-plan">
+                <span className="register-selected-plan-label">Selected Plan</span>
+                <span className="register-selected-plan-name">
                   {PACKAGES.find((p) => p.id === form.plan)?.name}
                 </span>
               </div>
 
-              <form onSubmit={handleRegister} className="login-fields">
-                <div className="login-field">
-                  <label className="login-label">Company Name</label>
-                  {/* Using .login-textarea for standard text inputs inherits the correct borders/focus rings */}
-                  <input
+              <form onSubmit={handleRegister} className="register-fields">
+                <div className="register-field">
+                  <Label className="register-label">Company Name</Label>
+                  <Input
                     required
                     type="text"
-                    className="login-textarea"
+                    className="register-input"
                     style={{ height: '42px' }}
                     value={form.companyName}
                     onChange={(e) => setForm({ ...form, companyName: e.target.value })}
                   />
                 </div>
 
-                <div className="login-field">
-                  <label className="login-label">Admin Email</label>
-                  <input
+                <div className="register-field">
+                  <Label className="register-label">Admin Email</Label>
+                  <Input
                     required
                     type="email"
-                    className="login-textarea"
+                    className="register-input"
                     style={{ height: '42px' }}
                     value={form.adminEmail}
                     onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
                   />
                 </div>
 
-                <button type="submit" className="login-button mt-2" disabled={submitting}>
+                <button type="submit" className="register-submit-button " disabled={submitting}>
                   {submitting ? <Loader2 className="animate-spin h-5 w-5" /> : 'Create Workspace'}
                 </button>
               </form>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
