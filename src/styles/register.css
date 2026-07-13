@@ -394,9 +394,6 @@
     margin: 0;
   }
 
-  /* This grid used to be capped at max-width: 320px, which is what was
-     squeezing all 5 plan cards into a sliver on the left. It now spans
-     a wide, centered section of its own. */
   .register-plans-section {
     max-width: 72rem;
     margin: 0 auto;

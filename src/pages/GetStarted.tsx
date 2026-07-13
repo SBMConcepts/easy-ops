@@ -5,6 +5,8 @@ import { supabasePublic } from '../integrations/supabase/client'
 import { toast } from 'sonner'
 import { Loader2, Mail, Phone, Building2, ArrowLeft } from 'lucide-react'
 import '../styles/loginpage.css'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 
 export default function GetStarted() {
   const navigate = useNavigate()
@@ -39,22 +41,17 @@ export default function GetStarted() {
 
   return (
     <div className="login-page">
-      <div className="login-content-column" style={{ maxWidth: '520px' }}>
+      <div className="login-content-column get-started-content-column">
         {/* Back navigation button matching standard workflow styling */}
         <button type="button" className="login-back-btn" onClick={() => navigate('/login')}>
           <ArrowLeft size={14} /> Back to login
         </button>
 
-        <div className="login-card">
+        <div className="login-card get-started-card">
           <div className="login-card-content">
             {/* Header Content */}
             <div className="login-flow-header">
-              <h1
-                className="login-flow-title"
-                style={{ fontSize: '1.35rem', marginBottom: '0.5rem' }}
-              >
-                Get Started with EasyOps
-              </h1>
+              <h1 className="login-flow-title get-started-title">Get Started with EasyOps</h1>
               <p className="login-flow-desc">
                 Ready to completely automate your workforce tracking operations? Submit an inquiry
                 and our technical onboarding team will configure your environment.
@@ -64,12 +61,11 @@ export default function GetStarted() {
             {/* Input Form Fields */}
             <form onSubmit={handleSubmit} className="login-fields">
               <div className="login-field">
-                <label className="login-label">Full Name</label>
-                <input
+                <Label className="login-label">Full Name</Label>
+                <Input
                   required
                   type="text"
-                  className="login-textarea"
-                  style={{ height: '42px' }}
+                  className="login-textarea get-started-input"
                   placeholder="Jane Doe"
                   value={form.fullName}
                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
@@ -77,12 +73,11 @@ export default function GetStarted() {
               </div>
 
               <div className="login-field">
-                <label className="login-label">Work Email</label>
-                <input
+                <Label className="login-label">Work Email</Label>
+                <Input
                   required
                   type="email"
-                  className="login-textarea"
-                  style={{ height: '42px' }}
+                  className="login-textarea get-started-input"
                   placeholder="jane@company.com"
                   value={form.workEmail}
                   onChange={(e) => setForm({ ...form, workEmail: e.target.value })}
@@ -90,19 +85,18 @@ export default function GetStarted() {
               </div>
 
               <div className="login-field">
-                <label className="login-label">Company Name</label>
-                <input
+                <Label className="login-label">Company Name</Label>
+                <Input
                   required
                   type="text"
-                  className="login-textarea"
-                  style={{ height: '42px' }}
+                  className="login-textarea get-started-input"
                   placeholder="Acme Logistics"
                   value={form.companyName}
                   onChange={(e) => setForm({ ...form, companyName: e.target.value })}
                 />
               </div>
 
-              <button type="submit" className="login-button mt-4" disabled={loading}>
+              <button type="submit" className="get-started-btn" disabled={loading}>
                 {loading ? (
                   <Loader2 className="animate-spin h-5 w-5" />
                 ) : (
@@ -112,21 +106,16 @@ export default function GetStarted() {
             </form>
 
             {/* Bottom Contact Information Panel */}
-            <div className="mt-6 pt-6 border-t border-black/5 dark:border-white/5">
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#888780] mb-3">
-                Contact Information
-              </h3>
-              <div className="flex flex-col gap-2.5 text-xs text-[#5f5e5a] dark:text-[#b4b2a9]">
-                <div className="flex items-center gap-2.5">
-                  <Mail size={14} className="text-[#534ab7]" />
+            <div className="get-started-contact">
+              <h3 className="get-started-contact-heading">Contact Information</h3>
+              <div className="get-started-contact-list">
+                <div className="get-started-contact-item">
+                  <Mail size={14} className="get-started-contact-icon" />
                   <span>sales@easyops.co.za</span>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <Phone size={14} className="text-[#534ab7]" />
-                  <span>+27 (0) 11 000 0000</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Building2 size={14} className="text-[#534ab7]" />
+
+                <div className="get-started-contact-item">
+                  <Building2 size={14} className="get-started-contact-icon" />
                   <span>Johannesburg, South Africa</span>
                 </div>
               </div>
