@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import { Check, ArrowRight, Link } from 'lucide-react'
-import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
 import { cn } from '../lib/utils'
 import '../styles/pricingsection.css'
@@ -101,7 +100,7 @@ const PricingSection = () => {
               <Card
                 className={cn(
                   'pricing-card',
-                  plan.highlighted ? 'pricqing-card-highlighted' : 'pricing-card-standard'
+                  plan.highlighted ? 'pricing-card-highlighted' : 'pricing-card-standard'
                 )}
               >
                 {plan.highlighted && <span className="pricing-badge">Most Popular</span>}

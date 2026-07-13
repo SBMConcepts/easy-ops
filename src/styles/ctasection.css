@@ -11,57 +11,55 @@
 }
 
 .cta-container {
-  display: flex;
   width: 100%;
+  display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 0;
+  align-items: center;
+  gap: 32px;
 }
 
 .cta-content {
-  display: flex;
   width: 100%;
+  display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 24px;
+  align-items: center;
+  gap: 16px;
 }
 
 .cta-heading-and-supporting-text {
-  display: flex;
   width: 100%;
+  display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
 }
 
 .cta-heading {
   margin: 0;
   color: var(--onboarding-text-primary);
-  font-size: 24px;
+  text-align: center;
+  font-size: 18px;
   font-style: normal;
   font-weight: 700;
-  line-height: 32px;
+  line-height: 28px;
 }
 
 .cta-supporting-text {
   margin: 0;
   color: var(--onboarding-text-muted);
+  text-align: center;
   font-size: 14px;
   font-style: normal;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 24px;
 }
 
 /* Buttons: full-width and stacked on mobile */
 .cta-actions {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  padding: 0;
+  gap: 32px;
 }
 
 .cta-gst-button {
@@ -110,22 +108,20 @@
 @media (min-width: 641px) and (max-width: 1007px) {
   .cta-section {
     padding: 48px 32px 40px;
-    min-height: 320px;
   }
 
   .cta-container {
-    padding: 0 24px;
-    gap: 32px;
+    padding: 0 32px;
+    gap: 40px;
   }
 
   .cta-content {
-    gap: 32px;
+    gap: 24px;
   }
 
   .cta-heading-and-supporting-text {
-    max-width: 680px;
-    align-self: center;
-    gap: 16px;
+    max-width: 860px;
+    gap: 24px;
   }
 
   .cta-heading {
@@ -140,14 +136,15 @@
   }
 
   .cta-actions {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     width: 100%;
   }
 
   .cta-gst-button {
     width: 100%;
+    padding: 12px 24px;
   }
 
   .cta-gst-button:hover {
@@ -158,6 +155,7 @@
 
   .cta-request-demo-button {
     width: 100%;
+    padding: 12px 24px;
   }
 
   .cta-request-demo-button:hover {
@@ -170,8 +168,7 @@
 /* ── STANDARD LAPTOP / DESKTOP  1008px – 1439px)─────────────────────────────────────────────── */
 @media (min-width: 1008px) and (max-width: 1439px) {
   .cta-section {
-    padding: 64px 32px 56px;
-    min-height: 320px;
+    padding: 48px 32px 40px;
   }
 
   .cta-container {
@@ -180,7 +177,7 @@
   }
 
   .cta-content {
-    gap: 32px;
+    gap: 24px;
   }
 
   .cta-heading-and-supporting-text {
@@ -190,14 +187,14 @@
   }
 
   .cta-heading {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -0.64px;
+    font-size: 28px;
+    letter-spacing: -0.56px;
+    line-height: 36px;
   }
 
   .cta-supporting-text {
-    font-size: 18px;
-    line-height: 28px;
+    font-size: 16px;
+    line-height: 26px;
   }
 
   .cta-actions {
@@ -233,8 +230,7 @@
 /* ── LARGE DESKTOP  (≥ 1440px) ───────────────────────────────────────────── */
 @media (min-width: 1440px) {
   .cta-section {
-    padding: 64px 32px 56px;
-    min-height: 320px;
+    padding: 48px 32px 40px;
   }
 
   .cta-container {
@@ -243,24 +239,23 @@
   }
 
   .cta-content {
-    gap: 32px;
+    gap: 24px;
   }
 
   .cta-heading-and-supporting-text {
-    max-width: 680px;
-    align-self: center;
-    gap: 16px;
+    max-width: 860px;
+    gap: 24px;
   }
 
   .cta-heading {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -0.64px;
+    font-size: 28px;
+    letter-spacing: -0.56px;
+    line-height: 36px;
   }
 
   .cta-supporting-text {
-    font-size: 18px;
-    line-height: 28px;
+    font-size: 16px;
+    line-height: 26px;
   }
 
   .cta-actions {
