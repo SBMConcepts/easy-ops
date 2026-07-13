@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { label: 'How It Works', id: 'how-it-works' },
   { label: 'Benefits', id: 'benefits' },
   { label: 'Pricing', id: 'pricing' },
-  { label: 'Contact', id: 'contact' },
+  { label: 'Contact', id: 'cta' },
 ] as const
 
 type NavId = (typeof NAV_ITEMS)[number]['id']
@@ -22,13 +22,15 @@ export default function TopNavBar() {
   const location = useLocation()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const navRef = useRef<HTMLDivElement>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const hamburgerRef = useRef<HTMLButtonElement>(null)
   const isClickScrolling = useRef(false)
   const [modalOpen, setModalOpen] = useState(false)
 
   // Close drawer on resize to desktop
   useEffect(() => {
     const onResize = () => {
-      if (window.innerWidth >= 768) setDrawerOpen(false)
+      if (window.innerWidth >= 641) setDrawerOpen(false)
     }
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
@@ -38,7 +40,11 @@ export default function TopNavBar() {
   useEffect(() => {
     if (!drawerOpen) return
     const onPointerDown = (e: PointerEvent) => {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      const insideHeader = navRef.current?.contains(target)
+      const insideDrawer = drawerRef.current?.contains(target)
+      const insideHamburger = hamburgerRef.current?.contains(target)
+      if (!insideHeader && !insideDrawer && !insideHamburger) {
         setDrawerOpen(false)
       }
     }
@@ -86,7 +92,7 @@ export default function TopNavBar() {
     }, 800)
   }
 
-  const handleNavClick = (id: NavId) => {
+  const handleNavClick = (id: NavId, fromDrawer = false) => {
     setActiveItem(id)
     setDrawerOpen(false)
 
@@ -94,6 +100,13 @@ export default function TopNavBar() {
     // navigate home first and let Index scroll to the target section.
     if (location.pathname !== '/') {
       navigate('/', { state: { scrollTo: id } })
+      return
+    }
+
+    if (fromDrawer) {
+      window.setTimeout(() => {
+        scrollToSection(id)
+      }, 250)
       return
     }
 
@@ -139,17 +152,18 @@ export default function TopNavBar() {
 
           {/* ── Desktop CTA (hidden on mobile via CSS) ── */}
           <div className="top-navbar-navigation-actions">
-            <Button
+            <button
               className="top-navbar-button"
               aria-label="Login"
               onClick={() => navigate('/login')}
             >
-              <div className="top-navbar-button-text">Login</div>
-            </Button>
+              <div className="top-navbar-button-text">Open App</div>
+            </button>
           </div>
 
           {/* ── Hamburger (visible on mobile only via CSS) ── */}
           <button
+            ref={hamburgerRef}
             className="top-navbar-hamburger"
             aria-label={drawerOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={drawerOpen}
@@ -165,6 +179,7 @@ export default function TopNavBar() {
 
       {/* ── Mobile drawer (outside sticky header so it overlays content) ── */}
       <div
+        ref={drawerRef}
         id="mobile-drawer"
         className={['top-navbar-drawer', drawerOpen ? 'top-navbar-drawer--open' : '']
           .filter(Boolean)
@@ -183,7 +198,7 @@ export default function TopNavBar() {
                   .filter(Boolean)
                   .join(' ')}
                 aria-current={activeItem === id ? 'page' : undefined}
-                onClick={() => handleNavClick(id)}
+                onClick={() => handleNavClick(id, true)}
               >
                 {label}
               </button>
@@ -193,11 +208,15 @@ export default function TopNavBar() {
 
         <div className="top-navbar-drawer-cta">
           <button
+            type="button"
             className="top-navbar-drawer-button"
             aria-label="Login"
-            onClick={() => navigate('/login')}
+            onClick={() => {
+              setDrawerOpen(false)
+              navigate('/login')
+            }}
           >
-            <span className="top-navbar-drawer-button-text">Login</span>
+            <span className="top-navbar-drawer-button-text">Open App</span>
           </button>
         </div>
       </div>

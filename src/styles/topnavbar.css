@@ -1,14 +1,4 @@
-@import '../styles/onboarding.css';
-/* =============================================================================
-   TOP NAVBAR
-   Breakpoints:
-     Mobile          → < 768px   (base / mobile-first)
-     Tablet          → 768px – 1023px
-     Standard Laptop → 1024px – 1439px
-     Large Desktop   → ≥ 1440px
-   ============================================================================= */
-
-/* ── BASE / MOBILE  (< 768px) ─────────────────────────────────────────────── */
+@import './onboarding.css';
 
 .top-navbar-header {
   display: flex;
@@ -29,7 +19,6 @@
 
 .top-navbar-container {
   width: 100%;
-  max-width: 1440px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -157,11 +146,11 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   width: 36px;
   height: 36px;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--onboarding-radius-sm);
   padding: 4px;
   box-sizing: border-box;
 }
@@ -174,8 +163,8 @@
   display: block;
   width: 22px;
   height: 2px;
-  background-color: var(--foreground);
-  border-radius: 2px;
+  background-color: var(--onboarding-text-primary);
+  border-radius: var(--onboarding-radius-sm);
   transition:
     transform 0.25s ease,
     opacity 0.25s ease,
@@ -207,7 +196,7 @@
   flex-direction: column;
   padding: 16px;
   gap: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--onboarding-shadow-sm);
   transform: translateY(-8px);
   opacity: 0;
   pointer-events: none;
@@ -225,27 +214,34 @@
 .top-navbar-drawer-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .top-navbar-drawer-item {
   display: flex;
-  width: 100%;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .top-navbar-drawer-text {
   all: unset;
+  display: flex;
   width: 100%;
-  padding: 12px 8px;
-  border-radius: 8px;
+  box-sizing: border-box;
+  justify-content: flex-start;
+  align-items: center;
   color: var(--onboarding-text-primary);
   font-family: 'Space Grotesk', sans-serif;
   font-size: 16px;
+  font-style: normal;
   font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease;
+  letter-spacing: 0;
+  line-height: 24px;
+  margin-top: -1px;
+  position: relative;
+  white-space: nowrap;
+  width: fit-content;
+  padding: 10px 12px;
 }
 
 .top-navbar-drawer-text:hover {
@@ -259,9 +255,8 @@
 }
 
 .top-navbar-drawer-cta {
-  margin-top: 8px;
-  padding-top: 16px;
   border-top: 1px solid var(--onboarding-border);
+  padding-top: 12px;
 }
 
 .top-navbar-drawer-button {
@@ -273,167 +268,655 @@
   align-items: center;
   background-color: var(--onboarding-accent);
   border: 1px solid var(--onboarding-accent);
-  border-radius: 16px;
-  padding: 12px 18px;
+  border-radius: var(--onboarding-radius-lg);
+  padding: 10px 18px;
   cursor: pointer;
-  box-shadow: var(--onboarding-shadow-xs);
+  box-shadow: var(--onboarding-shadow-sm);
 }
 
 .top-navbar-drawer-button-text {
-  color: var(--onboarding-text-primary);
+  color: var(--onboarding-surface);
   font-family: 'Space Grotesk', sans-serif;
   font-size: 16px;
   font-weight: 600;
-  white-space: nowrap;
+  line-height: 24px;
 }
 
-/* ── TABLET  (768px – 1023px) ─────────────────────────────────────────────── */
-@media (min-width: 768px) and (max-width: 1023px) {
+/* ── TABLET  (641px – 1007px) ─────────────────────────────────────────────── */
+@media (min-width: 641px) and (max-width: 1007px) {
   .top-navbar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
     height: 64px;
-    padding: 0 24px;
+    padding: 0 8px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: var(--onboarding-background);
+    border-bottom: 1px solid var(--onboarding-border);
+    box-shadow: var(--onboarding-shadow-md);
+    box-sizing: border-box;
+    font-family: 'Space Grotesk', sans-serif;
   }
 
-  .top-navbar-brand-Easy,
+  .top-navbar-container {
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ── Logo ── */
+  .top-navbar-logo {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top-navbar-logo-wrap {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+
+  .top-navbar-brand-name {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .top-navbar-brand-Easy {
+    color: var(--onboarding-text-primary);
+  }
+
   .top-navbar-brand-Ops {
-    font-size: 26px;
+    color: var(--onboarding-accent);
   }
 
+  /* ── Standard Laptop and Desktop nav — 641px – 1007px ── */
   .top-navbar-content {
     display: flex;
     align-items: center;
-    gap: 24px;
-    justify-content: flex-end;
-  }
-
-  .top-navbar-navigation {
+    justify-content: space-between;
     gap: 8px;
-    width: auto;
-  }
-
-  .top-navbar-hamburger {
-    display: none;
-  }
-
-  .top-navbar-navigation-actions {
-    all: unset;
-    align-items: center;
-    box-sizing: border-box;
-    display: inline-flex;
-    flex: 0 0 auto;
-    gap: 12px;
-    position: relative;
-  }
-
-  .top-navbar-drawer {
-    display: none !important;
-  }
-}
-
-/* ── STANDARD LAPTOP / DESKTOP  (1024px – 1439px) ─────────────────────────── */
-@media (min-width: 1024px) and (max-width: 1439px) {
-  .top-navbar-header {
-    height: 64px;
-    padding: 0 48px;
-  }
-
-  .top-navbar-brand-Easy,
-  .top-navbar-brand-Ops {
-    font-size: 28px;
-  }
-
-  .top-navbar-content {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    justify-content: flex-end;
   }
 
   .top-navbar-navigation {
-    gap: 12px;
-    width: auto;
-  }
-
-  .top-navbar-hamburger {
-    display: none;
-  }
-
-  .top-navbar-navigation-actions {
-    all: unset;
     align-items: center;
-    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    gap: 8px;
+  }
+
+  .top-navbar-nav-item {
+    align-items: center;
     display: inline-flex;
     flex: 0 0 auto;
-    gap: 12px;
+    gap: 8px;
+    justify-content: center;
     position: relative;
   }
 
-  .top-navbar-button {
-    padding: 10px 20px;
+  .top-navbar-text {
+    background: none;
+    border: none;
+    color: var(--onboarding-text-primary);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 22px;
+    margin-top: 0;
+    position: relative;
+    white-space: nowrap;
+    width: fit-content;
+    padding: 0;
+    cursor: pointer;
   }
 
-  .top-navbar-button-text {
-    font-size: 16px;
+  .top-navbar-text:hover {
+    color: var(--onboarding-accent);
     font-weight: 600;
   }
 
+  .top-navbar-text--active {
+    color: var(--onboarding-accent);
+    font-weight: 600;
+  }
+
+  /* ── CTA button — Standard small to tablet ── */
+  .top-navbar-navigation-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .top-navbar-button {
+    all: unset;
+    align-items: center;
+    background-color: var(--onboarding-accent);
+    border: 1px solid;
+    border-color: var(--onboarding-accent);
+    border-radius: 16px;
+    box-shadow: var(--onboarding-shadow-md);
+    box-sizing: border-box;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    justify-content: center;
+    overflow: hidden;
+    padding: 10px 18px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .top-navbar-button-text {
+    color: var(--onboarding-surface);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 22px;
+    margin-top: 0;
+    position: relative;
+    white-space: nowrap;
+    width: fit-content;
+  }
+
+  /* ── Large Desktop Hidden Hamburger button ── */
+  .top-navbar-hamburger {
+    display: none;
+  }
+
+  .top-navbar-hamburger:hover {
+    display: none;
+  }
+
+  .top-navbar-hamburger-bar {
+    display: none;
+  }
+
+  .top-navbar-hamburger[aria-expanded='true'] .top-navbar-hamburger-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .top-navbar-hamburger[aria-expanded='true'] .top-navbar-hamburger-bar:nth-child(2) {
+    opacity: 0;
+    width: 0;
+  }
+  .top-navbar-hamburger[aria-expanded='true'] .top-navbar-hamburger-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* ── Mobile drawer ── */
   .top-navbar-drawer {
-    display: none !important;
+    display: none;
+  }
+
+  .top-navbar-drawer--open {
+    display: none;
+  }
+
+  .top-navbar-drawer-nav {
+    display: none;
+  }
+
+  .top-navbar-drawer-item {
+    display: none;
+  }
+
+  .top-navbar-drawer-text {
+    display: none;
+  }
+
+  .top-navbar-drawer-text:hover {
+    display: none;
+  }
+
+  .top-navbar-drawer-text--active {
+    display: none;
+  }
+
+  .top-navbar-drawer-cta {
+    display: none;
+  }
+
+  .top-navbar-drawer-button {
+    display: none;
+  }
+
+  .top-navbar-drawer-button-text {
+    display: none;
+  }
+}
+
+/* ── STANDARD LAPTOP / DESKTOP  (1008px – 1439px) ─────────────────────────── */
+@media (min-width: 1008px) and (max-width: 1439px) {
+  .top-navbar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 64px;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: var(--onboarding-background);
+    border-bottom: 1px solid var(--onboarding-border);
+    box-shadow: var(--onboarding-shadow-md);
+    box-sizing: border-box;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .top-navbar-container {
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ── Logo ── */
+  .top-navbar-logo {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top-navbar-logo-wrap {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+
+  .top-navbar-brand-name {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .top-navbar-brand-Easy {
+    color: var(--onboarding-text-primary);
+  }
+
+  .top-navbar-brand-Ops {
+    color: var(--onboarding-accent);
+  }
+
+  /* ── Standard Laptop and Desktop nav — 1008px – 1439px ── */
+  .top-navbar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .top-navbar-navigation {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    gap: 16px;
+  }
+
+  .top-navbar-nav-item {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    justify-content: center;
+    position: relative;
+  }
+
+  .top-navbar-text {
+    background: none;
+    border: none;
+    color: var(--onboarding-text-primary);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 24px;
+    margin-top: -1px;
+    position: relative;
+    white-space: nowrap;
+    width: fit-content;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .top-navbar-text:hover {
+    color: var(--onboarding-accent);
+    font-weight: 700;
+  }
+
+  .top-navbar-text--active {
+    color: var(--onboarding-accent);
+    font-weight: 700;
+  }
+
+  /* ── CTA button — Standard Desktop ── */
+  .top-navbar-navigation-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .top-navbar-button {
+    all: unset;
+    align-items: center;
+    background-color: var(--onboarding-accent);
+    border: 1px solid;
+    border-color: var(--onboarding-accent);
+    border-radius: 16px;
+    box-shadow: var(--onboarding-shadow-md);
+    box-sizing: border-box;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    justify-content: center;
+    overflow: hidden;
+    padding: 10px 18px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .top-navbar-button-text {
+    color: var(--onboarding-surface);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 24px;
+    margin-top: -1px;
+    position: relative;
+    white-space: nowrap;
+    width: fit-content;
+  }
+
+  /* ── Large Desktop Hidden Hamburger button ── */
+  .top-navbar-hamburger {
+    display: none;
+  }
+
+  .top-navbar-hamburger:hover {
+    display: none;
+  }
+
+  .top-navbar-hamburger-bar {
+    display: none;
+  }
+
+  .top-navbar-hamburger[aria-expanded='true'] .top-navbar-hamburger-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .top-navbar-hamburger[aria-expanded='true'] .top-navbar-hamburger-bar:nth-child(2) {
+    opacity: 0;
+    width: 0;
+  }
+  .top-navbar-hamburger[aria-expanded='true'] .top-navbar-hamburger-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* ── Mobile drawer ── */
+  .top-navbar-drawer {
+    display: none;
+  }
+
+  .top-navbar-drawer--open {
+    display: none;
+  }
+
+  .top-navbar-drawer-nav {
+    display: none;
+  }
+
+  .top-navbar-drawer-item {
+    display: none;
+  }
+
+  .top-navbar-drawer-text {
+    display: none;
+  }
+
+  .top-navbar-drawer-text:hover {
+    display: none;
+  }
+
+  .top-navbar-drawer-text--active {
+    display: none;
+  }
+
+  .top-navbar-drawer-cta {
+    display: none;
+  }
+
+  .top-navbar-drawer-button {
+    display: none;
+  }
+
+  .top-navbar-drawer-button-text {
+    display: none;
   }
 }
 
 /* ── LARGE DESKTOP  (≥ 1440px) ───────────────────────────────────────────── */
 @media (min-width: 1440px) {
   .top-navbar-header {
-    height: 72px;
-    padding: 0 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 64px;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: var(--onboarding-background);
+    border-bottom: 1px solid var(--onboarding-border);
+    box-shadow: var(--onboarding-shadow-md);
+    box-sizing: border-box;
+    font-family: 'Space Grotesk', sans-serif;
   }
 
-  .top-navbar-brand-Easy,
+  .top-navbar-container {
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ── Logo ── */
+  .top-navbar-logo {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top-navbar-logo-wrap {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+
+  .top-navbar-brand-name {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .top-navbar-brand-Easy {
+    color: var(--onboarding-text-primary);
+  }
+
   .top-navbar-brand-Ops {
-    font-size: 30px;
+    color: var(--onboarding-accent);
   }
 
+  /* ── Large Desktop nav — 1440px > ── */
   .top-navbar-content {
     display: flex;
     align-items: center;
-    gap: 40px;
-    justify-content: flex-end;
+    justify-content: space-between;
+    gap: 16px;
   }
 
   .top-navbar-navigation {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
     gap: 16px;
-    width: auto;
   }
 
+  .top-navbar-nav-item {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    justify-content: center;
+    position: relative;
+  }
+
+  .top-navbar-text {
+    background: none;
+    border: none;
+    color: var(--onboarding-text-primary);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 24px;
+    margin-top: -1px;
+    position: relative;
+    white-space: nowrap;
+    width: fit-content;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .top-navbar-text:hover {
+    color: var(--onboarding-accent);
+    font-weight: 700;
+  }
+
+  .top-navbar-text--active {
+    color: var(--onboarding-accent);
+    font-weight: 700;
+  }
+
+  /* ── CTA button — Large Desktop ── */
+  .top-navbar-navigation-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .top-navbar-button {
+    all: unset;
+    align-items: center;
+    background-color: var(--onboarding-accent);
+    border: 1px solid;
+    border-color: var(--onboarding-accent);
+    border-radius: 16px;
+    box-shadow: var(--onboarding-shadow-md);
+    box-sizing: border-box;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    justify-content: center;
+    overflow: hidden;
+    padding: 10px 18px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .top-navbar-button-text {
+    color: var(--onboarding-surface);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 24px;
+    margin-top: -1px;
+    position: relative;
+    white-space: nowrap;
+    width: fit-content;
+  }
+
+  /* ── Large Desktop Hidden Hamburger button ── */
   .top-navbar-hamburger {
     display: none;
   }
 
-  .top-navbar-navigation-actions {
-    all: unset;
-    align-items: center;
-    box-sizing: border-box;
-    display: inline-flex;
-    flex: 0 0 auto;
-    gap: 16px;
-    position: relative;
+  .top-navbar-hamburger:hover {
+    display: none;
   }
 
-  .top-navbar-button {
-    padding: 12px 24px;
+  .top-navbar-hamburger-bar {
+    display: none;
   }
 
-  .top-navbar-button-text {
-    font-size: 17px;
-    font-weight: 600;
+  .top-navbar-hamburger[aria-expanded='true'] .top-navbar-hamburger-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .top-navbar-hamburger[aria-expanded='true'] .top-navbar-hamburger-bar:nth-child(2) {
+    opacity: 0;
+    width: 0;
+  }
+  .top-navbar-hamburger[aria-expanded='true'] .top-navbar-hamburger-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
   }
 
-  .top-navbar-text {
-    font-size: 17px;
-  }
-
+  /* ── Mobile drawer ── */
   .top-navbar-drawer {
-    display: none !important;
+    display: none;
+  }
+
+  .top-navbar-drawer--open {
+    display: none;
+  }
+
+  .top-navbar-drawer-nav {
+    display: none;
+  }
+
+  .top-navbar-drawer-item {
+    display: none;
+  }
+
+  .top-navbar-drawer-text {
+    display: none;
+  }
+
+  .top-navbar-drawer-text:hover {
+    display: none;
+  }
+
+  .top-navbar-drawer-text--active {
+    display: none;
+  }
+
+  .top-navbar-drawer-cta {
+    display: none;
+  }
+
+  .top-navbar-drawer-button {
+    display: none;
+  }
+
+  .top-navbar-drawer-button-text {
+    display: none;
   }
 }
