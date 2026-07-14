@@ -7,9 +7,15 @@ import '../styles/footer.css'
 const COMPANY_LINKS = [
   { label: 'Contact Us', to: '/contact' },
   { label: 'Careers', to: '/careers' },
-  { label: 'Privacy Policy', to: '/privacy' },
-  { label: 'Terms of Service', to: '/terms' },
   { label: 'Support', to: '/support' },
+] as const
+
+const LEGAL_LINKS = [
+  { label: 'Privacy Policy', to: '/privacy' },
+  { label: 'Terms & Conditions', to: '/terms-and-conditions' },
+  { label: 'Terms of Service', to: '/terms' },
+  { label: 'Terms of Use', to: '/terms-of-use' },
+  { label: 'Disclaimer', to: '/disclaimer' },
 ] as const
 
 function InstagramIcon() {
@@ -70,6 +76,19 @@ export default function Footer() {
             <h3 className="footer__nav-heading">Company</h3>
             <ul className="footer__nav-list">
               {COMPANY_LINKS.map(({ label, to }) => (
+                <li key={to}>
+                  <Link to={to} className="footer__nav-link">
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="footer__nav-group">
+            <h3 className="footer__nav-heading">Legal</h3>
+            <ul className="footer__nav-list">
+              {LEGAL_LINKS.map(({ label, to }) => (
                 <li key={to}>
                   <Link to={to} className="footer__nav-link">
                     {label}

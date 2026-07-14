@@ -15,7 +15,6 @@
   flex-direction: column;
   align-items: center;
   gap: 32px;
-  padding: 0 16px;
 }
 
 .pricing-header {
@@ -264,12 +263,12 @@
   }
 
   .pricing-header {
-    gap: 24px;
+    gap: 16px;
   }
 
   .pricing-subtitle {
-    font-size: 16px;
-    line-height: 26px;
+    font-size: 22px;
+    line-height: 24px;
   }
 
   .pricing-title {
@@ -286,10 +285,11 @@
   .pricing-grid {
     grid-template-columns: repeat(4, 1fr);
     display: grid;
-    gap: 24px;
+    gap: 16px;
   }
 
   .pricing-card-wrapper {
+    padding: 20px 16px;
     gap: 16px;
   }
 
@@ -297,8 +297,8 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    border-radius: var(--onboarding-radius-md);
-    border: 1px solid var(--onboarding-border);
+    border-radius: var(--onboarding-radius-lg);
+    border: 1px solid var(--onboarding-border-focus);
     background-color: var(--onboarding-surface-raised);
     transition: all 0.3s ease-in-out;
   }

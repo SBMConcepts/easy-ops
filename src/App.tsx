@@ -22,6 +22,9 @@ import ContactUs from './pages/ContactUs'
 import Careers from './pages/Careers'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsOfService from './pages/TermsOfService'
+import TermsAndConditions from './pages/TermsAndConditions'
+import TermsOfUse from './pages/TermsOfUse'
+import Disclaimer from './pages/Disclaimer'
 import Support from './pages/Support'
 import BecomePartner from './pages/BecomePartner'
 import SettingsLayout from './layouts/SettingsLayout'
@@ -50,6 +53,9 @@ const MarketingRoutes = () => (
     <Route path="/careers" element={<Careers />} />
     <Route path="/privacy" element={<PrivacyPolicy />} />
     <Route path="/terms" element={<TermsOfService />} />
+    <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+    <Route path="/terms-of-use" element={<TermsOfUse />} />
+    <Route path="/disclaimer" element={<Disclaimer />} />
     <Route path="/support" element={<Support />} />
     <Route path="/partner" element={<BecomePartner />} />
     <Route path="*" element={<NotFound />} />

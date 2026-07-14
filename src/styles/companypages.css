@@ -1,8 +1,4 @@
-/* =============================================================================
-   COMPANY PAGES  —  shared layout for Contact, Careers, Privacy, Terms,
-   Support and Become-a-Partner. Built on the --onboarding-* tokens
-   defined in onboarding.css (import onboarding.css alongside this file).
-   ============================================================================= */
+@import './onboarding.css';
 
 /* ── Page shell ── */
 .company-page {
@@ -10,58 +6,61 @@
   min-height: 60vh;
   width: 100%;
   box-sizing: border-box;
-  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   color: var(--onboarding-text-primary);
+  padding: 48px 16px 40px;
 }
 
 .company-container {
   width: 100%;
-  max-width: 64rem;
+  max-width: 1007px;
   margin: 0 auto;
-  padding: 3rem 1.25rem 4rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
   box-sizing: border-box;
+  gap: 2rem;
 }
 
 /* ── Page header ── */
 .company-header {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 32px;
   text-align: center;
 }
 
 .company-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  align-self: center;
-  gap: 0.5rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 999px;
-  background: var(--onboarding-accent-dim);
-  color: var(--onboarding-text-accent);
-  font-size: 0.75rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  color: var(--onboarding-text-accent);
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--onboarding-accent-dim);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--onboarding-radius-md);
+  width: fit-content;
+  align-self: center;
 }
 
 .company-title {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--onboarding-text-primary);
   margin: 0;
+  color: var(--onboarding-text-primary);
+  text-align: center;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 32px;
 }
 
 .company-subtitle {
-  font-size: 0.95rem;
+  margin: 0;
   color: var(--onboarding-text-muted);
-  margin: 0 auto;
-  max-width: 42rem;
-  line-height: 1.7;
+  text-align: center;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
 }
 
 /* ── Generic card ── */
@@ -129,13 +128,13 @@
   gap: 1.25rem;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 641px) {
   .company-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 1007px) {
   .company-grid--3 {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -341,6 +340,140 @@
   color: var(--onboarding-text-muted);
   line-height: 1.75;
   margin: 0;
+}
+
+.company-doc__subheading {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--onboarding-text-accent);
+  letter-spacing: 0.01em;
+  margin: -0.125rem 0 0.25rem;
+}
+
+.company-doc__text strong,
+.company-doc__list-item strong,
+.company-doc__callout strong,
+.company-doc__table strong {
+  font-weight: 700;
+  color: var(--onboarding-text-primary);
+}
+
+.company-doc__link-inline {
+  color: var(--onboarding-text-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+}
+
+.company-doc__link-inline:hover {
+  color: var(--onboarding-accent);
+}
+
+/* ── Lists ── */
+.company-doc__list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style-type: disc;
+}
+
+.company-doc__list--ordered {
+  list-style-type: decimal;
+}
+
+.company-doc__list .company-doc__list {
+  margin-top: 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.company-doc__list-item {
+  font-size: 0.9rem;
+  color: var(--onboarding-text-muted);
+  line-height: 1.7;
+}
+
+.company-doc__list-item::marker {
+  color: var(--onboarding-text-accent);
+}
+
+.company-doc__note {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--onboarding-text-muted);
+}
+
+/* ── Statutory callout ── */
+.company-doc__callout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.125rem 1.25rem;
+  border-radius: var(--onboarding-radius-md);
+  border-left: 3px solid var(--onboarding-accent);
+  background: var(--onboarding-accent-dim);
+}
+
+.company-doc__callout .company-doc__text {
+  color: var(--onboarding-text-muted);
+}
+
+.company-doc__callout .company-doc__list-item {
+  color: var(--onboarding-text-muted);
+}
+
+.company-doc__callout--legal {
+  border-left-color: var(--onboarding-border-hover);
+  background: var(--onboarding-background);
+  border: 1px solid var(--onboarding-border);
+  border-left: 3px solid var(--onboarding-border-hover);
+}
+
+.company-doc__callout--legal .company-doc__text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--onboarding-text-primary);
+  letter-spacing: 0.01em;
+}
+
+/* ── Disclosure table ── */
+.company-doc__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-md);
+}
+
+.company-doc__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.company-doc__table th,
+.company-doc__table td {
+  text-align: left;
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--onboarding-border);
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.company-doc__table th {
+  background: var(--onboarding-background);
+  color: var(--onboarding-text-primary);
+  font-weight: 700;
+}
+
+.company-doc__table td {
+  color: var(--onboarding-text-muted);
+}
+
+.company-doc__table tr:last-child td {
+  border-bottom: none;
 }
 
 /* ── Support — FAQ accordion ── */
