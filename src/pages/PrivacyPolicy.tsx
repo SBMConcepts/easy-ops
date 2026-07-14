@@ -3,8 +3,8 @@ import LegalPage, { type PolicyVersion } from '../components/legal/PolicyDocumen
 
 const VERSIONS: PolicyVersion[] = [
   {
-    version: 'v3.0',
-    label: 'v3.0',
+    version: 'v1.0',
+    label: 'v1.0',
     effectiveDate: '14 July 2026',
     sections: [
       {
@@ -187,101 +187,6 @@ const VERSIONS: PolicyVersion[] = [
               { text: '**EasyOps Information Officer**' },
               { text: '**Email:** [admin@easyops.co.za](mailto:admin@easyops.co.za)' },
             ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    version: 'v2.0',
-    label: 'v2.0',
-    effectiveDate: '1 May 2026',
-    sections: [
-      {
-        heading: '1. Introduction',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: 'EasyOps (Pty) Ltd ("EasyOps", "we", "us") is committed to protecting the privacy of the businesses and employees who use our workforce management platform. This Privacy Policy explains what personal information we collect, how we use it, and the choices you have.',
-          },
-        ],
-      },
-      {
-        heading: '2. Information We Collect',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: 'We collect account details, organisation information, attendance records, technical data (IP address, device, browser), and usage data. Where you use biometric or QR-based check-in, the associated verification data is processed solely to record attendance.',
-          },
-        ],
-      },
-      {
-        heading: '3. How We Use Your Information',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: 'Your information is used to provide attendance tracking, payroll exports, and compliance reporting, to secure your account, and to improve the platform. We do not sell your personal information to third parties.',
-          },
-        ],
-      },
-      {
-        heading: '4. Data Protection & POPIA',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: 'We process personal information in accordance with the Protection of Personal Information Act, 2013 (POPIA). We apply technical and organisational safeguards, including encryption in transit and role-based access controls.',
-          },
-        ],
-      },
-      {
-        heading: '5. Your Rights',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: 'You may request access to, correction of, or deletion of your personal information, subject to legal retention obligations. Contact us at info@easyops.co.za to exercise these rights.',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    version: 'v1.0',
-    label: 'v1.0',
-    effectiveDate: '1 January 2026',
-    sections: [
-      {
-        heading: '1. Introduction',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: 'This is the initial Privacy Policy for the EasyOps platform, describing our approach to handling the personal information of our customers and their employees.',
-          },
-        ],
-      },
-      {
-        heading: '2. Information We Collect',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: 'We collect account details, organisation information, and attendance records required to operate the service.',
-          },
-        ],
-      },
-      {
-        heading: '3. How We Use Your Information',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: 'Information is used to deliver core attendance and reporting features and to maintain the security of your account.',
-          },
-        ],
-      },
-      {
-        heading: '4. Contact',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: 'Questions about this policy can be directed to info@easyops.co.za.',
           },
         ],
       },

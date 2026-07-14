@@ -7,6 +7,7 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  padding: 48px 16px 40px;
   font-family: 'Space Grotesk', sans-serif;
 }
 
@@ -116,24 +117,27 @@
 .hero-cta-actions {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
   width: 100%;
 }
 
 .hero-cta-button {
+  width: 100%;
+  max-width: 260px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  gap: 8px;
+  padding: 12px 24px;
   border-radius: var(--onboarding-radius-md);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
   transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
+    background 150ms ease,
+    border 150ms ease,
     color 150ms ease;
 }
 
@@ -181,8 +185,9 @@
 /* ── Stats ── */
 .hero-stats-section {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 1.5rem;
+  padding: 0.5rem 0;
 }
 
 .hero-stat-container {
@@ -608,98 +613,138 @@
 /* ── LARGE DESKTOP  (≥ 1440px) ───────────────────────────────────────────── */
 @media (min-width: 1440px) {
   .hero-section {
-    padding: 64px 48px 56px;
+    padding: 48px 16px 40px;
   }
 
   .hero-container {
-    padding: 0 32px;
+    padding: 0 16px;
+    gap: 16px;
   }
 
   .hero-grid {
+    width: 100%;
+    display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4rem;
+    padding: 0 16px;
+    gap: 24px;
   }
 
   .hero-left-content {
-    gap: 1.5rem;
+    gap: 16px;
   }
 
   .hero-heading-badge {
-    padding: 0.3rem 0.85rem;
+    width: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 12px;
   }
 
   .hero-heading-badge__text {
     font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.5;
   }
 
   .hero-heading {
     font-size: 3.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.56px;
   }
 
   .hero-subheading {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.5;
   }
 
   .hero-cta-actions {
+    display: flex;
     flex-direction: row;
-    align-items: flex-start;
-    gap: 12px;
-    width: auto;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
   }
 
   .hero-cta-button {
-    width: auto;
-    padding: 0.5rem 0.75rem;
+    width: 100%;
+    padding: 12px 24px;
+    width: 100%;
+    max-width: 280px;
   }
 
   .hero-cta-button--primary {
-    background-color: var(--onboarding-text-accent);
+    background: var(--onboarding-text-accent);
     color: var(--onboarding-background);
   }
 
   .hero-cta-button--outline {
     border: 1px solid var(--onboarding-text-accent);
-    padding: 0.5rem 0.75rem;
   }
 
   .hero-cta-button-text {
     font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
   }
 
   .hero-icon-container {
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
   }
 
   .hero-cta-icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 24px;
+    height: 24px;
   }
 
   .hero-stats-section {
-    gap: 1.5rem;
+    display: flex;
+    flex-direction: row;
+    gap: 32px;
+    padding: 0.5rem 0;
   }
 
   .hero-stat-container {
-    gap: 1rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
   }
 
   .hero-stat-icon-content {
-    width: 2.75rem;
-    height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 9999px;
   }
 
   .hero-stat-icon {
-    width: 1.35rem;
-    height: 1.35rem;
+    width: 24px;
+    height: 24px;
   }
 
   .hero-stat-value {
-    font-size: 1.5rem;
+    font-size: 24px;
+    font-weight: 700;
+    font-style: normal;
+    line-height: 32px;
   }
 
   .hero-stat-label {
-    font-size: 0.875rem;
+    font-size: 14px;
+    font-weight: 500;
+    font-style: normal;
+    line-height: 24px;
   }
 
   .hero-image-content {

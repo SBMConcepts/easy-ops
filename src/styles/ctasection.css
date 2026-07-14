@@ -56,52 +56,64 @@
 
 /* Buttons: full-width and stacked on mobile */
 .cta-actions {
-  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
 }
 
 .cta-gst-button {
-  display: flex;
-  justify-content: center;
+  width: 100%;
+  max-width: 260px;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  border-radius: 18px;
-  border: 1px solid var(--onboarding-border);
-  background: var(--onboarding-accent);
-  cursor: pointer;
-  box-shadow: var(--onboarding-shadow-md);
-  color: var(--onboarding-surface);
-  font-size: 1rem;
-  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: var(--onboarding-radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background 150ms ease,
+    border 150ms ease,
+    color 150ms ease;
+  background-color: var(--onboarding-text-accent);
+  color: var(--onboarding-background);
 }
 
 .cta-gst-button:hover {
-  background: var(--onboarding-accent-hover);
-  color: var(--onboarding-surface);
-  border: 1px solid var(--onboarding-border-hover);
+  opacity: 0.9;
+  border-color: var(--onboarding-border-hover);
+  color: var(--onboarding-background);
 }
 
 .cta-request-demo-button {
-  display: flex;
-  justify-content: center;
+  width: 100%;
+  max-width: 260px;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  border-radius: 18px;
-  border: 1px solid var(--onboarding-border);
-  background: var(--onboarding-surface);
-  cursor: pointer;
-  box-shadow: var(--onboarding-shadow-md);
-  color: var(--onboarding-text-primary);
-  font-size: 1rem;
-  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: var(--onboarding-radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background 150ms ease,
+    border 150ms ease,
+    color 150ms ease;
+  background-color: transparent;
+  color: var(--onboarding-text-accent);
+  border: 1px solid var(--onboarding-text-accent);
 }
 
 .cta-request-demo-button:hover {
-  background: var(--onboarding-text-primary);
-  color: var(--onboarding-surface);
-  border: 1px solid var(--onboarding-border-hover);
+  background-color: var(--onboarding-text-accent);
+  color: var(--onboarding-background);
 }
 
 /* ── TABLET  (641px – 1007px) ─────────────────────────────────────────────── */
@@ -136,30 +148,34 @@
   }
 
   .cta-actions {
+    display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 16px;
+    justify-content: center;
+    gap: 28px;
     width: 100%;
   }
 
   .cta-gst-button {
-    width: 100%;
     padding: 12px 24px;
+    width: 100%;
+    max-width: 260px;
   }
 
   .cta-gst-button:hover {
-    background: var(--onboarding-accent-hover);
-    color: var(--onboarding-surface);
+    background: var(--onboarding-accent-dim);
+    color: var(--onboarding-text-primary);
     border: 1px solid var(--onboarding-border-hover);
   }
 
   .cta-request-demo-button {
     width: 100%;
+    max-width: 260px;
     padding: 12px 24px;
   }
 
   .cta-request-demo-button:hover {
-    background: var(--onboarding-text-primary);
+    background: var(--onboarding-text-accent);
     color: var(--onboarding-surface);
     border: 1px solid var(--onboarding-border-hover);
   }
@@ -198,30 +214,36 @@
   }
 
   .cta-actions {
+    display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 16px;
+    justify-content: center;
+    gap: 32px;
     width: 100%;
   }
 
   .cta-gst-button {
     width: 100%;
     padding: 12px 24px;
+    width: 100%;
+    max-width: 280px;
   }
 
   .cta-gst-button:hover {
-    background: var(--onboarding-accent-hover);
-    color: var(--onboarding-surface);
+    background: var(--onboarding-accent-dim);
+    color: var(--onboarding-text-primary);
     border: 1px solid var(--onboarding-border-hover);
   }
 
   .cta-request-demo-button {
     width: 100%;
     padding: 12px 24px;
+    width: 100%;
+    max-width: 280px;
   }
 
   .cta-request-demo-button:hover {
-    background: var(--onboarding-text-primary);
+    background: var(--onboarding-text-accent);
     color: var(--onboarding-surface);
     border: 1px solid var(--onboarding-border-hover);
   }
@@ -230,19 +252,20 @@
 /* ── LARGE DESKTOP  (≥ 1440px) ───────────────────────────────────────────── */
 @media (min-width: 1440px) {
   .cta-section {
-    padding: 48px 32px 40px;
+    padding: 48px 16px 40px;
   }
 
   .cta-container {
-    padding: 0 32px;
-    gap: 40px;
+    padding: 0 16px;
+    gap: 16px;
   }
 
   .cta-content {
-    gap: 24px;
+    gap: 16px;
   }
 
   .cta-heading-and-supporting-text {
+    width: 100%;
     max-width: 860px;
     gap: 24px;
   }
@@ -251,38 +274,47 @@
     font-size: 28px;
     letter-spacing: -0.56px;
     line-height: 36px;
+    font-weight: 700;
   }
 
   .cta-supporting-text {
-    font-size: 16px;
+    font-size: 14px;
     line-height: 26px;
+    font-weight: 400;
+    font-style: normal;
   }
 
   .cta-actions {
+    display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 16px;
+    justify-content: center;
+    gap: 32px;
     width: 100%;
   }
 
   .cta-gst-button {
     width: 100%;
     padding: 12px 24px;
+    width: 100%;
+    max-width: 280px;
   }
 
   .cta-gst-button:hover {
-    background: var(--onboarding-accent-hover);
-    color: var(--onboarding-surface);
+    background: var(--onboarding-accent-dim);
+    color: var(--onboarding-text-primary);
     border: 1px solid var(--onboarding-border-hover);
   }
 
   .cta-request-demo-button {
     width: 100%;
     padding: 12px 24px;
+    width: 100%;
+    max-width: 280px;
   }
 
   .cta-request-demo-button:hover {
-    background: var(--onboarding-text-primary);
+    background: var(--onboarding-text-accent);
     color: var(--onboarding-surface);
     border: 1px solid var(--onboarding-border-hover);
   }

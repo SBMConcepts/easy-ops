@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react'
 import '../styles/topnavbar.css'
 import DemoModal from './DemoModal'
 import { useNavigate, useLocation } from 'react-router'
-import { Button } from './ui/button'
 
 const NAV_ITEMS = [
   { label: 'Home', id: 'home' },
@@ -119,12 +118,12 @@ export default function TopNavBar() {
         <div className="top-navbar-container">
           {/* ── Logo ── */}
           <div className="top-navbar-logo">
-            <div className="top-navbar-logo-wrap">
+            <button className="top-navbar-logo-wrap" onClick={() => handleNavClick('home')}>
               <div className="top-navbar-brand-name">
                 <div className="top-navbar-brand-Easy">Easy</div>
                 <div className="top-navbar-brand-Ops">Ops</div>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* ── Desktop nav (hidden on mobile via CSS) ── */}
