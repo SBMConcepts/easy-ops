@@ -6,10 +6,10 @@ import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
 import CheckIn from './pages/CheckIn'
-import ComingSoon from './pages/ComingSoon'
 import Compliance from './pages/Compliance'
 import EmployeeManagement from './pages/EmployeeManagement'
 import LabourForecasting from './pages/LabourForecasting'
+import PayrollExport from './pages/PayrollExport'
 import GetStarted from './pages/GetStarted'
 import Index from './pages/Index'
 import Register from './pages/Register'
@@ -139,7 +139,7 @@ const WorkspaceShell = () => {
           path="payroll"
           element={
             <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
-              <ComingSoon title="Payroll Export" />
+              <PayrollExport />
             </ProtectedRoute>
           }
         />

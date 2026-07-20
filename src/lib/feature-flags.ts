@@ -44,3 +44,34 @@ export function useForecastingAccess(): ForecastingAccess {
   const { organization } = useAuth()
   return getForecastingAccess(organization?.plan)
 }
+
+// ── Payroll Export Pro ──────────────────────────────────────────────────────
+// Gated behind the Business tier (mapped to the Pro + Enterprise plans, since
+// the plan enum has no dedicated 'business' value). Keep in sync with the
+// server plan gate (server/routes/payroll-export.ts) and the edge function
+// (supabase/functions/payroll-export/index.ts) FULL_PAYROLL_PLANS.
+
+/** Plans that unlock Payroll Export Pro. */
+export const PAYROLL_EXPORT_PLANS = new Set(['pro', 'enterprise'])
+
+export interface PayrollAccess {
+  /** Pro / Enterprise : payroll export generation + download are enabled. */
+  canUsePayrollExport: boolean
+  /** The normalized plan string used to derive the flag. */
+  plan: string
+}
+
+/** Pure helper — derive payroll access from a raw plan string. */
+export function getPayrollAccess(plan: string | null | undefined): PayrollAccess {
+  const normalized = normalizePlan(plan)
+  return {
+    plan: normalized,
+    canUsePayrollExport: PAYROLL_EXPORT_PLANS.has(normalized),
+  }
+}
+
+/** React hook — payroll export access for the current organization. */
+export function usePayrollAccess(): PayrollAccess {
+  const { organization } = useAuth()
+  return getPayrollAccess(organization?.plan)
+}

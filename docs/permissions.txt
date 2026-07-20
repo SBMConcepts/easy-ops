@@ -61,6 +61,12 @@ write:labour_alerts — Create/update labour alerts incl. acknowledge/resolve/di
 
 delete:labour_alerts — Delete labour alerts (owners/admin only)
 
+read:payroll_exports — Read payroll export history/audit runs (manager/admin/owner)
+
+write:payroll_exports — Generate a payroll export run (admin/owner only; also gated by the Business/Pro plan)
+
+delete:payroll_exports — Delete payroll export audit runs (owners/admin only)
+
 read:invitations — Read invitations for your org (owner/admin only)
 
 write:invitations — Create/update invitations for your org (owner/admin only)

@@ -29,6 +29,7 @@ import {
   CreditCard,
   ChevronRight,
   TrendingUp,
+  FileSpreadsheet,
 } from 'lucide-react'
 
 interface NavItem {
@@ -88,6 +89,13 @@ const navItems: NavItem[] = [
     icon: TrendingUp,
     roles: ['owner', 'admin', 'manager', 'member'],
     tooltip: 'Predictive labour forecasting and staffing alerts',
+  },
+  {
+    title: 'Payroll Export',
+    url: '/app/payroll',
+    icon: FileSpreadsheet,
+    roles: ['owner', 'admin', 'manager', 'member'],
+    tooltip: 'Generate and export BCEA-aligned payroll registers',
   },
   {
     title: 'Settings',

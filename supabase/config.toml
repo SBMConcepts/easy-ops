@@ -377,6 +377,13 @@ allow_dynamic_registration = false
 enabled = true
 verify_jwt = false
 
+# Payroll Export Pro generator. Authenticated by the Express proxy via a shared
+# secret (PAYROLL_FN_SECRET) or an Auth0 Bearer fallback, so the platform JWT
+# gate is off.
+[functions.payroll-export]
+enabled = true
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

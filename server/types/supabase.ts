@@ -428,6 +428,7 @@ export type Database = {
           department_id: string | null
           employee_code: string | null
           employment_type: string | null
+          hourly_rate: number | null
           id: string
           job_role_id: string | null
           joined_at: string
@@ -436,6 +437,7 @@ export type Database = {
           shift_id: string | null
           site_id: string | null
           status: string
+          tax_number: string | null
         }
         Insert: {
           auth0_org_id?: string
@@ -443,6 +445,7 @@ export type Database = {
           department_id?: string | null
           employee_code?: string | null
           employment_type?: string | null
+          hourly_rate?: number | null
           id?: string
           job_role_id?: string | null
           joined_at?: string
@@ -451,6 +454,7 @@ export type Database = {
           shift_id?: string | null
           site_id?: string | null
           status?: string
+          tax_number?: string | null
         }
         Update: {
           auth0_org_id?: string
@@ -458,6 +462,7 @@ export type Database = {
           department_id?: string | null
           employee_code?: string | null
           employment_type?: string | null
+          hourly_rate?: number | null
           id?: string
           job_role_id?: string | null
           joined_at?: string
@@ -466,6 +471,7 @@ export type Database = {
           shift_id?: string | null
           site_id?: string | null
           status?: string
+          tax_number?: string | null
         }
         Relationships: [
           {
@@ -681,6 +687,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      payroll_export_runs: {
+        Row: {
+          auth0_org_id: string
+          created_at: string
+          employee_count: number
+          format: string
+          generated_by: string | null
+          gross_total: number
+          id: string
+          net_total: number
+          paye_total: number
+          period_end: string
+          period_start: string
+          uif_total: number
+        }
+        Insert: {
+          auth0_org_id: string
+          created_at?: string
+          employee_count?: number
+          format: string
+          generated_by?: string | null
+          gross_total?: number
+          id?: string
+          net_total?: number
+          paye_total?: number
+          period_end: string
+          period_start: string
+          uif_total?: number
+        }
+        Update: {
+          auth0_org_id?: string
+          created_at?: string
+          employee_count?: number
+          format?: string
+          generated_by?: string | null
+          gross_total?: number
+          id?: string
+          net_total?: number
+          paye_total?: number
+          period_end?: string
+          period_start?: string
+          uif_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'payroll_export_runs_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+        ]
       }
       subscriptions: {
         Row: {

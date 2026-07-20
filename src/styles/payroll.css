@@ -1,0 +1,268 @@
+/* Payroll Export Pro — reuses the --onboarding-* design tokens defined in
+   onboarding.css (imported alongside this file). */
+
+.payroll-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: var(--onboarding-text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+.payroll-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.payroll-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.payroll-title svg {
+  width: 24px;
+  height: 24px;
+  color: var(--onboarding-accent);
+}
+
+.payroll-subtitle {
+  margin: 6px 0 0;
+  color: var(--onboarding-text-muted);
+  font-size: 0.95rem;
+}
+
+/* ── Controls ──────────────────────────────────────────────────────────── */
+.payroll-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 18px;
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-md);
+  box-shadow: var(--onboarding-shadow-sm);
+}
+
+.payroll-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.payroll-field--action {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.payroll-select {
+  min-width: 200px;
+  background: var(--onboarding-background);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-sm);
+}
+
+.payroll-disclaimer {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--onboarding-text-muted);
+  padding: 10px 14px;
+  background: var(--onboarding-accent-dim);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-sm);
+}
+
+/* ── Locked state ──────────────────────────────────────────────────────── */
+.payroll-locked {
+  text-align: center;
+  max-width: 520px;
+  margin: 64px auto;
+  padding: 40px;
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-lg);
+  box-shadow: var(--onboarding-shadow-md);
+}
+
+.payroll-locked__icon {
+  width: 40px;
+  height: 40px;
+  color: var(--onboarding-text-muted);
+  margin-bottom: 12px;
+}
+
+.payroll-locked h2 {
+  margin: 0 0 12px;
+}
+
+.payroll-muted,
+.payroll-locked p {
+  color: var(--onboarding-text-muted);
+  font-size: 0.95rem;
+}
+
+/* ── Summary cards ─────────────────────────────────────────────────────── */
+.payroll-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.payroll-card {
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-md);
+  padding: 16px;
+  box-shadow: var(--onboarding-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.payroll-card--accent {
+  border-color: var(--onboarding-accent);
+}
+
+.payroll-card__label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--onboarding-text-muted);
+  font-weight: 600;
+}
+
+.payroll-card__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--onboarding-text-primary);
+  line-height: 1.1;
+}
+
+/* ── Sections ──────────────────────────────────────────────────────────── */
+.payroll-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.payroll-register__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.payroll-downloads {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* ── Table ─────────────────────────────────────────────────────────────── */
+.payroll-table-wrap {
+  overflow-x: auto;
+  background: var(--onboarding-surface);
+  border: 1px solid var(--onboarding-border);
+  border-radius: var(--onboarding-radius-md);
+  box-shadow: var(--onboarding-shadow-sm);
+}
+
+.payroll-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.payroll-table thead th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--onboarding-text-muted);
+  border-bottom: 1px solid var(--onboarding-border);
+  white-space: nowrap;
+}
+
+.payroll-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--onboarding-border);
+  color: var(--onboarding-text-primary);
+  white-space: nowrap;
+}
+
+.payroll-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.payroll-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.payroll-num--strong {
+  font-weight: 700;
+}
+
+.payroll-emp-name {
+  display: block;
+  font-weight: 600;
+}
+
+.payroll-emp-code {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--onboarding-text-muted);
+}
+
+.payroll-badge {
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border-radius: var(--onboarding-radius-sm);
+  background: var(--onboarding-accent-dim);
+  color: var(--onboarding-accent);
+}
+
+/* ── Empty / loading ───────────────────────────────────────────────────── */
+.payroll-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px;
+  color: var(--onboarding-text-muted);
+  background: var(--onboarding-surface);
+  border: 1px dashed var(--onboarding-border);
+  border-radius: var(--onboarding-radius-md);
+  font-size: 0.95rem;
+}
+
+/* ── Animation ─────────────────────────────────────────────────────────── */
+.payroll-spin {
+  width: 16px;
+  height: 16px;
+  animation: payroll-spin 1s linear infinite;
+}
+
+@keyframes payroll-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

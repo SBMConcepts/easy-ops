@@ -52,6 +52,9 @@ export const ALL_PERMISSIONS = [
   'read:labour_alerts',
   'write:labour_alerts',
   'delete:labour_alerts',
+  'read:payroll_exports',
+  'write:payroll_exports',
+  'delete:payroll_exports',
   'read:invitations',
   'write:invitations',
   'delete:invitations',
@@ -87,6 +90,7 @@ const MANAGER_PERMISSIONS: readonly Permission[] = [
   'read:labour_forecasts',
   'read:labour_alerts',
   'write:labour_alerts',
+  'read:payroll_exports',
   'write:audit_logs',
 ]
 

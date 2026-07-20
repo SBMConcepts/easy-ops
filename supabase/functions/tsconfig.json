@@ -1,13 +1,13 @@
 {
-    "compilerOptions": {
-        "target": "ES2020",
-        "lib": ["ES2020", "DOM"],
-        "module": "ESNext",
-        "moduleDetection": "force",
-        "moduleResolution": "bundler",
-        "strict": true,
-        "types": ["deno"],
-        "noEmit": true,
-        "allowImportingTsExtensions": true
-    }
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"],
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "types": ["deno"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  }
 }
