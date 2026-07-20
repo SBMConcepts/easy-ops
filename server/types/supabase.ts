@@ -1,10 +1,4 @@
-﻿export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
   graphql_public: {
@@ -67,18 +61,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "audit_logs_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'audit_logs_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
           {
-            foreignKeyName: "audit_logs_auth0_user_id_fkey"
-            columns: ["auth0_user_id"]
+            foreignKeyName: 'audit_logs_auth0_user_id_fkey'
+            columns: ['auth0_user_id']
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["auth0_user_id"]
+            referencedRelation: 'users'
+            referencedColumns: ['auth0_user_id']
           },
         ]
       }
@@ -112,11 +106,169 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "invitations_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'invitations_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+        ]
+      }
+      labour_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: Database['public']['Enums']['forecast_alert_type']
+          auth0_org_id: string
+          auth0_user_id: string | null
+          created_at: string
+          detail: string | null
+          forecast_id: string | null
+          id: string
+          metrics: Json | null
+          recommended_action: string | null
+          resolved_at: string | null
+          severity: Database['public']['Enums']['forecast_alert_severity']
+          site_id: string | null
+          status: Database['public']['Enums']['forecast_alert_status']
+          target_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: Database['public']['Enums']['forecast_alert_type']
+          auth0_org_id: string
+          auth0_user_id?: string | null
+          created_at?: string
+          detail?: string | null
+          forecast_id?: string | null
+          id?: string
+          metrics?: Json | null
+          recommended_action?: string | null
+          resolved_at?: string | null
+          severity?: Database['public']['Enums']['forecast_alert_severity']
+          site_id?: string | null
+          status?: Database['public']['Enums']['forecast_alert_status']
+          target_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: Database['public']['Enums']['forecast_alert_type']
+          auth0_org_id?: string
+          auth0_user_id?: string | null
+          created_at?: string
+          detail?: string | null
+          forecast_id?: string | null
+          id?: string
+          metrics?: Json | null
+          recommended_action?: string | null
+          resolved_at?: string | null
+          severity?: Database['public']['Enums']['forecast_alert_severity']
+          site_id?: string | null
+          status?: Database['public']['Enums']['forecast_alert_status']
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'labour_alerts_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+          {
+            foreignKeyName: 'labour_alerts_auth0_user_id_fkey'
+            columns: ['auth0_user_id']
+            isOneToOne: false
+            referencedRelation: 'user_credentials'
+            referencedColumns: ['auth0_user_id']
+          },
+          {
+            foreignKeyName: 'labour_alerts_forecast_id_fkey'
+            columns: ['forecast_id']
+            isOneToOne: false
+            referencedRelation: 'labour_forecasts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'labour_alerts_site_id_fkey'
+            columns: ['site_id']
+            isOneToOne: false
+            referencedRelation: 'org_sites'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      labour_forecasts: {
+        Row: {
+          auth0_org_id: string
+          confidence: number | null
+          created_at: string
+          demand_score: number | null
+          forecast_date: string
+          generated_by: string | null
+          horizon_days: number
+          id: string
+          input_summary: Json | null
+          model: string | null
+          predicted_hours: number | null
+          predicted_required_staff: number | null
+          reasoning: string | null
+          site_id: string | null
+        }
+        Insert: {
+          auth0_org_id: string
+          confidence?: number | null
+          created_at?: string
+          demand_score?: number | null
+          forecast_date: string
+          generated_by?: string | null
+          horizon_days?: number
+          id?: string
+          input_summary?: Json | null
+          model?: string | null
+          predicted_hours?: number | null
+          predicted_required_staff?: number | null
+          reasoning?: string | null
+          site_id?: string | null
+        }
+        Update: {
+          auth0_org_id?: string
+          confidence?: number | null
+          created_at?: string
+          demand_score?: number | null
+          forecast_date?: string
+          generated_by?: string | null
+          horizon_days?: number
+          id?: string
+          input_summary?: Json | null
+          model?: string | null
+          predicted_hours?: number | null
+          predicted_required_staff?: number | null
+          reasoning?: string | null
+          site_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'labour_forecasts_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+          {
+            foreignKeyName: 'labour_forecasts_site_id_fkey'
+            columns: ['site_id']
+            isOneToOne: false
+            referencedRelation: 'org_sites'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -129,7 +281,7 @@ export type Database = {
           department_id: string | null
           hours_worked: number
           id: string
-          method: Database["public"]["Enums"]["check_in_method"]
+          method: Database['public']['Enums']['check_in_method']
           overtime: number
           site_id: string | null
         }
@@ -141,7 +293,7 @@ export type Database = {
           department_id?: string | null
           hours_worked: number
           id?: string
-          method: Database["public"]["Enums"]["check_in_method"]
+          method: Database['public']['Enums']['check_in_method']
           overtime: number
           site_id?: string | null
         }
@@ -153,45 +305,45 @@ export type Database = {
           department_id?: string | null
           hours_worked?: number
           id?: string
-          method?: Database["public"]["Enums"]["check_in_method"]
+          method?: Database['public']['Enums']['check_in_method']
           overtime?: number
           site_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "org_attendance_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'org_attendance_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
           {
-            foreignKeyName: "org_attendance_auth0_user_id_fkey"
-            columns: ["auth0_user_id"]
+            foreignKeyName: 'org_attendance_auth0_user_id_fkey'
+            columns: ['auth0_user_id']
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["auth0_user_id"]
+            referencedRelation: 'users'
+            referencedColumns: ['auth0_user_id']
           },
           {
-            foreignKeyName: "org_attendance_department_id_fkey"
-            columns: ["department_id"]
+            foreignKeyName: 'org_attendance_department_id_fkey'
+            columns: ['department_id']
             isOneToOne: false
-            referencedRelation: "org_departments"
-            referencedColumns: ["id"]
+            referencedRelation: 'org_departments'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "org_attendance_member_fkey"
-            columns: ["auth0_org_id", "auth0_user_id"]
+            foreignKeyName: 'org_attendance_member_fkey'
+            columns: ['auth0_org_id', 'auth0_user_id']
             isOneToOne: false
-            referencedRelation: "org_members"
-            referencedColumns: ["auth0_org_id", "auth0_user_id"]
+            referencedRelation: 'org_members'
+            referencedColumns: ['auth0_org_id', 'auth0_user_id']
           },
           {
-            foreignKeyName: "org_attendance_site_id_fkey"
-            columns: ["site_id"]
+            foreignKeyName: 'org_attendance_site_id_fkey'
+            columns: ['site_id']
             isOneToOne: false
-            referencedRelation: "org_sites"
-            referencedColumns: ["id"]
+            referencedRelation: 'org_sites'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -219,11 +371,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_departments_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'org_departments_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
         ]
       }
@@ -254,18 +406,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_leave_balances_member_fkey"
-            columns: ["auth0_org_id", "auth0_user_id"]
+            foreignKeyName: 'org_leave_balances_member_fkey'
+            columns: ['auth0_org_id', 'auth0_user_id']
             isOneToOne: false
-            referencedRelation: "org_members"
-            referencedColumns: ["auth0_org_id", "auth0_user_id"]
+            referencedRelation: 'org_members'
+            referencedColumns: ['auth0_org_id', 'auth0_user_id']
           },
           {
-            foreignKeyName: "org_leave_balances_org_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'org_leave_balances_org_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
         ]
       }
@@ -317,53 +469,53 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_members_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'org_members_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
           {
-            foreignKeyName: "org_members_auth0_user_id_fkey"
-            columns: ["auth0_user_id"]
+            foreignKeyName: 'org_members_auth0_user_id_fkey'
+            columns: ['auth0_user_id']
             isOneToOne: true
-            referencedRelation: "user_credentials"
-            referencedColumns: ["auth0_user_id"]
+            referencedRelation: 'user_credentials'
+            referencedColumns: ['auth0_user_id']
           },
           {
-            foreignKeyName: "org_members_department_id_fkey"
-            columns: ["department_id"]
+            foreignKeyName: 'org_members_department_id_fkey'
+            columns: ['department_id']
             isOneToOne: false
-            referencedRelation: "org_departments"
-            referencedColumns: ["id"]
+            referencedRelation: 'org_departments'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "org_members_job_role_id_fkey"
-            columns: ["job_role_id"]
+            foreignKeyName: 'org_members_job_role_id_fkey'
+            columns: ['job_role_id']
             isOneToOne: false
-            referencedRelation: "org_roles"
-            referencedColumns: ["id"]
+            referencedRelation: 'org_roles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "org_members_manager_id_fkey"
-            columns: ["manager_id"]
+            foreignKeyName: 'org_members_manager_id_fkey'
+            columns: ['manager_id']
             isOneToOne: false
-            referencedRelation: "org_members"
-            referencedColumns: ["id"]
+            referencedRelation: 'org_members'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "org_members_shift_id_fkey"
-            columns: ["shift_id"]
+            foreignKeyName: 'org_members_shift_id_fkey'
+            columns: ['shift_id']
             isOneToOne: false
-            referencedRelation: "org_shifts"
-            referencedColumns: ["id"]
+            referencedRelation: 'org_shifts'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "org_members_site_id_fkey"
-            columns: ["site_id"]
+            foreignKeyName: 'org_members_site_id_fkey'
+            columns: ['site_id']
             isOneToOne: false
-            referencedRelation: "org_sites"
-            referencedColumns: ["id"]
+            referencedRelation: 'org_sites'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -388,11 +540,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_roles_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'org_roles_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
         ]
       }
@@ -432,11 +584,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_shifts_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'org_shifts_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
         ]
       }
@@ -473,18 +625,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_sites_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'org_sites_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
           {
-            foreignKeyName: "org_sites_department_id_fkey"
-            columns: ["department_id"]
+            foreignKeyName: 'org_sites_department_id_fkey'
+            columns: ['department_id']
             isOneToOne: false
-            referencedRelation: "org_departments"
-            referencedColumns: ["id"]
+            referencedRelation: 'org_departments'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -560,11 +712,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "subscriptions_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'subscriptions_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
         ]
       }
@@ -604,18 +756,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "user_credentials_auth0_org_id_fkey"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'user_credentials_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
           {
-            foreignKeyName: "user_credentials_auth0_user_id_fkey"
-            columns: ["auth0_user_id"]
+            foreignKeyName: 'user_credentials_auth0_user_id_fkey'
+            columns: ['auth0_user_id']
             isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["auth0_user_id"]
+            referencedRelation: 'users'
+            referencedColumns: ['auth0_user_id']
           },
         ]
       }
@@ -676,11 +828,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "users_auth0_org_id_fkey1"
-            columns: ["auth0_org_id"]
+            foreignKeyName: 'users_auth0_org_id_fkey1'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["auth0_org_id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
         ]
       }
@@ -693,22 +845,16 @@ export type Database = {
       org_id: { Args: never; Returns: string }
     }
     Enums: {
-      attendance_status: "present" | "late" | "absent" | "leave" | "holiday"
-      check_in_method:
-        | "qr"
-        | "biometric"
-        | "whatsapp"
-        | "manual"
-        | "georefrence"
-      organization_role: "owner" | "admin" | "manager" | "member"
-      organization_status:
-        | "provisioning"
-        | "active"
-        | "suspended"
-        | "offboarding"
-        | "archived"
-      subscription_plan: "free" | "growth" | "pro" | "enterprise" | "starter"
-      subscription_status: "free" | "active" | "past_due" | "canceled"
+      attendance_status: 'present' | 'late' | 'absent' | 'leave' | 'holiday'
+      check_in_method: 'qr' | 'biometric' | 'whatsapp' | 'manual' | 'georefrence'
+      forecast_alert_severity: 'low' | 'medium' | 'high' | 'critical'
+      forecast_alert_status: 'open' | 'acknowledged' | 'resolved' | 'dismissed'
+      forecast_alert_type:
+        'overtime_risk' | 'staffing_shortage' | 'understaffed_shift' | 'burnout_risk'
+      organization_role: 'owner' | 'admin' | 'manager' | 'member'
+      organization_status: 'provisioning' | 'active' | 'suspended' | 'offboarding' | 'archived'
+      subscription_plan: 'free' | 'growth' | 'pro' | 'enterprise' | 'starter'
+      subscription_status: 'free' | 'active' | 'past_due' | 'canceled'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -716,33 +862,31 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -751,23 +895,22 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -776,23 +919,22 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -801,36 +943,34 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    keyof DefaultSchema['CompositeTypes'] | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -839,19 +979,20 @@ export const Constants = {
   },
   public: {
     Enums: {
-      attendance_status: ["present", "late", "absent", "leave", "holiday"],
-      check_in_method: ["qr", "biometric", "whatsapp", "manual", "georefrence"],
-      organization_role: ["owner", "admin", "manager", "member"],
-      organization_status: [
-        "provisioning",
-        "active",
-        "suspended",
-        "offboarding",
-        "archived",
+      attendance_status: ['present', 'late', 'absent', 'leave', 'holiday'],
+      check_in_method: ['qr', 'biometric', 'whatsapp', 'manual', 'georefrence'],
+      forecast_alert_severity: ['low', 'medium', 'high', 'critical'],
+      forecast_alert_status: ['open', 'acknowledged', 'resolved', 'dismissed'],
+      forecast_alert_type: [
+        'overtime_risk',
+        'staffing_shortage',
+        'understaffed_shift',
+        'burnout_risk',
       ],
-      subscription_plan: ["free", "growth", "pro", "enterprise", "starter"],
-      subscription_status: ["free", "active", "past_due", "canceled"],
+      organization_role: ['owner', 'admin', 'manager', 'member'],
+      organization_status: ['provisioning', 'active', 'suspended', 'offboarding', 'archived'],
+      subscription_plan: ['free', 'growth', 'pro', 'enterprise', 'starter'],
+      subscription_status: ['free', 'active', 'past_due', 'canceled'],
     },
   },
 } as const
-

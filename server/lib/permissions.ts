@@ -46,6 +46,12 @@ export const ALL_PERMISSIONS = [
   'read:org_leave',
   'write:org_leave',
   'delete:org_leave',
+  'read:labour_forecasts',
+  'write:labour_forecasts',
+  'delete:labour_forecasts',
+  'read:labour_alerts',
+  'write:labour_alerts',
+  'delete:labour_alerts',
   'read:invitations',
   'write:invitations',
   'delete:invitations',
@@ -78,6 +84,9 @@ const MANAGER_PERMISSIONS: readonly Permission[] = [
   'write:org_shifts',
   'delete:org_shifts',
   'read:org_leave',
+  'read:labour_forecasts',
+  'read:labour_alerts',
+  'write:labour_alerts',
   'write:audit_logs',
 ]
 
@@ -96,6 +105,8 @@ const MEMBER_PERMISSIONS: readonly Permission[] = [
   'read:org_attendance',
   'read:org_shifts',
   'read:org_leave',
+  'read:labour_forecasts',
+  'read:labour_alerts',
   'write:audit_logs',
 ]
 

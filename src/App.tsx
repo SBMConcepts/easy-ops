@@ -9,6 +9,7 @@ import CheckIn from './pages/CheckIn'
 import ComingSoon from './pages/ComingSoon'
 import Compliance from './pages/Compliance'
 import EmployeeManagement from './pages/EmployeeManagement'
+import LabourForecasting from './pages/LabourForecasting'
 import GetStarted from './pages/GetStarted'
 import Index from './pages/Index'
 import Register from './pages/Register'
@@ -115,6 +116,14 @@ const WorkspaceShell = () => {
           element={
             <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
               <Compliance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="forecasting"
+          element={
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
+              <LabourForecasting />
             </ProtectedRoute>
           }
         />

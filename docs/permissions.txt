@@ -49,6 +49,18 @@ write:org_attendance — Insert/update attendance rows (admin/manager/owner only
 
 delete:org_attendance — Delete attendance rows (owners/admin only)
 
+read:labour_forecasts — Read predictive labour forecast snapshots (members can read)
+
+write:labour_forecasts — Create/update labour forecast snapshots (admin/manager/owner; generation also gated by plan)
+
+delete:labour_forecasts — Delete labour forecast snapshots (owners/admin only)
+
+read:labour_alerts — Read predictive labour alerts (members can read)
+
+write:labour_alerts — Create/update labour alerts incl. acknowledge/resolve/dismiss (admin/manager/owner only)
+
+delete:labour_alerts — Delete labour alerts (owners/admin only)
+
 read:invitations — Read invitations for your org (owner/admin only)
 
 write:invitations — Create/update invitations for your org (owner/admin only)

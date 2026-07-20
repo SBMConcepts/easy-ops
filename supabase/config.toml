@@ -371,6 +371,12 @@ authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
 
+# Predictive Labour Forecasting generator. It verifies the Auth0 access token
+# itself (supabase/functions/_shared/auth0.ts), so the platform JWT gate is off.
+[functions.labour-forecast]
+enabled = true
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

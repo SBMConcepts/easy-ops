@@ -23,6 +23,7 @@ import orgShiftsRouter from './routes/org-shifts.js'
 import orgLeaveRouter from './routes/org-leave.js'
 import subscriptionsRouter from './routes/subscriptions.js'
 import complianceRouter from './routes/compliance.js'
+import labourForecastingRouter from './routes/labour-forecasting.js'
 import userCredentialsRouter from './routes/user-credentials.js'
 
 // 4. Privileged administrative — JWT bearer + admin access tier
@@ -126,6 +127,7 @@ app.use(orgShiftsRouter)
 app.use(orgLeaveRouter)
 app.use(subscriptionsRouter)
 app.use(complianceRouter)
+app.use(labourForecastingRouter)
 app.use(userCredentialsRouter)
 
 // 4. Privileged administrative (JWT + admin tier)

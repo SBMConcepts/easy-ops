@@ -28,6 +28,7 @@ import {
   BarChart3,
   CreditCard,
   ChevronRight,
+  TrendingUp,
 } from 'lucide-react'
 
 interface NavItem {
@@ -80,6 +81,13 @@ const navItems: NavItem[] = [
     icon: Shield,
     roles: ['owner', 'admin', 'manager'],
     tooltip: 'Manage compliance settings',
+  },
+  {
+    title: 'Forecasting',
+    url: '/app/forecasting',
+    icon: TrendingUp,
+    roles: ['owner', 'admin', 'manager', 'member'],
+    tooltip: 'Predictive labour forecasting and staffing alerts',
   },
   {
     title: 'Settings',
