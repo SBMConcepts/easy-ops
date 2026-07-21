@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
-import { useAttendanceRecords, useSites, useDepartments } from '../hooks/useOrgData'
+import { useAttendanceRecords } from '../hooks/useOrgData'
 import {
   Select,
   SelectContent,
@@ -14,10 +14,8 @@ import '../styles/liveattendance.css'
 export default function LiveAttendance() {
   const [methodFilter, setMethodFilter] = useState('all')
   const { data: records = [], isLoading } = useAttendanceRecords()
-  const { data: sites = [] } = useSites()
-  const { data: departments = [] } = useDepartments()
-  const siteName = (id: string | null) => (id ? sites.find((s) => s.id === id)?.site_name : null)
-  const deptName = (id: string | null) => (id ? departments.find((d) => d.id === id)?.name : null)
+  const employeeName = (rec: (typeof records)[number]) =>
+    [rec.first_name, rec.last_name].filter(Boolean).join(' ') || rec.full_name || 'Unknown employee'
 
   const methods = Array.from(new Set(records.map((r) => r.method)))
   const filteredRecords =
@@ -65,14 +63,12 @@ export default function LiveAttendance() {
             filteredRecords.map((rec) => (
               <div key={rec.id} className="live-row">
                 <div className="live-row__details">
-                  <p className="live-row__details-name">
-                    Employee {rec.auth0_user_id?.slice(0, 8)}
-                  </p>
+                  <p className="live-row__details-name">{employeeName(rec)}</p>
                   <p className="live-row__details-meta">
                     <MapPin className="h-3 w-3 text-dashboard-primary" /> {rec.method.toUpperCase()}{' '}
                     · {rec.date}
-                    {rec.site_id && ` · ${siteName(rec.site_id) ?? 'Unknown site'}`}
-                    {rec.department_id && ` · ${deptName(rec.department_id) ?? 'Unknown dept'}`}
+                    {rec.site_name && ` · ${rec.site_name}`}
+                    {rec.department_name && ` · ${rec.department_name}`}
                   </p>
                 </div>
                 <span className="live-row__hours">

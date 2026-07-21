@@ -9,7 +9,19 @@ import type { Database } from '../integrations/supabase/types'
 // `attendance_records` event log. Typed directly from the generated schema —
 // the useDB() client is fully typed, so no `any` casts are needed.
 export type SiteRow = Database['public']['Tables']['org_sites']['Row']
-export type AttendanceRow = Database['public']['Tables']['org_attendance']['Row']
+
+// org_attendance stores only raw references (auth0_user_id, department_id,
+// site_id). The Express endpoint enriches each row with the resolved identity
+// (first/last/full name via the users row for that auth0_user_id) and the
+// department/site display names, so the client never renders an Auth0 sub or a
+// UUID.
+export type AttendanceRow = Database['public']['Tables']['org_attendance']['Row'] & {
+  first_name: string | null
+  last_name: string | null
+  full_name: string | null
+  department_name: string | null
+  site_name: string | null
+}
 
 export const attendanceKeys = {
   all: ['attendance'] as const,

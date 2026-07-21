@@ -8,7 +8,9 @@ const AdminDashboard = () => {
 
   if (loadingReport) return <DashboardLoader />
 
-  const uniqueEmployees = new Set(records.map((r) => r.auth0_user_id)).size
+  const uniqueEmployees = new Set(
+    records.map((r) => [r.first_name, r.last_name].filter(Boolean).join(' ') || r.full_name)
+  ).size
   const totalHours = records.reduce((sum, r) => sum + Number(r.hours_worked), 0)
   const totalOvertime = records.reduce((sum, r) => sum + Number(r.overtime), 0)
 
@@ -23,7 +25,7 @@ const AdminDashboard = () => {
       <header className="dashboard-header">
         <h1 className="dashboard-header__title">Executive Overview</h1>
         <p className="dashboard-header__subtitle">
-          Organization-wide workforce analytics and status.
+          Organisation-wide workforce analytics and status.
         </p>
       </header>
 
@@ -60,8 +62,14 @@ const AdminDashboard = () => {
             {records.map((rec) => (
               <AttendanceRow
                 key={rec.id}
-                fullName={rec.auth0_user_id}
-                metaText={`${rec.method.toUpperCase()} · ${rec.date}`}
+                fullName={
+                  [rec.first_name, rec.last_name].filter(Boolean).join(' ') ||
+                  rec.full_name ||
+                  'Unknown employee'
+                }
+                metaText={[rec.method.toUpperCase(), rec.date, rec.site_name, rec.department_name]
+                  .filter(Boolean)
+                  .join(' · ')}
                 status={rec.method}
                 hoursWorked={String(rec.hours_worked)}
               />

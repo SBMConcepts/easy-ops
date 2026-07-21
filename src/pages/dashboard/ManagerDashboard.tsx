@@ -27,8 +27,14 @@ const ManagerDashboard = () => {
             {records.map((rec) => (
               <AttendanceRow
                 key={rec.id}
-                fullName={rec.auth0_user_id?.slice(0, 8)}
-                metaText={`${rec.method.toUpperCase()} · ${rec.date}`}
+                fullName={
+                  [rec.first_name, rec.last_name].filter(Boolean).join(' ') ||
+                  rec.full_name ||
+                  'Unknown employee'
+                }
+                metaText={[rec.method.toUpperCase(), rec.date, rec.site_name, rec.department_name]
+                  .filter(Boolean)
+                  .join(' · ')}
                 status={rec.method}
                 hoursWorked={String(rec.hours_worked)}
               />

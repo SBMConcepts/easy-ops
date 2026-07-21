@@ -2,19 +2,15 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { useAttendanceRecords, useSites, useDepartments } from '../hooks/useOrgData'
+import { useAttendanceRecords } from '../hooks/useOrgData'
 import { Download, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 const Reports = () => {
   // Utilizing the RLS-backed hook directly
   const { data: records = [], isLoading } = useAttendanceRecords()
-  const { data: sites = [] } = useSites()
-  const { data: departments = [] } = useDepartments()
-  const siteName = (id: string | null) =>
-    (id ? sites.find((s) => s.id === id)?.site_name : null) ?? ''
-  const deptName = (id: string | null) =>
-    (id ? departments.find((d) => d.id === id)?.name : null) ?? ''
+  const employeeName = (rec: (typeof records)[number]) =>
+    [rec.first_name, rec.last_name].filter(Boolean).join(' ') || rec.full_name || ''
 
   const triggerDataExport = () => {
     if (records.length === 0) return toast.error('No record logs found within date bounds')
@@ -22,13 +18,13 @@ const Reports = () => {
 
     // CSV mapping for the daily attendance aggregate.
     const csvContent =
-      'Date,Operator ID,Method,Site,Department,Hours,Overtime\n' +
+      'Date,Employee,Method,Site,Department,Hours,Overtime\n' +
       records
         .map(
           (r) =>
-            `${r.date},${r.auth0_user_id},${r.method},${siteName(r.site_id)},${deptName(
-              r.department_id
-            )},${r.hours_worked},${r.overtime}`
+            `${r.date},${employeeName(r)},${r.method},${r.site_name ?? ''},${
+              r.department_name ?? ''
+            },${r.hours_worked},${r.overtime}`
         )
         .join('\n')
 
@@ -67,7 +63,7 @@ const Reports = () => {
               <thead className="bg-muted/30 text-muted-foreground border-b border-border">
                 <tr>
                   <th className="p-4 font-medium">Date</th>
-                  <th className="p-4 font-medium">Operator ID</th>
+                  <th className="p-4 font-medium">Employee</th>
                   <th className="p-4 font-medium">Method</th>
                   <th className="p-4 font-medium">Site</th>
                   <th className="p-4 font-medium">Department</th>
@@ -86,19 +82,17 @@ const Reports = () => {
                   records.map((rec) => (
                     <tr key={rec.id} className="hover:bg-muted/5">
                       <td className="p-4 font-medium text-foreground">{rec.date}</td>
-                      <td className="p-4 font-mono text-xs text-muted-foreground">
-                        {rec.auth0_user_id?.slice(0, 8)}
+                      <td className="p-4 text-xs text-muted-foreground">
+                        {employeeName(rec) || '—'}
                       </td>
                       <td className="p-4">
                         <Badge variant="outline" className="text-xs uppercase">
                           {rec.method}
                         </Badge>
                       </td>
+                      <td className="p-4 text-xs text-muted-foreground">{rec.site_name || '—'}</td>
                       <td className="p-4 text-xs text-muted-foreground">
-                        {siteName(rec.site_id) || '—'}
-                      </td>
-                      <td className="p-4 text-xs text-muted-foreground">
-                        {deptName(rec.department_id) || '—'}
+                        {rec.department_name || '—'}
                       </td>
                       <td className="p-4 font-mono text-xs text-foreground">{rec.hours_worked}</td>
                       <td className="p-4 font-mono text-xs text-foreground">{rec.overtime}</td>

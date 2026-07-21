@@ -42,7 +42,66 @@ router.get(
       res.status(500).json({ error: error.message })
       return
     }
-    res.json({ attendance: data ?? [] })
+
+    const rows = data ?? []
+
+    // org_attendance stores only raw references (auth0_user_id, department_id,
+    // site_id). Resolve those to human-readable identities so the client never
+    // has to display an Auth0 sub or a UUID. The attendance user is the same
+    // auth0_user_id that keys org_members / user_credentials; the person's
+    // first/last name lives on the users row for that sub.
+    const authUserIds = [
+      ...new Set(
+        rows
+          .map((r) => r.auth0_user_id)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      ),
+    ]
+
+    const usersBySub = new Map<
+      string,
+      { first_name: string; last_name: string; full_name: string }
+    >()
+    if (authUserIds.length > 0) {
+      const { data: users, error: usersErr } = await supabaseAdmin
+        .from('users')
+        .select('auth0_user_id, first_name, last_name, full_name')
+        .in('auth0_user_id', authUserIds)
+      if (usersErr) {
+        res.status(500).json({ error: usersErr.message })
+        return
+      }
+      for (const u of users ?? []) usersBySub.set(u.auth0_user_id, u)
+    }
+
+    const [deptsRes, sitesRes] = await Promise.all([
+      supabaseAdmin
+        .from('org_departments')
+        .select('id, department_name')
+        .eq('auth0_org_id', req.orgId!),
+      supabaseAdmin.from('org_sites').select('id, site_name').eq('auth0_org_id', req.orgId!),
+    ])
+    const lookupErr = deptsRes.error ?? sitesRes.error
+    if (lookupErr) {
+      res.status(500).json({ error: lookupErr.message })
+      return
+    }
+    const deptById = new Map((deptsRes.data ?? []).map((d) => [d.id, d.department_name]))
+    const siteById = new Map((sitesRes.data ?? []).map((s) => [s.id, s.site_name]))
+
+    const attendance = rows.map((r) => {
+      const u = r.auth0_user_id ? usersBySub.get(r.auth0_user_id) : undefined
+      return {
+        ...r,
+        first_name: u?.first_name ?? null,
+        last_name: u?.last_name ?? null,
+        full_name: u?.full_name ?? null,
+        department_name: r.department_id ? (deptById.get(r.department_id) ?? null) : null,
+        site_name: r.site_id ? (siteById.get(r.site_id) ?? null) : null,
+      }
+    })
+
+    res.json({ attendance })
   }
 )
 

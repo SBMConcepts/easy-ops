@@ -12,6 +12,13 @@ export interface AuthUser {
   auth0_user_id: string
   email: string
   full_name: string
+  first_name: string
+  last_name?: string
+  mobile_number?: string | null
+  national_id?: string | null
+  id_type?: 'sa_id' | 'passport' | null
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
   avatar_url: string | null
   user_status: string
   role: OrgRole
@@ -46,6 +53,13 @@ const AuthContext = createContext<AuthContextType>({
     auth0_user_id: '',
     auth0_org_id: '',
     full_name: '',
+    first_name: '',
+    last_name: '',
+    mobile_number: null,
+    national_id: null,
+    id_type: null,
+    emergency_contact_name: null,
+    emergency_contact_phone: null,
     email: '',
     role: 'owner',
   } as AuthUser,
@@ -75,7 +89,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       auth0_org_id: profile.auth0_org_id,
       email: profile.email,
       full_name: profile.full_name,
-      avatar_url: profile.avatar_url,
+      first_name: profile.first_name,
+      last_name: profile.last_name ?? '',
+      mobile_number: profile.mobile_number ?? null,
+      national_id: profile.national_id ?? null,
+      id_type: profile.id_type ?? null,
+      emergency_contact_name: profile.emergency_contact_name ?? null,
+      emergency_contact_phone: profile.emergency_contact_phone ?? null,
+      avatar_url: profile.avatar_url ?? null,
       user_status: profile.user_status,
       role: profile.role,
       permissions: profile.permissions ?? [],

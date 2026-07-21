@@ -37,7 +37,9 @@ const AppHeader = () => {
               name={user?.full_name}
               className="h-7 w-7 text-[0.65rem]"
             />
-            <span className="app-header-username">{user?.full_name}</span>
+            <span className="app-header-username">
+              {user?.first_name} {user?.last_name}
+            </span>
           </div>
           <button onClick={handleLogout} className="app-header-logout" title="Sign out">
             <LogOut className="h-4 w-4" />
