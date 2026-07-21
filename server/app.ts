@@ -26,6 +26,7 @@ import complianceRouter from './routes/compliance.js'
 import labourForecastingRouter from './routes/labour-forecasting.js'
 import payrollExportRouter from './routes/payroll-export.js'
 import supportRouter from './routes/support.js'
+import safetyRouter from './routes/safety.js'
 import userCredentialsRouter from './routes/user-credentials.js'
 
 // 4. Privileged administrative — JWT bearer + admin access tier
@@ -132,6 +133,7 @@ app.use(complianceRouter)
 app.use(labourForecastingRouter)
 app.use(payrollExportRouter)
 app.use(supportRouter)
+app.use(safetyRouter)
 app.use(userCredentialsRouter)
 
 // 4. Privileged administrative (JWT + admin tier)

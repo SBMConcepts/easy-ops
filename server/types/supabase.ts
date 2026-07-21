@@ -123,6 +123,100 @@ export type Database = {
           },
         ]
       }
+      incident_reports: {
+        Row: {
+          actions_taken: string | null
+          auth0_org_id: string
+          created_at: string
+          department_id: string | null
+          description: string
+          id: string
+          incident_type: Database['public']['Enums']['incident_type']
+          manager_id: string | null
+          manager_notes: string | null
+          manager_signature: string | null
+          manager_signed_at: string | null
+          occurred_at: string
+          photos: Json
+          reporter_id: string
+          reporter_signature: string
+          reporter_signed_at: string
+          severity: Database['public']['Enums']['incident_severity']
+          site_id: string | null
+          status: Database['public']['Enums']['incident_status']
+          updated_at: string
+          witnesses: string | null
+        }
+        Insert: {
+          actions_taken?: string | null
+          auth0_org_id: string
+          created_at?: string
+          department_id?: string | null
+          description: string
+          id?: string
+          incident_type: Database['public']['Enums']['incident_type']
+          manager_id?: string | null
+          manager_notes?: string | null
+          manager_signature?: string | null
+          manager_signed_at?: string | null
+          occurred_at?: string
+          photos?: Json
+          reporter_id: string
+          reporter_signature: string
+          reporter_signed_at?: string
+          severity: Database['public']['Enums']['incident_severity']
+          site_id?: string | null
+          status?: Database['public']['Enums']['incident_status']
+          updated_at?: string
+          witnesses?: string | null
+        }
+        Update: {
+          actions_taken?: string | null
+          auth0_org_id?: string
+          created_at?: string
+          department_id?: string | null
+          description?: string
+          id?: string
+          incident_type?: Database['public']['Enums']['incident_type']
+          manager_id?: string | null
+          manager_notes?: string | null
+          manager_signature?: string | null
+          manager_signed_at?: string | null
+          occurred_at?: string
+          photos?: Json
+          reporter_id?: string
+          reporter_signature?: string
+          reporter_signed_at?: string
+          severity?: Database['public']['Enums']['incident_severity']
+          site_id?: string | null
+          status?: Database['public']['Enums']['incident_status']
+          updated_at?: string
+          witnesses?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'incident_reports_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+          {
+            foreignKeyName: 'incident_reports_department_id_fkey'
+            columns: ['department_id']
+            isOneToOne: false
+            referencedRelation: 'org_departments'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'incident_reports_site_id_fkey'
+            columns: ['site_id']
+            isOneToOne: false
+            referencedRelation: 'org_sites'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -788,6 +882,127 @@ export type Database = {
           },
         ]
       }
+      safety_checklist_responses: {
+        Row: {
+          auth0_org_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          passed: boolean
+          responses: Json
+          shift_id: string | null
+          signature_data: string
+          signed_at: string
+          site_id: string | null
+          template_id: string
+          user_id: string
+        }
+        Insert: {
+          auth0_org_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          passed?: boolean
+          responses?: Json
+          shift_id?: string | null
+          signature_data: string
+          signed_at?: string
+          site_id?: string | null
+          template_id: string
+          user_id: string
+        }
+        Update: {
+          auth0_org_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          passed?: boolean
+          responses?: Json
+          shift_id?: string | null
+          signature_data?: string
+          signed_at?: string
+          site_id?: string | null
+          template_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'safety_checklist_responses_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+          {
+            foreignKeyName: 'safety_checklist_responses_shift_id_fkey'
+            columns: ['shift_id']
+            isOneToOne: false
+            referencedRelation: 'org_shifts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'safety_checklist_responses_site_id_fkey'
+            columns: ['site_id']
+            isOneToOne: false
+            referencedRelation: 'org_sites'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'safety_checklist_responses_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'safety_checklist_templates'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      safety_checklist_templates: {
+        Row: {
+          active: boolean
+          auth0_org_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          items: Json
+          name: string
+          required_at_shift_start: boolean
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          auth0_org_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          items?: Json
+          name: string
+          required_at_shift_start?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          auth0_org_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          items?: Json
+          name?: string
+          required_at_shift_start?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'safety_checklist_templates_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           auth0_org_id: string
@@ -1073,6 +1288,16 @@ export type Database = {
       forecast_alert_status: 'open' | 'acknowledged' | 'resolved' | 'dismissed'
       forecast_alert_type:
         'overtime_risk' | 'staffing_shortage' | 'understaffed_shift' | 'burnout_risk'
+      incident_severity: 'low' | 'medium' | 'high' | 'critical'
+      incident_status: 'open' | 'under_review' | 'resolved' | 'closed'
+      incident_type:
+        | 'injury'
+        | 'near_miss'
+        | 'property_damage'
+        | 'environmental'
+        | 'security'
+        | 'equipment_failure'
+        | 'other'
       organization_role: 'owner' | 'admin' | 'manager' | 'member'
       organization_status: 'provisioning' | 'active' | 'suspended' | 'offboarding' | 'archived'
       subscription_plan: 'free' | 'growth' | 'pro' | 'enterprise' | 'starter'
@@ -1214,6 +1439,17 @@ export const Constants = {
         'staffing_shortage',
         'understaffed_shift',
         'burnout_risk',
+      ],
+      incident_severity: ['low', 'medium', 'high', 'critical'],
+      incident_status: ['open', 'under_review', 'resolved', 'closed'],
+      incident_type: [
+        'injury',
+        'near_miss',
+        'property_damage',
+        'environmental',
+        'security',
+        'equipment_failure',
+        'other',
       ],
       organization_role: ['owner', 'admin', 'manager', 'member'],
       organization_status: ['provisioning', 'active', 'suspended', 'offboarding', 'archived'],

@@ -31,6 +31,7 @@ import {
   TrendingUp,
   FileSpreadsheet,
   LifeBuoy,
+  HardHat,
 } from 'lucide-react'
 
 interface NavItem {
@@ -104,6 +105,13 @@ const navItems: NavItem[] = [
     icon: LifeBuoy,
     roles: ['owner', 'admin', 'manager', 'member'],
     tooltip: 'Open support tickets and track SLA response times',
+  },
+  {
+    title: 'Safety Ops',
+    url: '/app/safety',
+    icon: HardHat,
+    roles: ['owner', 'admin', 'manager', 'member'],
+    tooltip: 'Run shift-start safety checklists and log signed incident reports',
   },
   {
     title: 'Settings',

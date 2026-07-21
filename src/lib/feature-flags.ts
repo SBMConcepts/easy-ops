@@ -125,3 +125,33 @@ export function useSupportAccess(): SupportAccess {
   const { organization } = useAuth()
   return getSupportAccess(organization?.plan)
 }
+
+// ── Safety Ops ────────────────────────────────────────────────────────────────
+// Gated behind the Business tier (mapped to the Pro + Enterprise plans, since
+// the plan enum has no dedicated 'business' value). Keep in sync with the server
+// plan gate (server/routes/safety.ts SAFETY_PLANS).
+
+/** Plans that unlock Safety Ops (checklists + incident reporting). */
+export const SAFETY_OPS_PLANS = new Set(['pro', 'enterprise'])
+
+export interface SafetyAccess {
+  /** Pro / Enterprise : the Safety Ops page and its APIs are enabled. */
+  canUseSafetyOps: boolean
+  /** The normalized plan string used to derive the flag. */
+  plan: string
+}
+
+/** Pure helper — derive Safety Ops access from a raw plan string. */
+export function getSafetyAccess(plan: string | null | undefined): SafetyAccess {
+  const normalized = normalizePlan(plan)
+  return {
+    plan: normalized,
+    canUseSafetyOps: SAFETY_OPS_PLANS.has(normalized),
+  }
+}
+
+/** React hook — Safety Ops access for the current organization. */
+export function useSafetyAccess(): SafetyAccess {
+  const { organization } = useAuth()
+  return getSafetyAccess(organization?.plan)
+}

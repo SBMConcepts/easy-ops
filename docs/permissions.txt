@@ -85,6 +85,24 @@ write:csm_assignments — Set/update the Customer Success Manager contact (owner
 
 delete:csm_assignments — Remove the Customer Success Manager contact (owners/admin only)
 
+read:safety_templates — Read safety checklist templates for your org (all roles, to complete at shift start)
+
+write:safety_templates — Create/update safety checklist templates (admin/manager/owner only)
+
+delete:safety_templates — Delete safety checklist templates (admin/manager/owner only)
+
+read:safety_checklists — Read safety checklist responses (members see their own; manager/admin/owner see all)
+
+write:safety_checklists — Sign & submit a safety checklist response (all roles, own submission)
+
+delete:safety_checklists — Delete safety checklist responses (owners/admin only)
+
+read:incident_reports — Read incident reports (members see their own; manager/admin/owner see all)
+
+write:incident_reports — File an incident report and (manager/admin/owner) counter-sign / update status
+
+delete:incident_reports — Delete incident reports (owners/admin only)
+
 read:invitations — Read invitations for your org (owner/admin only)
 
 write:invitations — Create/update invitations for your org (owner/admin only)
