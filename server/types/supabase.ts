@@ -76,6 +76,53 @@ export type Database = {
           },
         ]
       }
+      csm_assignments: {
+        Row: {
+          auth0_org_id: string
+          calendar_url: string | null
+          created_at: string
+          csm_email: string
+          csm_name: string
+          csm_phone: string | null
+          csm_title: string | null
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          auth0_org_id: string
+          calendar_url?: string | null
+          created_at?: string
+          csm_email: string
+          csm_name: string
+          csm_phone?: string | null
+          csm_title?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auth0_org_id?: string
+          calendar_url?: string | null
+          created_at?: string
+          csm_email?: string
+          csm_name?: string
+          csm_phone?: string | null
+          csm_title?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'csm_assignments_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: true
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -779,6 +826,122 @@ export type Database = {
           },
         ]
       }
+      support_messages: {
+        Row: {
+          auth0_org_id: string
+          author_id: string | null
+          author_role: Database['public']['Enums']['support_message_author']
+          body: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          ticket_id: string
+        }
+        Insert: {
+          auth0_org_id: string
+          author_id?: string | null
+          author_role?: Database['public']['Enums']['support_message_author']
+          body: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          ticket_id: string
+        }
+        Update: {
+          auth0_org_id?: string
+          author_id?: string | null
+          author_role?: Database['public']['Enums']['support_message_author']
+          body?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'support_messages_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+          {
+            foreignKeyName: 'support_messages_ticket_id_fkey'
+            columns: ['ticket_id']
+            isOneToOne: false
+            referencedRelation: 'support_tickets'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          auth0_org_id: string
+          category: Database['public']['Enums']['support_ticket_category']
+          closed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          first_response_at: string | null
+          id: string
+          plan_at_creation: string | null
+          priority: Database['public']['Enums']['support_ticket_priority']
+          resolved_at: string | null
+          sla_resolution_due: string | null
+          sla_response_due: string | null
+          status: Database['public']['Enums']['support_ticket_status']
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          auth0_org_id: string
+          category?: Database['public']['Enums']['support_ticket_category']
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          first_response_at?: string | null
+          id?: string
+          plan_at_creation?: string | null
+          priority?: Database['public']['Enums']['support_ticket_priority']
+          resolved_at?: string | null
+          sla_resolution_due?: string | null
+          sla_response_due?: string | null
+          status?: Database['public']['Enums']['support_ticket_status']
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          auth0_org_id?: string
+          category?: Database['public']['Enums']['support_ticket_category']
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          first_response_at?: string | null
+          id?: string
+          plan_at_creation?: string | null
+          priority?: Database['public']['Enums']['support_ticket_priority']
+          resolved_at?: string | null
+          sla_resolution_due?: string | null
+          sla_response_due?: string | null
+          status?: Database['public']['Enums']['support_ticket_status']
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'support_tickets_auth0_org_id_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+        ]
+      }
       user_credentials: {
         Row: {
           auth0_org_id: string
@@ -914,6 +1077,10 @@ export type Database = {
       organization_status: 'provisioning' | 'active' | 'suspended' | 'offboarding' | 'archived'
       subscription_plan: 'free' | 'growth' | 'pro' | 'enterprise' | 'starter'
       subscription_status: 'free' | 'active' | 'past_due' | 'canceled'
+      support_message_author: 'customer' | 'agent' | 'system'
+      support_ticket_category: 'technical' | 'billing' | 'feature_request' | 'account' | 'general'
+      support_ticket_priority: 'low' | 'medium' | 'high' | 'urgent'
+      support_ticket_status: 'open' | 'in_progress' | 'resolved' | 'closed'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1052,6 +1219,10 @@ export const Constants = {
       organization_status: ['provisioning', 'active', 'suspended', 'offboarding', 'archived'],
       subscription_plan: ['free', 'growth', 'pro', 'enterprise', 'starter'],
       subscription_status: ['free', 'active', 'past_due', 'canceled'],
+      support_message_author: ['customer', 'agent', 'system'],
+      support_ticket_category: ['technical', 'billing', 'feature_request', 'account', 'general'],
+      support_ticket_priority: ['low', 'medium', 'high', 'urgent'],
+      support_ticket_status: ['open', 'in_progress', 'resolved', 'closed'],
     },
   },
 } as const

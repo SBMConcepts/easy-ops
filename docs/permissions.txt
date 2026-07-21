@@ -67,6 +67,24 @@ write:payroll_exports — Generate a payroll export run (admin/owner only; also 
 
 delete:payroll_exports — Delete payroll export audit runs (owners/admin only)
 
+read:support_tickets — Read support tickets for your org (all roles)
+
+write:support_tickets — Open a support ticket and change its status/priority (all roles create; resolve/close is admin/owner only)
+
+delete:support_tickets — Delete support tickets (owners/admin only)
+
+read:support_messages — Read replies on a support ticket (all roles; internal notes are staff-only)
+
+write:support_messages — Post a reply on a support ticket (all roles)
+
+delete:support_messages — Delete support ticket replies (owners/admin only)
+
+read:csm_assignments — Read the Customer Success Manager contact for your org (all roles)
+
+write:csm_assignments — Set/update the Customer Success Manager contact (owners/admin only)
+
+delete:csm_assignments — Remove the Customer Success Manager contact (owners/admin only)
+
 read:invitations — Read invitations for your org (owner/admin only)
 
 write:invitations — Create/update invitations for your org (owner/admin only)

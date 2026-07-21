@@ -10,6 +10,7 @@ import Compliance from './pages/Compliance'
 import EmployeeManagement from './pages/EmployeeManagement'
 import LabourForecasting from './pages/LabourForecasting'
 import PayrollExport from './pages/PayrollExport'
+import SupportCenter from './pages/SupportCenter'
 import GetStarted from './pages/GetStarted'
 import Index from './pages/Index'
 import Register from './pages/Register'
@@ -140,6 +141,15 @@ const WorkspaceShell = () => {
           element={
             <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
               <PayrollExport />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="support-center"
+          element={
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
+              <SupportCenter />
             </ProtectedRoute>
           }
         />

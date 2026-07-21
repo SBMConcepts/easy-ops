@@ -384,6 +384,13 @@ verify_jwt = false
 enabled = true
 verify_jwt = false
 
+# Premium Support ticket creator (stamps plan-based SLA deadlines). Authenticated
+# by the Express proxy via a shared secret (SUPPORT_FN_SECRET) or an Auth0 Bearer
+# fallback, so the platform JWT gate is off.
+[functions.support-ticket]
+enabled = true
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

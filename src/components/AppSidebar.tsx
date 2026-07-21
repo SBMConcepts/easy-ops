@@ -30,6 +30,7 @@ import {
   ChevronRight,
   TrendingUp,
   FileSpreadsheet,
+  LifeBuoy,
 } from 'lucide-react'
 
 interface NavItem {
@@ -96,6 +97,13 @@ const navItems: NavItem[] = [
     icon: FileSpreadsheet,
     roles: ['owner', 'admin', 'manager', 'member'],
     tooltip: 'Generate and export BCEA-aligned payroll registers',
+  },
+  {
+    title: 'Support Centre',
+    url: '/app/support-center',
+    icon: LifeBuoy,
+    roles: ['owner', 'admin', 'manager', 'member'],
+    tooltip: 'Open support tickets and track SLA response times',
   },
   {
     title: 'Settings',

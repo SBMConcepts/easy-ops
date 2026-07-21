@@ -75,3 +75,53 @@ export function usePayrollAccess(): PayrollAccess {
   const { organization } = useAuth()
   return getPayrollAccess(organization?.plan)
 }
+
+// ── Premium Support ─────────────────────────────────────────────────────────
+// The Support Centre itself is available on every plan (support must always be
+// reachable). The "premium" tiers differ in SLA speed and in whether a dedicated
+// Customer Success Manager is assigned. Keep SUPPORT_SLA_TIERS in sync with the
+// edge function (supabase/functions/support-ticket/index.ts SLA_TIERS).
+
+/** Plans that receive a dedicated Customer Success Manager contact. */
+export const CSM_PLANS = new Set(['enterprise'])
+
+export interface SlaTier {
+  /** First-response SLA target, in hours. */
+  responseHours: number
+  /** Resolution SLA target, in hours. */
+  resolutionHours: number
+}
+
+/** Plan → SLA targets. Unknown plans fall back to the 'free' tier. */
+export const SUPPORT_SLA_TIERS: Record<string, SlaTier> = {
+  enterprise: { responseHours: 2, resolutionHours: 24 },
+  pro: { responseHours: 4, resolutionHours: 48 },
+  growth: { responseHours: 8, resolutionHours: 72 },
+  starter: { responseHours: 24, resolutionHours: 120 },
+  free: { responseHours: 48, resolutionHours: 168 },
+}
+
+export interface SupportAccess {
+  /** Enterprise : a dedicated CSM contact card is shown. */
+  hasCsm: boolean
+  /** The SLA targets that apply to this organization's plan. */
+  sla: SlaTier
+  /** The normalized plan string used to derive the flags. */
+  plan: string
+}
+
+/** Pure helper — derive support access + SLA tier from a raw plan string. */
+export function getSupportAccess(plan: string | null | undefined): SupportAccess {
+  const normalized = normalizePlan(plan)
+  return {
+    plan: normalized,
+    hasCsm: CSM_PLANS.has(normalized),
+    sla: SUPPORT_SLA_TIERS[normalized] ?? SUPPORT_SLA_TIERS.free,
+  }
+}
+
+/** React hook — support access + SLA tier for the current organization. */
+export function useSupportAccess(): SupportAccess {
+  const { organization } = useAuth()
+  return getSupportAccess(organization?.plan)
+}
