@@ -15,8 +15,8 @@ export interface AuthUser {
   first_name: string
   last_name?: string
   mobile_number?: string | null
-  national_id?: string | null
-  id_type?: 'sa_id' | 'passport' | null
+  national_id?: string | ''
+  id_type?: 'SA ID' | 'Passport'
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
   avatar_url: string | null
@@ -55,11 +55,12 @@ const AuthContext = createContext<AuthContextType>({
     full_name: '',
     first_name: '',
     last_name: '',
-    mobile_number: null,
-    national_id: null,
-    id_type: null,
-    emergency_contact_name: null,
-    emergency_contact_phone: null,
+    mobile_number: '',
+    national_id: '',
+    id_type: 'SA ID',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    avatar_url: '',
     email: '',
     role: 'owner',
   } as AuthUser,
@@ -91,12 +92,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       full_name: profile.full_name,
       first_name: profile.first_name,
       last_name: profile.last_name ?? '',
-      mobile_number: profile.mobile_number ?? null,
-      national_id: profile.national_id ?? null,
-      id_type: profile.id_type ?? null,
-      emergency_contact_name: profile.emergency_contact_name ?? null,
-      emergency_contact_phone: profile.emergency_contact_phone ?? null,
-      avatar_url: profile.avatar_url ?? null,
+      mobile_number: profile.mobile_number,
+      national_id: profile.national_id || '',
+      id_type: profile.id_type || 'SA ID',
+      emergency_contact_name: profile.emergency_contact_name || '',
+      emergency_contact_phone: profile.emergency_contact_phone || '',
+      avatar_url: profile.avatar_url || '',
       user_status: profile.user_status,
       role: profile.role,
       permissions: profile.permissions ?? [],

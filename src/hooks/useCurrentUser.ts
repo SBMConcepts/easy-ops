@@ -24,8 +24,8 @@ export interface CurrentUserProfile {
   first_name: string
   last_name: string
   mobile_number: string | null
-  national_id: string | null
-  id_type: 'sa_id' | 'passport' | null
+  national_id: string | ''
+  id_type: '' | 'SA ID' | 'Passport'
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
 
