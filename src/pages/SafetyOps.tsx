@@ -51,8 +51,8 @@ import {
   type IncidentStatus,
 } from '../hooks/useSafety'
 
-import '../styles/onboarding.css'
 import '../styles/safety.css'
+import { cn } from '@/lib/utils'
 
 const INCIDENT_TYPE_OPTIONS: { value: IncidentType; label: string }[] = [
   { value: 'injury', label: 'Injury' },
@@ -159,20 +159,20 @@ export default function SafetyOps() {
         </div>
       </header>
 
-      <Tabs defaultValue="checklists">
-        <TabsList className="safety-tabs">
-          <TabsTrigger value="checklists">
+      <Tabs defaultValue="checklists" className="safety-tabs">
+        <TabsList className="safety-tabs__nav">
+          <TabsTrigger value="checklists" className="safety-tabs__nav-trigger">
             <ClipboardCheck aria-hidden /> Checklists
           </TabsTrigger>
-          <TabsTrigger value="incidents">
+          <TabsTrigger value="incidents" className="safety-tabs__nav-trigger">
             <AlertTriangle aria-hidden /> Incidents
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="checklists">
+        <TabsContent value="checklists" className="safety-tabs__content">
           <ChecklistsTab isStaff={isStaff} />
         </TabsContent>
-        <TabsContent value="incidents">
+        <TabsContent value="incidents" className="safety-tabs__content">
           <IncidentsTab isStaff={isStaff} />
         </TabsContent>
       </Tabs>
@@ -324,61 +324,75 @@ function TemplateManager({ templates }: { templates: SafetyTemplate[] }) {
         <h2 className="safety-section-title">
           <ClipboardCheck aria-hidden /> Checklist templates
         </h2>
-        <Button variant="outline" onClick={() => setOpen((v) => !v)}>
+        <button
+          type="button"
+          className="safety-section__add-btn"
+          onClick={() => setOpen((v) => !v)}
+        >
           <Plus aria-hidden /> New template
-        </Button>
+        </button>
       </div>
 
       {open && (
-        <div className="safety-form">
-          <div className="safety-field">
-            <Label htmlFor="tmpl-name">Name</Label>
+        <div className="safety-section-form">
+          <div className="safety-section-form__field">
+            <Label htmlFor="tmpl-name" className="safety-section-form__label">
+              Name
+            </Label>
             <Input
               id="tmpl-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Forklift pre-shift inspection"
               maxLength={120}
+              className="safety-section-form__input"
             />
           </div>
-          <div className="safety-field">
-            <Label htmlFor="tmpl-desc">Description</Label>
+          <div className="safety-section-form__field">
+            <Label htmlFor="tmpl-desc" className="safety-section-form__label">
+              Description
+            </Label>
             <Textarea
               id="tmpl-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               placeholder="Optional context for the team"
+              className="safety-section-form__textarea"
             />
           </div>
 
-          <div className="safety-switch-row">
+          <div className="safety-section-form__switch-row">
             <Switch
               id="tmpl-required"
               checked={requiredAtStart}
               onCheckedChange={setRequiredAtStart}
+              className="safety-section-form__switch"
             />
-            <Label htmlFor="tmpl-required">Required at shift start</Label>
+            <Label htmlFor="tmpl-required" className="safety-section-form__label">
+              Required at shift start
+            </Label>
           </div>
 
-          <div className="safety-field">
-            <Label>Checklist items</Label>
+          <div className="safety-section-form__field">
+            <Label className="safety-section-form__label">Checklist items</Label>
             {items.length > 0 && (
-              <ul className="safety-item-list">
+              <ul className="safety-section-form__item-list">
                 {items.map((item) => (
-                  <li key={item.key} className="safety-item">
-                    <span className="safety-item__label">{item.label}</span>
-                    <label className="safety-item__req">
-                      <input
+                  <li key={item.key} className="safety-section-form__item">
+                    <span className="safety-section-form__item-label">{item.label}</span>
+                    <Label className="safety-section-form__item-req">
+                      <Input
+                        className="safety-section-form__item-req-switch"
                         type="checkbox"
                         checked={item.required}
                         onChange={() => toggleRequired(item.key)}
                       />
                       Required
-                    </label>
+                    </Label>
                     <button
                       type="button"
-                      className="safety-icon-btn"
+                      className="safety-section-form__icon-delete-btn"
                       onClick={() => removeItem(item.key)}
                       aria-label="Remove item"
                     >
@@ -388,8 +402,9 @@ function TemplateManager({ templates }: { templates: SafetyTemplate[] }) {
                 ))}
               </ul>
             )}
-            <div className="safety-inline">
+            <div className="safety-section-form__inline">
               <Input
+                className="safety-section-form__item-input"
                 value={newItem}
                 onChange={(e) => setNewItem(e.target.value)}
                 onKeyDown={(e) => {
@@ -400,52 +415,62 @@ function TemplateManager({ templates }: { templates: SafetyTemplate[] }) {
                 }}
                 placeholder="Add a checklist item and press Enter"
               />
-              <Button variant="outline" onClick={addItem}>
+              <button type="button" className="safety-section-form__icon-add-btn" onClick={addItem}>
                 Add
-              </Button>
+              </button>
             </div>
           </div>
 
-          <div className="safety-form__actions">
-            <Button variant="outline" onClick={reset}>
+          <div className="safety-section-form__actions">
+            <button type="button" className="safety-section-form__icon-cancel-btn" onClick={reset}>
               Cancel
-            </Button>
-            <Button onClick={handleCreate} disabled={createTemplate.isPending}>
+            </button>
+            <button
+              type="button"
+              className="safety-section-form__icon-save-btn"
+              onClick={handleCreate}
+              disabled={createTemplate.isPending}
+            >
               {createTemplate.isPending && <Loader2 className="safety-spin" aria-hidden />} Save
               template
-            </Button>
+            </button>
           </div>
         </div>
       )}
 
       {templates.length === 0 ? (
-        <div className="safety-empty">No templates yet. Create one to get started.</div>
+        <div className="safety-section-form__empty">
+          No templates yet. Create one to get started.
+        </div>
       ) : (
-        <ul className="safety-list">
+        <ul className="safety-section-form__list">
           {templates.map((t) => (
-            <li key={t.id} className="safety-list-row">
-              <div className="safety-list-row__main">
-                <span className="safety-list-row__title">
+            <li key={t.id} className="safety-section-form__list-row">
+              <div className="safety-section-form__list-row-main">
+                <span className="safety-section-form__list-row-title">
                   {t.name}
-                  {!t.active && <span className="safety-badge safety-badge--muted">Inactive</span>}
+                  {!t.active && (
+                    <span className="safety-status safety-status--inactive">Inactive</span>
+                  )}
                 </span>
-                <span className="safety-list-row__meta">
+                <span className="safety-section-form__list-row-meta">
                   {readItems(t).length} item{readItems(t).length === 1 ? '' : 's'}
                   {t.required_at_shift_start ? ' · shift start' : ''}
                 </span>
               </div>
-              <div className="safety-list-row__actions">
-                <label className="safety-item__req">
-                  <input
+              <div className="safety-section-form__list-row-actions">
+                <Label className="safety-section-form__list-row-item__req">
+                  <Input
+                    className="safety-section-form__list-row-item__req-switch"
                     type="checkbox"
                     checked={t.active}
                     onChange={() => handleToggleActive(t)}
                   />
                   Active
-                </label>
+                </Label>
                 <button
                   type="button"
-                  className="safety-icon-btn"
+                  className="safety-section-form__icon-delete-btn"
                   onClick={() => handleDelete(t)}
                   aria-label="Delete template"
                 >
@@ -524,17 +549,19 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
   }
 
   return (
-    <section className="safety-card">
-      <h2 className="safety-section-title">
+    <section className="safety-section-form__card">
+      <h2 className="safety-section-form__title">
         <PenLine aria-hidden /> Complete a checklist
       </h2>
 
       {templates.length === 0 ? (
-        <div className="safety-empty">No active checklists are available right now.</div>
+        <div className="safety-section-form__empty">
+          No active checklists are available right now.
+        </div>
       ) : (
         <>
-          <div className="safety-field">
-            <Label>Checklist</Label>
+          <div className="safety-section-form__field">
+            <Label className="safety-section-form__field-label">Checklist</Label>
             <Select
               value={templateId || undefined}
               onValueChange={(v) => {
@@ -542,12 +569,15 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
                 resetRun()
               }}
             >
-              <SelectTrigger className="safety-select">
-                <SelectValue placeholder="Select a checklist" />
+              <SelectTrigger className="safety-section-form__select-trigger">
+                <SelectValue
+                  className="safety-section-form__select-value"
+                  placeholder="Select a checklist"
+                />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="safety-section-form__select-content">
                 {templates.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
+                  <SelectItem className="safety-section-form__select-item" key={t.id} value={t.id}>
                     {t.name}
                   </SelectItem>
                 ))}
@@ -557,13 +587,16 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
 
           {template && (
             <>
-              {template.description && <p className="safety-muted">{template.description}</p>}
+              {template.description && (
+                <p className="safety-section-form__muted">{template.description}</p>
+              )}
 
-              <ul className="safety-check-list">
+              <ul className="safety-section-form__checklist">
                 {items.map((item) => (
-                  <li key={item.key} className="safety-check">
-                    <label className="safety-check__label">
-                      <input
+                  <li key={item.key} className="safety-check__item">
+                    <Label className="safety-section-form__checklist-item-label">
+                      <Input
+                        className="safety-section-form__checklist-item-input"
                         type="checkbox"
                         checked={!!checked[item.key]}
                         onChange={(e) =>
@@ -572,38 +605,50 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
                       />
                       {item.label}
                       {item.required && <span className="safety-req-star">*</span>}
-                    </label>
+                    </Label>
                   </li>
                 ))}
               </ul>
 
-              <div className="safety-form__row">
-                <div className="safety-field">
-                  <Label>Site (optional)</Label>
+              <div className="safety-section-form__row">
+                <div className="safety-section-form__row-field">
+                  <Label className="safety-section-form__field-label">Site (optional)</Label>
                   <Select value={siteId} onValueChange={(v) => setSiteId(v ?? 'none')}>
-                    <SelectTrigger className="safety-select">
-                      <SelectValue />
+                    <SelectTrigger className="safety-section-form__select-trigger">
+                      <SelectValue className="safety-section-form__select-value" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No site</SelectItem>
+                    <SelectContent className="safety-section-form__select-content">
+                      <SelectItem className="safety-section-form__select-item" value="none">
+                        No site
+                      </SelectItem>
                       {(sitesQuery.data ?? []).map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
+                        <SelectItem
+                          key={s.id}
+                          value={s.id}
+                          className="safety-section-form__select-item"
+                        >
                           {s.site_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="safety-field">
-                  <Label>Shift (optional)</Label>
+                <div className="safety-section-form__row-field">
+                  <Label className="safety-section-form__field-label">Shift (optional)</Label>
                   <Select value={shiftId} onValueChange={(v) => setShiftId(v ?? 'none')}>
-                    <SelectTrigger className="safety-select">
-                      <SelectValue />
+                    <SelectTrigger className="safety-section-form__select-trigger">
+                      <SelectValue className="safety-section-form__select-value" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No shift</SelectItem>
+                    <SelectContent className="safety-section-form__select-content">
+                      <SelectItem value="none" className="safety-section-form__select-item">
+                        No shift
+                      </SelectItem>
                       {(shiftsQuery.data ?? []).map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
+                        <SelectItem
+                          key={s.id}
+                          value={s.id}
+                          className="safety-section-form__select-item"
+                        >
                           {s.name}
                         </SelectItem>
                       ))}
@@ -612,46 +657,56 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
                 </div>
               </div>
 
-              <div className="safety-field">
-                <Label htmlFor="run-notes">Notes (optional)</Label>
+              <div className="safety-section-form__row-field">
+                <Label htmlFor="run-notes" className="safety-section-form__field-label">
+                  Notes (optional)
+                </Label>
                 <Textarea
                   id="run-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}
                   placeholder="Anything the reviewer should know"
+                  className="safety-section-form__textarea"
                 />
               </div>
 
               {!passed && requiredMet && (
-                <p className="safety-flag-note">
+                <p className="safety-section-form__flag-note">
                   <AlertTriangle aria-hidden /> Some optional items are unchecked — this submission
                   will be flagged for review.
                 </p>
               )}
 
-              <div className="safety-sign">
-                <Label htmlFor="run-sign">Signature</Label>
+              <div className="safety-section-form__row-field safety-sign">
+                <Label htmlFor="run-sign" className="safety-section-form__field-label">
+                  Signature
+                </Label>
                 <Input
+                  className="safety-section-form__input"
                   id="run-sign"
                   value={signature}
                   onChange={(e) => setSignature(e.target.value)}
                   placeholder={`Type your full name (${user.full_name || 'e.g. Jane Doe'}) to sign`}
                 />
-                <span className="safety-sign__hint">
+                <span className="safety-section-form__hint">
                   By signing you confirm the checklist was completed accurately.
                 </span>
               </div>
 
-              <div className="safety-form__actions">
-                <Button onClick={handleSubmit} disabled={submit.isPending}>
+              <div className="safety-section-form__actions">
+                <button
+                  className="safety-section-form__actions-signIn-btn"
+                  onClick={handleSubmit}
+                  disabled={submit.isPending}
+                >
                   {submit.isPending ? (
                     <Loader2 className="safety-spin" aria-hidden />
                   ) : (
                     <Send aria-hidden />
                   )}
                   Sign & submit
-                </Button>
+                </button>
               </div>
             </>
           )}
@@ -680,17 +735,19 @@ function IncidentsTab({ isStaff }: { isStaff: boolean }) {
   const selected = incidents.find((i) => i.id === effectiveSelectedId) ?? null
 
   return (
-    <div className="safety-columns">
-      <div className="safety-col">
+    <div className="safety-incidents-columns">
+      {' '}
+      {/* Incidents Section */}
+      <div className="safety-incidents-col">
         {canReport && <IncidentForm />}
 
-        <section className="safety-card">
-          <div className="safety-card__head">
-            <h2 className="safety-section-title">
+        <section className="safety-incident-card">
+          <div className="safety-incident-card__head">
+            <h2 className="safety-incident-section-title">
               <AlertTriangle aria-hidden /> {isStaff ? 'All incidents' : 'Your incidents'}
             </h2>
           </div>
-          <div className="safety-filters">
+          <div className="safety-incident-filters">
             {INCIDENT_STATUS_FILTERS.map((f) => (
               <button
                 key={f.value}
@@ -704,13 +761,13 @@ function IncidentsTab({ isStaff }: { isStaff: boolean }) {
           </div>
 
           {incidentsQuery.isLoading ? (
-            <div className="safety-empty">
-              <Loader2 className="safety-spin" aria-hidden /> Loading incidents…
+            <div className="safety-incident-empty">
+              <Loader2 className="safety-incident-spinner" aria-hidden /> Loading incidents…
             </div>
           ) : incidents.length === 0 ? (
-            <div className="safety-empty">No incidents reported.</div>
+            <div className="safety-incident-empty">No incidents reported.</div>
           ) : (
-            <ul className="safety-list">
+            <ul className="safety-incident-list">
               {incidents.map((i) => (
                 <li key={i.id}>
                   <button
@@ -742,7 +799,6 @@ function IncidentsTab({ isStaff }: { isStaff: boolean }) {
           )}
         </section>
       </div>
-
       <div className="safety-col">
         <IncidentDetail incident={selected} isStaff={isStaff} />
       </div>
@@ -809,49 +865,62 @@ function IncidentForm() {
   }
 
   return (
-    <section className="safety-card">
-      <div className="safety-card__head">
-        <h2 className="safety-section-title">
+    <section className="safety-incident-report__card">
+      <div className="safety-incident-report-card__head">
+        <h2 className="safety-incident-report-card__title">
           <Plus aria-hidden /> Report an incident
         </h2>
-        <Button variant="outline" onClick={() => setOpen((v) => !v)}>
+        <button
+          className={cn('safety-incident-report-card__toggle', {
+            'safety-incident-report-card__toggle--close': open,
+          })}
+          onClick={() => setOpen((v) => !v)}
+        >
           {open ? 'Close' : 'New report'}
-        </Button>
+        </button>
       </div>
 
       {open && (
-        <div className="safety-form">
-          <div className="safety-form__row">
-            <div className="safety-field">
-              <Label>Type</Label>
+        <div className="safety-incident-report__form">
+          <div className="safety-incident-report__form__row">
+            <div className="safety-incident-report__field">
+              <Label className="safety-incident-report__label">Type</Label>
               <Select
                 value={incidentType}
                 onValueChange={(v) => setIncidentType((v as IncidentType) ?? 'other')}
               >
-                <SelectTrigger className="safety-select">
-                  <SelectValue />
+                <SelectTrigger className="safety-incident-report__select-trigger">
+                  <SelectValue className="safety-incident-report__select-value" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="safety-incident-report__select-content">
                   {INCIDENT_TYPE_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
+                    <SelectItem
+                      className="safety-incident-report__select-item"
+                      key={o.value}
+                      value={o.value}
+                    >
                       {o.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="safety-field">
-              <Label>Severity</Label>
+            <div className="safety-incident-report__field">
+              <Label className="safety-incident-report__label">Severity</Label>
               <Select
                 value={severity}
-                onValueChange={(v) => setSeverity((v as IncidentSeverity) ?? 'medium')}
+                onValueChange={(v) => setSeverity((v as IncidentSeverity) ?? 'Medium')}
               >
-                <SelectTrigger className="safety-select">
-                  <SelectValue />
+                <SelectTrigger className="safety-incident-report__select-trigger">
+                  <SelectValue className="safety-incident-report__select-value" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="safety-incident-report__select-content">
                   {SEVERITY_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
+                    <SelectItem
+                      className="safety-incident-report__select-item"
+                      key={o.value}
+                      value={o.value}
+                    >
                       {o.label}
                     </SelectItem>
                   ))}
@@ -860,43 +929,61 @@ function IncidentForm() {
             </div>
           </div>
 
-          <div className="safety-field">
-            <Label htmlFor="inc-when">When did it happen?</Label>
+          <div className="safety-incident-report__field">
+            <Label className="safety-incident-report__label" htmlFor="inc-when">
+              When did it happen?
+            </Label>
             <Input
               id="inc-when"
               type="datetime-local"
               value={occurredAt}
               onChange={(e) => setOccurredAt(e.target.value)}
+              className="safety-incident-report__input"
             />
           </div>
 
-          <div className="safety-form__row">
-            <div className="safety-field">
-              <Label>Site (optional)</Label>
-              <Select value={siteId} onValueChange={(v) => setSiteId(v ?? 'none')}>
-                <SelectTrigger className="safety-select">
-                  <SelectValue />
+          <div className="safety-incident-report__field">
+            <div className="safety-incident-report__field">
+              <Label className="safety-incident-report__label">Site (optional)</Label>
+              <Select value={siteId} onValueChange={(v) => setSiteId(v ?? '')}>
+                <SelectTrigger className="safety-incident-report__select-trigger">
+                  <SelectValue className="safety-incident-report__select-value" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No site</SelectItem>
+                <SelectContent className="safety-incident-report__select-content">
+                  <SelectItem className="safety-incident-report__select-item" value="">
+                    No site
+                  </SelectItem>
                   {(sitesQuery.data ?? []).map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
+                    <SelectItem
+                      className="safety-incident-report__select-item"
+                      key={s.id}
+                      value={s.site_name}
+                    >
                       {s.site_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="safety-field">
-              <Label>Department (optional)</Label>
-              <Select value={departmentId} onValueChange={(v) => setDepartmentId(v ?? 'none')}>
-                <SelectTrigger className="safety-select">
-                  <SelectValue />
+            <div className="safety-incident-report__field">
+              <Label className="safety-incident-report__label">Department (optional)</Label>
+              <Select value={departmentId} onValueChange={(v) => setDepartmentId(v ?? '')}>
+                <SelectTrigger className="safety-incident-report__select-trigger">
+                  <SelectValue className="safety-incident-report__select-value" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No department</SelectItem>
+                <SelectContent className="safety-incident-report__select-content">
+                  <SelectItem
+                    className="safety-incident-report__select-item"
+                    value="Select a department"
+                  >
+                    No department
+                  </SelectItem>
                   {(departmentsQuery.data ?? []).map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
+                    <SelectItem
+                      className="safety-incident-report__select-item"
+                      key={d.id}
+                      value={d.id}
+                    >
                       {d.name}
                     </SelectItem>
                   ))}
@@ -905,60 +992,76 @@ function IncidentForm() {
             </div>
           </div>
 
-          <div className="safety-field">
-            <Label htmlFor="inc-desc">Description</Label>
+          <div className="safety-incident-report__field">
+            <Label className="safety-incident-report__label" htmlFor="inc-desc">
+              Description
+            </Label>
             <Textarea
               id="inc-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="What happened, where, and who was involved"
+              className="safety-incident-report__textarea"
             />
           </div>
-          <div className="safety-field">
-            <Label htmlFor="inc-actions">Immediate actions taken</Label>
+          <div className="safety-incident-report__field">
+            <Label className="safety-incident-report__label" htmlFor="inc-actions">
+              Immediate actions taken
+            </Label>
             <Textarea
               id="inc-actions"
               value={actionsTaken}
               onChange={(e) => setActionsTaken(e.target.value)}
               rows={2}
+              className="safety-incident-report__textarea"
             />
           </div>
-          <div className="safety-field">
-            <Label htmlFor="inc-witness">Witnesses</Label>
+          <div className="safety-incident-report__field">
+            <Label className="safety-incident-report__label" htmlFor="inc-witness">
+              Witnesses
+            </Label>
             <Input
               id="inc-witness"
               value={witnesses}
               onChange={(e) => setWitnesses(e.target.value)}
               placeholder="Names of anyone who saw the incident"
+              className="safety-incident-report__input"
             />
           </div>
 
-          <div className="safety-sign">
-            <Label htmlFor="inc-sign">Reporter signature</Label>
+          <div className="safety-incident-report__field">
+            <Label className="safety-incident-report__label" htmlFor="inc-sign">
+              Reporter signature
+            </Label>
             <Input
               id="inc-sign"
               value={signature}
               onChange={(e) => setSignature(e.target.value)}
               placeholder="Type your full name to sign"
+              className="safety-incident-report__input"
             />
-            <span className="safety-sign__hint">
+            <span className="safety-incident-report__hint">
               By signing you confirm this report is accurate to the best of your knowledge.
             </span>
           </div>
 
-          <div className="safety-form__actions">
-            <Button variant="outline" onClick={reset}>
+          <div className="safety-incident-report__actions">
+            <button className="safety-incident-report__cancel-btn" onClick={reset}>
               Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={fileIncident.isPending}>
+            </button>
+            <button
+              className="safety-incident-report__submit-btn"
+              onClick={handleSubmit}
+              disabled={fileIncident.isPending}
+            >
               {fileIncident.isPending ? (
                 <Loader2 className="safety-spin" aria-hidden />
               ) : (
                 <Send aria-hidden />
               )}
               Submit report
-            </Button>
+            </button>
           </div>
         </div>
       )}
@@ -981,7 +1084,7 @@ function IncidentDetail({
 
   if (!incident) {
     return (
-      <section className="safety-card">
+      <section className="safety-review-card">
         <div className="safety-empty">Select an incident to view the details.</div>
       </section>
     )
@@ -1007,26 +1110,30 @@ function IncidentDetail({
   }
 
   return (
-    <section className="safety-card">
-      <div className="safety-detail__head">
-        <h2 className="safety-section-title">
+    <section className="safety-detail-review-card">
+      <div className="safety-detail-review-card__head">
+        <h2 className="safety-detail-review-card__title">
           <ShieldCheck aria-hidden /> Incident detail
         </h2>
-        <span className={`safety-badge safety-badge--${incident.status}`}>
+        <span
+          className={`safety-detail-review-card__badge safety-detail-review-card__badge--${incident.status}`}
+        >
           {statusLabel(incident.status)}
         </span>
       </div>
 
-      <div className="safety-detail__badges">
-        <span className={`safety-badge safety-badge--sev-${incident.severity}`}>
+      <div className="safety-detail-review-card__badges">
+        <span
+          className={`safety-detail-review-card__badge safety-detail-review-card__badge--sev-${incident.severity}`}
+        >
           {incident.severity}
         </span>
-        <span className="safety-badge safety-badge--muted">
+        <span className="safety-detail-review-card__badge safety-detail-review-card__badge--muted">
           {labelFor(INCIDENT_TYPE_OPTIONS, incident.incident_type)}
         </span>
       </div>
 
-      <dl className="safety-detail__grid">
+      <dl className="safety-detail-review-card__grid">
         <div>
           <dt>Occurred</dt>
           <dd>{formatDateTime(incident.occurred_at)}</dd>
@@ -1037,36 +1144,36 @@ function IncidentDetail({
         </div>
       </dl>
 
-      <div className="safety-detail__block">
-        <h4>Description</h4>
-        <p>{incident.description}</p>
+      <div className="safety-detail-review-card__block">
+        <h4 className="safety-detail-review-card__block-title">Description</h4>
+        <p className="safety-detail-review-card__block-text">{incident.description}</p>
       </div>
       {incident.actions_taken && (
-        <div className="safety-detail__block">
-          <h4>Actions taken</h4>
-          <p>{incident.actions_taken}</p>
+        <div className="safety-detail-review-card__block">
+          <h4 className="safety-detail-review-card__block-title">Actions taken</h4>
+          <p className="safety-detail-review-card__block-text">{incident.actions_taken}</p>
         </div>
       )}
       {incident.witnesses && (
-        <div className="safety-detail__block">
-          <h4>Witnesses</h4>
-          <p>{incident.witnesses}</p>
+        <div className="safety-detail-review-card__block">
+          <h4 className="safety-detail-review-card__block-title">Witnesses</h4>
+          <p className="safety-detail-review-card__block-text">{incident.witnesses}</p>
         </div>
       )}
 
-      <div className="safety-signoff">
-        <div className="safety-signoff__row">
+      <div className="safety-detail-review-card__signoff">
+        <div className="safety-detail-review-card__signoff-row">
           <PenLine aria-hidden />
-          <span>
+          <span className="safety-detail-review-card__signoff-text">
             Reporter signed{' '}
             {incident.reporter_signed_at ? formatDateTime(incident.reporter_signed_at) : ''}
           </span>
         </div>
-        <div className="safety-signoff__row">
+        <div className="safety-detail-review-card__signoff-row">
           {incident.manager_signed_at ? (
             <>
               <CheckCircle2 aria-hidden />
-              <span>
+              <span className="safety-detail-review-card__signoff-text">
                 Counter-signed by {incident.manager_name || 'manager'} ·{' '}
                 {formatDateTime(incident.manager_signed_at)}
               </span>
@@ -1074,72 +1181,85 @@ function IncidentDetail({
           ) : (
             <>
               <XCircle aria-hidden />
-              <span className="safety-muted">Awaiting manager counter-signature</span>
+              <span className="safety-detail-review-card__signoff-text safety-muted">
+                Awaiting manager counter-signature
+              </span>
             </>
           )}
         </div>
         {incident.manager_notes && (
-          <div className="safety-detail__block">
-            <h4>Manager notes</h4>
-            <p>{incident.manager_notes}</p>
+          <div className="safety-detail-review-card__block">
+            <h4 className="safety-detail-review-card__block-title">Manager notes</h4>
+            <p className="safety-detail-review-card__block-text">{incident.manager_notes}</p>
           </div>
         )}
       </div>
 
       {isStaff && (
-        <div className="safety-review">
-          <h4 className="safety-section-title">Manager review</h4>
-          <div className="safety-field">
-            <Label>Status</Label>
+        <div className="safety-detail-review-card__manager">
+          <h4 className="safety-detail-review-card__manager-title">Manager review</h4>
+          <div className="safety-detail-review-card__manager-field">
+            <Label className="safety-detail-review-card__manager-label">Status</Label>
             <Select
               value={status || incident.status}
               onValueChange={(v) => setStatus((v as IncidentStatus) ?? incident.status)}
             >
-              <SelectTrigger className="safety-select">
-                <SelectValue />
+              <SelectTrigger className="safety-detail-review-card__manager-select-trigger">
+                <SelectValue className="safety-detail-review-card__manager-select-value" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="safety-detail-review-card__manager-select-content">
                 {INCIDENT_STATUS_FILTERS.filter((f) => f.value !== 'all').map((f) => (
-                  <SelectItem key={f.value} value={f.value}>
+                  <SelectItem
+                    className="safety-detail-review-card__manager-select-item"
+                    key={f.value}
+                    value={f.value}
+                  >
                     {f.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="safety-field">
-            <Label htmlFor="mgr-notes">Manager notes</Label>
+          <div className="safety-detail-review-card__manager-field">
+            <Label htmlFor="mgr-notes" className="safety-detail-review-card__manager-label">
+              Manager notes
+            </Label>
             <Textarea
               id="mgr-notes"
               value={managerNotes}
               onChange={(e) => setManagerNotes(e.target.value)}
               rows={2}
               placeholder="Review findings, follow-up actions…"
+              className="safety-detail-review-card__manager-text-area"
             />
           </div>
-          <div className="safety-field">
-            <Label htmlFor="mgr-sign">Counter-signature (optional)</Label>
+          <div className="safety-detail-review-card__manager-field">
+            <Label htmlFor="mgr-sign" className="safety-detail-review-card__manager-label">
+              Counter-signature (optional)
+            </Label>
             <Input
               id="mgr-sign"
               value={signature}
               onChange={(e) => setSignature(e.target.value)}
               placeholder="Type your full name to counter-sign"
+              className="safety-detail-review-card__manager-input"
             />
           </div>
-          <div className="safety-form__actions">
-            <Button
-              variant="outline"
+          <div className="safety-detail-review-card__manager-actions">
+            <button
+              className="safety-detail-review-card__manager-update-btn"
               onClick={() => handleReview(false)}
               disabled={review.isPending}
             >
               Update status
-            </Button>
-            <Button
+            </button>
+            <button
+              className="safety-detail-review-card__manager-counter-sign-btn"
               onClick={() => handleReview(true)}
               disabled={review.isPending || !signature.trim()}
             >
               {review.isPending && <Loader2 className="safety-spin" aria-hidden />} Counter-sign
-            </Button>
+            </button>
           </div>
         </div>
       )}

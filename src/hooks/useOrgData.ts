@@ -8,7 +8,6 @@ import type { Database } from '../integrations/supabase/types'
 // org_attendance aggregate (one row per user per day) replaces the legacy
 // `attendance_records` event log. Typed directly from the generated schema —
 // the useDB() client is fully typed, so no `any` casts are needed.
-export type SiteRow = Database['public']['Tables']['org_sites']['Row']
 
 // org_attendance stores only raw references (auth0_user_id, department_id,
 // site_id). The Express endpoint enriches each row with the resolved identity
@@ -55,15 +54,18 @@ export interface ComplianceSummary {
 
 // ── 1. Sites Data ───────────────────────────────────────────────────────────
 export function useSites() {
+  const { apiFetch } = useOrgApi()
+  const { user } = useAuth()
   const supabase = useDB()
 
   return useQuery({
     queryKey: sitesKeys.lists(),
     queryFn: async () => {
-      const { data, error } = await supabase.from('org_sites').select('*').order('site_name')
-      if (error) throw error
-      return data ?? []
+      const res = await apiFetch<{ sites: SiteRow[] }>('org_sites')
+      if (!res.sites) throw new Error('Failed to fetch sites')
+      return res.sites ?? []
     },
+    enabled: !!user && !!supabase,
     staleTime: 1000 * 60 * 10,
   })
 }
@@ -99,7 +101,14 @@ export function useComplianceCheck() {
   })
 }
 
-// ── 4. Departments & Job Titles (via Express) ───────────────────────────────
+// ── 4. Sites , Departments & Job Titles (via Express) ───────────────────────────────
+export interface SiteRow {
+  id: string
+  site_name: string
+  department_id: string | null
+  address: string | null
+}
+
 export interface DepartmentRow {
   id: string
   name: string
