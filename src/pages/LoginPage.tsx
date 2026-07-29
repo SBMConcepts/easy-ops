@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { LogIn, Loader2, Sparkles, UserPlus } from 'lucide-react'
+import BrandFull from '../assets/EasyOps Brand Logo and Name.png'
+import BrandLogo from '../assets/EasyOps Logo.png'
+import BrandName from '../assets/EasyOps Name.png'
 import '../styles/loginpage.css'
 
 const LoginPage = () => {
@@ -43,7 +46,7 @@ const LoginPage = () => {
       <div className="login-content-column">
         <Card className="login-card">
           <CardHeader className="login-card-header">
-            <CardTitle className="login-card-title">EasyOps</CardTitle>
+            <img className="login-card-logo" src={BrandFull} alt="EasyOps" />
             <p className="login-card-description">Secure Workspace Authentication</p>
           </CardHeader>
 

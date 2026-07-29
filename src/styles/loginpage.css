@@ -1,13 +1,13 @@
 @import './onboarding.css';
 
 .login-page {
-  background: var(--onboarding-background);
-  width: 100%;
   display: flex;
   flex-direction: column;
-  font-family: 'Space Grotesk', sans-serif;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 48px 32px 40px;
   box-sizing: border-box;
-  padding: 48px 16px 40px;
 }
 
 /* Centre column */
@@ -17,19 +17,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 1.5rem;
 }
 
 /* Card */
 .login-card {
   width: 100%;
+  max-width: 600px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: var(--onboarding-radius-sm);
-  border: 1px solid var(--onboarding-border-focus);
-  background-color: var(--onboarding-background);
-  gap: 1.25rem;
+  border-radius: var(--onboarding-radius-md);
+  border: 1px solid var(--onboarding-accent);
+  background: var(--onboarding-background);
+  box-sizing: border-box;
 }
 
 .login-card-content {
@@ -37,6 +40,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  width: 100%;
 }
 
 .login-card-header {
@@ -44,15 +48,13 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
 }
 
-.login-card-title {
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--onboarding-text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.login-card-logo {
+  width: 120px;
+  height: auto;
+  margin-bottom: 0.75rem;
 }
 
 .login-card-description {
@@ -465,14 +467,13 @@
   /* Card */
   .login-card {
     width: 100%;
-    max-width: 22rem;
-    padding: 20px 16px;
+    max-width: 600px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
     border-radius: var(--onboarding-radius-md);
-    border: 1px solid var(--onboarding-border);
+    border: 1px solid var(--onboarding-accent);
     background-color: var(--onboarding-background);
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
@@ -491,13 +492,13 @@
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
+    width: 100%;
   }
 
-  .login-card-title {
-    font-size: 36px;
-    font-weight: 600;
-    color: var(--onboarding-text-primary);
-    margin: 0;
+  .login-card-logo {
+    width: 120px;
+    height: auto;
+    margin-bottom: 0.75rem;
   }
 
   .login-card-description {
@@ -923,7 +924,7 @@
     flex-direction: column;
     align-items: center;
     border-radius: var(--onboarding-radius-md);
-    border: 1px solid var(--onboarding-border);
+    border: 1px solid var(--onboarding-accent);
     background: var(--onboarding-background);
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
@@ -942,13 +943,13 @@
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
+    width: 100%;
   }
 
-  .login-card-title {
-    font-size: 36px;
-    font-weight: 600;
-    color: var(--onboarding-text-primary);
-    margin: 0;
+  .login-card-logo {
+    width: 160px;
+    height: auto;
+    margin-bottom: 0.75rem;
   }
 
   .login-card-description {
@@ -1372,7 +1373,7 @@
     flex-direction: column;
     align-items: center;
     border-radius: var(--onboarding-radius-lg);
-    border: 1px solid var(--onboarding-border-focus);
+    border: 1px solid var(--onboarding-accent);
     background: var(--onboarding-background);
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
@@ -1391,13 +1392,13 @@
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
+    width: 100%;
   }
 
-  .login-card-title {
-    font-size: 36px;
-    font-weight: 600;
-    color: var(--onboarding-text-primary);
-    margin: 0;
+  .login-card-logo {
+    width: 200px;
+    height: auto;
+    margin-bottom: 0.75rem;
   }
 
   .login-card-description {
