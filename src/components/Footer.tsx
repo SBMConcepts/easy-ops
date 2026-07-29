@@ -1,8 +1,9 @@
 'use client'
 import { Link } from 'react-router-dom'
 import { Handshake } from 'lucide-react'
-import '../styles/onboarding.css'
 import '../styles/footer.css'
+import BrandLogo from '../assets/EasyOps Logo.png'
+import BrandName from '../assets/EasyOps Name.png'
 
 const COMPANY_LINKS = [
   { label: 'Contact Us', to: '/contact' },
@@ -62,8 +63,8 @@ export default function Footer() {
       <div className="footer__main">
         <div className="footer__brand">
           <div className="footer__logo">
-            <span className="footer__logo-eazy">Easy</span>
-            <span className="footer__logo-ops">Ops</span>
+            <img className="footer__logo-image" src={BrandLogo} alt="EasyOps" />
+            <img className="footer__logo-name" src={BrandName} alt="EasyOps" />
           </div>
           <p className="footer__tagline">
             Simplifying workforce management, attendance tracking, payroll, and compliance for

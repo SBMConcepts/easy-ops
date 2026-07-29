@@ -27,30 +27,22 @@
 
 /* ── Logo ── */
 .top-navbar-logo {
-  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
+  width: fit-content;
+  height: fit-content;
 }
 
 .top-navbar-logo-wrap {
-  font-size: 1.4rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.top-navbar-brand-name {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.top-navbar-brand-Easy {
-  color: var(--onboarding-text-primary);
-}
-
-.top-navbar-brand-Ops {
-  color: var(--onboarding-accent);
+.top-navbar-logo-image {
+  height: 36px;
+  width: auto;
 }
 
 /* ── Desktop nav — hidden on mobile ── */

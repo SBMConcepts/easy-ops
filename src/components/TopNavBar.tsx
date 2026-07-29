@@ -3,6 +3,9 @@ import { useState, useEffect, useRef } from 'react'
 import '../styles/topnavbar.css'
 import DemoModal from './DemoModal'
 import { useNavigate, useLocation } from 'react-router'
+import BrandFull from '../assets/EasyOps Brand Logo and Name.png'
+import BrandLogo from '../assets/EasyOps Logo.png'
+import BrandName from '../assets/EasyOps Name.png'
 
 const NAV_ITEMS = [
   { label: 'Home', id: 'home' },
@@ -119,10 +122,7 @@ export default function TopNavBar() {
           {/* ── Logo ── */}
           <div className="top-navbar-logo">
             <button className="top-navbar-logo-wrap" onClick={() => handleNavClick('home')}>
-              <div className="top-navbar-brand-name">
-                <div className="top-navbar-brand-Easy">Easy</div>
-                <div className="top-navbar-brand-Ops">Ops</div>
-              </div>
+              <img className="top-navbar-logo-image" src={BrandLogo} alt="EasyOps" />
             </button>
           </div>
 
