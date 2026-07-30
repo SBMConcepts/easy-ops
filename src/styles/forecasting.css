@@ -2,13 +2,9 @@
    defined in onboarding.css (imported alongside this file). */
 
 .forecasting-page {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-  color: var(--onboarding-text-primary);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 1rem;
 }
 
 /* ── Header ────────────────────────────────────────────────────────────── */
@@ -16,37 +12,37 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .forecasting-title {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1.6rem;
+  gap: 1rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  color: var(--onboarding-text-primary);
+  color: var(--onboarding-text-primary, #0f2d5c);
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .forecasting-title svg {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   color: var(--onboarding-accent);
 }
 
 .forecasting-subtitle {
-  margin: 6px 0 0;
-  color: var(--onboarding-text-muted);
-  font-size: 0.95rem;
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted, #64748b);
+  margin: 0;
+  font-weight: 500;
 }
 
 .forecasting-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .forecasting-select {
@@ -70,8 +66,8 @@
 }
 
 .forecasting-banner svg {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   color: var(--onboarding-accent);
   flex-shrink: 0;
 }
@@ -188,8 +184,8 @@
 }
 
 .forecasting-section-title svg {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   color: var(--onboarding-accent);
 }
 

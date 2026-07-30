@@ -23,10 +23,10 @@ import {
   type AlertStatus,
 } from '../hooks/useForecasting'
 
-import '../styles/onboarding.css'
 import '../styles/forecasting.css'
 
-const ALL_SITES = '__all__'
+const ALL_SITES_ID = 'All sites'
+const ALL_SITES_NAME = 'All sites'
 
 const HORIZON_OPTIONS = [
   { value: 7, label: 'Next 7 days' },
@@ -68,13 +68,15 @@ export default function LabourForecasting() {
   const { hasPermission } = useAuthRole()
   const canManageAlerts = canUseFullForecasting && hasPermission('write:labour_alerts')
 
-  const [siteId, setSiteId] = useState<string>(ALL_SITES)
+  const [siteId, setSiteId] = useState<string>(ALL_SITES_ID)
+  const [site_name, setSiteName] = useState<string>(ALL_SITES_NAME)
   const [horizon, setHorizon] = useState<number>(7)
   const [statusFilter, setStatusFilter] = useState<AlertStatus | 'all'>('open')
 
   const { data: sites = [] } = useSites()
   const forecastQuery = useForecasts({
-    siteId: siteId === ALL_SITES ? null : siteId,
+    siteId: siteId === ALL_SITES_ID ? null : siteId,
+    site_name: site_name === ALL_SITES_NAME ? null : site_name,
     limit: 30,
   })
   const alertsQuery = useAlerts(statusFilter)
@@ -99,7 +101,8 @@ export default function LabourForecasting() {
   const handleGenerate = async () => {
     try {
       const result = await generateForecast.mutateAsync({
-        siteId: siteId === ALL_SITES ? null : siteId,
+        siteId: siteId === ALL_SITES_ID ? null : siteId,
+        site_name: site_name === ALL_SITES_NAME ? null : site_name,
         horizonDays: horizon,
       })
       const alertCount = result.alerts?.length ?? 0
@@ -154,12 +157,12 @@ export default function LabourForecasting() {
           </p>
         </div>
         <div className="forecasting-controls">
-          <Select value={siteId} onValueChange={(v) => setSiteId(v ?? ALL_SITES)}>
+          <Select value={siteId} onValueChange={(v) => setSiteId(v ?? ALL_SITES_ID)}>
             <SelectTrigger className="forecasting-select" aria-label="Filter by site">
               <SelectValue placeholder="All sites" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_SITES}>All sites</SelectItem>
+              <SelectItem value={ALL_SITES_ID}>{ALL_SITES_NAME}</SelectItem>
               {sites.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
                   {s.site_name}

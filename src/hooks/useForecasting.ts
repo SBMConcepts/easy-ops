@@ -19,6 +19,7 @@ export const forecastingKeys = {
 
 export interface ForecastQuery {
   siteId?: string | null
+  site_name?: string | null
   from?: string | null
   to?: string | null
   limit?: number
@@ -34,6 +35,7 @@ export function useForecasts(params?: ForecastQuery) {
     queryFn: async () => {
       const search = new URLSearchParams()
       if (params?.siteId) search.set('site_id', params.siteId)
+      if (params?.site_name) search.set('site_name', params.site_name)
       if (params?.from) search.set('from', params.from)
       if (params?.to) search.set('to', params.to)
       if (params?.limit) search.set('limit', String(params.limit))
@@ -87,6 +89,7 @@ export function useUpdateAlert() {
 // ── Generate a new forecast (Express → Edge Function) ───────────────────────
 export interface GenerateForecastInput {
   siteId?: string | null
+  site_name?: string | null
   horizonDays?: number
 }
 
@@ -104,8 +107,9 @@ export function useGenerateForecast() {
       apiFetch<GenerateForecastResult>('labour-forecasts/generate', {
         method: 'POST',
         body: JSON.stringify({
-          site_id: input.siteId ?? undefined,
-          horizon_days: input.horizonDays ?? undefined,
+          siteId: input.siteId ?? '',
+          site_name: input.site_name ?? '',
+          horizon_days: input.horizonDays ?? 7,
         }),
       }),
     onSuccess: () => {

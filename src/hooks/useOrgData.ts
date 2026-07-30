@@ -105,14 +105,14 @@ export function useComplianceCheck() {
 export interface SiteRow {
   id: string
   site_name: string
-  department_id: string | null
+  department_name: string | null
   address: string | null
 }
 
 export interface DepartmentRow {
   id: string
-  name: string
-  site_id: string | null
+  department_name: string
+  site_name: string | null
 }
 
 export interface JobRoleRow {
@@ -159,6 +159,7 @@ export function useRoles() {
 // ── 5. Shifts (standard working hours / schedules, via Express) ─────────────
 export interface ShiftRow {
   id: string
+  auth0_org_id: string
   name: string
   start_time: string | null
   end_time: string | null
