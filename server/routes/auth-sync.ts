@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express'
 
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import { hasRequiredRole, jobRoleToTier } from '../lib/rbac.js'
+import { hasRequiredRole, jobRoleToTier, type AccessRole } from '../lib/rbac.js'
 import { permissionsForRole } from '../lib/permissions.js'
 
 const router = Router()
@@ -27,6 +27,14 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     return
   }
 
+  // Every user in this B2B product belongs to a tenant: users.auth0_org_id is
+  // NOT NULL. Reject an orgless sync with a clean 400 rather than a DB error.
+  const auth0OrgId = typeof body.auth0_org_id === 'string' ? body.auth0_org_id : ''
+  if (!auth0OrgId) {
+    res.status(400).json({ error: 'auth0_org_id is required.' })
+    return
+  }
+
   const { data: user, error: userErr } = await supabaseAdmin
     .from('users')
     .upsert(
@@ -35,7 +43,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
         email: body.email,
         full_name: body.full_name ?? '',
         avatar_url: body.avatar_url ?? null,
-        auth0_org_id: body.auth0_org_id,
+        auth0_org_id: auth0OrgId,
         last_seen_at: new Date().toISOString(),
       },
       { onConflict: 'auth0_user_id' }
@@ -56,7 +64,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     .delete()
     .eq('auth0_user_id', `pending|${body.email.toLowerCase()}`)
 
-  let role = 'admin' // default to owner/admin if no org context
+  let role: AccessRole = 'admin' // default to owner/admin if no org context
   if (body.auth0_org_id) {
     let roleHint = body.role
     const { data: invite } = await supabaseAdmin

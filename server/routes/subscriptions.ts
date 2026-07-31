@@ -7,7 +7,12 @@ import {
   type AuthedRequest,
 } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import type { TablesUpdate } from '../types/supabase.js'
+import type { Database, TablesUpdate } from '../types/supabase.js'
+
+type OrgPlan = Database['public']['Enums']['org_plan']
+type SubscriptionStatus = Database['public']['Enums']['subscription_status']
+const PLANS = new Set<OrgPlan>(['free', 'starter', 'growth', 'pro', 'enterprise'])
+const STATUSES = new Set<SubscriptionStatus>(['trialing', 'active', 'past_due', 'cancelled'])
 
 const router = Router()
 
@@ -44,8 +49,20 @@ router.patch(
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as { plan?: string; status?: string }
     const update: TablesUpdate<'subscriptions'> = {}
-    if (typeof body.plan === 'string') update.plan = body.plan
-    if (typeof body.status === 'string') update.status = body.status
+    if (typeof body.plan === 'string') {
+      if (!PLANS.has(body.plan as OrgPlan)) {
+        res.status(400).json({ error: 'plan is not a valid value.' })
+        return
+      }
+      update.plan = body.plan as OrgPlan
+    }
+    if (typeof body.status === 'string') {
+      if (!STATUSES.has(body.status as SubscriptionStatus)) {
+        res.status(400).json({ error: 'status is not a valid value.' })
+        return
+      }
+      update.status = body.status as SubscriptionStatus
+    }
     if (Object.keys(update).length === 0) {
       res.status(400).json({ error: 'Provide plan and/or status to update.' })
       return

@@ -47,7 +47,7 @@ function serializeSite(row: {
   address: string
   latitude: number
   longitude: number
-  geo_radius: number
+  geo_radius_m: number
   department_id: string
 }) {
   return {
@@ -58,7 +58,7 @@ function serializeSite(row: {
     address: row.address,
     latitude: row.latitude,
     longitude: row.longitude,
-    geofence_radius_m: row.geo_radius,
+    geofence_radius_m: row.geo_radius_m,
     department_id: row.department_id,
   }
 }
@@ -72,7 +72,7 @@ router.get(
     const { data, error } = await supabaseAdmin
       .from('org_sites')
       .select(
-        'id, auth0_org_id, site_name, address, latitude, longitude, geo_radius, department_id'
+        'id, auth0_org_id, site_name, address, latitude, longitude, geo_radius_m, department_id'
       )
       .eq('auth0_org_id', req.orgId!)
       .order('site_name', { ascending: true })
@@ -108,11 +108,11 @@ router.post(
         address: body.address ?? '',
         latitude: body.latitude ?? 0,
         longitude: body.longitude ?? 0,
-        geo_radius: body.geofence_radius_m ?? 0,
+        geo_radius_m: body.geofence_radius_m ?? 0,
         department_id: departmentId,
       })
       .select(
-        'id, auth0_org_id, site_name, address, latitude, longitude, geo_radius, department_id'
+        'id, auth0_org_id, site_name, address, latitude, longitude, geo_radius_m, department_id'
       )
       .single()
     if (error) {
@@ -135,7 +135,7 @@ router.patch(
     if (body.address !== undefined) update.address = body.address ?? ''
     if (body.latitude !== undefined) update.latitude = body.latitude ?? 0
     if (body.longitude !== undefined) update.longitude = body.longitude ?? 0
-    if (body.geofence_radius_m !== undefined) update.geo_radius = body.geofence_radius_m ?? 0
+    if (body.geofence_radius_m !== undefined) update.geo_radius_m = body.geofence_radius_m ?? 0
     if (body.department_id) update.department_id = body.department_id
 
     const { data, error } = await supabaseAdmin
@@ -144,7 +144,7 @@ router.patch(
       .eq('auth0_org_id', req.orgId!)
       .eq('id', String(req.params.id))
       .select(
-        'id, auth0_org_id, site_name, address, latitude, longitude, geo_radius, department_id'
+        'id, auth0_org_id, site_name, address, latitude, longitude, geo_radius_m, department_id'
       )
       .maybeSingle()
     if (error) {

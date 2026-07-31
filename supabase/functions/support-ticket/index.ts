@@ -32,8 +32,15 @@ const SLA_TIERS: Record<string, SlaTier> = {
 }
 const DEFAULT_TIER: SlaTier = SLA_TIERS.free
 
-type Category = 'technical' | 'billing' | 'feature_request' | 'account' | 'general'
-const CATEGORIES: Category[] = ['technical', 'billing', 'feature_request', 'account', 'general']
+type Category = 'general' | 'billing' | 'technical' | 'onboarding' | 'feature_request' | 'bug'
+const CATEGORIES: Category[] = [
+  'general',
+  'billing',
+  'technical',
+  'onboarding',
+  'feature_request',
+  'bug',
+]
 
 type Priority = 'low' | 'medium' | 'high' | 'urgent'
 const PRIORITIES: Priority[] = ['low', 'medium', 'high', 'urgent']

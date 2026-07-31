@@ -22,7 +22,7 @@ import { verifyAuth0 } from '../_shared/auth0.ts'
 const FULL_FORECAST_PLANS = new Set(['pro', 'enterprise'])
 const LOOKBACK_DAYS = 28
 
-type AlertType = 'overtime_risk' | 'staffing_shortage' | 'understaffed_shift' | 'burnout_risk'
+type AlertType = 'understaffed' | 'overstaffed' | 'overtime_risk' | 'absence_spike' | 'coverage_gap'
 type AlertSeverity = 'low' | 'medium' | 'high' | 'critical'
 
 interface DraftAlert {
@@ -117,7 +117,7 @@ function heuristicForecast(inputs: ModelInputs): ForecastDraft {
   if (predictedRequiredStaff > activeStaff && activeStaff > 0) {
     const gap = predictedRequiredStaff - activeStaff
     alerts.push({
-      alert_type: 'staffing_shortage',
+      alert_type: 'understaffed',
       severity: gap >= 3 ? 'high' : 'medium',
       title: `Projected shortfall of ${gap} staff`,
       detail: `Forecast requires ~${predictedRequiredStaff} staff but only ${activeStaff} active members are available.`,
@@ -148,7 +148,7 @@ function heuristicForecast(inputs: ModelInputs): ForecastDraft {
 
   if (utilisation > 0 && utilisation < 0.5 && activeStaff > 0) {
     alerts.push({
-      alert_type: 'understaffed_shift',
+      alert_type: 'coverage_gap',
       severity: 'low',
       title: 'Low attendance coverage',
       detail: `Only ${round2(utilisation * 100)}% of active members are attending on an average day.`,
@@ -163,7 +163,7 @@ function heuristicForecast(inputs: ModelInputs): ForecastDraft {
   for (const [userId, ot] of Object.entries(perMemberOvertime)) {
     if (ot >= 12) {
       alerts.push({
-        alert_type: 'burnout_risk',
+        alert_type: 'overtime_risk',
         severity: ot >= 20 ? 'critical' : 'high',
         title: 'Individual burnout risk',
         detail: `A team member accumulated ${round2(ot)}h of overtime in the last ${LOOKBACK_DAYS} days.`,

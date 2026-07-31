@@ -2,7 +2,7 @@ import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import type { Json, TablesUpdate } from '../types/supabase.js'
+import type { Database, Json, TablesUpdate } from '../types/supabase.js'
 
 const router = Router()
 
@@ -100,7 +100,7 @@ router.post(
             address: s.address ?? '',
             latitude: s.latitude ?? 0,
             longitude: s.longitude ?? 0,
-            geo_radius: s.geofence_radius_m ?? 0,
+            geo_radius_m: s.geofence_radius_m ?? 0,
             department_id: firstDepartmentId!,
           }))
           const { error: siteErr } = await supabaseAdmin.from('org_sites').insert(siteRows)
@@ -116,7 +116,11 @@ router.post(
         .map((r) => {
           const name = typeof r.name === 'string' ? r.name.trim() : ''
           const base = typeof r.base_role === 'string' ? r.base_role.trim().toLowerCase() : ''
-          return { name, base_role: JOB_ROLES.has(base) ? base : null }
+          return {
+            name,
+            base_role: (JOB_ROLES.has(base) ? base : null) as
+              Database['public']['Enums']['org_role'] | null,
+          }
         })
         .filter((r) => {
           if (!r.name) return false
@@ -141,14 +145,16 @@ router.post(
       const shiftRows = (body.shifts ?? [])
         .map((s) => ({
           name: typeof s.name === 'string' ? s.name.trim() : '',
-          start_time: s.start_time ? String(s.start_time) : null,
-          end_time: s.end_time ? String(s.end_time) : null,
+          start_time: s.start_time ? String(s.start_time) : '',
+          end_time: s.end_time ? String(s.end_time) : '',
           grace_period_minutes:
             typeof s.grace_period_minutes === 'number' ? s.grace_period_minutes : 0,
           weekly_hours: typeof s.weekly_hours === 'number' ? s.weekly_hours : null,
         }))
         .filter((s) => {
-          if (!s.name) return false
+          // start_time and end_time are NOT NULL on org_shifts — drop any
+          // incomplete shift rather than letting the insert fail.
+          if (!s.name || !s.start_time || !s.end_time) return false
           const key = s.name.toLowerCase()
           if (seenShifts.has(key)) return false
           seenShifts.add(key)
@@ -157,7 +163,9 @@ router.post(
       if (shiftRows.length > 0) {
         const { error: shiftErr } = await supabaseAdmin
           .from('org_shifts')
-          .insert(shiftRows.map((s) => ({ auth0_org_id: orgId, ...s })))
+          .insert(
+            shiftRows.map(({ name, ...s }) => ({ auth0_org_id: orgId, shift_name: name, ...s }))
+          )
         if (shiftErr) throw new Error(shiftErr.message)
       }
 

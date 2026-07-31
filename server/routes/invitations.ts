@@ -85,7 +85,7 @@ router.post(
       return
     }
 
-    let auth0InvitationId: string | null = null
+    let auth0InvitationId: string | null
     try {
       auth0InvitationId =
         (await createOrgInvitation({

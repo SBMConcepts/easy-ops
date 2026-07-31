@@ -9,15 +9,9 @@ import {
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import type { Database } from '../types/supabase.js'
 
-type CheckInMethod = Database['public']['Enums']['check_in_method']
+type CheckInMethod = Database['public']['Enums']['attendance_method']
 
-const CHECK_IN_METHODS = new Set<CheckInMethod>([
-  'qr',
-  'biometric',
-  'whatsapp',
-  'manual',
-  'georefrence',
-])
+const CHECK_IN_METHODS = new Set<CheckInMethod>(['whatsapp', 'biometric', 'ussd', 'qr'])
 
 function isCheckInMethod(value: unknown): value is CheckInMethod {
   return typeof value === 'string' && CHECK_IN_METHODS.has(value as CheckInMethod)
@@ -139,7 +133,7 @@ router.post(
       .upsert(
         {
           auth0_org_id: req.orgId!,
-          auth0_user_id: req.auth?.sub,
+          auth0_user_id: req.auth?.sub ?? '',
           date: body.date,
           method: body.method,
           hours_worked: Number(body.hours_worked ?? 0),

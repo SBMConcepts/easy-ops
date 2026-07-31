@@ -3,10 +3,12 @@ import { Router, type Request, type Response } from 'express'
 import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { createAuth0Org, createOrgInvitation, enableOrgConnection } from '../lib/auth0-admin.js'
+import type { Database } from '../types/supabase.js'
 
 const router = Router()
 
-const ORG_PLANS = new Set(['free', 'starter', 'growth', 'pro', 'enterprise'])
+type OrgPlan = Database['public']['Enums']['org_plan']
+const ORG_PLANS = new Set<OrgPlan>(['free', 'starter', 'growth', 'pro', 'enterprise'])
 
 function slugify(input: string): string {
   return input
@@ -29,7 +31,9 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
   }
 
   const slug = slugify(orgName) || `org-${Date.now()}`
-  const orgPlan = ORG_PLANS.has(requestedPlan) ? requestedPlan : 'free'
+  const orgPlan: OrgPlan = ORG_PLANS.has(requestedPlan as OrgPlan)
+    ? (requestedPlan as OrgPlan)
+    : 'free'
 
   try {
     const auth0Org = await createAuth0Org(orgName, slug)

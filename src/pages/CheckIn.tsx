@@ -27,7 +27,7 @@ export default function CheckIn() {
   const canLog = hasPermission('write:org_attendance')
 
   const { data: attendanceHistory = [], isLoading } = useAttendanceRecords()
-  const [selectedMethod, setSelectedMethod] = useState<'qr' | 'biometric' | 'manual'>('qr')
+  const [selectedMethod, setSelectedMethod] = useState<'qr' | 'biometric' | 'ussd'>('qr')
   const [hoursWorked, setHoursWorked] = useState('8')
   const [overtime, setOvertime] = useState('0')
 
@@ -82,10 +82,10 @@ export default function CheckIn() {
               <Fingerprint size={24} /> <span className="text-xs font-semibold">Biometric</span>
             </button>
             <button
-              className={`checkin-method-btn ${selectedMethod === 'manual' ? 'checkin-method-btn--active' : ''}`}
-              onClick={() => setSelectedMethod('manual')}
+              className={`checkin-method-btn ${selectedMethod === 'ussd' ? 'checkin-method-btn--active' : ''}`}
+              onClick={() => setSelectedMethod('ussd')}
             >
-              <MapPin size={24} /> <span className="text-xs font-semibold">Manual</span>
+              <MapPin size={24} /> <span className="text-xs font-semibold">USSD</span>
             </button>
           </div>
 

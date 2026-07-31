@@ -111,8 +111,8 @@ export interface SiteRow {
 
 export interface DepartmentRow {
   id: string
-  department_name: string
-  site_name: string | null
+  name: string
+  site_id: string | null
 }
 
 export interface JobRoleRow {

@@ -2,11 +2,16 @@ import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
+import type { Database } from '../types/supabase.js'
 
 const SAFE_COLUMNS =
   'id, auth0_org_id, email, email_verified, status, created_at, updated_at, auth0_user_id'
 
-const CREDENTIAL_STATUSES = new Set(['active', 'blocked', 'deleted'])
+const CREDENTIAL_STATUSES = new Set<Database['public']['Enums']['credential_status']>([
+  'active',
+  'blocked',
+  'deleted',
+])
 
 const router = Router()
 
@@ -35,7 +40,10 @@ router.patch(
   async (req: AuthedRequest, res: Response) => {
     const targetUserId = String(req.params.auth0UserId)
     const body = (req.body ?? {}) as { status?: string }
-    if (!body.status || !CREDENTIAL_STATUSES.has(body.status)) {
+    if (
+      !body.status ||
+      !CREDENTIAL_STATUSES.has(body.status as Database['public']['Enums']['credential_status'])
+    ) {
       res.status(400).json({ error: 'status must be one of: active, blocked, deleted.' })
       return
     }
@@ -60,7 +68,7 @@ router.patch(
       .update({
         auth0_org_id: req.orgId!,
         auth0_user_id: targetUserId,
-        status: body.status,
+        status: body.status as Database['public']['Enums']['credential_status'],
         updated_at: new Date().toISOString(),
       })
       .eq('auth0_user_id', targetUserId)

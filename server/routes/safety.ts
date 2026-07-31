@@ -38,15 +38,15 @@ const INCIDENT_TYPES = [
   'property_damage',
   'environmental',
   'security',
-  'equipment_failure',
+  'vehicle',
   'other',
 ] as const
 type IncidentType = (typeof INCIDENT_TYPES)[number]
 
-const INCIDENT_SEVERITIES = ['low', 'medium', 'high', 'critical'] as const
+const INCIDENT_SEVERITIES = ['minor', 'moderate', 'serious', 'fatal'] as const
 type IncidentSeverity = (typeof INCIDENT_SEVERITIES)[number]
 
-const INCIDENT_STATUSES = ['open', 'under_review', 'resolved', 'closed'] as const
+const INCIDENT_STATUSES = ['open', 'under_review', 'closed'] as const
 type IncidentStatus = (typeof INCIDENT_STATUSES)[number]
 
 function isStaff(req: AuthedRequest): boolean {
@@ -247,7 +247,7 @@ router.get(
     const templateId = String(req.query.template_id ?? '')
     if (templateId) query = query.eq('template_id', templateId)
     // Members are scoped to their own submissions.
-    if (!isStaff(req)) query = query.eq('user_id', req.auth?.sub ?? '')
+    if (!isStaff(req)) query = query.eq('auth0_user_id', req.auth?.sub ?? '')
 
     const { data: responses, error } = await query
     if (error) {
@@ -265,7 +265,7 @@ router.get(
 
     const enriched = (responses ?? []).map((r) => ({
       ...r,
-      user_name: r.user_id ? (names[r.user_id] ?? null) : null,
+      user_name: r.auth0_user_id ? (names[r.auth0_user_id] ?? null) : null,
     }))
     res.json({ responses: enriched })
   }
@@ -322,7 +322,7 @@ router.post(
       .insert({
         auth0_org_id: orgId,
         template_id: templateId,
-        user_id: req.auth?.sub ?? '',
+        auth0_user_id: req.auth?.sub ?? '',
         responses: Array.isArray(body.responses) ? body.responses : [],
         passed: body.passed !== false,
         notes: typeof body.notes === 'string' ? body.notes : null,
@@ -382,7 +382,7 @@ router.get(
     const enriched = (incidents ?? []).map((i) => ({
       ...i,
       reporter_name: i.reporter_id ? (names[i.reporter_id] ?? null) : null,
-      manager_name: i.manager_id ? (names[i.manager_id] ?? null) : null,
+      manager_name: i.manager_user_id ? (names[i.manager_user_id] ?? null) : null,
     }))
     res.json({ incidents: enriched })
   }
@@ -543,7 +543,7 @@ router.patch(
     // A manager counter-signature stamps the reviewer + timestamp.
     if (typeof body.manager_signature === 'string' && body.manager_signature.trim()) {
       update.manager_signature = body.manager_signature.trim()
-      update.manager_id = req.auth?.sub ?? null
+      update.manager_user_id = req.auth?.sub ?? null
       update.manager_signed_at = new Date().toISOString()
     }
 

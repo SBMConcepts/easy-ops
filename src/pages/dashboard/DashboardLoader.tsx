@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react'
 import { Badge } from '../../components/ui/badge'
-import type { Database } from '../../integrations/supabase/types'
 
-type AttendanceStatus = Database['public']['Enums']['attendance_status']
+// Attendance status is derived client-side (org_attendance stores hours, not a
+// status enum). Kept as a local union for the badge colour lookup.
+type AttendanceStatus = 'present' | 'late' | 'absent' | 'leave' | 'holiday'
 
 export const STATUS_COLORS: Record<AttendanceStatus, string> = {
   present: 'bg-secondary/10 text-secondary border-secondary/20',

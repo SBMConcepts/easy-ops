@@ -42,10 +42,11 @@ const SEVERITY_LABEL: Record<AlertSeverity, string> = {
 }
 
 const ALERT_TYPE_LABEL: Record<string, string> = {
+  understaffed: 'Understaffed',
+  overstaffed: 'Overstaffed',
   overtime_risk: 'Overtime risk',
-  staffing_shortage: 'Staffing shortage',
-  understaffed_shift: 'Understaffed shift',
-  burnout_risk: 'Burnout risk',
+  absence_spike: 'Absence spike',
+  coverage_gap: 'Coverage gap',
 }
 
 function formatDate(value: string | null): string {

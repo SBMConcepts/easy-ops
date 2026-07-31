@@ -12,7 +12,7 @@ import type { TablesInsert, TablesUpdate } from '../types/supabase.js'
 const router = Router()
 
 const SHIFT_COLUMNS =
-  'id, auth0_org_id, name, start_time, end_time, grace_period_minutes, weekly_hours'
+  'id, auth0_org_id, name:shift_name, start_time, end_time, grace_period_minutes, weekly_hours'
 
 interface ShiftBody {
   name?: string
@@ -22,11 +22,10 @@ interface ShiftBody {
   weekly_hours?: number | null
 }
 
-// Normalize a "HH:MM"/"HH:MM:SS" input to a value Postgres `time` accepts, or
-// null when blank. Returns undefined when the field was not provided at all.
-function timeOrNull(value: unknown, provided: boolean): string | null | undefined {
-  if (!provided) return undefined
-  if (value === null || value === '') return null
+// Normalize a "HH:MM"/"HH:MM:SS" input for a NOT NULL `time` column. Returns
+// undefined when blank or not provided, so callers can reject it explicitly.
+function timeOrUndefined(value: unknown): string | undefined {
+  if (value === null || value === undefined || value === '') return undefined
   return String(value)
 }
 
@@ -47,7 +46,7 @@ router.get(
       .from('org_shifts')
       .select(SHIFT_COLUMNS)
       .eq('auth0_org_id', req.orgId!)
-      .order('name', { ascending: true })
+      .order('shift_name', { ascending: true })
     if (error) {
       res.status(500).json({ error: error.message })
       return
@@ -69,12 +68,18 @@ router.post(
     }
     const insert: TablesInsert<'org_shifts'> = {
       auth0_org_id: req.orgId!,
-      name: body.name.trim(),
+      shift_name: body.name.trim(),
+      start_time: '',
+      end_time: '',
     }
-    const start = timeOrNull(body.start_time, 'start_time' in body)
-    if (start !== undefined) insert.start_time = start
-    const end = timeOrNull(body.end_time, 'end_time' in body)
-    if (end !== undefined) insert.end_time = end
+    const start = timeOrUndefined(body.start_time)
+    const end = timeOrUndefined(body.end_time)
+    if (!start || !end) {
+      res.status(400).json({ error: 'start_time and end_time are required.' })
+      return
+    }
+    insert.start_time = start
+    insert.end_time = end
     const grace = numberOrNull(body.grace_period_minutes, 'grace_period_minutes' in body)
     if (grace !== undefined && grace !== null) insert.grace_period_minutes = grace
     const weekly = numberOrNull(body.weekly_hours, 'weekly_hours' in body)
@@ -110,12 +115,24 @@ router.patch(
         res.status(400).json({ error: 'name cannot be empty.' })
         return
       }
-      update.name = body.name.trim()
+      update.shift_name = body.name.trim()
     }
-    const start = timeOrNull(body.start_time, 'start_time' in body)
-    if (start !== undefined) update.start_time = start
-    const end = timeOrNull(body.end_time, 'end_time' in body)
-    if (end !== undefined) update.end_time = end
+    if ('start_time' in body) {
+      const start = timeOrUndefined(body.start_time)
+      if (!start) {
+        res.status(400).json({ error: 'start_time cannot be empty.' })
+        return
+      }
+      update.start_time = start
+    }
+    if ('end_time' in body) {
+      const end = timeOrUndefined(body.end_time)
+      if (!end) {
+        res.status(400).json({ error: 'end_time cannot be empty.' })
+        return
+      }
+      update.end_time = end
+    }
     const grace = numberOrNull(body.grace_period_minutes, 'grace_period_minutes' in body)
     if (grace !== undefined && grace !== null) update.grace_period_minutes = grace
     const weekly = numberOrNull(body.weekly_hours, 'weekly_hours' in body)

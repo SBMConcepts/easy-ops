@@ -439,11 +439,20 @@ Deno.serve(async (req: Request) => {
   }
 
   // 4. Persist an audit run (best-effort; export still returns if this fails).
+  // payroll_export_runs.format is the payroll_export_format enum
+  // (csv|xlsx|sage|pastel|xero|custom); map the app layout selector onto it.
+  const DB_FORMAT: Record<ExportFormat, 'csv' | 'sage' | 'xero' | 'custom'> = {
+    full: 'csv',
+    sage: 'sage',
+    xero: 'xero',
+    payspace: 'custom',
+    sars_emp201: 'custom',
+  }
   await supabase.from('payroll_export_runs').insert({
     auth0_org_id: orgId,
     period_start: periodStart,
     period_end: periodEnd,
-    format,
+    format: DB_FORMAT[format],
     employee_count: summary.employee_count,
     gross_total: summary.gross_total,
     paye_total: summary.paye_total,

@@ -46,11 +46,12 @@ import '../styles/onboarding.css'
 import '../styles/support.css'
 
 const CATEGORY_OPTIONS: { value: TicketCategory; label: string }[] = [
-  { value: 'technical', label: 'Technical issue' },
-  { value: 'billing', label: 'Billing & payments' },
-  { value: 'feature_request', label: 'Feature request' },
-  { value: 'account', label: 'Account & access' },
   { value: 'general', label: 'General enquiry' },
+  { value: 'billing', label: 'Billing & payments' },
+  { value: 'technical', label: 'Technical issue' },
+  { value: 'onboarding', label: 'Onboarding' },
+  { value: 'feature_request', label: 'Feature request' },
+  { value: 'bug', label: 'Bug report' },
 ]
 
 const PRIORITY_OPTIONS: { value: TicketPriority; label: string }[] = [

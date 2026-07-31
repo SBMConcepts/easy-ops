@@ -60,22 +60,21 @@ const INCIDENT_TYPE_OPTIONS: { value: IncidentType; label: string }[] = [
   { value: 'property_damage', label: 'Property damage' },
   { value: 'environmental', label: 'Environmental' },
   { value: 'security', label: 'Security' },
-  { value: 'equipment_failure', label: 'Equipment failure' },
+  { value: 'vehicle', label: 'Vehicle' },
   { value: 'other', label: 'Other' },
 ]
 
 const SEVERITY_OPTIONS: { value: IncidentSeverity; label: string }[] = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
+  { value: 'minor', label: 'Minor' },
+  { value: 'moderate', label: 'Moderate' },
+  { value: 'serious', label: 'Serious' },
+  { value: 'fatal', label: 'Fatal' },
 ]
 
 const INCIDENT_STATUS_FILTERS: { value: IncidentStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'open', label: 'Open' },
   { value: 'under_review', label: 'Under review' },
-  { value: 'resolved', label: 'Resolved' },
   { value: 'closed', label: 'Closed' },
 ]
 
@@ -814,7 +813,7 @@ function IncidentForm() {
 
   const [open, setOpen] = useState(false)
   const [incidentType, setIncidentType] = useState<IncidentType>('near_miss')
-  const [severity, setSeverity] = useState<IncidentSeverity>('medium')
+  const [severity, setSeverity] = useState<IncidentSeverity>('moderate')
   const [occurredAt, setOccurredAt] = useState('')
   const [description, setDescription] = useState('')
   const [actionsTaken, setActionsTaken] = useState('')
@@ -825,7 +824,7 @@ function IncidentForm() {
 
   const reset = () => {
     setIncidentType('near_miss')
-    setSeverity('medium')
+    setSeverity('moderate')
     setOccurredAt('')
     setDescription('')
     setActionsTaken('')
@@ -909,7 +908,7 @@ function IncidentForm() {
               <Label className="safety-incident-report__label">Severity</Label>
               <Select
                 value={severity}
-                onValueChange={(v) => setSeverity((v as IncidentSeverity) ?? 'Medium')}
+                onValueChange={(v) => setSeverity((v as IncidentSeverity) ?? 'moderate')}
               >
                 <SelectTrigger className="safety-incident-report__select-trigger">
                   <SelectValue className="safety-incident-report__select-value" />

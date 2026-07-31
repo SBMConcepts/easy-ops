@@ -8,7 +8,7 @@ import {
 } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { isAccessRole } from '../lib/rbac.js'
-import type { TablesUpdate } from '../types/supabase.js'
+import type { Database, TablesUpdate } from '../types/supabase.js'
 import { auth } from 'express-openid-connect'
 
 const router = Router()
@@ -73,7 +73,7 @@ router.get(
         .eq('auth0_org_id', req.orgId!),
       supabaseAdmin.from('org_sites').select('id, site_name').eq('auth0_org_id', req.orgId!),
       supabaseAdmin.from('org_roles').select('id, name').eq('auth0_org_id', req.orgId!),
-      supabaseAdmin.from('org_shifts').select('id, name').eq('auth0_org_id', req.orgId!),
+      supabaseAdmin.from('org_shifts').select('id, shift_name').eq('auth0_org_id', req.orgId!),
     ])
     const firstErr = deptsRes.error ?? sitesRes.error ?? rolesRes.error ?? shiftsRes.error
     if (firstErr) {
@@ -83,7 +83,7 @@ router.get(
     const deptById = new Map((deptsRes.data ?? []).map((d) => [d.id, d.department_name]))
     const siteById = new Map((sitesRes.data ?? []).map((s) => [s.id, s.site_name]))
     const roleById = new Map((rolesRes.data ?? []).map((r) => [r.id, r.name]))
-    const shiftById = new Map((shiftsRes.data ?? []).map((s) => [s.id, s.name]))
+    const shiftById = new Map((shiftsRes.data ?? []).map((s) => [s.id, s.shift_name]))
 
     // Manager label resolves via the manager's own membership -> their user's
     // full name. Build a membership-id -> full-name map from the rows we have.
@@ -229,7 +229,8 @@ router.post(
       update.shift_id = body.shift_id ?? null
     }
     if ('employment_type' in body) {
-      update.employment_type = body.employment_type ?? null
+      update.employment_type = (body.employment_type ?? null) as
+        Database['public']['Enums']['employment_type'] | null
     }
     if ('employee_code' in body) {
       const code = typeof body.employee_code === 'string' ? body.employee_code.trim() : ''

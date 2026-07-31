@@ -27,7 +27,7 @@ const router = Router()
 // Roles that act as support agents (see internal notes, author replies as staff).
 const STAFF_ROLES = new Set(['owner', 'admin', 'manager'])
 
-const TICKET_STATUSES = ['open', 'in_progress', 'resolved', 'closed'] as const
+const TICKET_STATUSES = ['open', 'pending', 'in_progress', 'resolved', 'closed'] as const
 type TicketStatus = (typeof TICKET_STATUSES)[number]
 const TICKET_PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const
 type TicketPriority = (typeof TICKET_PRIORITIES)[number]
