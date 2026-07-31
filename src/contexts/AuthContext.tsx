@@ -13,12 +13,12 @@ export interface AuthUser {
   email: string
   full_name: string
   first_name: string
-  last_name?: string
-  mobile_number?: string | null
-  national_id?: string | ''
-  id_type?: 'SA ID' | 'Passport'
-  emergency_contact_name?: string | null
-  emergency_contact_phone?: string | null
+  last_name: string
+  mobile_number: string | null
+  national_id: string | ''
+  id_type: 'sa_id' | 'passport'
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
   avatar_url: string | null
   user_status: string
   role: OrgRole
@@ -55,14 +55,16 @@ const AuthContext = createContext<AuthContextType>({
     full_name: '',
     first_name: '',
     last_name: '',
-    mobile_number: '',
+    mobile_number: null,
     national_id: '',
-    id_type: 'SA ID',
-    emergency_contact_name: '',
-    emergency_contact_phone: '',
-    avatar_url: '',
+    id_type: 'sa_id',
+    emergency_contact_name: null,
+    emergency_contact_phone: null,
+    avatar_url: null,
     email: '',
+    user_status: '',
     role: 'owner',
+    permissions: [],
   } as AuthUser,
   organization: {} as AuthOrganization,
   isAuthenticated: false,
@@ -91,10 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: profile.email,
       full_name: profile.full_name,
       first_name: profile.first_name,
-      last_name: profile.last_name ?? '',
+      last_name: profile.last_name,
       mobile_number: profile.mobile_number,
       national_id: profile.national_id || '',
-      id_type: profile.id_type || 'SA ID',
+      id_type: profile.id_type || 'sa_id',
       emergency_contact_name: profile.emergency_contact_name || '',
       emergency_contact_phone: profile.emergency_contact_phone || '',
       avatar_url: profile.avatar_url || '',

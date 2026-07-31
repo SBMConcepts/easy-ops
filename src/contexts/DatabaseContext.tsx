@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../server/types/supabase'
+import type { Database } from '../integrations/supabase/types'
 import { createSupabaseClient } from '../integrations/supabase/client'
 
 export type TypedSupabaseClient = SupabaseClient<Database>

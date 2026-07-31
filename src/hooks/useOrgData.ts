@@ -61,9 +61,9 @@ export function useSites() {
   return useQuery({
     queryKey: sitesKeys.lists(),
     queryFn: async () => {
-      const res = await apiFetch<{ sites: SiteRow[] }>('org_sites')
-      if (!res.sites) throw new Error('Failed to fetch sites')
-      return res.sites ?? []
+      // /api/org-sites returns a bare array of serialized sites.
+      const sites = await apiFetch<SiteRow[]>('org-sites')
+      return sites ?? []
     },
     enabled: !!user && !!supabase,
     staleTime: 1000 * 60 * 10,
@@ -104,9 +104,14 @@ export function useComplianceCheck() {
 // ── 4. Sites , Departments & Job Titles (via Express) ───────────────────────────────
 export interface SiteRow {
   id: string
+  auth0_org_id: string
+  name: string
   site_name: string
-  department_name: string | null
-  address: string | null
+  address: string
+  latitude: number
+  longitude: number
+  geofence_radius_m: number
+  department_id: string
 }
 
 export interface DepartmentRow {

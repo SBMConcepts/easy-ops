@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { useOrgApi } from './useOrgApi'
 import type { Permission } from '../lib/permissions'
+import type { Database } from '../integrations/supabase/types'
 
 type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 type MembershipStatus = 'active' | 'suspended'
@@ -24,8 +25,8 @@ export interface CurrentUserProfile {
   first_name: string
   last_name: string
   mobile_number: string | null
-  national_id: string | ''
-  id_type: '' | 'SA ID' | 'Passport'
+  national_id: string | null
+  id_type: Database['public']['Enums']['identification_type'] | null
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
 
@@ -48,11 +49,7 @@ export interface CurrentUserProfile {
 
   leave_balances: LeaveBalance[]
 
-  seat_cap?: number | null
-  assigned_site_id?: string | null
-  phone?: string | null
-  address?: string | null
-  job_title?: string | null
+  address: string | null
 }
 
 export const currentUserKeys = {

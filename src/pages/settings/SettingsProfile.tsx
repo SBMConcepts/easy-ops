@@ -36,7 +36,7 @@ const profileSchema = z.object({
   full_name: z.string().trim().min(1, 'Name is required').max(100),
   mobile_number: z.string().trim().max(30).optional().or(z.literal('')),
   national_id: z.string().trim().max(50).optional().or(z.literal('')),
-  id_type: z.enum(['SA ID', 'Passport']).optional().or(z.literal('')),
+  id_type: z.enum(['sa_id', 'passport']).optional().or(z.literal('')),
   address: z.string().trim().max(300).optional().or(z.literal('')),
   emergency_contact_name: z.string().trim().max(100).optional().or(z.literal('')),
   emergency_contact_phone: z.string().trim().max(30).optional().or(z.literal('')),
@@ -269,15 +269,15 @@ export default function SettingsProfile() {
               <Select
                 value={formData.id_type || undefined}
                 onValueChange={(v) =>
-                  setFormData({ ...formData, id_type: (v as 'SA ID' | 'Passport') || '' })
+                  setFormData({ ...formData, id_type: (v as 'sa_id' | 'passport') || '' })
                 }
               >
                 <SelectTrigger className="settings-card-tab__input">
                   <SelectValue placeholder="Select ID type…" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SA ID">South African ID</SelectItem>
-                  <SelectItem value="Passport">Passport</SelectItem>
+                  <SelectItem value="sa_id">South African ID</SelectItem>
+                  <SelectItem value="passport">Passport</SelectItem>
                 </SelectContent>
               </Select>
             </div>
