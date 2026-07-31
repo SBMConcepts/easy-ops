@@ -5,7 +5,6 @@ import { Loader2 } from 'lucide-react'
 import { useOrgApi } from '../hooks/useOrgApi'
 import { useCurrentUser } from '../hooks/useCurrentUser'
 import { useAuthRole } from '../contexts/AuthContext'
-import { Button } from '../components/ui/button'
 import {
   Select,
   SelectContent,
@@ -52,12 +51,14 @@ const LEAVE_TYPES = [
 ] as const
 
 // Sentinel for the "unassigned" option (Radix Select cannot use an empty value).
-const NONE = '__none__'
+const NONE = 'none'
 
 interface MemberUser {
   id: string
   email: string
   full_name: string
+  first_name: string | null
+  last_name: string | null
   avatar_url: string | null
 }
 
@@ -67,6 +68,8 @@ interface MemberRow {
   status: string
   joined_at: string | null
   user_id: string | null
+  first_name: string | null
+  last_name: string | null
   department_id: string | null
   department_name: string | null
   site_id: string | null
@@ -99,6 +102,9 @@ export default function EmployeeManagement() {
     job_role_id: NONE,
     shift_id: NONE,
     manager_id: NONE,
+    first_name: '',
+    last_name: '',
+
     employment_type: NONE,
     employee_code: '',
   })
@@ -170,6 +176,8 @@ export default function EmployeeManagement() {
   const assignMember = useMutation({
     mutationFn: async (vars: {
       userId: string
+      first_name: string | null
+      last_name: string | null
       department_id: string | null
       site_id: string | null
       job_role_id: string | null
@@ -182,6 +190,8 @@ export default function EmployeeManagement() {
         method: 'POST',
         body: JSON.stringify({
           user_id: vars.userId,
+          first_name: vars.first_name,
+          last_name: vars.last_name,
           department_id: vars.department_id,
           site_id: vars.site_id,
           job_role_id: vars.job_role_id,
@@ -217,6 +227,8 @@ export default function EmployeeManagement() {
     setAssignForm({
       department_id: member.department_id ?? NONE,
       site_id: member.site_id ?? NONE,
+      first_name: member.first_name ?? '',
+      last_name: member.last_name ?? '',
       job_role_id: member.job_role_id ?? NONE,
       shift_id: member.shift_id ?? NONE,
       manager_id: member.manager_id ?? NONE,
@@ -239,6 +251,8 @@ export default function EmployeeManagement() {
         shift_id: assignForm.shift_id === NONE ? null : assignForm.shift_id,
         manager_id: assignForm.manager_id === NONE ? null : assignForm.manager_id,
         employment_type: assignForm.employment_type === NONE ? null : assignForm.employment_type,
+        first_name: assignForm.first_name,
+        last_name: assignForm.last_name,
         employee_code:
           assignForm.employee_code.trim() === '' ? null : assignForm.employee_code.trim(),
       })
@@ -274,7 +288,10 @@ export default function EmployeeManagement() {
   return (
     <div className="employee-management-page">
       {members.map((member) => {
-        const displayName = member.users?.full_name || member.users?.email || 'Unknown user'
+        const displayName =
+          member.users?.first_name && member.users?.last_name
+            ? `${member.users.first_name} ${member.users.last_name}`
+            : member.users?.first_name || 'Unknown user'
         const isCurrentUser = !!profile?.profile_id && member.user_id === profile.profile_id
         const canChangeMemberRole = canChangeRole && !isCurrentUser
         const canRemoveMember = canRemove && !isCurrentUser
@@ -308,9 +325,9 @@ export default function EmployeeManagement() {
                   disabled={changeRole.isPending}
                 >
                   <SelectTrigger className="employee-management-role-select-trigger">
-                    <SelectValue />
+                    <SelectValue className="employee-management-select-value" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="employee-management-role-select-content">
                     {ACCESS_ROLES.map((role) => (
                       <SelectItem
                         key={role}
