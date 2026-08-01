@@ -1,5 +1,4 @@
-DO $
-$
+DO $$
 DECLARE v_table text;
 BEGIN
   FOREACH v_table IN ARRAY ARRAY [
@@ -24,6 +23,7 @@ EXECUTE format
 );
 END LOOP;
 END $$;
+
 REVOKE all ON public.user_credentials
 FROM authenticated;
 GRANT SELECT (password_hash) ON public.user_credentials
