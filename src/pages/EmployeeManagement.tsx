@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { useOrgApi } from '../hooks/useOrgApi'
-import { useCurrentUser } from '../hooks/useCurrentUser'
+import { LeaveBalance, useCurrentUser } from '../hooks/useCurrentUser'
 import { OrgRole, useAuthRole } from '../contexts/AuthContext'
 import {
   Select,
@@ -35,7 +35,9 @@ import {
 } from '../hooks/useOrgData'
 
 import '../styles/employeemanagement.css'
-import { any } from 'zod'
+import { Permission } from '../../server/lib/permissions'
+import { Database } from '../../server/types/supabase'
+import { profile } from 'console'
 
 const ACCESS_ROLES = ['owner', 'admin', 'manager', 'member'] as const
 type AccessRole = (typeof ACCESS_ROLES)[number]
@@ -58,62 +60,93 @@ const LEAVE_TYPES = [
 const NONE = 'none'
 
 interface MemberUser {
-  id: string
+  profile_id: string
   auth0_user_id: string
   auth0_org_id: string
+  email: string
   full_name: string
+  avatar_url: string | ''
+  status: string
   first_name: string
   last_name: string
-  email: string
-  mobile_number: string | null
+  employment_type: string
+  employee_code: string
+  hourly_rate: number
+  tax_number: string | null
+  mobile_number: string
+  national_id: string
+  id_type: Database['public']['Enums']['identification_type'] | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
   role: OrgRole
-  status: string
-  avatar_url: string | null
-  department_id: string | null
-  department_name: string | null
-  site_id: string | null
-  site_name: string | null
+  department_id: string | ''
+  department_name: string | ''
   job_role_id: string | null
   job_role_name: string | null
   shift_id: string | null
   shift_name: string | null
   manager_id: string | null
   manager_name: string | null
-  employee_code: string
-  employment_type: string
-  hourly_rate: number
-  tax_number: string
-  users?: MemberUser[]
+  site_id: string | null
+  site_name: string | null
+  permissions: Permission[]
+  joined_at: string
+  org_name: string
+  org_auth0_id: string
+  org_status: string
+  org_logo: string | ''
+  org_country: string | ''
+  org_industry: string | ''
+  plan: string | null
+  billing_status: string | null
+  current_period_end: string | null
+  leave_balances: LeaveBalance[]
+  address: string | null
 }
 
 interface MemberRow {
-  id: string
+  profile_id: string
   auth0_user_id: string
   auth0_org_id: string
+  email: string
   full_name: string
+  avatar_url: string | ''
+  status: string
   first_name: string
   last_name: string
-  email: string
-  mobile_number: string | null
-  avatar_url: string | null
-  address: string | null
+  employment_type: string
+  employee_code: string
+  hourly_rate: number
+  tax_number: string | null
+  mobile_number: string
+  national_id: string
+  id_type: Database['public']['Enums']['identification_type'] | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
   role: OrgRole
-  status: string
-  department_id: string | null
-  department_name: string | null
-  site_id: string | null
-  site_name: string | null
+  department_id: string | ''
+  department_name: string | ''
   job_role_id: string | null
   job_role_name: string | null
   shift_id: string | null
   shift_name: string | null
   manager_id: string | null
   manager_name: string | null
-  employee_code: string
-  employment_type: string
-  hourly_rate: number
-  tax_number: string
-  users?: MemberUser[]
+  site_id: string | null
+  site_name: string | null
+  permissions: Permission[]
+  joined_at: string
+  org_name: string
+  org_auth0_id: string
+  org_status: string
+  org_logo: string | ''
+  org_country: string | ''
+  org_industry: string | ''
+  plan: string | null
+  billing_status: string | null
+  current_period_end: string | null
+  leave_balances: LeaveBalance[]
+  address: string | null
 }
 
 export default function EmployeeManagement() {
@@ -128,7 +161,7 @@ export default function EmployeeManagement() {
   const [removeTarget, setRemoveTarget] = useState<MemberRow>()
   const [assignTarget, setAssignTarget] = useState<MemberRow>()
   const [assignForm, setAssignForm] = useState({
-    id: '',
+    profile_id: '',
     auth0_org_id: '',
     auth0_user_id: '',
     full_name: '',
@@ -220,7 +253,7 @@ export default function EmployeeManagement() {
 
   const assignMember = useMutation({
     mutationFn: async (vars: {
-      id: ''
+      profile_id: ''
       auth0_org_id: ''
       auth0_user_id: ''
       full_name: ''
@@ -248,7 +281,7 @@ export default function EmployeeManagement() {
       apiFetch('org-members', {
         method: 'POST',
         body: JSON.stringify({
-          id: vars.id,
+          profile_id: vars.profile_id,
           auth0_org_id: vars.auth0_org_id,
           auth0_user_id: vars.auth0_user_id,
           full_name: vars.full_name,
@@ -298,8 +331,8 @@ export default function EmployeeManagement() {
 
   const openAssign = (member: MemberRow) => {
     setAssignForm({
-      id: member.id,
-      auth0_org_id: member.auth0_org_id,
+      profile_id: member.profile_id || '',
+      auth0_org_id: member.auth0_org_id || '',
       auth0_user_id: member.auth0_user_id,
       full_name: member.full_name,
       first_name: member.first_name,
@@ -332,7 +365,7 @@ export default function EmployeeManagement() {
     const auth0_user_id = assignTarget.auth0_user_id
     try {
       await assignMember.mutateAsync({
-        id: '',
+        profile_id: '',
         auth0_org_id: '',
         auth0_user_id: '',
         full_name: '',
@@ -391,16 +424,16 @@ export default function EmployeeManagement() {
       {members.map((member) => {
         const displayName = member.full_name
           ? member.full_name
-          : `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim()
-        const isCurrentUser = !!profile?.profile_id && member.auth0_user_id === profile.profile_id
+          : `${member.first_name ?? ''} ${member.last_name ?? ''}`
+        const isCurrentUser = profile?.auth0_user_id === member.auth0_user_id
         const canChangeMemberRole = canChangeRole && !isCurrentUser
         const canRemoveMember = canRemove && !isCurrentUser
 
         return (
-          <div key={member.id} className="employee-management-row">
+          <div key={member.auth0_user_id} className="employee-management-row">
             <div className="employee-management-info">
               <div className="employee-management-name">
-                {displayName}
+                {displayName || member.email || 'Unknown'}
                 {isCurrentUser && <span className="employee-management-you">(You)</span>}
               </div>
               {member.email && <div className="employee-management-email">{member.email}</div>}
@@ -569,9 +602,13 @@ export default function EmployeeManagement() {
                   Unassigned
                 </SelectItem>
                 {members
-                  .filter((m) => m.id !== assignTarget?.id)
+                  .filter((m) => m.auth0_user_id !== assignTarget?.auth0_user_id)
                   .map((m) => (
-                    <SelectItem key={m.id} className="employee-management-select-item" value={m.id}>
+                    <SelectItem
+                      key={m.auth0_user_id}
+                      className="employee-management-select-item"
+                      value={m.auth0_user_id}
+                    >
                       {m.full_name || m.email || 'Unknown'}
                     </SelectItem>
                   ))}
@@ -601,7 +638,7 @@ export default function EmployeeManagement() {
               <Label className="employee-management-label">Shift schedule</Label>
               <Select
                 value={''}
-                onValueChange={(v) => setAssignForm((f) => ({ ...f, id: v ?? NONE }))}
+                onValueChange={(v) => setAssignForm((f) => ({ ...f, shift_id: v ?? NONE }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a shift" />
@@ -676,7 +713,7 @@ export default function EmployeeManagement() {
             </button>
             <button
               className="employee-management-button employee-management-remove-button"
-              onClick={() => removeTarget && removeMember.mutate(removeTarget.id)}
+              onClick={() => removeTarget && removeMember.mutate(removeTarget.auth0_user_id)}
               disabled={removeMember.isPending}
             >
               {removeMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm'}
