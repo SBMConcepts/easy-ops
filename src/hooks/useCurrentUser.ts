@@ -8,6 +8,9 @@ type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 type MembershipStatus = 'active' | 'suspended'
 
 export interface LeaveBalance {
+  id: string
+  auth0_org_id: string
+  auth0_user_id: string
   leave_type: string
   balance_days: number
 }
@@ -19,18 +22,16 @@ export interface CurrentUserProfile {
   email: string
   full_name: string
   avatar_url: string | null
-  user_status: string
-
+  status: string
   // Identity & contact (persisted on the users row)
   first_name: string
   last_name: string
-  mobile_number: string | null
-  national_id: string | null
+  mobile_number: string
+  national_id: string
   id_type: Database['public']['Enums']['identification_type'] | null
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
 
-  org_id: string
   role: OrgRole
   permissions: Permission[]
   membership_status: MembershipStatus
@@ -39,9 +40,9 @@ export interface CurrentUserProfile {
   org_name: string
   org_auth0_id: string
   org_status: string
-  org_logo: string | null
-  org_country: string
-  org_industry: string | null
+  org_logo: string | ''
+  org_country: string | ''
+  org_industry: string | ''
 
   plan: string | null
   billing_status: string | null

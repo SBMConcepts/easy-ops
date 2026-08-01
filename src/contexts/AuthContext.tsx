@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useOrgApi } from '../hooks/useOrgApi'
@@ -14,13 +15,13 @@ export interface AuthUser {
   full_name: string
   first_name: string
   last_name: string
-  mobile_number: string | null
-  national_id: string | ''
+  mobile_number: string
+  national_id: string
   id_type: 'sa_id' | 'passport'
-  emergency_contact_name: string | null
-  emergency_contact_phone: string | null
+  emergency_contact_name: string
+  emergency_contact_phone: string
   avatar_url: string | null
-  user_status: string
+  status: string | 'active'
   role: OrgRole
   permissions: Permission[]
 }
@@ -30,11 +31,12 @@ export interface AuthOrganization {
   auth0_org_id: string
   name: string
   slug: string | null
-  status: string
+  status: string | 'active'
   plan: string | null
-  logo_url: string | null
-  country: string | null
-  industry: string | null
+  logo_url: string | ''
+  country: string | ''
+  industry: string | ''
+  metadata: Record<string, any>
 }
 
 interface AuthContextType {
@@ -55,18 +57,29 @@ const AuthContext = createContext<AuthContextType>({
     full_name: '',
     first_name: '',
     last_name: '',
-    mobile_number: null,
+    mobile_number: '',
     national_id: '',
     id_type: 'sa_id',
-    emergency_contact_name: null,
-    emergency_contact_phone: null,
-    avatar_url: null,
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    avatar_url: '',
     email: '',
-    user_status: '',
+    status: '',
     role: 'owner',
     permissions: [],
   } as AuthUser,
-  organization: {} as AuthOrganization,
+  organization: {
+    id: '',
+    auth0_org_id: '',
+    name: '',
+    slug: null,
+    status: '',
+    plan: null,
+    logo_url: '',
+    country: '',
+    industry: '',
+    metadata: {},
+  } as AuthOrganization,
   isAuthenticated: false,
   isLoading: true,
   login: async () => {},
@@ -99,22 +112,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id_type: profile.id_type || 'sa_id',
       emergency_contact_name: profile.emergency_contact_name || '',
       emergency_contact_phone: profile.emergency_contact_phone || '',
-      avatar_url: profile.avatar_url || '',
-      user_status: profile.user_status,
+      avatar_url: profile.avatar_url || null,
+      status: profile.status,
       role: profile.role,
       permissions: profile.permissions ?? [],
     })
 
     setOrganization({
-      id: profile.org_id,
+      id: profile.auth0_org_id,
       name: profile.org_name,
       auth0_org_id: profile.auth0_org_id,
       status: profile.org_status,
       plan: profile.plan,
-      logo_url: profile.org_logo,
+      logo_url: profile.org_logo || '',
       country: profile.org_country,
-      industry: profile.org_industry,
+      industry: profile.org_industry || '',
       slug: null,
+      metadata: {},
     })
   }, [apiFetch])
 

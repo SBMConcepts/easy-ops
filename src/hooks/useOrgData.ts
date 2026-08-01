@@ -15,11 +15,20 @@ import type { Database } from '../integrations/supabase/types'
 // department/site display names, so the client never renders an Auth0 sub or a
 // UUID.
 export type AttendanceRow = Database['public']['Tables']['org_attendance']['Row'] & {
-  first_name: string | null
-  last_name: string | null
-  full_name: string | null
-  department_name: string | null
-  site_name: string | null
+  id: string
+  auth0_org_id: string
+  auth0_user_id: string
+  date: string
+  method: string
+  hours_worked: number
+  overtime: number
+  first_name: string
+  last_name: string
+  full_name: string
+  department_id: string
+  department_name: string
+  site_id: string
+  site_name: string
 }
 
 export const attendanceKeys = {
@@ -105,25 +114,26 @@ export function useComplianceCheck() {
 export interface SiteRow {
   id: string
   auth0_org_id: string
+  department_id: string
   name: string
   site_name: string
   address: string
   latitude: number
   longitude: number
-  geofence_radius_m: number
-  department_id: string
+  geo_radius_m: number
 }
 
 export interface DepartmentRow {
   id: string
-  name: string
-  site_id: string | null
+  auth0_org_id: string
+  department_name: string
 }
 
 export interface JobRoleRow {
   id: string
+  auth0_org_id: string
   name: string
-  base_role: string | null
+  base_role: string
 }
 
 export const departmentsKeys = {
@@ -165,11 +175,11 @@ export function useRoles() {
 export interface ShiftRow {
   id: string
   auth0_org_id: string
-  name: string
-  start_time: string | null
-  end_time: string | null
+  shift_name: string
+  start_time: string
+  end_time: string
   grace_period_minutes: number
-  weekly_hours: number | null
+  weekly_hours: number
 }
 
 export const shiftsKeys = {
@@ -193,30 +203,33 @@ export function useShifts() {
 
 // ── 6. Leave balances (via Express) ─────────────────────────────────────────
 export interface LeaveBalanceRow {
+  id: string
+  auth0_org_id: string
+  auth0_user_id: string
   leave_type: string
   balance_days: number
-  updated_at: string | null
+  updated_at: string
 }
 
 export const leaveKeys = {
-  all: ['org_leave'] as const,
-  member: (userId: string) => ['org_leave', userId] as const,
+  all: ['org_leave_balance'] as const,
+  member: (auth0_user_id: string) => ['org_leave_balance', auth0_user_id] as const,
 }
 
 // Fetch a specific member's leave balances (admin view). Pass the target
 // users.id; the caller must hold write:org_leave to read another member.
-export function useLeaveBalances(userId: string | null | undefined) {
+export function useLeaveBalances(auth0_user_id: string | null | undefined) {
   const { apiFetch } = useOrgApi()
 
   return useQuery<LeaveBalanceRow[]>({
-    queryKey: leaveKeys.member(userId ?? ''),
+    queryKey: leaveKeys.member(auth0_user_id ?? ''),
     queryFn: async () => {
       const res = await apiFetch<{ balances: LeaveBalanceRow[] }>(
-        `org-leave?user_id=${encodeURIComponent(userId!)}`
+        `org-leave_balance?auth0_user_id=${encodeURIComponent(auth0_user_id!)}`
       )
       return res.balances ?? []
     },
-    enabled: !!userId,
+    enabled: !!auth0_user_id,
     staleTime: 1000 * 60 * 5,
   })
 }
