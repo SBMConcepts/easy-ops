@@ -6,12 +6,48 @@
   gap: 1rem;
 }
 
+.employee-management-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.employee-management-header__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--onboarding-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.employee-management-header__subtitle {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-muted);
+  margin: 0;
+}
+
+.employee-management-header__description {
+  font-size: 0.725rem;
+  color: var(--onboarding-text-muted);
+  max-width: 42rem;
+}
+
 .employee-management-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--onboarding-border);
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--onboarding-surface, #ffffff);
+  border-radius: var(--onboarding-radius-md);
+  border: 1px solid var(--onboarding-border);
+  box-shadow: var(--onboarding-shadow-md);
+
+  transition:
+    background var(--onboarding-transition),
+    box-shadow var(--onboarding-transition);
 }
 
 .employee-management-info {
@@ -19,20 +55,19 @@
   flex-direction: column;
   gap: 0.25rem;
 }
+
 .employee-management-name {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 0.875rem;
   color: var(--onboarding-text-primary);
 }
+
 .employee-management-you {
   font-size: 0.75rem;
   color: var(--onboarding-text-muted);
-  gap: 0.25rem;
-  display: flex;
 }
 
 .employee-management-email {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--onboarding-text-muted);
 }
 
