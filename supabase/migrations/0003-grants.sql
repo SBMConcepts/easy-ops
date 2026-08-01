@@ -1,4 +1,5 @@
-DO $$
+DO $
+$
 DECLARE v_table text;
 BEGIN
   FOREACH v_table IN ARRAY ARRAY [

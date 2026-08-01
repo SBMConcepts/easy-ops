@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS public.organizations (
   auth0_org_id text PRIMARY KEY CONSTRAINT organizations_org_id_chk CHECK (length(auth0_org_id) > 0),
-  name text NOT NULL CONSTRAINT organizations_name_chk CHECK (length(btrim(name)) > 0),
+  name text NOT NULL CONSTRAINT organizations_name_chk CHECK (length(name) > 0),
   slug text NOT NULL,
   plan public.org_plan NOT NULL DEFAULT 'free',
   status public.org_status NOT NULL DEFAULT 'active',
@@ -130,9 +130,9 @@ CREATE TABLE IF NOT EXISTS public.org_members (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT org_members_org_id_chk CHECK (length(auth0_org_id) > 0),
   auth0_user_id text NOT NULL CONSTRAINT org_members_user_id_chk CHECK (length(auth0_user_id) > 0),
-  full_name text NOT NULL DEFAULT '',
-  first_name text NOT NULL DEFAULT '',
-  last_name text NOT NULL DEFAULT '',
+  full_name text NOT NULL CONSTRAINT org_members_user_full_name_chk CHECK (length(full_name) > 0),
+  first_name text NOT NULL CONSTRAINT org_members_user_first_name_chk CHECK (length(first_name) > 0),
+  last_name text NOT NULL CONSTRAINT org_members_user_last_name_chk CHECK (length(last_name) > 0),
   role public.org_role NOT NULL DEFAULT 'member',
   status public.member_status NOT NULL DEFAULT 'active',
   department_id uuid,
@@ -238,6 +238,7 @@ CREATE TABLE IF NOT EXISTS public.org_attendance (
   CONSTRAINT org_attendance_site_fkey foreign key (site_id, auth0_org_id) REFERENCES public.org_sites (id, auth0_org_id) ON DELETE no action,
   CONSTRAINT org_attendance_day_key unique (auth0_org_id, auth0_user_id, date)
 );
+
 CREATE TABLE IF NOT EXISTS public.org_leave_balances (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT org_leave_balances_org_id_chk CHECK (length(auth0_org_id) > 0),
@@ -248,6 +249,7 @@ CREATE TABLE IF NOT EXISTS public.org_leave_balances (
   CONSTRAINT org_leave_balances_member_fkey foreign key (auth0_org_id, auth0_user_id) REFERENCES public.org_members (auth0_org_id, auth0_user_id) ON DELETE CASCADE,
   CONSTRAINT org_leave_balances_key unique (auth0_org_id, auth0_user_id, leave_type)
 );
+
 CREATE TABLE IF NOT EXISTS public.labour_forecasts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT labour_forecasts_org_id_chk CHECK (length(auth0_org_id) > 0),
@@ -279,6 +281,7 @@ CREATE TABLE IF NOT EXISTS public.labour_forecasts (
   CONSTRAINT labour_forecasts_generator_fkey foreign key (generated_by, auth0_org_id) REFERENCES public.org_members (auth0_user_id, auth0_org_id) ON DELETE no action,
   CONSTRAINT labour_forecasts_id_org_key unique (id, auth0_org_id)
 );
+
 CREATE TABLE IF NOT EXISTS public.labour_alerts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT labour_alerts_org_id_chk CHECK (length(auth0_org_id) > 0),
@@ -308,6 +311,7 @@ CREATE TABLE IF NOT EXISTS public.labour_alerts (
     OR acknowledged_at IS NOT NULL
   )
 );
+
 CREATE TABLE IF NOT EXISTS public.payroll_export_runs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT payroll_export_runs_org_id_chk CHECK (length(auth0_org_id) > 0),
@@ -325,6 +329,7 @@ CREATE TABLE IF NOT EXISTS public.payroll_export_runs (
   CONSTRAINT payroll_export_runs_generator_fkey foreign key (generated_by, auth0_org_id) REFERENCES public.org_members (auth0_user_id, auth0_org_id) ON DELETE no action,
   CONSTRAINT payroll_export_runs_period_chk CHECK (period_end >= period_start)
 );
+
 CREATE TABLE IF NOT EXISTS public.support_tickets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT support_tickets_org_id_chk CHECK (length(auth0_org_id) > 0),
@@ -351,6 +356,7 @@ CREATE TABLE IF NOT EXISTS public.support_tickets (
     OR closed_at IS NOT NULL
   )
 );
+
 CREATE TABLE IF NOT EXISTS public.support_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   ticket_id uuid NOT NULL,
@@ -363,6 +369,7 @@ CREATE TABLE IF NOT EXISTS public.support_messages (
   CONSTRAINT support_messages_ticket_fkey foreign key (ticket_id, auth0_org_id) REFERENCES public.support_tickets (id, auth0_org_id) ON DELETE CASCADE,
   CONSTRAINT support_messages_org_fkey foreign key (auth0_org_id) REFERENCES public.organizations (auth0_org_id) ON DELETE CASCADE
 );
+
 CREATE TABLE IF NOT EXISTS public.csm_assignments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT csm_assignments_org_id_chk CHECK (length(auth0_org_id) > 0),
@@ -380,7 +387,7 @@ CREATE TABLE IF NOT EXISTS public.csm_assignments (
 CREATE TABLE IF NOT EXISTS public.safety_checklist_templates (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT safety_templates_org_id_chk CHECK (length(auth0_org_id) > 0),
-  name text NOT NULL CONSTRAINT safety_templates_name_chk CHECK (length(btrim(name)) > 0),
+  name text NOT NULL CONSTRAINT safety_templates_name_chk CHECK (length(name) > 0),
   description text,
   items jsonb NOT NULL DEFAULT '[]'::jsonb CONSTRAINT safety_templates_items_chk CHECK (jsonb_typeof(items) = 'array'),
   required_at_shift_start boolean NOT NULL DEFAULT true,
@@ -412,6 +419,7 @@ CREATE TABLE IF NOT EXISTS public.safety_checklist_responses (
   CONSTRAINT safety_responses_shift_fkey foreign key (shift_id, auth0_org_id) REFERENCES public.org_shifts (id, auth0_org_id) ON DELETE no action,
   CONSTRAINT safety_responses_site_fkey foreign key (site_id, auth0_org_id) REFERENCES public.org_sites (id, auth0_org_id) ON DELETE no action
 );
+
 CREATE TABLE IF NOT EXISTS public.incident_reports (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT incident_reports_org_id_chk CHECK (length(auth0_org_id) > 0),

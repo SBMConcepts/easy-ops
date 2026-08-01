@@ -1,5 +1,6 @@
-BEGIN $$
-DECLARE v_table text;
+BEGIN
+  $$
+  DECLARE v_table text;
 BEGIN foreach v_table IN array [
     'organizations', 'users', 'user_credentials', 'org_departments', 'org_sites',
     'org_roles', 'org_shifts', 'org_members', 'subscriptions', 'org_attendance',
@@ -153,14 +154,14 @@ BEGIN
     r.child_table,
     r.child_col
   );
-  EXECUTE format
-  (
+EXECUTE format
+(
   'drop trigger IF exists %I ON public.%I',
   v_trigger,
   r.parent_table
 );
-  EXECUTE format
-  (
+EXECUTE format
+(
   'CREATE trigger %I
          before delete ON public.%I
          for each row
@@ -171,7 +172,7 @@ BEGIN
   r.child_col,
   r.parent_key
 );
-  END LOOP;
+END LOOP;
 END $$;
 
 DROP trigger IF EXISTS trg_members_sync_org
@@ -181,23 +182,32 @@ AFTER
 INSERT
   OR
 UPDATE OF auth0_org_id ON public.org_members FOR EACH ROW
-EXECUTE FUNCTION
+EXECUTE
+FUNCTION
 public.sync_member_org
 ();
 DROP trigger IF EXISTS trg_audit_guard
 ON public.audit_logs;
 CREATE trigger trg_audit_guard BEFORE
-INSERT ON public.audit_logs
-FOR EACH ROW
-EXECUTE FUNCTION
+INSERT ON public.
+audit_logs
+FOR
+EACH
+ROW
+EXECUTE
+FUNCTION
 public.guard_audit_log
 ();
 DROP trigger IF EXISTS trg_tickets_sla
 ON public.support_tickets;
 CREATE trigger trg_tickets_sla BEFORE
-INSERT ON public.support_tickets
-FOR EACH ROW
-EXECUTE FUNCTION
+INSERT ON public.
+support_tickets
+FOR
+EACH
+ROW
+EXECUTE
+FUNCTION
 public.set_ticket_sla
 ();
 
