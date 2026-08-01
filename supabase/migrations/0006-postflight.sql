@@ -14,7 +14,8 @@ BEGIN
   FOREACH v_table IN ARRAY v_tables LOOP
 IF to_regclass('public.' || quote_ident(v_table)) IS NULL THEN raise exception 'postflight: table public.% is missing',
 v_table;
-END IF;
+END
+IF;
 
 IF NOT EXISTS (
   SELECT 1
@@ -25,7 +26,8 @@ WHERE n.nspname = 'public'
   AND c.relrowsecurity = true
 ) THEN raise exception 'postflight: rls is not enabled ON public.%',
 v_table;
-END IF;
+END
+IF;
 
 IF NOT EXISTS (
   SELECT 1
@@ -34,6 +36,7 @@ WHERE schemaname = 'public'
   AND tablename = v_table
 ) THEN raise exception 'postflight: public.% has rls enabled but no policies',
 v_table;
-END IF;
+END
+IF;
   END LOOP;
 END$$;

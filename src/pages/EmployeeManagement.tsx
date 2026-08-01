@@ -65,18 +65,20 @@ interface MemberUser {
   first_name: string
   last_name: string
   email: string
+  mobile_number: string | null
   role: OrgRole
   status: string
-  department_id: string
-  department_name: string
-  site_id: string
-  site_name: string
-  job_role_id: string
-  job_role_name: string
-  shift_id: string
-  shift_name: string
-  manager_id: string
-  manager_name: string
+  avatar_url: string | null
+  department_id: string | null
+  department_name: string | null
+  site_id: string | null
+  site_name: string | null
+  job_role_id: string | null
+  job_role_name: string | null
+  shift_id: string | null
+  shift_name: string | null
+  manager_id: string | null
+  manager_name: string | null
   employee_code: string
   employment_type: string
   hourly_rate: number
@@ -92,18 +94,21 @@ interface MemberRow {
   first_name: string
   last_name: string
   email: string
+  mobile_number: string | null
+  avatar_url: string | null
+  address: string | null
   role: OrgRole
   status: string
-  department_id: string
-  department_name: string
-  site_id: string
-  site_name: string
-  job_role_id: string
-  job_role_name: string
-  shift_id: string
-  shift_name: string
-  manager_id: string
-  manager_name: string
+  department_id: string | null
+  department_name: string | null
+  site_id: string | null
+  site_name: string | null
+  job_role_id: string | null
+  job_role_name: string | null
+  shift_id: string | null
+  shift_name: string | null
+  manager_id: string | null
+  manager_name: string | null
   employee_code: string
   employment_type: string
   hourly_rate: number
@@ -134,6 +139,9 @@ export default function EmployeeManagement() {
     department_name: '',
     manager_id: '',
     manager_name: '',
+    avatar_url: '',
+    mobile_number: '',
+    address: '',
     employment_type: '',
     employee_code: '',
     site_id: '',
@@ -223,6 +231,9 @@ export default function EmployeeManagement() {
       department_name: ''
       manager_id: ''
       manager_name: ''
+      avatar_url: ''
+      mobile_number: ''
+      address: ''
       employment_type: ''
       employee_code: ''
       site_id: ''
@@ -248,6 +259,9 @@ export default function EmployeeManagement() {
           department_name: vars.department_name,
           manager_id: vars.manager_id,
           manager_name: vars.manager_name,
+          avatar_url: vars.avatar_url,
+          mobile_number: vars.mobile_number,
+          address: vars.address,
           employment_type: vars.employment_type,
           employee_code: vars.employee_code,
           site_id: vars.site_id,
@@ -284,27 +298,30 @@ export default function EmployeeManagement() {
 
   const openAssign = (member: MemberRow) => {
     setAssignForm({
-      id: member.id || '',
-      email: member.email || '',
+      id: member.id,
       auth0_org_id: member.auth0_org_id,
       auth0_user_id: member.auth0_user_id,
       full_name: member.full_name,
       first_name: member.first_name,
       last_name: member.last_name,
-      department_id: member.department_id || '',
-      department_name: member.department_name || '',
-      manager_id: member.manager_id || '',
-      manager_name: member.manager_name || '',
-      employment_type: member.employment_type || '',
-      employee_code: member.employee_code || '',
-      site_id: member.site_id || '',
-      site_name: member.site_name || '',
-      job_role_id: member.job_role_id || '',
-      job_role_name: member.job_role_name || '',
-      shift_id: member.shift_id || '',
-      shift_name: member.shift_name || '',
-      hourly_rate: member.hourly_rate || 0,
-      tax_number: member.tax_number || '',
+      email: member.email,
+      department_id: member.department_id ?? '',
+      department_name: member.department_name ?? '',
+      manager_id: member.manager_id ?? '',
+      manager_name: member.manager_name ?? '',
+      avatar_url: member.avatar_url ?? '',
+      mobile_number: member.mobile_number ?? '',
+      address: member.address ?? '',
+      employment_type: member.employment_type ?? '',
+      employee_code: member.employee_code ?? '',
+      site_id: member.site_id ?? '',
+      site_name: member.site_name ?? '',
+      job_role_id: member.job_role_id ?? '',
+      job_role_name: member.job_role_name ?? '',
+      shift_id: member.shift_id ?? '',
+      shift_name: member.shift_name ?? '',
+      hourly_rate: member.hourly_rate ?? 0,
+      tax_number: member.tax_number ?? '',
     })
     setLeaveForm({ annual: '0', sick: '0', family_responsibility: '0' })
     setAssignTarget(member)
@@ -317,15 +334,18 @@ export default function EmployeeManagement() {
       await assignMember.mutateAsync({
         id: '',
         auth0_org_id: '',
-        email: '',
         auth0_user_id: '',
         full_name: '',
         first_name: '',
         last_name: '',
+        email: '',
         department_id: '',
         department_name: '',
         manager_id: '',
         manager_name: '',
+        avatar_url: '',
+        mobile_number: '',
+        address: '',
         employment_type: '',
         employee_code: '',
         site_id: '',

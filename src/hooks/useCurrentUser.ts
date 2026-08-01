@@ -21,35 +21,43 @@ export interface CurrentUserProfile {
   auth0_org_id: string
   email: string
   full_name: string
-  avatar_url: string | null
+  avatar_url: string | ''
   status: string
-  // Identity & contact (persisted on the users row)
   first_name: string
   last_name: string
+  employment_type: string
+  employee_code: string
+  hourly_rate: number
+  tax_number: string | null
   mobile_number: string
   national_id: string
   id_type: Database['public']['Enums']['identification_type'] | null
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
-
   role: OrgRole
+  department_id: string | ''
+  department_name: string | ''
+  job_role_id: string | null
+  job_role_name: string | null
+  shift_id: string | null
+  shift_name: string | null
+  manager_id: string | null
+  manager_name: string | null
+  site_id: string | null
+  site_name: string | null
   permissions: Permission[]
   membership_status: MembershipStatus
   joined_at: string
-
   org_name: string
   org_auth0_id: string
   org_status: string
   org_logo: string | ''
   org_country: string | ''
   org_industry: string | ''
-
   plan: string | null
   billing_status: string | null
   current_period_end: string | null
-
   leave_balances: LeaveBalance[]
-
   address: string | null
 }
 

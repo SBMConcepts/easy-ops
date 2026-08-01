@@ -8,34 +8,49 @@ import type { Permission } from '../lib/permissions'
 export type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 
 export interface AuthUser {
-  id: string // users.id (uuid surrogate)
+  id: AuthUser['auth0_user_id'] // profiles.auth0_user_id (text)
   auth0_org_id: string
   auth0_user_id: string
-  email: string
   full_name: string
   first_name: string
   last_name: string
+  email: string
+  department_id: string
+  department_name: string
+  manager_id: string
+  manager_name: string
+  avatar_url: string
   mobile_number: string
+  address: string
+  employment_type: string
+  employee_code: string
+  site_id: string
+  site_name: string
+  job_role_id: string
+  job_role_name: string
+  shift_id: string
+  shift_name: string
+  hourly_rate: number
+  tax_number: string
   national_id: string
   id_type: 'sa_id' | 'passport'
   emergency_contact_name: string
   emergency_contact_phone: string
-  avatar_url: string | null
-  status: string | 'active'
+  status: string
   role: OrgRole
   permissions: Permission[]
 }
 
 export interface AuthOrganization {
-  id: string // organizations.auth0_org_id (text)
+  id: AuthOrganization['auth0_org_id'] // organizations.auth0_org_id (text)
   auth0_org_id: string
   name: string
   slug: string | null
-  status: string | 'active'
   plan: string | null
-  logo_url: string | ''
-  country: string | ''
+  status: string | 'active'
   industry: string | ''
+  country: string | ''
+  logo_url: string | ''
   metadata: Record<string, any>
 }
 
@@ -52,32 +67,46 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: {
     id: '',
-    auth0_user_id: '',
     auth0_org_id: '',
+    auth0_user_id: '',
     full_name: '',
     first_name: '',
     last_name: '',
+    email: '',
+    department_id: '',
+    department_name: '',
+    manager_id: '',
+    manager_name: '',
+    avatar_url: '',
     mobile_number: '',
+    address: '',
+    employment_type: '',
+    employee_code: '',
+    site_id: '',
+    site_name: '',
+    job_role_id: '',
+    job_role_name: '',
+    shift_id: '',
+    shift_name: '',
+    hourly_rate: 0,
+    tax_number: '',
     national_id: '',
     id_type: 'sa_id',
     emergency_contact_name: '',
     emergency_contact_phone: '',
-    avatar_url: '',
-    email: '',
     status: '',
-    role: 'owner',
+    role: 'owner' as OrgRole,
     permissions: [],
   } as AuthUser,
   organization: {
-    id: '',
     auth0_org_id: '',
     name: '',
-    slug: null,
+    slug: '',
+    plan: '',
     status: '',
-    plan: null,
-    logo_url: '',
-    country: '',
     industry: '',
+    country: '',
+    logo_url: '',
     metadata: {},
   } as AuthOrganization,
   isAuthenticated: false,
@@ -100,20 +129,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const profile = await apiFetch<CurrentUserProfile>('/userinfo')
 
     setUser({
-      id: profile.profile_id,
-      auth0_user_id: profile.auth0_user_id,
+      id: profile.auth0_user_id,
       auth0_org_id: profile.auth0_org_id,
-      email: profile.email,
+      auth0_user_id: profile.auth0_user_id,
       full_name: profile.full_name,
       first_name: profile.first_name,
       last_name: profile.last_name,
-      mobile_number: profile.mobile_number,
+      email: profile.email,
+      department_id: profile.department_id || '',
+      department_name: profile.department_name || '',
+      manager_id: profile.manager_id || '',
+      manager_name: profile.manager_name || '',
+      avatar_url: profile.avatar_url || '',
+      mobile_number: profile.mobile_number || '',
+      address: profile.address || '',
+      employment_type: profile.employment_type || '',
+      employee_code: profile.employee_code || '',
+      site_id: profile.site_id || '',
+      site_name: profile.site_name || '',
+      job_role_id: profile.job_role_id || '',
+      job_role_name: profile.job_role_name || '',
+      shift_id: profile.shift_id || '',
+      shift_name: profile.shift_name || '',
+      hourly_rate: profile.hourly_rate || 0,
+      tax_number: profile.tax_number || '',
       national_id: profile.national_id || '',
       id_type: profile.id_type || 'sa_id',
       emergency_contact_name: profile.emergency_contact_name || '',
       emergency_contact_phone: profile.emergency_contact_phone || '',
-      avatar_url: profile.avatar_url || null,
-      status: profile.status,
+      status: profile.status || '',
       role: profile.role,
       permissions: profile.permissions ?? [],
     })
@@ -127,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logo_url: profile.org_logo || '',
       country: profile.org_country,
       industry: profile.org_industry || '',
-      slug: null,
+      slug: profile.org_name.toLowerCase().replace(/\s+/g, '-'),
       metadata: {},
     })
   }, [apiFetch])
