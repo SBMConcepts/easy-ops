@@ -318,7 +318,9 @@ Deno.serve(async (req: Request) => {
   const trustedBySecret = !!sharedSecret && presentedSecret === sharedSecret
 
   let orgId: string | undefined
-  let generatedBy = 'system'
+  // generated_by is a real FK to org_members(auth0_user_id, auth0_org_id); null means
+  // an automated/trusted-caller run with no specific acting member.
+  let generatedBy: string | null = null
   if (trustedBySecret) {
     orgId = typeof body.org_id === 'string' && body.org_id ? body.org_id : undefined
   } else {
@@ -332,7 +334,7 @@ Deno.serve(async (req: Request) => {
       })
     }
     orgId = claims.org_id ?? claims.auth0_org_id
-    generatedBy = claims.sub ?? 'system'
+    generatedBy = claims.sub ?? null
   }
 
   if (!orgId) {
