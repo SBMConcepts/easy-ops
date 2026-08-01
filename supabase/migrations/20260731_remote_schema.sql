@@ -541,6 +541,9 @@ create table if not exists public.user_credentials (
   id             uuid primary key default gen_random_uuid(),
   auth0_user_id  text not null constraint user_credentials_user_id_chk check (length(auth0_user_id) > 0),
   auth0_org_id   text not null constraint user_credentials_org_id_chk  check (length(auth0_org_id) > 0),
+  full_name       public.users.full_name,
+  first_name      public.users.first_name,
+  last_name       public.users.last_name,
   email          extensions.citext not null,
   password_hash  text,
   email_verified boolean not null default false,
@@ -644,13 +647,23 @@ create table if not exists public.org_members (
   id              uuid primary key default gen_random_uuid(),
   auth0_org_id    text not null constraint org_members_org_id_chk  check (length(auth0_org_id) > 0),
   auth0_user_id   text not null constraint org_members_user_id_chk check (length(auth0_user_id) > 0),
+  full_name       public.users.full_name not null default '',
+  first_name      public.users.first_name not null default '',
+  last_name       public.users.last_name not null default '',
   role            public.org_role      not null default 'member',
   status          public.member_status not null default 'active',
-  department_id   uuid,
-  site_id         uuid,
-  job_role_id     uuid,
-  shift_id        uuid,
-  manager_id      uuid,
+  department_id   public.org_departments.id,
+  department_name public.org_departments.department_name constraint org_members_department_name_chk check (length(btrim(department_name)) > 0),
+  site_id         public.org_sites.id, 
+  site_name       public.org_sites.site_name constraint org_members_site_name_chk check (length(btrim(site_name)) > 0),
+  job_role_id     public.org_roles.id 
+                  constraint org_members_job_role_id_chk check (length(btrim(job_role_id::text)) > 0),
+  shift_id        public.org_shifts.id
+                  constraint org_members_shift_id_chk check (length(btrim(shift_id::text)) > 0),
+  shift_name      public.org_shifts.shift_name constraint org_members_shift_name_chk check (length(btrim(shift_name)) > 0),
+  manager_id      public.org_members.auth0_user_id 
+                  constraint org_members_manager_id_chk check (length(btrim(manager_id::text)) > 0),
+  manager_name    public.org_members.full_name constraint org_members_manager_name_chk check (length(btrim(manager_name)) > 0),
   employee_code   text,
   employment_type public.employment_type,
   hourly_rate     numeric(12,2) constraint org_members_rate_chk check (hourly_rate is null or hourly_rate >= 0),
@@ -665,22 +678,22 @@ create table if not exists public.org_members (
     references public.users (auth0_user_id, auth0_org_id) on delete cascade,
   constraint org_members_org_fkey foreign key (auth0_org_id)
     references public.organizations (auth0_org_id) on delete cascade,
-  constraint org_members_department_fkey foreign key (department_id, auth0_org_id)
-    references public.org_departments (id, auth0_org_id) on delete no action,
-  constraint org_members_site_fkey foreign key (site_id, auth0_org_id)
-    references public.org_sites (id, auth0_org_id) on delete no action,
-  constraint org_members_job_role_fkey foreign key (job_role_id, auth0_org_id)
-    references public.org_roles (id, auth0_org_id) on delete no action,
-  constraint org_members_shift_fkey foreign key (shift_id, auth0_org_id)
-    references public.org_shifts (id, auth0_org_id) on delete no action,
+  constraint org_members_department_fkey foreign key (department_name, auth0_org_id)
+    references public.org_departments (department_name, auth0_org_id) on delete no action,
+  constraint org_members_site_fkey foreign key (site_name, auth0_org_id)
+    references public.org_sites (site_name, auth0_org_id) on delete no action,
+  constraint org_members_job_role_fkey foreign key (job_role_id, base_role, auth0_org_id)
+    references public.org_roles (id, base_role, auth0_org_id) on delete no action,
+  constraint org_members_shift_fkey foreign key (shift_name, auth0_org_id)
+    references public.org_shifts (shift_name, auth0_org_id) on delete no action,
   -- self-reference, tenant-contained: a manager must be in the same org
-  constraint org_members_manager_fkey foreign key (manager_id, auth0_org_id)
-    references public.org_members (id, auth0_org_id) on delete no action,
-  constraint org_members_no_self_manage check (manager_id is distinct from id),
+  constraint org_members_manager_fkey foreign key (full_name, auth0_org_id)
+    references public.org_members (full_name, auth0_org_id) on delete no action,
+  constraint org_members_no_self_manage check (full_name is distinct from public.org_members.full_name),
   -- targets for every composite fk pointing at a member
-  constraint org_members_id_org_key        unique (id, auth0_org_id),
-  constraint org_members_user_org_key      unique (auth0_org_id, auth0_user_id),
-  constraint org_members_employee_code_key unique (auth0_org_id, employee_code)
+  constraint org_members_id_org_key        unique (auth0_org_id),
+  constraint org_members_user_org_key      unique (auth0_user_id),
+  constraint org_members_full_name_org_key unique (full_name, auth0_org_id);
 );
 
 -- ---------------------------------------------------------------------
