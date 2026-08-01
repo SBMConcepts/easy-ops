@@ -35,6 +35,7 @@ import {
 } from '../hooks/useOrgData'
 
 import '../styles/employeemanagement.css'
+import { any } from 'zod'
 
 const ACCESS_ROLES = ['owner', 'admin', 'manager', 'member'] as const
 type AccessRole = (typeof ACCESS_ROLES)[number]
@@ -60,49 +61,54 @@ interface MemberUser {
   id: string
   auth0_user_id: string
   auth0_org_id: string
-  profile_id: string
-  status: string
-  role: OrgRole
-  membership_status: 'active' | 'suspended'
-  email: string
   full_name: string
   first_name: string
   last_name: string
-  avatar_url: string | null
-  mobile_number: string | null
-  national_id: string | null
-  id_type: 'sa_id' | 'passport' | null
-  emergency_contact_name: string | null
-  emergency_contact_phone: string | null
-  permissions: string[]
+  email: string
+  role: OrgRole
+  status: string
+  department_id: string
+  department_name: string
+  site_id: string
+  site_name: string
+  job_role_id: string
+  job_role_name: string
+  shift_id: string
+  shift_name: string
+  manager_id: string
+  manager_name: string
+  employee_code: string
+  employment_type: string
+  hourly_rate: number
+  tax_number: string
+  users?: MemberUser[]
 }
 
 interface MemberRow {
   id: string
-  profile_id: string
   auth0_user_id: string
   auth0_org_id: string
-  role: OrgRole
-  status: string
   full_name: string
-  email: string
-  joined_at: string
-  membership_status: 'active' | 'suspended'
   first_name: string
   last_name: string
+  email: string
+  role: OrgRole
+  status: string
   department_id: string
   department_name: string
-  site_id: string | null
-  site_name: string | null
-  job_role_id: string | null
-  job_role_name: string | null
-  employee_code: string | null
-  employment_type: string | null
-  shift_id: string | null
-  shift_name: string | null
-  manager_id: string | null
-  manager_name: string | null
-  users: MemberUser
+  site_id: string
+  site_name: string
+  job_role_id: string
+  job_role_name: string
+  shift_id: string
+  shift_name: string
+  manager_id: string
+  manager_name: string
+  employee_code: string
+  employment_type: string
+  hourly_rate: number
+  tax_number: string
+  users?: MemberUser[]
 }
 
 export default function EmployeeManagement() {
@@ -114,19 +120,30 @@ export default function EmployeeManagement() {
   const canChangeRole = hasPermission('write:org_members')
   const canRemove = hasPermission('delete:org_members')
   const canManageLeave = hasPermission('write:org_leave')
-  const [removeTarget, setRemoveTarget] = useState<MemberRow | null>(null)
-  const [assignTarget, setAssignTarget] = useState<MemberRow | null>(null)
+  const [removeTarget, setRemoveTarget] = useState<MemberRow>()
+  const [assignTarget, setAssignTarget] = useState<MemberRow>()
   const [assignForm, setAssignForm] = useState({
-    department_id: departmentsKeys.all[0],
-    site_id: sitesKeys.all[0],
-    job_role_id: NONE,
-    shift_id: shiftsKeys.all[0],
-    manager_id: NONE,
+    id: '',
+    auth0_org_id: '',
+    auth0_user_id: '',
+    full_name: '',
     first_name: '',
     last_name: '',
-
-    employment_type: NONE,
+    email: '',
+    department_id: '',
+    department_name: '',
+    manager_id: '',
+    manager_name: '',
+    employment_type: '',
     employee_code: '',
+    site_id: '',
+    site_name: '',
+    job_role_id: '',
+    job_role_name: '',
+    shift_id: '',
+    shift_name: '',
+    hourly_rate: 0,
+    tax_number: '',
   })
   const [leaveForm, setLeaveForm] = useState<Record<string, string>>({
     annual: '0',
@@ -169,7 +186,7 @@ export default function EmployeeManagement() {
     mutationFn: async ({ auth0_user_id, role }: { auth0_user_id: string; role: AccessRole }) =>
       apiFetch('org-members', {
         method: 'POST',
-        body: JSON.stringify({ user_id: auth0_user_id, role }),
+        body: JSON.stringify({ auth0_user_id: auth0_user_id, role }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['org-members'] })
@@ -185,7 +202,7 @@ export default function EmployeeManagement() {
       apiFetch(`org-members/${auth0_user_id}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['org-members'] })
-      setRemoveTarget(null)
+      setRemoveTarget((prev) => (prev ? { ...prev, status: 'removed' } : prev))
       toast.success('Member removed')
     },
     onError: (err: unknown) => {
@@ -195,34 +212,52 @@ export default function EmployeeManagement() {
 
   const assignMember = useMutation({
     mutationFn: async (vars: {
-      id: string
-      auth0_org_id: string
-      auth0_user_id: string
-      first_name: string
-      last_name: string
-      department_id: string
-      site_id: string
-      job_role_id: string
-      shift_id: string
-      manager_id: string
-      employment_type: string
-      employee_code: string
+      id: ''
+      auth0_org_id: ''
+      auth0_user_id: ''
+      full_name: ''
+      first_name: ''
+      last_name: ''
+      email: ''
+      department_id: ''
+      department_name: ''
+      manager_id: ''
+      manager_name: ''
+      employment_type: ''
+      employee_code: ''
+      site_id: ''
+      site_name: ''
+      job_role_id: ''
+      job_role_name: ''
+      shift_id: ''
+      shift_name: ''
+      hourly_rate: 0
+      tax_number: ''
     }) =>
       apiFetch('org-members', {
         method: 'POST',
         body: JSON.stringify({
-          user_id: vars.auth0_user_id,
-          org_id: vars.auth0_org_id,
-          full_name: `${vars.first_name} ${vars.last_name}`,
+          id: vars.id,
+          auth0_org_id: vars.auth0_org_id,
+          auth0_user_id: vars.auth0_user_id,
+          full_name: vars.full_name,
           first_name: vars.first_name,
           last_name: vars.last_name,
+          email: vars.email,
           department_id: vars.department_id,
-          site_id: vars.site_id,
-          job_role_id: vars.job_role_id,
-          shift_id: vars.shift_id,
+          department_name: vars.department_name,
           manager_id: vars.manager_id,
+          manager_name: vars.manager_name,
           employment_type: vars.employment_type,
           employee_code: vars.employee_code,
+          site_id: vars.site_id,
+          site_name: vars.site_name,
+          job_role_id: vars.job_role_id,
+          job_role_name: vars.job_role_name,
+          shift_id: vars.shift_id,
+          shift_name: vars.shift_name,
+          hourly_rate: vars.hourly_rate,
+          tax_number: vars.tax_number,
         }),
       }),
     onSuccess: () => {
@@ -240,7 +275,7 @@ export default function EmployeeManagement() {
     }) =>
       apiFetch('org-leave', {
         method: 'PUT',
-        body: JSON.stringify({ user_id: vars.auth0_user_id, balances: vars.balances }),
+        body: JSON.stringify({ auth0_user_id: vars.auth0_user_id, balances: vars.balances }),
       }),
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : 'Failed to update leave balances')
@@ -249,18 +284,27 @@ export default function EmployeeManagement() {
 
   const openAssign = (member: MemberRow) => {
     setAssignForm({
-      id: member.id,
+      id: member.id || '',
+      email: member.email || '',
       auth0_org_id: member.auth0_org_id,
       auth0_user_id: member.auth0_user_id,
-      first_name: member.first_name ?? '',
-      last_name: member.last_name ?? '',
-      department_id: member.department_id ?? '',
-      site_id: member.site_id ?? '',
-      job_role_id: member.job_role_id ?? '',
-      shift_id: member.shift_id ?? '',
-      manager_id: member.manager_id ?? '',
-      employment_type: member.employment_type ?? '',
-      employee_code: member.employee_code ?? '',
+      full_name: member.full_name,
+      first_name: member.first_name,
+      last_name: member.last_name,
+      department_id: member.department_id || '',
+      department_name: member.department_name || '',
+      manager_id: member.manager_id || '',
+      manager_name: member.manager_name || '',
+      employment_type: member.employment_type || '',
+      employee_code: member.employee_code || '',
+      site_id: member.site_id || '',
+      site_name: member.site_name || '',
+      job_role_id: member.job_role_id || '',
+      job_role_name: member.job_role_name || '',
+      shift_id: member.shift_id || '',
+      shift_name: member.shift_name || '',
+      hourly_rate: member.hourly_rate || 0,
+      tax_number: member.tax_number || '',
     })
     setLeaveForm({ annual: '0', sick: '0', family_responsibility: '0' })
     setAssignTarget(member)
@@ -271,17 +315,27 @@ export default function EmployeeManagement() {
     const auth0_user_id = assignTarget.auth0_user_id
     try {
       await assignMember.mutateAsync({
-        auth0_user_id,
-        department_id: assignForm.department_id === '' ? null : assignForm.department_id,
-        site_id: assignForm.site_id === '' ? null : assignForm.site_id,
-        job_role_id: assignForm.job_role_id === '' ? null : assignForm.job_role_id,
-        shift_id: assignForm.shift_id === '' ? null : assignForm.shift_id,
-        manager_id: assignForm.manager_id === '' ? null : assignForm.manager_id,
-        employment_type: assignForm.employment_type === '' ? null : assignForm.employment_type,
-        first_name: assignForm.first_name,
-        last_name: assignForm.last_name,
-        employee_code:
-          assignForm.employee_code.trim() === '' ? null : assignForm.employee_code.trim(),
+        id: '',
+        auth0_org_id: '',
+        email: '',
+        auth0_user_id: '',
+        full_name: '',
+        first_name: '',
+        last_name: '',
+        department_id: '',
+        department_name: '',
+        manager_id: '',
+        manager_name: '',
+        employment_type: '',
+        employee_code: '',
+        site_id: '',
+        site_name: '',
+        job_role_id: '',
+        job_role_name: '',
+        shift_id: '',
+        shift_name: '',
+        hourly_rate: 0,
+        tax_number: '',
       })
       if (canManageLeave) {
         await saveLeave.mutateAsync({
@@ -293,7 +347,7 @@ export default function EmployeeManagement() {
         })
         queryClient.invalidateQueries({ queryKey: leaveKeys.member(auth0_user_id) })
       }
-      setAssignTarget(null)
+      setAssignTarget(undefined)
       toast.success('Member updated')
     } catch {
       // Errors surfaced via the individual mutation onError handlers.
@@ -315,10 +369,9 @@ export default function EmployeeManagement() {
   return (
     <div className="employee-management-page">
       {members.map((member) => {
-        const displayName =
-          member.users?.first_name && member.users?.last_name
-            ? `${member.users.first_name} ${member.users.last_name}`
-            : member.users?.first_name || 'Unknown user'
+        const displayName = member.full_name
+          ? member.full_name
+          : `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim()
         const isCurrentUser = !!profile?.profile_id && member.auth0_user_id === profile.profile_id
         const canChangeMemberRole = canChangeRole && !isCurrentUser
         const canRemoveMember = canRemove && !isCurrentUser
@@ -330,9 +383,7 @@ export default function EmployeeManagement() {
                 {displayName}
                 {isCurrentUser && <span className="employee-management-you">(You)</span>}
               </div>
-              {member.users?.email && (
-                <div className="employee-management-email">{member.users.email}</div>
-              )}
+              {member.email && <div className="employee-management-email">{member.email}</div>}
               <div className="employee-management-meta">
                 {[member.job_role_name, member.department_name, member.site_name]
                   .filter(Boolean)
@@ -401,7 +452,7 @@ export default function EmployeeManagement() {
         <div className="employee-management-no-members">No members found.</div>
       )}
 
-      <Dialog open={!!assignTarget} onOpenChange={(open) => !open && setAssignTarget(null)}>
+      <Dialog open={!!assignTarget} onOpenChange={(open) => !open && setAssignTarget(assignTarget)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Assign member</DialogTitle>
@@ -417,14 +468,13 @@ export default function EmployeeManagement() {
               <Input
                 value={assignForm.employee_code}
                 onChange={(e) => setAssignForm((f) => ({ ...f, employee_code: e.target.value }))}
-                placeholder="e.g. EMP-00123"
               />
             </div>
             <div className="space-y-1">
               <Label className="employee-management-label">Department</Label>
               <Select
                 value={assignForm.department_id}
-                onValueChange={(v) => setAssignForm((f) => ({ ...f, id: v ?? NONE }))}
+                onValueChange={(v) => setAssignForm((f) => ({ ...f, department_id: v ?? NONE }))}
               >
                 <SelectTrigger className="employee-management-select-trigger">
                   <SelectValue placeholder="Select a department" />
@@ -443,7 +493,7 @@ export default function EmployeeManagement() {
               <Label className="employee-management-label">Site</Label>
               <Select
                 value={assignForm.site_id}
-                onValueChange={(v) => setAssignForm((f) => ({ ...f, id: v ?? NONE }))}
+                onValueChange={(v) => setAssignForm((f) => ({ ...f, site_id: v ?? NONE }))}
               >
                 <SelectTrigger className="employee-management-select-trigger">
                   <SelectValue placeholder="Select a site" />
@@ -485,56 +535,52 @@ export default function EmployeeManagement() {
             <div className="space-y-1">
               <Label className="employee-management-label">Direct manager / supervisor</Label>
               <Select
-                value={assignForm.manager_id}
+                value={''}
                 onValueChange={(v) => setAssignForm((f) => ({ ...f, manager_id: v ?? NONE }))}
-              >
-                <SelectTrigger className="employee-management-select-trigger">
-                  <SelectValue
-                    className="employee-management-select-value"
-                    placeholder="Select a manager"
-                  />
-                </SelectTrigger>
-                <SelectContent className="employee-management-select-content">
-                  <SelectItem className="employee-management-select-item" value={NONE}>
-                    Unassigned
-                  </SelectItem>
-                  {members
-                    .filter((m) => m.id !== assignTarget?.id)
-                    .map((m) => (
-                      <SelectItem
-                        key={m.id}
-                        className="employee-management-select-item"
-                        value={m.id}
-                      >
-                        {m.full_name || m.email || 'Unknown'}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="employee-management-label">Employment type</Label>
-              <Select
-                value={assignForm.employment_type}
-                onValueChange={(v) => setAssignForm((f) => ({ ...f, employment_type: v ?? NONE }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select employment type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>Unassigned</SelectItem>
-                  {EMPLOYMENT_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
+              />
+              <SelectTrigger className="employee-management-select-trigger">
+                <SelectValue
+                  className="employee-management-select-value"
+                  placeholder="Select a manager"
+                />
+              </SelectTrigger>
+              <SelectContent className="employee-management-select-content">
+                <SelectItem className="employee-management-select-item" value={NONE}>
+                  Unassigned
+                </SelectItem>
+                {members
+                  .filter((m) => m.id !== assignTarget?.id)
+                  .map((m) => (
+                    <SelectItem key={m.id} className="employee-management-select-item" value={m.id}>
+                      {m.full_name || m.email || 'Unknown'}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
+              </SelectContent>
             </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="employee-management-label">Employment type</Label>
+            <Select
+              value={''}
+              onValueChange={(v) => setAssignForm((f) => ({ ...f, employment_type: v ?? NONE }))}
+            />
+            <SelectTrigger>
+              <SelectValue placeholder="Select employment type" />
+            </SelectTrigger>
+            <Select>
+              <SelectContent>
+                <SelectItem value={NONE}>Unassigned</SelectItem>
+                {EMPLOYMENT_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="space-y-1">
               <Label className="employee-management-label">Shift schedule</Label>
               <Select
-                value={assignForm.shift_id}
+                value={''}
                 onValueChange={(v) => setAssignForm((f) => ({ ...f, id: v ?? NONE }))}
               >
                 <SelectTrigger>
@@ -570,7 +616,10 @@ export default function EmployeeManagement() {
             )}
           </div>
           <DialogFooter>
-            <button className="employee-management-button" onClick={() => setAssignTarget(null)}>
+            <button
+              className="employee-management-button"
+              onClick={() => setAssignTarget(assignTarget)}
+            >
               Cancel
             </button>
             <button
@@ -588,20 +637,21 @@ export default function EmployeeManagement() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!removeTarget} onOpenChange={(open) => !open && setRemoveTarget(null)}>
+      <Dialog open={!!removeTarget} onOpenChange={(open) => !open && setRemoveTarget(removeTarget)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Remove member</DialogTitle>
             <DialogDescription>
               Are you sure you want to remove{' '}
-              <strong>
-                {removeTarget?.users?.full_name || removeTarget?.users?.email || 'this member'}
-              </strong>{' '}
-              from the organization? This action cannot be undone.
+              <strong>{removeTarget?.full_name || removeTarget?.email}</strong> from the
+              organization? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <button className="employee-management-button" onClick={() => setRemoveTarget(null)}>
+            <button
+              className="employee-management-button"
+              onClick={() => setRemoveTarget(removeTarget)}
+            >
               Cancel
             </button>
             <button

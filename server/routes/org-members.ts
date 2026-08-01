@@ -9,7 +9,6 @@ import {
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { isAccessRole } from '../lib/rbac.js'
 import type { Database, TablesUpdate } from '../types/supabase.js'
-import { auth } from 'express-openid-connect'
 
 const router = Router()
 

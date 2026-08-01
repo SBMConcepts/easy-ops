@@ -4,9 +4,11 @@
 // database (owner > admin > manager > member). These are the ONLY values used
 // for gating API access.
 
-// Job roles (`org_roles.name`, the `organization_role` enum: admin, manager, owner) describe a person's position in the org and are
-// stored separately. When a job role needs to be resolved to an access tier
-// (e.g. accepting an invite, syncing membership), use `jobRoleToTier`.
+// Job roles live in `org_roles` (`name` is a free-form title; the optional
+// `base_role` column is the `org_role` enum: owner, admin, manager, member).
+// They describe a person's position in the org and are stored separately. When
+// a job role needs to be resolved to an access tier (e.g. accepting an invite,
+// syncing membership), use `jobRoleToTier`.
 
 export type AccessRole = 'owner' | 'admin' | 'manager' | 'member'
 
@@ -31,9 +33,9 @@ export function isAccessRole(value: unknown): value is AccessRole {
   return typeof value === 'string' && (ACCESS_ROLES as readonly string[]).includes(value)
 }
 
-// Documented mapping from the five job roles (organization_role enum) down to
-// the four access tiers. This is the single source of truth for that mapping;
-// keep it in sync with the frontend (src/contexts/AuthContext.tsx).
+// Documented mapping from the `org_role` enum values down to the four access
+// tiers. This is the single source of truth for that mapping; keep it in sync
+// with the frontend (src/contexts/AuthContext.tsx).
 const JOB_ROLE_TO_TIER: Record<string, AccessRole> = {
   owner: 'owner',
   admin: 'admin',

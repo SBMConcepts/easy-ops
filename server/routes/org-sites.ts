@@ -8,7 +8,6 @@ import {
 } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import type { TablesUpdate } from '../types/supabase.js'
-import { auth } from 'express-openid-connect'
 
 const router = Router()
 
