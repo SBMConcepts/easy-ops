@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom' // Sta
 import { Toaster as Sonner } from './components/ui/sonner'
 import { TooltipProvider } from './components/ui/tooltip'
 import AppLayout from './components/AppLayout'
-import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
 import CheckIn from './pages/CheckIn'
@@ -48,7 +47,7 @@ const queryClient = new QueryClient()
 // Served at the root domain — public pages only, no authenticated routes.
 const MarketingRoutes = () => (
   <Routes>
-    <Route path="/" element={<Index />} />
+    <Route path="/home" element={<Index />} />
     <Route path="/get-started" element={<GetStarted />} />
     <Route path="/register" element={<Register />} />
     <Route path="/login" element={<Login />} />
@@ -216,24 +215,22 @@ const WorkspaceShell = () => {
 
 // ── App Root ──────────────────────────────────────────────────────────────────
 const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* All secure workspace views live under /app instead of /t/:slug */}
-              <Route path="/app/*" element={<WorkspaceShell />} />
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* All secure workspace views live under /app instead of /t/:slug */}
+            <Route path="/app/*" element={<WorkspaceShell />} />
 
-              {/* Root-level marketing/public pages */}
-              <Route path="/*" element={<MarketingRoutes />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
+            {/* Root-level marketing/public pages */}
+            <Route path="/*" element={<MarketingRoutes />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 )
 
 export default App

@@ -49,8 +49,6 @@ BEGIN
       ('org_shifts','id','safety_checklist_responses','shift_id'),
 
       ('org_members','auth0_user_id','org_members','manager_id'),
-      ('org_members','id','invitations','accepted_member_id'),
-      ('org_members','auth0_user_id','invitations','invited_by'),
       ('org_members','auth0_user_id','labour_forecasts','generated_by'),
       ('org_members','auth0_user_id','labour_alerts','acknowledged_by'),
       ('org_members','auth0_user_id','payroll_export_runs','generated_by'),
@@ -85,17 +83,6 @@ BEGIN
     );
   END LOOP;
 END $$;
-
-DROP trigger IF EXISTS trg_members_sync_org
-ON public.org_members;
-CREATE trigger trg_members_sync_org
-AFTER
-INSERT
-  OR
-UPDATE OF auth0_org_id ON public.org_members FOR EACH ROW
-EXECUTE FUNCTION
-public.sync_member_org
-();
 
 DROP trigger IF EXISTS trg_audit_guard
 ON public.audit_logs;

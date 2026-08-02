@@ -48,12 +48,11 @@ router.patch(
       return
     }
 
-    // Resolve the target from the users table (the source of truth for a
-    // person's identity/data), scoped to the caller's org. user_credentials is
-    // then updated from that, and the membership status is propagated to
-    // org_members afterwards (users -> user_credentials -> org_members).
+    // Resolve the target from the membership roster (scoped to the caller's
+    // org). user_credentials is then updated from that, and the membership
+    // status is propagated to org_members afterwards.
     const { data: member } = await supabaseAdmin
-      .from('users')
+      .from('org_members')
       .select('auth0_user_id')
       .eq('auth0_user_id', targetUserId)
       .eq('auth0_org_id', req.orgId!)

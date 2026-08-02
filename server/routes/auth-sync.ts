@@ -35,48 +35,42 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     return
   }
 
-  const { data: user, error: userErr } = await supabaseAdmin
-    .from('users')
+  // user_credentials is the tenant identity anchor: it exists independent of any
+  // organization-scoped membership data and is keyed by the Auth0 subject.
+  const { data: cred, error: credErr } = await supabaseAdmin
+    .from('user_credentials')
     .upsert(
       {
         auth0_user_id: body.auth0_user_id,
+        auth0_org_id: auth0OrgId,
         email: body.email,
         full_name: body.full_name ?? '',
-        avatar_url: body.avatar_url ?? null,
-        auth0_org_id: auth0OrgId,
-        last_seen_at: new Date().toISOString(),
+        last_synced_at: new Date().toISOString(),
       },
       { onConflict: 'auth0_user_id' }
     )
-    .select('auth0_user_id, email, full_name, avatar_url, auth0_org_id')
+    .select('auth0_user_id, auth0_org_id, email, full_name')
     .single()
 
-  if (userErr || !user) {
-    res.status(500).json({ error: userErr?.message ?? 'Failed to sync user.' })
+  if (credErr || !cred) {
+    res.status(500).json({ error: credErr?.message ?? 'Failed to sync user.' })
     return
   }
-
-  // Reconcile the invite-time placeholder (see POST /api/invitations): now that
-  // the real profile row exists, drop the 'pending|<email>' row so it does not
-  // linger as a duplicate. Best-effort — a failure here must not block sync.
-  await supabaseAdmin
-    .from('users')
-    .delete()
-    .eq('auth0_user_id', `pending|${body.email.toLowerCase()}`)
 
   let role: AccessRole = 'admin' // default to owner/admin if no org context
   if (body.auth0_org_id) {
     let roleHint = body.role
+    // public.users is the invite table. The invite carries the provisioning-
+    // time intent — the org creator is always invited as owner/admin. Let it
+    // win whenever it grants at least as much privilege as the token hint, so a
+    // stale or low app_metadata role can never downgrade the creator (or any
+    // invited admin) below their intended tier.
     const { data: invite } = await supabaseAdmin
-      .from('invitations')
+      .from('users')
       .select('role')
       .eq('auth0_org_id', body.auth0_org_id)
       .eq('email', body.email.toLowerCase())
       .maybeSingle()
-    // The invitation carries the provisioning-time intent — the org creator is
-    // always invited as 'owner'. Let it win whenever it grants at least as much
-    // privilege as the token hint, so a stale or low app_metadata role can never
-    // downgrade the creator (or any invited admin) below their intended tier.
     if (
       invite?.role &&
       (!roleHint || hasRequiredRole(jobRoleToTier(invite.role), jobRoleToTier(roleHint)))
@@ -101,6 +95,8 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
       {
         auth0_org_id: body.auth0_org_id,
         auth0_user_id: body.auth0_user_id,
+        email: body.email,
+        full_name: body.full_name ?? '',
         role,
         status: 'active',
       },
@@ -110,6 +106,14 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
       res.status(500).json({ error: memberErr.message })
       return
     }
+
+    // Stamp the invite as accepted now that the membership exists.
+    await supabaseAdmin
+      .from('users')
+      .update({ accepted_at: new Date().toISOString() })
+      .eq('auth0_org_id', body.auth0_org_id)
+      .eq('email', body.email.toLowerCase())
+      .is('accepted_at', null)
   }
 
   res.json({ ok: true, role, permissions: permissionsForRole(role) })

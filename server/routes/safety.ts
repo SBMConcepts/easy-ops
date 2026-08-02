@@ -255,9 +255,9 @@ router.get(
       return
     }
 
-    // Attach submitter display names (best-effort) from the users directory.
+    // Attach submitter display names (best-effort) from the membership roster.
     const { data: users } = await supabaseAdmin
-      .from('users')
+      .from('org_members')
       .select('auth0_user_id, full_name')
       .eq('auth0_org_id', orgId)
     const names: Record<string, string> = {}
@@ -373,7 +373,7 @@ router.get(
     }
 
     const { data: users } = await supabaseAdmin
-      .from('users')
+      .from('org_members')
       .select('auth0_user_id, full_name')
       .eq('auth0_org_id', orgId)
     const names: Record<string, string> = {}

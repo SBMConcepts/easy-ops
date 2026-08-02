@@ -58,7 +58,7 @@ router.get(
     >()
     if (authUserIds.length > 0) {
       const { data: users, error: usersErr } = await supabaseAdmin
-        .from('users')
+        .from('org_members')
         .select('auth0_user_id, first_name, last_name, full_name')
         .in('auth0_user_id', authUserIds)
       if (usersErr) {

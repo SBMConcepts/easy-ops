@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import '../styles/topnavbar.css'
 import DemoModal from './DemoModal'
-import { useNavigate, useLocation } from 'react-router'
+import { useNavigate, useLocation } from 'react-router-dom'
 import BrandFull from '../assets/EasyOps Brand Logo and Name.png'
 import BrandLogo from '../assets/EasyOps Logo.png'
 import BrandName from '../assets/EasyOps Name.png'

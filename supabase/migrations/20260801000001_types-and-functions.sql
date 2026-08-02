@@ -208,23 +208,6 @@ $$;
 
 
 -- Sync member org id on updates (assumes triggers call this on relevant tables)
-CREATE OR REPLACE FUNCTION public.sync_member_org()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-BEGIN
-  UPDATE public.users u
-  SET auth0_org_id = NEW.auth0_org_id
-  WHERE u.auth0_user_id = NEW.auth0_user_id
-    AND u.auth0_org_id IS DISTINCT FROM NEW.auth0_org_id;
-
-  RETURN NEW;
-END;
-$$;
-
-
 CREATE OR REPLACE FUNCTION public.guard_audit_log()
 RETURNS trigger
 LANGUAGE plpgsql

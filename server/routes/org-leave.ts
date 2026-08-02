@@ -20,14 +20,15 @@ function isLeaveType(value: unknown): value is LeaveType {
   return typeof value === 'string' && (LEAVE_TYPES as readonly string[]).includes(value)
 }
 
-// Resolve a client-supplied users.id (UUID) to its Auth0 subject within the
+// Resolve a client-supplied member handle (the Auth0 subject) within the
 // current org. org_leave_balances is keyed by auth0_user_id (composite FK to
-// org_members), so writes/reads for a specific member go through this.
+// org_members), so writes/reads for a specific member are validated against an
+// existing membership before proceeding.
 async function resolveSub(orgId: string, userId: string): Promise<string | null> {
   const { data } = await supabaseAdmin
-    .from('users')
+    .from('org_members')
     .select('auth0_user_id')
-    .eq('id', userId)
+    .eq('auth0_user_id', userId)
     .eq('auth0_org_id', orgId)
     .maybeSingle()
   return data?.auth0_user_id ?? null

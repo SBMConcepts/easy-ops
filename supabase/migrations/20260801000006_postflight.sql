@@ -2,7 +2,7 @@ DO $$
 DECLARE
   v_tables text[] := ARRAY[
     'organizations', 'users', 'user_credentials', 'org_departments', 'org_sites',
-    'org_roles', 'org_shifts', 'org_members', 'subscriptions', 'invitations',
+    'org_roles', 'org_shifts', 'org_members', 'subscriptions',
     'audit_logs', 'org_attendance', 'org_leave_balances', 'labour_forecasts',
     'labour_alerts', 'payroll_export_runs', 'support_tickets', 'support_messages',
     'csm_assignments', 'safety_checklist_templates', 'safety_checklist_responses',

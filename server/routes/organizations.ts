@@ -52,10 +52,14 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     )
     if (orgErr) throw new Error(orgErr.message)
 
+    // Seed the org creator as an admin invite record. public.users is the
+    // invite table (identity/credentials are created later when the invitee
+    // enrols via Auth0's custom-DB create.js). The role carried here is what
+    // /api/auth/sync reads back to provision the owning membership.
     const { error: inviteErr } = await supabaseAdmin
-      .from('invitations')
+      .from('users')
       .upsert(
-        { auth0_org_id: auth0Org.id, email: adminEmail, role: 'admin' },
+        { auth0_org_id: auth0Org.id, email: adminEmail, full_name: '', role: 'admin' },
         { onConflict: 'auth0_org_id,email' }
       )
     if (inviteErr) throw new Error(inviteErr.message)

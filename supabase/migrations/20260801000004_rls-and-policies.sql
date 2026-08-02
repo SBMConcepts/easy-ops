@@ -4,7 +4,7 @@ DECLARE v_table text;
 BEGIN
   FOREACH v_table IN ARRAY array [
     'organizations', 'users', 'user_credentials', 'org_departments', 'org_sites',
-    'org_roles', 'org_shifts', 'org_members', 'subscriptions', 'invitations',
+    'org_roles', 'org_shifts', 'org_members', 'subscriptions',
     'audit_logs', 'org_attendance', 'org_leave_balances', 'labour_forecasts',
     'labour_alerts', 'payroll_export_runs', 'support_tickets', 'support_messages',
     'csm_assignments', 'safety_checklist_templates', 'safety_checklist_responses',
@@ -29,7 +29,7 @@ BEGIN
     AND tablename = any (
     array [
          'organizations', 'users', 'user_credentials', 'org_departments', 'org_sites',
-         'org_roles', 'org_shifts', 'org_members', 'subscriptions', 'invitations',
+         'org_roles', 'org_shifts', 'org_members', 'subscriptions',
          'audit_logs', 'org_attendance', 'org_leave_balances', 'labour_forecasts',
          'labour_alerts', 'payroll_export_runs', 'support_tickets', 'support_messages',
          'csm_assignments', 'safety_checklist_templates', 'safety_checklist_responses',
@@ -323,40 +323,6 @@ AND
 (
       SELECT auth0.is_org_admin()
     )
-);
-CREATE policy "invitations_select" ON public.invitations FOR
-SELECT TO authenticated
-USING
-(
-    auth0_org_id =
-(
-      SELECT auth0.current_org_id()
-    )
-AND
-(
-      SELECT auth0.is_org_admin()
-    )
-);
-CREATE policy "invitations_write" ON public.invitations FOR ALL TO authenticated USING
-(
-  auth0_org_id =
-(
-    SELECT auth0.current_org_id()
-  )
-AND
-(
-    SELECT auth0.is_org_admin()
-  )
-) WITH check
-(
-  auth0_org_id =
-(
-    SELECT auth0.current_org_id()
-  )
-AND
-(
-    SELECT auth0.is_org_admin()
-  )
 );
 CREATE policy "audit_select" ON public.audit_logs FOR
 SELECT TO authenticated

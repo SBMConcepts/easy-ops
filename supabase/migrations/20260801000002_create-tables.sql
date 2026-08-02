@@ -14,40 +14,32 @@ CREATE TABLE IF NOT EXISTS public.organizations (
   CONSTRAINT organizations_slug_chk CHECK (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$')
 );
 COMMENT ON TABLE public.organizations IS 'tenant root. auth0_org_id is the tenant key for the entire schema.';
+-- public.users holds the MINIMUM data needed to send/receive an invitation,
+-- before the invitee accepts and sets a password. It is the invite record
+-- itself (there is no separate invitations table). auth0_user_id/PII/avatar do
+-- NOT live here; they belong to user_credentials + org_members once the invitee
+-- enrols. role carries the tier the invitee is being granted on acceptance.
 CREATE TABLE IF NOT EXISTS public.users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  auth0_user_id text NOT NULL CONSTRAINT users_user_id_chk CHECK (length(auth0_user_id) > 0),
   auth0_org_id text NOT NULL CONSTRAINT users_org_id_chk CHECK (length(auth0_org_id) > 0),
-  email extensions.citext NOT NULL,
   full_name text NOT NULL DEFAULT '',
   first_name text NOT NULL DEFAULT '',
   last_name text NOT NULL DEFAULT '',
-  avatar_url text,
-  mobile_number text,
-  national_id text,
-  id_type public.identification_type,
-  address text,
-  emergency_contact_name text,
-  emergency_contact_phone text,
-  last_seen_at timestamptz NOT NULL DEFAULT now(),
+  email extensions.citext NOT NULL,
+  role public.org_role NOT NULL DEFAULT 'member',
+  token text NOT NULL DEFAULT encode(extensions.gen_random_bytes(32), 'hex'),
+  invited_by text,
+  accepted_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT users_auth0_user_id_key unique (auth0_user_id),
   CONSTRAINT users_org_fkey foreign key (auth0_org_id) REFERENCES public.organizations (auth0_org_id) ON DELETE CASCADE,
   CONSTRAINT users_org_email_key unique (auth0_org_id, email),
   CONSTRAINT users_id_org_key unique (id, auth0_org_id),
-  CONSTRAINT users_user_org_key unique (auth0_user_id, auth0_org_id),
-  CONSTRAINT users_id_type_chk CHECK (
-    (
-      national_id IS NULL
-      AND id_type IS NULL
-    )
-    OR (
-      national_id IS NOT NULL
-      AND id_type IS NOT NULL
-    )
-  )
+  CONSTRAINT users_token_key unique (token)
 );
+-- public.user_credentials is the tenant/client IDENTITY anchor: everything a
+-- person carries independent of a specific org membership (login credentials +
+-- personal PII). It is created when the invitee accepts and sets a password.
 CREATE TABLE IF NOT EXISTS public.user_credentials (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_user_id text NOT NULL CONSTRAINT user_credentials_user_id_chk CHECK (length(auth0_user_id) > 0),
@@ -57,13 +49,31 @@ CREATE TABLE IF NOT EXISTS public.user_credentials (
   last_name text,
   email extensions.citext NOT NULL,
   password_hash text,
+  mobile_number text,
+  id_type public.identification_type,
+  national_id text,
+  tax_number text,
+  address text,
+  emergency_contact_name text,
+  emergency_contact_phone text,
   email_verified boolean NOT NULL DEFAULT false,
   status public.credential_status NOT NULL DEFAULT 'active',
   last_synced_at timestamptz NOT NULL DEFAULT now(),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT user_credentials_org_fkey foreign key (auth0_org_id) REFERENCES public.organizations (auth0_org_id) ON DELETE CASCADE,
   CONSTRAINT user_credentials_auth0_user_id_key unique (auth0_user_id),
-  CONSTRAINT user_credentials_user_fkey foreign key (auth0_user_id, auth0_org_id) REFERENCES public.users (auth0_user_id, auth0_org_id) ON DELETE CASCADE
+  CONSTRAINT user_credentials_user_org_key unique (auth0_user_id, auth0_org_id),
+  CONSTRAINT user_credentials_id_type_chk CHECK (
+    (
+      national_id IS NULL
+      AND id_type IS NULL
+    )
+    OR (
+      national_id IS NOT NULL
+      AND id_type IS NOT NULL
+    )
+  )
 );
 CREATE TABLE IF NOT EXISTS public.org_departments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -130,11 +140,15 @@ CREATE TABLE IF NOT EXISTS public.org_members (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT org_members_org_id_chk CHECK (length(auth0_org_id) > 0),
   auth0_user_id text NOT NULL CONSTRAINT org_members_user_id_chk CHECK (length(auth0_user_id) > 0),
-  full_name text NOT NULL CONSTRAINT org_members_user_full_name_chk CHECK (length(full_name) > 0),
-  first_name text NOT NULL CONSTRAINT org_members_user_first_name_chk CHECK (length(first_name) > 0),
-  last_name text NOT NULL CONSTRAINT org_members_user_last_name_chk CHECK (length(last_name) > 0),
+  full_name text NOT NULL DEFAULT '',
+  first_name text NOT NULL DEFAULT '',
+  last_name text NOT NULL DEFAULT '',
+  email extensions.citext NOT NULL DEFAULT '',
+  avatar_url text,
   role public.org_role NOT NULL DEFAULT 'member',
   status public.member_status NOT NULL DEFAULT 'active',
+  permissions jsonb NOT NULL DEFAULT '[]'::jsonb CONSTRAINT org_members_permissions_chk CHECK (jsonb_typeof(permissions) = 'array'),
+  leave_balances jsonb NOT NULL DEFAULT '[]'::jsonb CONSTRAINT org_members_leave_balances_chk CHECK (jsonb_typeof(leave_balances) = 'array'),
   department_id uuid,
   site_id uuid,
   job_role_id uuid,
@@ -151,7 +165,7 @@ CREATE TABLE IF NOT EXISTS public.org_members (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT org_members_auth0_user_id_key unique (auth0_user_id),
-  CONSTRAINT org_members_user_fkey foreign key (auth0_user_id, auth0_org_id) REFERENCES public.users (auth0_user_id, auth0_org_id) ON DELETE CASCADE,
+  CONSTRAINT org_members_user_fkey foreign key (auth0_user_id, auth0_org_id) REFERENCES public.user_credentials (auth0_user_id, auth0_org_id) ON DELETE CASCADE,
   CONSTRAINT org_members_org_fkey foreign key (auth0_org_id) REFERENCES public.organizations (auth0_org_id) ON DELETE CASCADE,
   CONSTRAINT org_members_department_fkey foreign key (department_id, auth0_org_id) REFERENCES public.org_departments (id, auth0_org_id) ON DELETE no action,
   CONSTRAINT org_members_site_fkey foreign key (site_id, auth0_org_id) REFERENCES public.org_sites (id, auth0_org_id) ON DELETE no action,
@@ -175,36 +189,6 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
 );
 CREATE unique index IF NOT EXISTS subscriptions_one_live_per_org ON public.subscriptions (auth0_org_id)
 WHERE status in ('trialing', 'active', 'past_due');
-CREATE TABLE IF NOT EXISTS public.invitations (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  auth0_org_id text NOT NULL CONSTRAINT invitations_org_id_chk CHECK (length(auth0_org_id) > 0),
-  email extensions.citext NOT NULL,
-  role public.org_role NOT NULL DEFAULT 'member',
-  token text NOT NULL DEFAULT encode(extensions.gen_random_bytes(32), 'hex'),
-  invited_by text,
-  expires_at timestamptz NOT NULL DEFAULT (now() + interval '7 days'),
-  accepted_at timestamptz,
-  accepted_member_id uuid,
-  revoked_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT invitations_token_key unique (token),
-  CONSTRAINT invitations_org_fkey foreign key (auth0_org_id) REFERENCES public.organizations (auth0_org_id) ON DELETE CASCADE,
-  CONSTRAINT invitations_inviter_fkey foreign key (invited_by, auth0_org_id) REFERENCES public.org_members (auth0_user_id, auth0_org_id) ON DELETE no action,
-  CONSTRAINT invitations_member_fkey foreign key (accepted_member_id, auth0_org_id) REFERENCES public.org_members (id, auth0_org_id) ON DELETE no action,
-  CONSTRAINT invitations_accept_chk CHECK (
-    (
-      accepted_at IS NULL
-      AND accepted_member_id IS NULL
-    )
-    OR (
-      accepted_at IS NOT NULL
-      AND accepted_member_id IS NOT NULL
-    )
-  )
-);
-CREATE unique index IF NOT EXISTS invitations_pending_unique ON public.invitations (auth0_org_id, email)
-WHERE accepted_at IS NULL
-  AND revoked_at IS NULL;
 CREATE TABLE IF NOT EXISTS public.audit_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT audit_logs_org_id_chk CHECK (length(auth0_org_id) > 0),
@@ -215,7 +199,7 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
   diff jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT audit_logs_org_fkey foreign key (auth0_org_id) REFERENCES public.organizations (auth0_org_id) ON DELETE CASCADE,
-  CONSTRAINT audit_logs_actor_fkey foreign key (auth0_user_id, auth0_org_id) REFERENCES public.users (auth0_user_id, auth0_org_id) ON DELETE restrict
+  CONSTRAINT audit_logs_actor_fkey foreign key (auth0_user_id, auth0_org_id) REFERENCES public.user_credentials (auth0_user_id, auth0_org_id) ON DELETE restrict
 );
 CREATE TABLE IF NOT EXISTS public.org_attendance (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -475,13 +459,6 @@ CREATE index IF NOT EXISTS idx_members_shift ON public.org_members (shift_id, au
 CREATE index IF NOT EXISTS idx_members_job_role ON public.org_members (job_role_id, auth0_org_id);
 CREATE index IF NOT EXISTS idx_members_manager ON public.org_members (manager_id, auth0_org_id);
 CREATE index IF NOT EXISTS idx_subscriptions_org ON public.subscriptions (auth0_org_id);
-CREATE index IF NOT EXISTS idx_invitations_org ON public.invitations (auth0_org_id);
-CREATE index IF NOT EXISTS idx_invitations_email ON public.invitations (auth0_org_id, email);
-CREATE index IF NOT EXISTS idx_invitations_inviter ON public.invitations (invited_by, auth0_org_id);
-CREATE index IF NOT EXISTS idx_invitations_member ON public.invitations (accepted_member_id, auth0_org_id);
-CREATE index IF NOT EXISTS idx_invitations_expiring ON public.invitations (expires_at)
-WHERE accepted_at IS NULL
-  AND revoked_at IS NULL;
 CREATE index IF NOT EXISTS idx_audit_org_created ON public.audit_logs (auth0_org_id, created_at desc);
 CREATE index IF NOT EXISTS idx_audit_actor ON public.audit_logs (auth0_user_id, auth0_org_id);
 CREATE index IF NOT EXISTS idx_audit_resource ON public.audit_logs (auth0_org_id, resource_type, resource_id);

@@ -40,36 +40,27 @@ router.post(
     // rejects — silently breaking the invitation email).
     const inviterName = req.auth?.email || 'EasyOps'
 
+    // Persist the invite as a public.users row. public.users IS the invite
+    // table: it holds the minimum identity needed to receive an invite, keyed
+    // by (auth0_org_id, email). The real credentials/membership are created
+    // when the invitee enrols via Auth0's custom-DB create.js, which reads this
+    // row back by email and stamps accepted_at.
     const { data: invitation, error } = await supabaseAdmin
-      .from('invitations')
-      .upsert({ auth0_org_id: orgId, email, role: tier }, { onConflict: 'auth0_org_id,email' })
+      .from('users')
+      .upsert(
+        {
+          auth0_org_id: orgId,
+          email,
+          full_name: typeof body.full_name === 'string' ? body.full_name.trim() : '',
+          role: tier,
+        },
+        { onConflict: 'auth0_org_id,email' }
+      )
       .select('id, email, role')
       .single()
 
     if (error) {
       res.status(500).json({ error: error.message })
-      return
-    }
-
-    // Populate a pending placeholder in public.users at invite time. The real
-    // auth0_user_id is not known until the invitee signs up (Auth0's custom-DB
-    // create.js mints it), and users.auth0_user_id is UNIQUE + NOT NULL, so a
-    // stable 'pending|<email>' key is used. POST /api/auth/sync reconciles this
-    // placeholder into the real profile row once the invitee enrolls.
-    const pendingUserId = `pending|${email}`
-    const { error: pendingErr } = await supabaseAdmin.from('users').upsert(
-      {
-        auth0_user_id: pendingUserId,
-        email,
-        full_name: typeof body.full_name === 'string' ? body.full_name.trim() : '',
-        auth0_org_id: orgId,
-        last_seen_at: new Date().toISOString(),
-      },
-      { onConflict: 'auth0_user_id' }
-    )
-
-    if (pendingErr) {
-      res.status(500).json({ error: pendingErr.message })
       return
     }
 

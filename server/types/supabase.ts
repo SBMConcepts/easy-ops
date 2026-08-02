@@ -39,7 +39,7 @@ export type Database = {
             foreignKeyName: 'audit_logs_actor_fkey'
             columns: ['auth0_user_id', 'auth0_org_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'user_credentials'
             referencedColumns: ['auth0_user_id', 'auth0_org_id']
           },
           {
@@ -203,70 +203,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'org_sites'
             referencedColumns: ['id', 'auth0_org_id']
-          },
-        ]
-      }
-      invitations: {
-        Row: {
-          accepted_at: string | null
-          accepted_member_id: string | null
-          auth0_org_id: string
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          invited_by: string | null
-          revoked_at: string | null
-          role: Database['public']['Enums']['org_role']
-          token: string
-        }
-        Insert: {
-          accepted_at?: string | null
-          accepted_member_id?: string | null
-          auth0_org_id: string
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          revoked_at?: string | null
-          role?: Database['public']['Enums']['org_role']
-          token?: string
-        }
-        Update: {
-          accepted_at?: string | null
-          accepted_member_id?: string | null
-          auth0_org_id?: string
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          revoked_at?: string | null
-          role?: Database['public']['Enums']['org_role']
-          token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'invitations_inviter_fkey'
-            columns: ['invited_by', 'auth0_org_id']
-            isOneToOne: false
-            referencedRelation: 'org_members'
-            referencedColumns: ['auth0_user_id', 'auth0_org_id']
-          },
-          {
-            foreignKeyName: 'invitations_member_fkey'
-            columns: ['accepted_member_id', 'auth0_org_id']
-            isOneToOne: false
-            referencedRelation: 'org_members'
-            referencedColumns: ['id', 'auth0_org_id']
-          },
-          {
-            foreignKeyName: 'invitations_org_fkey'
-            columns: ['auth0_org_id']
-            isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['auth0_org_id']
           },
         ]
       }
@@ -577,15 +513,22 @@ export type Database = {
         Row: {
           auth0_org_id: string
           auth0_user_id: string
+          avatar_url: string | null
           created_at: string
           department_id: string | null
+          email: string
           employee_code: string | null
           employment_type: Database['public']['Enums']['employment_type'] | null
+          first_name: string
+          full_name: string
           hourly_rate: number | null
           id: string
           job_role_id: string | null
           joined_at: string
+          last_name: string
+          leave_balances: Json
           manager_id: string | null
+          permissions: Json
           role: Database['public']['Enums']['org_role']
           shift_id: string | null
           site_id: string | null
@@ -596,15 +539,22 @@ export type Database = {
         Insert: {
           auth0_org_id: string
           auth0_user_id: string
+          avatar_url?: string | null
           created_at?: string
           department_id?: string | null
+          email?: string
           employee_code?: string | null
           employment_type?: Database['public']['Enums']['employment_type'] | null
+          first_name?: string
+          full_name?: string
           hourly_rate?: number | null
           id?: string
           job_role_id?: string | null
           joined_at?: string
+          last_name?: string
+          leave_balances?: Json
           manager_id?: string | null
+          permissions?: Json
           role?: Database['public']['Enums']['org_role']
           shift_id?: string | null
           site_id?: string | null
@@ -615,15 +565,22 @@ export type Database = {
         Update: {
           auth0_org_id?: string
           auth0_user_id?: string
+          avatar_url?: string | null
           created_at?: string
           department_id?: string | null
+          email?: string
           employee_code?: string | null
           employment_type?: Database['public']['Enums']['employment_type'] | null
+          first_name?: string
+          full_name?: string
           hourly_rate?: number | null
           id?: string
           job_role_id?: string | null
           joined_at?: string
+          last_name?: string
+          leave_balances?: Json
           manager_id?: string | null
+          permissions?: Json
           role?: Database['public']['Enums']['org_role']
           shift_id?: string | null
           site_id?: string | null
@@ -678,7 +635,7 @@ export type Database = {
             foreignKeyName: 'org_members_user_fkey'
             columns: ['auth0_user_id', 'auth0_org_id']
             isOneToOne: true
-            referencedRelation: 'users'
+            referencedRelation: 'user_credentials'
             referencedColumns: ['auth0_user_id', 'auth0_org_id']
           },
         ]
@@ -1219,107 +1176,122 @@ export type Database = {
       }
       user_credentials: {
         Row: {
+          address: string | null
           auth0_org_id: string
           auth0_user_id: string
           created_at: string
           email: string
           email_verified: boolean
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          first_name: string | null
+          full_name: string | null
           id: string
+          id_type: Database['public']['Enums']['identification_type'] | null
+          last_name: string | null
           last_synced_at: string
+          mobile_number: string | null
+          national_id: string | null
           password_hash: string | null
           status: Database['public']['Enums']['credential_status']
+          tax_number: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           auth0_org_id: string
           auth0_user_id: string
           created_at?: string
           email: string
           email_verified?: boolean
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name?: string | null
+          full_name?: string | null
           id?: string
+          id_type?: Database['public']['Enums']['identification_type'] | null
+          last_name?: string | null
           last_synced_at?: string
+          mobile_number?: string | null
+          national_id?: string | null
           password_hash?: string | null
           status?: Database['public']['Enums']['credential_status']
+          tax_number?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           auth0_org_id?: string
           auth0_user_id?: string
           created_at?: string
           email?: string
           email_verified?: boolean
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name?: string | null
+          full_name?: string | null
           id?: string
+          id_type?: Database['public']['Enums']['identification_type'] | null
+          last_name?: string | null
           last_synced_at?: string
+          mobile_number?: string | null
+          national_id?: string | null
           password_hash?: string | null
           status?: Database['public']['Enums']['credential_status']
+          tax_number?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'user_credentials_user_fkey'
-            columns: ['auth0_user_id', 'auth0_org_id']
+            foreignKeyName: 'user_credentials_org_fkey'
+            columns: ['auth0_org_id']
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['auth0_user_id', 'auth0_org_id']
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
           },
         ]
       }
       users: {
         Row: {
-          address: string | null
+          accepted_at: string | null
           auth0_org_id: string
-          auth0_user_id: string
-          avatar_url: string | null
           created_at: string
           email: string
-          emergency_contact_name: string | null
-          emergency_contact_phone: string | null
           first_name: string
           full_name: string
           id: string
-          id_type: Database['public']['Enums']['identification_type'] | null
+          invited_by: string | null
           last_name: string
-          last_seen_at: string
-          mobile_number: string | null
-          national_id: string | null
+          role: Database['public']['Enums']['org_role']
+          token: string
           updated_at: string
         }
         Insert: {
-          address?: string | null
+          accepted_at?: string | null
           auth0_org_id: string
-          auth0_user_id: string
-          avatar_url?: string | null
           created_at?: string
           email: string
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
           first_name?: string
           full_name?: string
           id?: string
-          id_type?: Database['public']['Enums']['identification_type'] | null
+          invited_by?: string | null
           last_name?: string
-          last_seen_at?: string
-          mobile_number?: string | null
-          national_id?: string | null
+          role?: Database['public']['Enums']['org_role']
+          token?: string
           updated_at?: string
         }
         Update: {
-          address?: string | null
+          accepted_at?: string | null
           auth0_org_id?: string
-          auth0_user_id?: string
-          avatar_url?: string | null
           created_at?: string
           email?: string
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
           first_name?: string
           full_name?: string
           id?: string
-          id_type?: Database['public']['Enums']['identification_type'] | null
+          invited_by?: string | null
           last_name?: string
-          last_seen_at?: string
-          mobile_number?: string | null
-          national_id?: string | null
+          role?: Database['public']['Enums']['org_role']
+          token?: string
           updated_at?: string
         }
         Relationships: [

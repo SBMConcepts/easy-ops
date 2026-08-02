@@ -39,20 +39,22 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
   const sub = req.auth!.sub
   const orgId = req.orgId!
 
-  const { data: user, error: userErr } = await supabaseAdmin
-    .from('users')
+  // Identity + PII live on user_credentials (the tenant identity anchor). The
+  // organization-scoped membership (role, status, avatar) lives on org_members.
+  const { data: cred, error: credErr } = await supabaseAdmin
+    .from('user_credentials')
     .select(
-      'id, auth0_org_id, auth0_user_id, email, full_name, avatar_url, first_name, last_name, mobile_number, national_id, id_type, address, emergency_contact_name, emergency_contact_phone'
+      'id, auth0_org_id, auth0_user_id, email, full_name, first_name, last_name, mobile_number, national_id, id_type, address, emergency_contact_name, emergency_contact_phone, status'
     )
     .eq('auth0_user_id', sub)
     .eq('auth0_org_id', orgId)
     .maybeSingle()
 
-  if (userErr) {
-    res.status(500).json({ error: userErr.message })
+  if (credErr) {
+    res.status(500).json({ error: credErr.message })
     return
   }
-  if (!user) {
+  if (!cred) {
     res.status(404).json({ error: 'User profile not found.' })
     return
   }
@@ -61,7 +63,7 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     await Promise.all([
       supabaseAdmin
         .from('org_members')
-        .select('role, status, joined_at')
+        .select('role, status, joined_at, avatar_url, full_name, email')
         .eq('auth0_org_id', orgId)
         .eq('auth0_user_id', sub)
         .maybeSingle(),
@@ -85,21 +87,21 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     ])
 
   res.json({
-    profile_id: user.id,
-    auth0_user_id: user.auth0_user_id,
-    auth0_org_id: user.auth0_org_id,
-    email: user.email,
-    full_name: user.full_name,
-    avatar_url: user.avatar_url,
-    first_name: user.first_name ?? '',
-    last_name: user.last_name ?? '',
-    mobile_number: user.mobile_number ?? null,
-    national_id: user.national_id ?? null,
-    id_type: user.id_type ?? null,
-    address: user.address ?? null,
-    emergency_contact_name: user.emergency_contact_name ?? null,
-    emergency_contact_phone: user.emergency_contact_phone ?? null,
-    user_status: 'active',
+    profile_id: cred.id,
+    auth0_user_id: cred.auth0_user_id,
+    auth0_org_id: cred.auth0_org_id,
+    email: cred.email,
+    full_name: cred.full_name ?? member?.full_name ?? '',
+    avatar_url: member?.avatar_url ?? null,
+    first_name: cred.first_name ?? '',
+    last_name: cred.last_name ?? '',
+    mobile_number: cred.mobile_number ?? null,
+    national_id: cred.national_id ?? null,
+    id_type: cred.id_type ?? null,
+    address: cred.address ?? null,
+    emergency_contact_name: cred.emergency_contact_name ?? null,
+    emergency_contact_phone: cred.emergency_contact_phone ?? null,
+    user_status: cred.status ?? 'active',
     org_id: org?.auth0_org_id ?? null,
     role: member?.role ?? 'member',
     permissions: permissionsForRole(member?.role ?? 'member'),
@@ -135,8 +137,8 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
     emergency_contact_phone?: unknown
   }
 
-  const update: TablesUpdate<'users'> = {
-    last_seen_at: new Date().toISOString(),
+  const update: TablesUpdate<'user_credentials'> = {
+    last_synced_at: new Date().toISOString(),
   }
   if (typeof body.full_name === 'string') update.full_name = body.full_name
   if (typeof body.first_name === 'string') update.first_name = body.first_name
@@ -171,10 +173,10 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
   }
 
   const { data, error } = await supabaseAdmin
-    .from('users')
+    .from('user_credentials')
     .update(update)
     .eq('auth0_user_id', sub)
-    .select('id, auth0_org_id, auth0_user_id, full_name, avatar_url, email')
+    .select('id, auth0_org_id, auth0_user_id, full_name, email')
     .maybeSingle()
 
   if (error) {
@@ -185,6 +187,17 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
     res.status(500).json({ error: error.message })
     return
   }
+
+  // Keep the org roster (org_members) in sync with the display-name fields so
+  // Team Members / attendance views reflect profile edits without a re-sync.
+  const nameSync: TablesUpdate<'org_members'> = {}
+  if (typeof body.full_name === 'string') nameSync.full_name = body.full_name
+  if (typeof body.first_name === 'string') nameSync.first_name = body.first_name
+  if (typeof body.last_name === 'string') nameSync.last_name = body.last_name
+  if (Object.keys(nameSync).length > 0) {
+    await supabaseAdmin.from('org_members').update(nameSync).eq('auth0_user_id', sub)
+  }
+
   res.json({ ok: true, profile: data })
 })
 
@@ -249,9 +262,10 @@ router.post(
     const avatarUrl = `${pub.publicUrl}?v=${Date.now()}`
 
     const { data, error } = await supabaseAdmin
-      .from('users')
-      .update({ avatar_url: avatarUrl, last_seen_at: new Date().toISOString() })
+      .from('org_members')
+      .update({ avatar_url: avatarUrl })
       .eq('auth0_user_id', sub)
+      .eq('auth0_org_id', orgId)
       .select('id, auth0_org_id, auth0_user_id, full_name, avatar_url, email')
       .maybeSingle()
 
@@ -281,9 +295,10 @@ router.delete(
     }
 
     const { data, error } = await supabaseAdmin
-      .from('users')
-      .update({ avatar_url: null, last_seen_at: new Date().toISOString() })
+      .from('org_members')
+      .update({ avatar_url: null })
       .eq('auth0_user_id', sub)
+      .eq('auth0_org_id', orgId)
       .select('id, auth0_org_id, auth0_user_id, full_name, avatar_url, email')
       .maybeSingle()
 
