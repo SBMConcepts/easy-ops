@@ -9,9 +9,10 @@ const router = Router()
 
 /**
  * True when the login-minted Supabase JWT already carries a `permissions` array.
- * Sessions established before the permissions rollout lack this claim, so those
- * tokens must be re-minted server-side or Supabase RLS (has_permission) denies
- * every authenticated read. Decode only — we trust our own session claim.
+ * RLS itself only needs `org_id`/`sub` (auth0.current_role() looks the role up
+ * from org_members) — this claim is kept for defense-in-depth / future use, not
+ * because its absence would break policies. Decode only — we trust our own
+ * session claim.
  */
 function claimTokenHasPermissions(token: string): boolean {
   try {
@@ -39,7 +40,8 @@ router.get('/api/supabase-token', requireAuth, (req: AuthedRequest, res: Respons
   const secret = process.env.SUPABASE_JWT_SECRET
   const sub = req.auth?.sub
 
-  // Re-mint with permissions so pre-rollout sessions are not locked out of RLS.
+  // Re-mint so pre-rollout sessions still carry org_id/sub — the only claims
+  // auth0.current_role() actually reads to derive the role from org_members.
   if (secret && sub) {
     const nowSec = Math.floor(Date.now() / 1000)
     const minted = jwt.sign(

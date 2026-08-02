@@ -3,6 +3,7 @@ import { Router, type Request, type Response } from 'express'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { hasRequiredRole, jobRoleToTier, type AccessRole } from '../lib/rbac.js'
 import { permissionsForRole } from '../lib/permissions.js'
+import { findActiveOrgMember } from '../lib/org-members.js'
 
 const router = Router()
 
@@ -78,12 +79,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
       roleHint = invite.role
     }
 
-    const { data: existingMember } = await supabaseAdmin
-      .from('org_members')
-      .select('role')
-      .eq('auth0_org_id', body.auth0_org_id)
-      .eq('auth0_user_id', body.auth0_user_id)
-      .maybeSingle()
+    const existingMember = await findActiveOrgMember(body.auth0_org_id, body.auth0_user_id)
 
     if (!invite && !existingMember) {
       res.json({ ok: true, role: 'admin', permissions: permissionsForRole('admin') })

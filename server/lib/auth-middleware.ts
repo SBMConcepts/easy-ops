@@ -15,9 +15,9 @@
 import type { NextFunction, Request, Response } from 'express'
 
 import { AUTH0_CLAIM_NS, type Auth0Claims } from './auth.js'
-import { supabaseAdmin } from './supabase-admin.js'
 import { hasRequiredRole, type AccessRole } from './rbac.js'
 import { roleHasPermission, type Permission } from './permissions.js'
+import { findActiveOrgMember } from './org-members.js'
 
 export interface AuthedRequest extends Request {
   auth?: Auth0Claims
@@ -82,14 +82,8 @@ async function resolveMemberRole(req: AuthedRequest): Promise<string | null> {
     return null
   }
 
-  const { data: member } = await supabaseAdmin
-    .from('org_members')
-    .select('role, status')
-    .eq('auth0_org_id', orgId)
-    .eq('auth0_user_id', sub)
-    .maybeSingle()
-
-  const role = member && member.status === 'active' ? member.role : null
+  const member = await findActiveOrgMember(orgId, sub)
+  const role = member?.role ?? null
   req.memberRole = role
   return role
 }
