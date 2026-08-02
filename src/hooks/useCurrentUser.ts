@@ -7,10 +7,9 @@ import type { Database } from '../integrations/supabase/types'
 type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 type MembershipStatus = 'active' | 'suspended'
 
+// Matches /api/userinfo's leave_balances shape exactly (org_leave_balances rows
+// stripped down to the two fields the caller needs; no id/org/user columns).
 export interface LeaveBalance {
-  id: string
-  auth0_org_id: string
-  auth0_user_id: string
   leave_type: string
   balance_days: number
 }
@@ -48,6 +47,7 @@ export interface CurrentUserProfile {
   permissions: Permission[]
   membership_status: MembershipStatus
   joined_at: string
+  org_id: string | null
   org_name: string
   org_auth0_id: string
   org_status: string

@@ -202,13 +202,12 @@ export function useShifts() {
 }
 
 // ── 6. Leave balances (via Express) ─────────────────────────────────────────
+// Matches GET /api/org-leave's response exactly — org_leave_balances rows
+// keyed by (auth0_org_id, auth0_user_id) but returned without those columns.
 export interface LeaveBalanceRow {
-  id: string
-  auth0_org_id: string
-  auth0_user_id: string
   leave_type: string
   balance_days: number
-  updated_at: string
+  updated_at: string | null
 }
 
 export const leaveKeys = {
@@ -217,7 +216,8 @@ export const leaveKeys = {
 }
 
 // Fetch a specific member's leave balances (admin view). Pass the target
-// users.id; the caller must hold write:org_leave to read another member.
+// org_members.auth0_user_id; the caller must hold write:org_leave to read
+// another member's balances.
 export function useLeaveBalances(auth0_user_id: string | null | undefined) {
   const { apiFetch } = useOrgApi()
 
@@ -225,7 +225,7 @@ export function useLeaveBalances(auth0_user_id: string | null | undefined) {
     queryKey: leaveKeys.member(auth0_user_id ?? ''),
     queryFn: async () => {
       const res = await apiFetch<{ balances: LeaveBalanceRow[] }>(
-        `org-leave_balance?auth0_user_id=${encodeURIComponent(auth0_user_id!)}`
+        `org-leave?user_id=${encodeURIComponent(auth0_user_id!)}`
       )
       return res.balances ?? []
     },

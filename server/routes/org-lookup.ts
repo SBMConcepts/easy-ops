@@ -26,16 +26,21 @@ router.get('/api/org-lookup', async (req: Request, res: Response) => {
   }
 
   if (email) {
-    const { data: user } = await supabaseAdmin
+    // public.users is keyed by (auth0_org_id, email), NOT globally unique on
+    // email — the same address can hold invites across multiple orgs. Take the
+    // most recent invite rather than .maybeSingle(), which errors on >1 row.
+    const { data: invites } = await supabaseAdmin
       .from('users')
       .select('auth0_org_id')
       .eq('email', email)
-      .maybeSingle()
-    if (user?.auth0_org_id) {
+      .order('created_at', { ascending: false })
+      .limit(1)
+    const orgId = invites?.[0]?.auth0_org_id
+    if (orgId) {
       const { data: org } = await supabaseAdmin
         .from('organizations')
         .select('auth0_org_id, name, slug')
-        .eq('auth0_org_id', user.auth0_org_id)
+        .eq('auth0_org_id', orgId)
         .maybeSingle()
       if (org) {
         res.json({ auth0_org_id: org.auth0_org_id, name: org.name, slug: org.slug })

@@ -63,7 +63,9 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     await Promise.all([
       supabaseAdmin
         .from('org_members')
-        .select('role, status, joined_at, avatar_url, full_name, email')
+        .select(
+          'role, status, joined_at, avatar_url, full_name, email, department_id, site_id, job_role_id, shift_id, manager_id, employee_code, employment_type, hourly_rate, tax_number'
+        )
         .eq('auth0_org_id', orgId)
         .eq('auth0_user_id', sub)
         .maybeSingle(),
@@ -86,6 +88,39 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
         .eq('auth0_user_id', sub),
     ])
 
+  // Resolve display labels for the caller's assignment references. Each is a
+  // small per-org lookup table, so only fetch the ones actually assigned.
+  const [deptRow, siteRow, jobRoleRow, shiftRow, managerRow] = await Promise.all([
+    member?.department_id
+      ? supabaseAdmin
+          .from('org_departments')
+          .select('department_name')
+          .eq('id', member.department_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    member?.site_id
+      ? supabaseAdmin.from('org_sites').select('site_name').eq('id', member.site_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    member?.job_role_id
+      ? supabaseAdmin.from('org_roles').select('name').eq('id', member.job_role_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    member?.shift_id
+      ? supabaseAdmin
+          .from('org_shifts')
+          .select('shift_name')
+          .eq('id', member.shift_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    member?.manager_id
+      ? supabaseAdmin
+          .from('org_members')
+          .select('full_name')
+          .eq('auth0_org_id', orgId)
+          .eq('auth0_user_id', member.manager_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
   res.json({
     profile_id: cred.id,
     auth0_user_id: cred.auth0_user_id,
@@ -105,8 +140,23 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     org_id: org?.auth0_org_id ?? null,
     role: member?.role ?? 'member',
     permissions: permissionsForRole(member?.role ?? 'member'),
+    status: member?.status ?? 'active',
     membership_status: member?.status ?? 'active',
     joined_at: member?.joined_at ?? null,
+    department_id: member?.department_id ?? null,
+    department_name: deptRow.data?.department_name ?? null,
+    site_id: member?.site_id ?? null,
+    site_name: siteRow.data?.site_name ?? null,
+    job_role_id: member?.job_role_id ?? null,
+    job_role_name: jobRoleRow.data?.name ?? null,
+    shift_id: member?.shift_id ?? null,
+    shift_name: shiftRow.data?.shift_name ?? null,
+    manager_id: member?.manager_id ?? null,
+    manager_name: managerRow.data?.full_name ?? null,
+    employee_code: member?.employee_code ?? null,
+    employment_type: member?.employment_type ?? null,
+    hourly_rate: member?.hourly_rate ?? null,
+    tax_number: member?.tax_number ?? null,
     org_name: org?.name ?? '',
     org_auth0_id: org?.auth0_org_id ?? '',
     org_status: org?.status ?? 'active',

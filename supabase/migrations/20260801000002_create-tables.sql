@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS public.org_sites (
   CONSTRAINT org_sites_name_key unique (auth0_org_id, site_name)
 );
 CREATE TABLE IF NOT EXISTS public.org_roles (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), 
   auth0_org_id text NOT NULL CONSTRAINT org_roles_org_id_chk CHECK (length(auth0_org_id) > 0),
   name text NOT NULL CONSTRAINT org_roles_name_chk CHECK (length(btrim(name)) > 0),
   base_role public.org_role,
