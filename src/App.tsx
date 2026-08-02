@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom' // Sta
 import { Toaster as Sonner } from './components/ui/sonner'
 import { TooltipProvider } from './components/ui/tooltip'
 import AppLayout from './components/AppLayout'
+import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
 import CheckIn from './pages/CheckIn'
@@ -215,22 +216,24 @@ const WorkspaceShell = () => {
 
 // ── App Root ──────────────────────────────────────────────────────────────────
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* All secure workspace views live under /app instead of /t/:slug */}
-            <Route path="/app/*" element={<WorkspaceShell />} />
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* All secure workspace views live under /app instead of /t/:slug */}
+              <Route path="/app/*" element={<WorkspaceShell />} />
 
-            {/* Root-level marketing/public pages */}
-            <Route path="/*" element={<MarketingRoutes />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+              {/* Root-level marketing/public pages */}
+              <Route path="/*" element={<MarketingRoutes />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 )
 
 export default App

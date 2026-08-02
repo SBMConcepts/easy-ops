@@ -10,12 +10,10 @@ Complete API documentation for @auth0/auth0-react SDK.
 
 ```tsx
 import { Auth0Provider } from '@auth0/auth0-react'
-;<Auth0Provider
-  // Required
-  domain="your-tenant.auth0.com"
-  clientId="your-client-id"
-  // Authorization parameters
-  authorizationParams={{
+;<Auth0Provider>
+  // Required domain="your-tenant.auth0.com" clientId="your-client-id" // Authorization parameters
+  authorizationParams=
+  {{
     redirect_uri: window.location.origin,
     audience: 'https://your-api-identifier', // For API calls
     scope: 'openid profile email', // Default scopes
@@ -24,25 +22,21 @@ import { Auth0Provider } from '@auth0/auth0-react'
     ui_locales: 'en', // Localization
     screen_hint: 'signup', // Show signup page by default
   }}
-  // Token management
-  cacheLocation="localstorage" // or "memory" for stricter security (default: "memory")
-  useRefreshTokens={true} // Enable refresh tokens (default: false)
-  useRefreshTokensFallback={false} // Fall back to iframe if refresh token exchange fails (default: false)
-  useMrrt={false} // Enable Multi-Refresh-Token for multi-tenant apps (default: false)
-  // MFA / Step-up
-  interactiveErrorHandler="popup" // Automatically handle MFA via popup (requires useRefreshTokens)
-  // Advanced options
-  skipRedirectCallback={false} // Skip automatic callback handling
-  context={Auth0Context} // Custom React context
-  // Callbacks
-  onRedirectCallback={(appState) => {
+  // Token management cacheLocation="localstorage" // or "memory" for stricter security (default:
+  "memory") useRefreshTokens={true} // Enable refresh tokens (default: false)
+  useRefreshTokensFallback={false} // Fall back to iframe if refresh token exchange fails (default:
+  false) useMrrt={false} // Enable Multi-Refresh-Token for multi-tenant apps (default: false) // MFA
+  / Step-up interactiveErrorHandler="popup" // Automatically handle MFA via popup (requires
+  useRefreshTokens) // Advanced options skipRedirectCallback={false} // Skip automatic callback
+  handling context={Auth0Context} // Custom React context // Callbacks onRedirectCallback=
+  {(appState) => {
     // Handle redirect after login
     // appState receives the custom state passed to loginWithRedirect()
     // Example: if login was called with appState: { targetUrl: '/dashboard' }
     // then appState.targetUrl will be '/dashboard' here
     window.location.replace(appState?.returnTo || '/')
   }}
->
+  ;
   <App />
 </Auth0Provider>
 ```
