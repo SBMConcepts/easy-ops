@@ -1,14 +1,15 @@
 # Code Commenting Standards & Checklist
-**A Reference Guide for Engineering Teams**
+
+## A Reference Guide for Engineering Teams
 
 ---
 
 ## The Golden Rule
 
-> **Code tells you *what* it does. A good comment tells you *why*.**
-> If you feel compelled to write a comment explaining *what* a line does, that's a signal to rename a variable, extract a function, or simplify the logic — not to add a comment. Comments are a supplement to clear code, never a substitute for it.
+> **Code tells you _what_ it does. A good comment tells you _why_.**
+> If you feel compelled to write a comment explaining _what_ a line does, that's a signal to rename a variable, extract a function, or simplify the logic — not to add a comment. Comments are a supplement to clear code, never a substitute for it.
 
-This principle underlies every major style guide in the industry — Robert C. Martin's *Clean Code*, the Google Style Guides, PEP 8/257, and the TSDoc/JSDoc specs all converge on it, even though their syntax differs.
+This principle underlies every major style guide in the industry — Robert C. Martin's _Clean Code_, the Google Style Guides, PEP 8/257, and the TSDoc/JSDoc specs all converge on it, even though their syntax differs.
 
 ---
 
@@ -22,23 +23,24 @@ But a stale or misleading comment is worse than no comment — it actively lies 
 
 ## 2. Comment Taxonomy
 
-| Type | Purpose | Lifespan |
-|---|---|---|
-| **File/module header** | Orients a reader to a file's responsibility | Long-lived |
-| **Public API doc comment** (JSDoc/TSDoc/Javadoc/XMLDoc) | Contract for consumers of a function/class/module | Long-lived, versioned with the API |
-| **"Why" comment** | Explains a non-obvious decision, constraint, or trade-off | Long-lived |
-| **Warning comment** | Flags a fragile or non-obvious dependency ("don't reorder this") | Long-lived |
-| **TODO / FIXME / HACK** | Marks known, tracked, temporary debt | Short-lived, must reference a ticket |
-| **Commented-out code** | — | **Banned.** Git history is the changelog. |
+| Type                                                    | Purpose                                                          | Lifespan                                  |
+| ------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------- |
+| **File/module header**                                  | Orients a reader to a file's responsibility                      | Long-lived                                |
+| **Public API doc comment** (JSDoc/TSDoc/Javadoc/XMLDoc) | Contract for consumers of a function/class/module                | Long-lived, versioned with the API        |
+| **"Why" comment**                                       | Explains a non-obvious decision, constraint, or trade-off        | Long-lived                                |
+| **Warning comment**                                     | Flags a fragile or non-obvious dependency ("don't reorder this") | Long-lived                                |
+| **TODO / FIXME / HACK**                                 | Marks known, tracked, temporary debt                             | Short-lived, must reference a ticket      |
+| **Commented-out code**                                  | —                                                                | **Banned.** Git history is the changelog. |
 
 ---
 
 ## 3. Language & Ecosystem Standards
 
 ### TypeScript / JavaScript — TSDoc / JSDoc
+
 Use `/** ... */` doc comments on every exported function, class, type, and React component. Microsoft's [TSDoc spec](https://tsdoc.org) is the modern standard for TypeScript specifically because it's tool-agnostic (works with TypeDoc, API Extractor, and editor tooltips); plain [JSDoc](https://jsdoc.app) is the JS equivalent.
 
-**Key nuance in TypeScript:** the type system already documents parameter and return *types* — don't duplicate them in prose. Use the doc comment to explain *behavior*, *edge cases*, and *why*, not restate `@param {string} name`.
+**Key nuance in TypeScript:** the type system already documents parameter and return _types_ — don't duplicate them in prose. Use the doc comment to explain _behavior_, _edge cases_, and _why_, not restate `@param {string} name`.
 
 ```typescript
 /**
@@ -65,22 +67,26 @@ async function verifyOrgMembership(req: AuthenticatedRequest, orgId: string): Pr
  * on purpose — this flow gets abandoned and restarted often, and syncing
  * partial signup data to global state previously caused stale-state bugs.
  */
-export function GetStarted() { /* ... */ }
+export function GetStarted() {
+  /* ... */
+}
 ```
 
 **Inline comment — bad vs. good:**
+
 ```typescript
 // Bad: restates the code
 // increment retry count by 1
-retryCount++;
+retryCount++
 
 // Good: explains a non-obvious external constraint
 // Auth0's Management API caps us at 2 req/sec; back off after 3
 // failures instead of failing the whole onboarding flow outright.
-retryCount++;
+retryCount++
 ```
 
 ### Java — Javadoc
+
 Follow Oracle's Javadoc conventions: a summary sentence, then `@param`, `@return`, `@throws` for every public method.
 
 ```java
@@ -100,12 +106,15 @@ public Connection connect(String dbPath) throws SQLException { /* ... */ }
 ```
 
 ### Python — PEP 257 / PEP 8
+
 Triple-quoted docstrings for every public module, class, and function (PEP 257); block comments above the code they describe, inline comments sparingly and separated by two spaces (PEP 8).
 
 ### C# — XML Doc Comments
+
 `///` comments with `<summary>`, `<param>`, `<returns>` tags, consumed by IntelliSense and DocFX.
 
 ### SQL / Database (Row-Level Security policies especially)
+
 RLS policies and non-obvious query logic are some of the highest-value places to comment — a wrong assumption here is a security bug, not a readability nit.
 
 ```sql
@@ -117,7 +126,8 @@ create policy "org_members_insert" on org_members
 ```
 
 ### Infrastructure as Code (Terraform, Dockerfiles, CI YAML)
-Comment *deviations from default* and *non-obvious operational reasoning* — not every line.
+
+Comment _deviations from default_ and _non-obvious operational reasoning_ — not every line.
 
 ```hcl
 # Pinned to n2-standard-4 instead of the default e2 family: RLS query
@@ -135,12 +145,12 @@ Untracked TODOs rot. Require an owner and a ticket reference:
 // TODO(ezekiel): Remove this shim once Auth0 SDK v5 migration ships — JIRA-482
 ```
 
-| Tag | Meaning |
-|---|---|
-| `TODO` | Planned work, not a defect |
-| `FIXME` | Known defect, not yet fixed |
-| `HACK` | Deliberate workaround; explain the constraint that forced it |
-| `NOTE` | Non-obvious context worth flagging, no action required |
+| Tag     | Meaning                                                      |
+| ------- | ------------------------------------------------------------ |
+| `TODO`  | Planned work, not a defect                                   |
+| `FIXME` | Known defect, not yet fixed                                  |
+| `HACK`  | Deliberate workaround; explain the constraint that forced it |
+| `NOTE`  | Non-obvious context worth flagging, no action required       |
 
 ---
 
@@ -158,7 +168,7 @@ Untracked TODOs rot. Require an owner and a ticket reference:
 
 ## 6. Comments in Code Review vs. Comments in Code
 
-These are different artifacts with different lifespans. PR review comments are ephemeral conversation; source comments are permanent documentation. The [Conventional Comments](https://conventionalcomments.org) standard is a widely adopted convention for *labeling review feedback* so intent is unambiguous:
+These are different artifacts with different lifespans. PR review comments are ephemeral conversation; source comments are permanent documentation. The [Conventional Comments](https://conventionalcomments.org) standard is a widely adopted convention for _labeling review feedback_ so intent is unambiguous:
 
 `praise:` `nitpick:` `suggestion:` `issue:` `question:` `thought:` `chore:`
 
@@ -181,7 +191,7 @@ e.g. `nitpick: minor naming — consider orgId over id here` vs. `issue: this by
 Inline comments are the smallest unit of a larger documentation layer. Don't try to make a code comment carry weight that belongs elsewhere:
 
 - **README** — setup, environment variables, architecture overview
-- **Architecture Decision Records (ADRs)** — Michael Nygard's lightweight template, one file per significant, costly-to-reverse decision (e.g., a schema pivot or an auth provider choice) — the *why* behind a decision outlives any single comment
+- **Architecture Decision Records (ADRs)** — Michael Nygard's lightweight template, one file per significant, costly-to-reverse decision (e.g., a schema pivot or an auth provider choice) — the _why_ behind a decision outlives any single comment
 - **CHANGELOG.md** — "Keep a Changelog" format for user-facing history
 - **OpenAPI/Swagger** — generated API contract docs, ideally sourced from the same doc comments as the code
 
@@ -190,11 +200,13 @@ Inline comments are the smallest unit of a larger documentation layer. Don't try
 ## 9. The Checklist
 
 ### A. Before you write a comment
+
 - [ ] Could a better variable/function name make this comment unnecessary?
 - [ ] Could extracting this into a well-named function replace the comment?
 - [ ] Is this genuinely non-obvious to a competent teammate — not just to me right now?
 
 ### B. Comment content
+
 - [ ] Explains **why**, not what
 - [ ] Doesn't restate what the code already says
 - [ ] No commented-out code
@@ -202,6 +214,7 @@ Inline comments are the smallest unit of a larger documentation layer. Don't try
 - [ ] TODO/FIXME/HACK tags include an owner and a ticket reference
 
 ### C. Public API / function-level (JSDoc, TSDoc, Javadoc, XML doc)
+
 - [ ] Every exported function, class, interface, and component has a doc comment
 - [ ] Summary line describes purpose, not just repeats the name
 - [ ] Non-obvious parameters and edge cases are called out (types themselves aren't re-explained in TS)
@@ -209,6 +222,7 @@ Inline comments are the smallest unit of a larger documentation layer. Don't try
 - [ ] `@deprecated` / `@example` used where relevant
 
 ### D. Pull request review
+
 - [ ] No leftover debug comments
 - [ ] Comments touched by this diff still match the new code
 - [ ] New non-obvious logic (algorithms, regex, business rules) has a "why" comment
@@ -216,6 +230,7 @@ Inline comments are the smallest unit of a larger documentation layer. Don't try
 - [ ] No comment simply restates self-explanatory code
 
 ### E. Project / DevOps level
+
 - [ ] README covers setup, env vars, and architecture at a glance
 - [ ] CI/CD YAML comments explain non-obvious steps or secret usage
 - [ ] Dockerfile comments explain non-default base image or build-stage choices
@@ -226,16 +241,16 @@ Inline comments are the smallest unit of a larger documentation layer. Don't try
 
 ## 10. Quick Reference
 
-| Situation | Do this |
-|---|---|
-| Obvious code | No comment |
-| Non-obvious *why* | Short comment above the line |
-| Public function/class | Full doc comment (TSDoc/JSDoc/Javadoc) |
-| Temporary workaround | `HACK` comment explaining the constraint |
-| Known future work | `TODO(owner): description — TICKET-ID` |
-| Old logic no longer needed | Delete it — don't comment it out |
-| Big architectural decision | Write an ADR, not a giant code comment |
+| Situation                  | Do this                                  |
+| -------------------------- | ---------------------------------------- |
+| Obvious code               | No comment                               |
+| Non-obvious _why_          | Short comment above the line             |
+| Public function/class      | Full doc comment (TSDoc/JSDoc/Javadoc)   |
+| Temporary workaround       | `HACK` comment explaining the constraint |
+| Known future work          | `TODO(owner): description — TICKET-ID`   |
+| Old logic no longer needed | Delete it — don't comment it out         |
+| Big architectural decision | Write an ADR, not a giant code comment   |
 
 ---
 
-*References: Robert C. Martin,* Clean Code *(Ch. 4); Google Style Guides; PEP 8 / PEP 257; TSDoc spec (tsdoc.org); JSDoc spec (jsdoc.app); Oracle Javadoc conventions; Conventional Comments (conventionalcomments.org); ISO/IEC 25010; Keep a Changelog; Michael Nygard's ADR template.*
+_References: Robert C. Martin,_ Clean Code _(Ch. 4); Google Style Guides; PEP 8 / PEP 257; TSDoc spec (tsdoc.org); JSDoc spec (jsdoc.app); Oracle Javadoc conventions; Conventional Comments (conventionalcomments.org); ISO/IEC 25010; Keep a Changelog; Michael Nygard's ADR template._

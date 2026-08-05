@@ -120,13 +120,21 @@ router.post(
 
     // Inherit the member's assigned department & site so the attendance record
     // captures where they checked in. Resolved server-side from the membership,
-    // never trusted from the request body.
+    // never trusted from the request body. department_id is NOT NULL on
+    // org_attendance, so a member with no department assigned cannot check in.
     const { data: membership } = await supabaseAdmin
       .from('org_members')
       .select('department_id, site_id')
       .eq('auth0_org_id', req.orgId!)
       .eq('auth0_user_id', req.auth?.sub ?? '')
       .maybeSingle()
+
+    if (!membership?.department_id) {
+      res.status(400).json({
+        error: 'You must have an assigned department before you can check in. Contact an admin.',
+      })
+      return
+    }
 
     const { data, error } = await supabaseAdmin
       .from('org_attendance')
@@ -138,8 +146,8 @@ router.post(
           method: body.method,
           hours_worked: Number(body.hours_worked ?? 0),
           overtime: Number(body.overtime ?? 0),
-          department_id: membership?.department_id ?? null,
-          site_id: membership?.site_id ?? null,
+          department_id: membership.department_id,
+          site_id: membership.site_id ?? null,
         },
         { onConflict: 'auth0_user_id,auth0_org_id,date' }
       )

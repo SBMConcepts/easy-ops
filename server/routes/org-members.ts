@@ -18,13 +18,13 @@ router.get(
   requireOrg,
   requirePermission('read:org_members'),
   async (req: AuthedRequest, res: Response) => {
-    // org_members now carries the member's identity (name/email/avatar) inline,
-    // so no join to another table is needed. Only the assignment label lookups
-    // (department / site / job title / shift / manager) are resolved below.
+    // org_members carries the membership + operational assignment; identity
+    // fields email/avatar_url live only on `users` (keyed by auth0_user_id) and
+    // must be joined in separately.
     const { data: memberRows, error } = await supabaseAdmin
       .from('org_members')
       .select(
-        'id, auth0_org_id, auth0_user_id, role, status, joined_at, full_name, first_name, last_name, email, avatar_url, department_id, site_id, job_role_id, shift_id, manager_id, employee_code, employment_type, hourly_rate, tax_number'
+        'id, auth0_org_id, auth0_user_id, role, status, joined_at, full_name, first_name, last_name, department_id, site_id, job_role_id, shift_id, manager_id, employee_code, employment_type, hourly_rate, tax_number'
       )
       .eq('auth0_org_id', req.orgId!)
       .order('joined_at', { ascending: true })
@@ -35,11 +35,12 @@ router.get(
     }
 
     const rows = memberRows ?? []
+    const authUserIds = [...new Set(rows.map((m) => m.auth0_user_id))]
 
     // Resolve assignment labels (department / site / job title / shift) for
     // display. These are small per-org lookup tables, so fetch each once and
     // map by id.
-    const [deptsRes, sitesRes, rolesRes, shiftsRes] = await Promise.all([
+    const [deptsRes, sitesRes, rolesRes, shiftsRes, usersRes] = await Promise.all([
       supabaseAdmin
         .from('org_departments')
         .select('id, department_name')
@@ -47,8 +48,16 @@ router.get(
       supabaseAdmin.from('org_sites').select('id, site_name').eq('auth0_org_id', req.orgId!),
       supabaseAdmin.from('org_roles').select('id, name').eq('auth0_org_id', req.orgId!),
       supabaseAdmin.from('org_shifts').select('id, shift_name').eq('auth0_org_id', req.orgId!),
+      authUserIds.length > 0
+        ? supabaseAdmin
+            .from('users')
+            .select('auth0_user_id, email, avatar_url')
+            .eq('auth0_org_id', req.orgId!)
+            .in('auth0_user_id', authUserIds)
+        : Promise.resolve({ data: [], error: null }),
     ])
-    const firstErr = deptsRes.error ?? sitesRes.error ?? rolesRes.error ?? shiftsRes.error
+    const firstErr =
+      deptsRes.error ?? sitesRes.error ?? rolesRes.error ?? shiftsRes.error ?? usersRes.error
     if (firstErr) {
       res.status(500).json({ error: firstErr.message })
       return
@@ -57,6 +66,12 @@ router.get(
     const siteById = new Map((sitesRes.data ?? []).map((s) => [s.id, s.site_name]))
     const roleById = new Map((rolesRes.data ?? []).map((r) => [r.id, r.name]))
     const shiftById = new Map((shiftsRes.data ?? []).map((s) => [s.id, s.shift_name]))
+    const identityBySub = new Map(
+      (usersRes.data ?? []).map((u) => [
+        u.auth0_user_id,
+        { email: u.email, avatar_url: u.avatar_url },
+      ])
+    )
 
     // Manager label resolves via the manager's own membership row -> their
     // full name. manager_id is the manager's auth0_user_id (managers are org
@@ -64,43 +79,46 @@ router.get(
     const managerNameById = new Map<string, string>()
     for (const m of rows) managerNameById.set(m.auth0_user_id, m.full_name)
 
-    const members = rows.map((m) => ({
-      id: m.id,
-      auth0_org_id: m.auth0_org_id,
-      auth0_user_id: m.auth0_user_id,
-      role: m.role,
-      status: m.status,
-      joined_at: m.joined_at,
-      full_name: m.full_name,
-      first_name: m.first_name,
-      last_name: m.last_name,
-      email: m.email,
-      avatar_url: m.avatar_url,
-      department_id: m.department_id,
-      department_name: m.department_id ? (deptById.get(m.department_id) ?? null) : null,
-      site_id: m.site_id,
-      site_name: m.site_id ? (siteById.get(m.site_id) ?? null) : null,
-      job_role_id: m.job_role_id,
-      job_role_name: m.job_role_id ? (roleById.get(m.job_role_id) ?? null) : null,
-      employee_code: m.employee_code,
-      employment_type: m.employment_type,
-      hourly_rate: m.hourly_rate,
-      tax_number: m.tax_number,
-      shift_id: m.shift_id,
-      shift_name: m.shift_id ? (shiftById.get(m.shift_id) ?? null) : null,
-      manager_id: m.manager_id,
-      manager_name: m.manager_id ? (managerNameById.get(m.manager_id) ?? null) : null,
-      // Legacy identity handle + nested object retained for older callers.
-      user_id: m.auth0_user_id,
-      users: {
+    const members = rows.map((m) => {
+      const identity = identityBySub.get(m.auth0_user_id)
+      return {
         id: m.id,
-        auth0_user_id: m.auth0_user_id,
         auth0_org_id: m.auth0_org_id,
-        email: m.email,
+        auth0_user_id: m.auth0_user_id,
+        role: m.role,
+        status: m.status,
+        joined_at: m.joined_at,
         full_name: m.full_name,
-        avatar_url: m.avatar_url,
-      },
-    }))
+        first_name: m.first_name,
+        last_name: m.last_name,
+        email: identity?.email ?? null,
+        avatar_url: identity?.avatar_url ?? null,
+        department_id: m.department_id,
+        department_name: m.department_id ? (deptById.get(m.department_id) ?? null) : null,
+        site_id: m.site_id,
+        site_name: m.site_id ? (siteById.get(m.site_id) ?? null) : null,
+        job_role_id: m.job_role_id,
+        job_role_name: m.job_role_id ? (roleById.get(m.job_role_id) ?? null) : null,
+        employee_code: m.employee_code,
+        employment_type: m.employment_type,
+        hourly_rate: m.hourly_rate,
+        tax_number: m.tax_number,
+        shift_id: m.shift_id,
+        shift_name: m.shift_id ? (shiftById.get(m.shift_id) ?? null) : null,
+        manager_id: m.manager_id,
+        manager_name: m.manager_id ? (managerNameById.get(m.manager_id) ?? null) : null,
+        // Legacy identity handle + nested object retained for older callers.
+        user_id: m.auth0_user_id,
+        users: {
+          id: m.id,
+          auth0_user_id: m.auth0_user_id,
+          auth0_org_id: m.auth0_org_id,
+          email: identity?.email ?? null,
+          full_name: m.full_name,
+          avatar_url: identity?.avatar_url ?? null,
+        },
+      }
+    })
 
     res.json({ members })
   }
@@ -118,7 +136,6 @@ router.post(
       full_name?: string
       first_name?: string
       last_name?: string
-      email?: string
       department_id?: string | null
       site_id?: string | null
       job_role_id?: string | null
@@ -173,7 +190,6 @@ router.post(
     if (typeof body.full_name === 'string') update.full_name = body.full_name
     if (typeof body.first_name === 'string') update.first_name = body.first_name
     if (typeof body.last_name === 'string') update.last_name = body.last_name
-    if (typeof body.email === 'string') update.email = body.email
     if ('hourly_rate' in body) {
       const rate = body.hourly_rate
       update.hourly_rate = rate === null || rate === undefined ? null : Number(rate)
@@ -265,7 +281,7 @@ router.post(
       .eq('auth0_org_id', req.orgId!)
       .eq('auth0_user_id', targetSub)
       .select(
-        'id, role, status, auth0_user_id, full_name, first_name, last_name, email, department_id, site_id, job_role_id, employee_code, manager_id, employment_type, shift_id, hourly_rate, tax_number'
+        'id, role, status, auth0_user_id, full_name, first_name, last_name, department_id, site_id, job_role_id, employee_code, manager_id, employment_type, shift_id, hourly_rate, tax_number'
       )
       .maybeSingle()
 
@@ -290,7 +306,6 @@ router.post(
       full_name: data.full_name,
       first_name: data.first_name,
       last_name: data.last_name,
-      email: data.email,
       department_id: data.department_id,
       site_id: data.site_id,
       job_role_id: data.job_role_id,

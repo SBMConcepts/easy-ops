@@ -1,7 +1,7 @@
 ---
 name: code-comment-audit
 description: "Audit a codebase against the team's Code Commenting Standards checklist and insert, adapt, or fix comments and doc comments (JSDoc/TSDoc/Javadoc) directly in files where needed. Use this skill whenever the user asks to review, audit, check, improve, clean up, or add code comments or documentation across a project, repo, folder, or set of files — including requests like 'document this codebase', 'add JSDoc to these functions', 'check our comment coverage', 'bring this repo in line with our commenting standard', 'audit comments before this PR', or 'clean up stale/leftover comments'. Trigger even if the user doesn't say the word 'comments' but asks to improve code readability, maintainability, or documentation quality across files."
-compatibility: "Node.js required to run scripts/scan_doc_coverage.js (zero external dependencies). File-editing and shell/git tool access required for the execute phase. Works on any codebase; scanner has first-class support for JS/TS/Java, and the reference doc covers Python, C#, SQL, and IaC for manual review."
+compatibility: 'Node.js required to run scripts/scan_doc_coverage.js (zero external dependencies). File-editing and shell/git tool access required for the execute phase. Works on any codebase; scanner has first-class support for JS/TS/Java, and the reference doc covers Python, C#, SQL, and IaC for manual review.'
 ---
 
 # Code Comment Audit & Remediation
@@ -19,6 +19,7 @@ comments), and the anti-patterns to remove.
 ## Step 1 — Scope the work
 
 Confirm before starting, unless already obvious from the request:
+
 - Target path(s): whole repo, a package/folder, or a specific set of files.
 - Report-only vs. apply changes: some users just want the audit; others want
   fixes applied directly. If unclear, default to producing the report first
@@ -31,8 +32,7 @@ Confirm before starting, unless already obvious from the request:
 
 Run the scanner against the target path:
 
-```
-node scripts/scan_doc_coverage.js <path> \
+```node scripts/scan_doc_coverage.js <path> \
   --ext=.ts,.tsx,.js,.jsx,.java \
   --exclude=node_modules,dist,build,.git,coverage,.next,out,target,vendor \
   --out=comment-audit-report.md
@@ -62,13 +62,13 @@ For each item:
 
 1. **Understand the "why" before writing anything.** Read the function body,
    its call sites, related tests, and — if available — `git log -p <file>`
-   or `git blame` around that line, to understand *why* the code exists,
+   or `git blame` around that line, to understand _why_ the code exists,
    not just what it does.
 2. **Write the doc comment** using the convention for that language (see
    `references/commenting-standards.md` §3 for TSDoc/JSDoc/Javadoc examples
    and the "why, not what" rule). In TypeScript, don't restate types the
    compiler already documents — explain behavior, edge cases, and rationale.
-3. **Never fabricate rationale.** If the *why* genuinely isn't recoverable
+3. **Never fabricate rationale.** If the _why_ genuinely isn't recoverable
    from the code, tests, or history, do not invent a plausible-sounding
    reason. Either leave a clearly-marked placeholder —
    `// TODO(needs-context): <what you'd need to know to document this>` —

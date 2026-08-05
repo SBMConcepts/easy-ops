@@ -40,11 +40,12 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
   const orgId = req.orgId!
 
   // Identity + PII live on user_credentials (the tenant identity anchor). The
-  // organization-scoped membership (role, status, avatar) lives on org_members.
+  // organization-scoped membership (role, status) lives on org_members;
+  // avatar_url/emergency_contact_* live only on `users`.
   const { data: cred, error: credErr } = await supabaseAdmin
     .from('user_credentials')
     .select(
-      'id, auth0_org_id, auth0_user_id, email, full_name, first_name, last_name, mobile_number, national_id, id_type, address, emergency_contact_name, emergency_contact_phone, status'
+      'id, auth0_org_id, auth0_user_id, email, full_name, first_name, last_name, mobile_number, national_id, id_type, address, status'
     )
     .eq('auth0_user_id', sub)
     .eq('auth0_org_id', orgId)
@@ -59,34 +60,47 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     return
   }
 
-  const [{ data: member }, { data: org }, { data: subscription }, { data: leaveRows }] =
-    await Promise.all([
-      supabaseAdmin
-        .from('org_members')
-        .select(
-          'role, status, joined_at, avatar_url, full_name, email, department_id, site_id, job_role_id, shift_id, manager_id, employee_code, employment_type, hourly_rate, tax_number'
-        )
-        .eq('auth0_org_id', orgId)
-        .eq('auth0_user_id', sub)
-        .maybeSingle(),
-      supabaseAdmin
-        .from('organizations')
-        .select('auth0_org_id, name, slug, status, logo_url, country, industry')
-        .eq('auth0_org_id', orgId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from('subscriptions')
-        .select('plan, status, current_period_end')
-        .eq('auth0_org_id', orgId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      supabaseAdmin
-        .from('org_leave_balances')
-        .select('leave_type, balance_days')
-        .eq('auth0_org_id', orgId)
-        .eq('auth0_user_id', sub),
-    ])
+  const [
+    { data: member },
+    { data: identity },
+    { data: org },
+    { data: subscription },
+    { data: leaveRows },
+  ] = await Promise.all([
+    supabaseAdmin
+      .from('org_members')
+      .select(
+        'role, status, joined_at, full_name, department_id, site_id, job_role_id, shift_id, manager_id, employee_code, employment_type, hourly_rate, tax_number'
+      )
+      .eq('auth0_org_id', orgId)
+      .eq('auth0_user_id', sub)
+      .maybeSingle(),
+    // avatar_url + emergency contact fields live only on `users`, not on
+    // org_members or user_credentials.
+    supabaseAdmin
+      .from('users')
+      .select('avatar_url, emergency_contact_name, emergency_contact_phone')
+      .eq('auth0_org_id', orgId)
+      .eq('auth0_user_id', sub)
+      .maybeSingle(),
+    supabaseAdmin
+      .from('organizations')
+      .select('auth0_org_id, name, slug, status, logo_url, country, industry')
+      .eq('auth0_org_id', orgId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from('subscriptions')
+      .select('plan, status, current_period_end')
+      .eq('auth0_org_id', orgId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabaseAdmin
+      .from('org_leave_balances')
+      .select('leave_type, balance_days')
+      .eq('auth0_org_id', orgId)
+      .eq('auth0_user_id', sub),
+  ])
 
   // Resolve display labels for the caller's assignment references. Each is a
   // small per-org lookup table, so only fetch the ones actually assigned.
@@ -127,15 +141,15 @@ router.get('/api/userinfo', requireAuth, requireOrg, async (req: AuthedRequest, 
     auth0_org_id: cred.auth0_org_id,
     email: cred.email,
     full_name: cred.full_name ?? member?.full_name ?? '',
-    avatar_url: member?.avatar_url ?? null,
+    avatar_url: identity?.avatar_url ?? null,
     first_name: cred.first_name ?? '',
     last_name: cred.last_name ?? '',
     mobile_number: cred.mobile_number ?? null,
     national_id: cred.national_id ?? null,
     id_type: cred.id_type ?? null,
     address: cred.address ?? null,
-    emergency_contact_name: cred.emergency_contact_name ?? null,
-    emergency_contact_phone: cred.emergency_contact_phone ?? null,
+    emergency_contact_name: identity?.emergency_contact_name ?? null,
+    emergency_contact_phone: identity?.emergency_contact_phone ?? null,
     user_status: cred.status ?? 'active',
     org_id: org?.auth0_org_id ?? null,
     role: member?.role ?? 'member',
@@ -206,10 +220,6 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
   if (nationalId !== undefined) update.national_id = nationalId
   const address = nullableText(body.address)
   if (address !== undefined) update.address = address
-  const ecName = nullableText(body.emergency_contact_name)
-  if (ecName !== undefined) update.emergency_contact_name = ecName
-  const ecPhone = nullableText(body.emergency_contact_phone)
-  if (ecPhone !== undefined) update.emergency_contact_phone = ecPhone
 
   if ('id_type' in body) {
     if (body.id_type === null || body.id_type === '') {
@@ -218,6 +228,23 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
       update.id_type = body.id_type
     } else {
       res.status(400).json({ error: "id_type must be 'sa_id' or 'passport'." })
+      return
+    }
+  }
+
+  // emergency_contact_name/phone live only on `users`, not user_credentials.
+  const usersUpdate: TablesUpdate<'users'> = {}
+  const ecName = nullableText(body.emergency_contact_name)
+  if (ecName !== undefined) usersUpdate.emergency_contact_name = ecName
+  const ecPhone = nullableText(body.emergency_contact_phone)
+  if (ecPhone !== undefined) usersUpdate.emergency_contact_phone = ecPhone
+  if (Object.keys(usersUpdate).length > 0) {
+    const { error: usersErr } = await supabaseAdmin
+      .from('users')
+      .update(usersUpdate)
+      .eq('auth0_user_id', sub)
+    if (usersErr) {
+      res.status(500).json({ error: usersErr.message })
       return
     }
   }
@@ -305,7 +332,7 @@ router.post(
     const avatarUrl = `${pub.publicUrl}?v=${Date.now()}`
 
     const { data, error } = await supabaseAdmin
-      .from('org_members')
+      .from('users')
       .update({ avatar_url: avatarUrl })
       .eq('auth0_user_id', sub)
       .eq('auth0_org_id', orgId)
@@ -338,7 +365,7 @@ router.delete(
     }
 
     const { data, error } = await supabaseAdmin
-      .from('org_members')
+      .from('users')
       .update({ avatar_url: null })
       .eq('auth0_user_id', sub)
       .eq('auth0_org_id', orgId)

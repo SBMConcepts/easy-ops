@@ -292,12 +292,19 @@ router.post(
 
     const templateId = typeof body.template_id === 'string' ? body.template_id : ''
     const signature = typeof body.signature_data === 'string' ? body.signature_data.trim() : ''
+    const shiftId = typeof body.shift_id === 'string' ? body.shift_id : ''
+    const siteId = typeof body.site_id === 'string' ? body.site_id : ''
     if (!templateId) {
       res.status(400).json({ error: 'template_id is required.' })
       return
     }
     if (!signature) {
       res.status(400).json({ error: 'A signature is required to submit a checklist.' })
+      return
+    }
+    // shift_id/site_id are NOT NULL on safety_checklist_responses.
+    if (!shiftId || !siteId) {
+      res.status(400).json({ error: 'shift_id and site_id are required.' })
       return
     }
 
@@ -327,8 +334,8 @@ router.post(
         passed: body.passed !== false,
         notes: typeof body.notes === 'string' ? body.notes : null,
         signature_data: signature,
-        shift_id: typeof body.shift_id === 'string' && body.shift_id ? body.shift_id : null,
-        site_id: typeof body.site_id === 'string' && body.site_id ? body.site_id : null,
+        shift_id: shiftId,
+        site_id: siteId,
       })
       .select('*')
       .single()
