@@ -494,8 +494,8 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
   const [templateId, setTemplateId] = useState<string>('')
   const [checked, setChecked] = useState<Record<string, boolean>>({})
   const [notes, setNotes] = useState('')
-  const [siteId, setSiteId] = useState<string>('none')
-  const [shiftId, setShiftId] = useState<string>('none')
+  const [siteId, setSiteId] = useState<string>('')
+  const [shiftId, setShiftId] = useState<string>('')
   const [signature, setSignature] = useState('')
 
   const template = templates.find((t) => t.id === templateId) ?? null
@@ -506,8 +506,8 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
   const resetRun = () => {
     setChecked({})
     setNotes('')
-    setSiteId('none')
-    setShiftId('none')
+    setSiteId('')
+    setShiftId('')
     setSignature('')
   }
 
@@ -518,6 +518,10 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
     }
     if (!requiredMet) {
       toast.error('Please complete all required items before signing.')
+      return
+    }
+    if (!siteId || !shiftId) {
+      toast.error('Select a site and shift before signing.')
       return
     }
     if (!signature.trim()) {
@@ -536,8 +540,8 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
         passed,
         notes: notes.trim() || null,
         signature_data: `signed:${signature.trim()}:${new Date().toISOString()}`,
-        site_id: siteId === 'none' ? null : siteId,
-        shift_id: shiftId === 'none' ? null : shiftId,
+        site_id: siteId,
+        shift_id: shiftId,
       })
       toast.success('Checklist submitted.')
       setTemplateId('')
@@ -611,15 +615,15 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
 
               <div className="safety-section-form__row">
                 <div className="safety-section-form__row-field">
-                  <Label className="safety-section-form__field-label">Site (optional)</Label>
-                  <Select value={siteId} onValueChange={(v) => setSiteId(v ?? 'none')}>
+                  <Label className="safety-section-form__field-label">Site</Label>
+                  <Select value={siteId || undefined} onValueChange={(v) => setSiteId(v ?? '')}>
                     <SelectTrigger className="safety-section-form__select-trigger">
-                      <SelectValue className="safety-section-form__select-value" />
+                      <SelectValue
+                        className="safety-section-form__select-value"
+                        placeholder="Select a site"
+                      />
                     </SelectTrigger>
                     <SelectContent className="safety-section-form__select-content">
-                      <SelectItem className="safety-section-form__select-item" value="none">
-                        No site
-                      </SelectItem>
                       {(sitesQuery.data ?? []).map((s) => (
                         <SelectItem
                           key={s.id}
@@ -633,22 +637,22 @@ function ChecklistRunner({ templates }: { templates: SafetyTemplate[] }) {
                   </Select>
                 </div>
                 <div className="safety-section-form__row-field">
-                  <Label className="safety-section-form__field-label">Shift (optional)</Label>
-                  <Select value={shiftId} onValueChange={(v) => setShiftId(v ?? 'none')}>
+                  <Label className="safety-section-form__field-label">Shift</Label>
+                  <Select value={shiftId || undefined} onValueChange={(v) => setShiftId(v ?? '')}>
                     <SelectTrigger className="safety-section-form__select-trigger">
-                      <SelectValue className="safety-section-form__select-value" />
+                      <SelectValue
+                        className="safety-section-form__select-value"
+                        placeholder="Select a shift"
+                      />
                     </SelectTrigger>
                     <SelectContent className="safety-section-form__select-content">
-                      <SelectItem value="none" className="safety-section-form__select-item">
-                        No shift
-                      </SelectItem>
                       {(shiftsQuery.data ?? []).map((s) => (
                         <SelectItem
                           key={s.id}
                           value={s.id}
                           className="safety-section-form__select-item"
                         >
-                          {s.name}
+                          {s.shift_name}
                         </SelectItem>
                       ))}
                     </SelectContent>

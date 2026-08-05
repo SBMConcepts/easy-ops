@@ -61,8 +61,9 @@ export interface SubmitResponseInput {
   passed: boolean
   notes?: string | null
   signature_data: string
-  shift_id?: string | null
-  site_id?: string | null
+  // NOT NULL on safety_checklist_responses — the server 400s without these.
+  shift_id: string
+  site_id: string
 }
 
 export interface FileIncidentInput {
