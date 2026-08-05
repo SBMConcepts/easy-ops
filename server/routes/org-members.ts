@@ -59,9 +59,10 @@ router.get(
     const shiftById = new Map((shiftsRes.data ?? []).map((s) => [s.id, s.shift_name]))
 
     // Manager label resolves via the manager's own membership row -> their
-    // full name. Build a membership-id -> full-name map from the rows we have.
+    // full name. manager_id is the manager's auth0_user_id (managers are org
+    // members too), so key this map the same way.
     const managerNameById = new Map<string, string>()
-    for (const m of rows) managerNameById.set(m.id, m.full_name)
+    for (const m of rows) managerNameById.set(m.auth0_user_id, m.full_name)
 
     const members = rows.map((m) => ({
       id: m.id,
@@ -233,20 +234,20 @@ router.post(
     }
     if ('manager_id' in body) {
       if (body.manager_id) {
-        // The manager must be an existing membership in this org and cannot be
-        // the member themselves.
+        // manager_id is the manager's auth0_user_id: they must be an existing
+        // membership in this org and cannot be the member themselves.
+        if (body.manager_id === targetSub) {
+          res.status(400).json({ error: 'A member cannot be their own manager.' })
+          return
+        }
         const { data: managerRow } = await supabaseAdmin
           .from('org_members')
-          .select('id, auth0_user_id')
+          .select('auth0_user_id')
           .eq('auth0_org_id', req.orgId!)
-          .eq('id', body.manager_id)
+          .eq('auth0_user_id', body.manager_id)
           .maybeSingle()
         if (!managerRow) {
           res.status(400).json({ error: 'manager_id does not belong to this organization.' })
-          return
-        }
-        if (managerRow.auth0_user_id === targetSub) {
-          res.status(400).json({ error: 'A member cannot be their own manager.' })
           return
         }
       }

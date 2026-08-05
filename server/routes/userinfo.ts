@@ -238,15 +238,8 @@ router.put('/api/userinfo', requireAuth, async (req: AuthedRequest, res: Respons
     return
   }
 
-  // Keep the org roster (org_members) in sync with the display-name fields so
-  // Team Members / attendance views reflect profile edits without a re-sync.
-  const nameSync: TablesUpdate<'org_members'> = {}
-  if (typeof body.full_name === 'string') nameSync.full_name = body.full_name
-  if (typeof body.first_name === 'string') nameSync.first_name = body.first_name
-  if (typeof body.last_name === 'string') nameSync.last_name = body.last_name
-  if (Object.keys(nameSync).length > 0) {
-    await supabaseAdmin.from('org_members').update(nameSync).eq('auth0_user_id', sub)
-  }
+  // org_members' display-name fields are now kept in sync by a DB trigger
+  // (trg_sync_org_members_identity) fired off this update, not app code.
 
   res.json({ ok: true, profile: data })
 })

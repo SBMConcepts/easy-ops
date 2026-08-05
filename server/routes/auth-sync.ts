@@ -1,9 +1,11 @@
 import { Router, type Request, type Response } from 'express'
+import type { member_status, AccessRole } from '../types/supabase.js'
 
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import { hasRequiredRole, jobRoleToTier, type AccessRole } from '../lib/rbac.js'
+import { hasRequiredRole, jobRoleToTier } from '../lib/rbac.js'
 import { permissionsForRole } from '../lib/permissions.js'
 import { findActiveOrgMember } from '../lib/org-members.js'
+import { Json } from '../types/supabase.js'
 
 const router = Router()
 
@@ -15,12 +17,30 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
   }
 
   const body = (req.body ?? {}) as {
-    auth0_user_id?: string
-    email?: string
-    full_name?: string
-    avatar_url?: string | null
-    auth0_org_id?: string
-    role?: string
+    id: string
+    auth0_org_id: string
+    auth0_user_id: string
+    email: string
+    full_name: string
+    first_name: string
+    last_name: string
+    status: member_status
+    avatar_url: string | null
+    department_id: string | null
+    job_role_id: string | null
+    joined_at: Date
+    leave_balances: Json
+    manager_id: string | null
+    site_id: string | null
+    shift_id: string | null
+    permissions: Json
+    employee_code: string | null
+    employment_type: string | null
+    hourly_rate: number | null
+    mobile_number: string | ''
+    tax_number: string | null
+    role: AccessRole | null
+    updated_at: string
   }
 
   if (!body.auth0_user_id || !body.email) {
@@ -30,8 +50,8 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
 
   // Every user in this B2B product belongs to a tenant: users.auth0_org_id is
   // NOT NULL. Reject an orgless sync with a clean 400 rather than a DB error.
-  const auth0OrgId = typeof body.auth0_org_id === 'string' ? body.auth0_org_id : ''
-  if (!auth0OrgId) {
+  const auth0_org_id = typeof body.auth0_org_id === 'string' ? body.auth0_org_id : ''
+  if (!auth0_org_id) {
     res.status(400).json({ error: 'auth0_org_id is required.' })
     return
   }
@@ -42,11 +62,28 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     .from('user_credentials')
     .upsert(
       {
+        id: body.id,
+        auth0_org_id: body.auth0_org_id,
         auth0_user_id: body.auth0_user_id,
-        auth0_org_id: auth0OrgId,
         email: body.email,
-        full_name: body.full_name ?? '',
-        last_synced_at: new Date().toISOString(),
+        full_name: body.full_name,
+        first_name: body.first_name,
+        last_name: body.last_name,
+        status: body.status,
+        avatar_url: body.avatar_url ?? null,
+        department_id: body.department_id ?? null,
+        job_role_id: body.job_role_id ?? null,
+        joined_at: body.joined_at ?? new Date().toISOString(),
+        leave_balances: body.leave_balances ?? JSON.stringify([]),
+        manager_id: body.manager_id ?? null,
+        site_id: body.site_id ?? null,
+        shift_id: body.shift_id ?? null,
+        employment_type: body.employment_type ?? null,
+        hourly_rate: body.hourly_rate ?? null,
+        mobile_number: body.mobile_number ?? '',
+        tax_number: body.tax_number ?? null,
+        role: body.role ?? null,
+        updated_at: new Date().toISOString(),
       },
       { onConflict: 'auth0_user_id' }
     )
@@ -89,12 +126,25 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     role = jobRoleToTier(roleHint)
     const { error: memberErr } = await supabaseAdmin.from('org_members').upsert(
       {
+        id: existingMember?.id ?? '',
         auth0_org_id: body.auth0_org_id,
         auth0_user_id: body.auth0_user_id,
-        email: body.email,
         full_name: body.full_name ?? '',
-        role,
+        first_name: body.first_name ?? '',
+        last_name: body.last_name ?? '',
+        email: body.email,
+        avatar_url: body.avatar_url ?? null,
+        department_id: body.department_id ?? null,
+        job_role_id: body.job_role_id ?? null,
+        joined_at: new Date().toISOString(),
+        employee_code: body.employee_code ?? null,
+        employment_type: body.employment_type,
+        hourly_rate: body.hourly_rate ?? null,
+        mobile_number: body.mobile_number ?? '',
+        tax_number: body.tax_number ?? null,
+        role: body.role ?? 'admin',
         status: 'active',
+        updated_at: new Date().toISOString(),
       },
       { onConflict: 'auth0_org_id,auth0_user_id' }
     )

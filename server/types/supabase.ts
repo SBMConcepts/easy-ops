@@ -511,6 +511,32 @@ export type Database = {
       }
       org_members: {
         Row: {
+          id: string
+          auth0_org_id: string
+          auth0_user_id: string
+          first_name: string
+          full_name: string
+          last_name: string
+          email: string
+          avatar_url: string | null
+          created_at: string
+          department_id: string | null
+          employee_code: string | null
+          employment_type: Database['public']['Enums']['employment_type']
+          hourly_rate: number | null
+          job_role_id: string | null
+          joined_at: string
+          leave_balances: Json
+          manager_id: string | null
+          permissions: Json
+          role: Database['public']['Enums']['org_role']
+          shift_id: string | null
+          site_id: string | null
+          status: Database['public']['Enums']['member_status']
+          tax_number: string | null
+          updated_at: string
+        }
+        Insert: {
           auth0_org_id: string
           auth0_user_id: string
           avatar_url: string | null
@@ -518,7 +544,7 @@ export type Database = {
           department_id: string | null
           email: string
           employee_code: string | null
-          employment_type: Database['public']['Enums']['employment_type'] | null
+          employment_type: Database['public']['Enums']['employment_type']
           first_name: string
           full_name: string
           hourly_rate: number | null
@@ -536,33 +562,8 @@ export type Database = {
           tax_number: string | null
           updated_at: string
         }
-        Insert: {
-          auth0_org_id: string
-          auth0_user_id: string
-          avatar_url?: string | null
-          created_at?: string
-          department_id?: string | null
-          email?: string
-          employee_code?: string | null
-          employment_type?: Database['public']['Enums']['employment_type'] | null
-          first_name?: string
-          full_name?: string
-          hourly_rate?: number | null
-          id?: string
-          job_role_id?: string | null
-          joined_at?: string
-          last_name?: string
-          leave_balances?: Json
-          manager_id?: string | null
-          permissions?: Json
-          role?: Database['public']['Enums']['org_role']
-          shift_id?: string | null
-          site_id?: string | null
-          status?: Database['public']['Enums']['member_status']
-          tax_number?: string | null
-          updated_at?: string
-        }
         Update: {
+          id?: string
           auth0_org_id?: string
           auth0_user_id?: string
           avatar_url?: string | null
@@ -570,14 +571,13 @@ export type Database = {
           department_id?: string | null
           email?: string
           employee_code?: string | null
-          employment_type?: Database['public']['Enums']['employment_type'] | null
-          first_name?: string
+          employment_type?: Database['public']['Enums']['employment_type']
           full_name?: string
+          last_name?: string
+          first_name?: string
           hourly_rate?: number | null
-          id?: string
           job_role_id?: string | null
           joined_at?: string
-          last_name?: string
           leave_balances?: Json
           manager_id?: string | null
           permissions?: Json
@@ -1331,7 +1331,7 @@ export type Database = {
         | 'vehicle'
         | 'other'
       leave_type: 'annual' | 'sick' | 'family_responsibility'
-      member_status: 'active' | 'suspended'
+      member_status: 'active' | 'suspended' | 'terminated' | 'resigned'
       org_plan: 'free' | 'starter' | 'growth' | 'pro' | 'enterprise'
       org_role: 'owner' | 'admin' | 'manager' | 'member'
       org_status: 'provisioning' | 'active' | 'suspended' | 'cancelled'
@@ -1488,7 +1488,7 @@ export const Constants = {
         'other',
       ],
       leave_type: ['annual', 'sick', 'family_responsibility'],
-      member_status: ['active', 'suspended'],
+      member_status: ['active', 'suspended', 'terminated', 'resigned'],
       org_plan: ['free', 'starter', 'growth', 'pro', 'enterprise'],
       org_role: ['owner', 'admin', 'manager', 'member'],
       org_status: ['provisioning', 'active', 'suspended', 'cancelled'],
