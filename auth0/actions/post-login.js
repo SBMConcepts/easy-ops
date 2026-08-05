@@ -92,8 +92,7 @@ exports.onExecutePostLogin = async (event, api) => {
         email: event.user.email,
         aud: 'authenticated',
         role: 'authenticated',
-        auth0_org_id: orgId,
-        auth0_user_id: event.user.user_id,
+        org_id: orgId, // bare claim: auth0.current_org_id() reads org_id, not auth0_org_id
         user_role: role || null,
         iat: nowSec,
         exp: nowSec + 60 * 60, // 1 hour
