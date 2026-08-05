@@ -1,14 +1,20 @@
 import { Router, type Request, type Response } from 'express'
-import type { member_status, AccessRole } from '../types/supabase.js'
 
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import { hasRequiredRole, jobRoleToTier } from '../lib/rbac.js'
+import { hasRequiredRole, jobRoleToTier, type AccessRole } from '../lib/rbac.js'
 import { permissionsForRole } from '../lib/permissions.js'
 import { findActiveOrgMember } from '../lib/org-members.js'
-import { Json } from '../types/supabase.js'
 
 const router = Router()
 
+// Fields actually sent by auth0/actions/post-login.js + post-user-registration.js.
+// public.users is the real identity/profile table (NOT an invite table);
+// public.invitations is the separate pending-invite record; public.org_members
+// is per-org membership only (no email/avatar_url columns there — identity
+// display data lives on `users`, synced onto org_members.full_name/first_name/
+// last_name by the trg_sync_org_members_identity trigger... except that
+// trigger watches user_credentials, not users, so this route updates
+// org_members' name fields directly too).
 router.post('/api/auth/sync', async (req: Request, res: Response) => {
   const secret = process.env.AUTH0_SYNC_SECRET
   if (!secret || req.header('x-api-key') !== secret) {
@@ -17,30 +23,12 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
   }
 
   const body = (req.body ?? {}) as {
-    id: string
-    auth0_org_id: string
-    auth0_user_id: string
-    email: string
-    full_name: string
-    first_name: string
-    last_name: string
-    status: member_status
-    avatar_url: string | null
-    department_id: string | null
-    job_role_id: string | null
-    joined_at: Date
-    leave_balances: Json
-    manager_id: string | null
-    site_id: string | null
-    shift_id: string | null
-    permissions: Json
-    employee_code: string | null
-    employment_type: string | null
-    hourly_rate: number | null
-    mobile_number: string | ''
-    tax_number: string | null
-    role: AccessRole | null
-    updated_at: string
+    auth0_user_id?: string
+    auth0_org_id?: string
+    email?: string
+    full_name?: string
+    avatar_url?: string | null
+    role?: string | null
   }
 
   if (!body.auth0_user_id || !body.email) {
@@ -56,111 +44,97 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     return
   }
 
-  // user_credentials is the tenant identity anchor: it exists independent of any
-  // organization-scoped membership data and is keyed by the Auth0 subject.
-  const { data: cred, error: credErr } = await supabaseAdmin
-    .from('user_credentials')
+  const email = body.email.toLowerCase()
+  const full_name = body.full_name ?? ''
+
+  const { data: identity, error: identityErr } = await supabaseAdmin
+    .from('users')
     .upsert(
       {
-        id: body.id,
-        auth0_org_id: body.auth0_org_id,
         auth0_user_id: body.auth0_user_id,
-        email: body.email,
-        full_name: body.full_name,
-        first_name: body.first_name,
-        last_name: body.last_name,
-        status: body.status,
+        auth0_org_id,
+        email,
+        full_name,
         avatar_url: body.avatar_url ?? null,
-        department_id: body.department_id ?? null,
-        job_role_id: body.job_role_id ?? null,
-        joined_at: body.joined_at ?? new Date().toISOString(),
-        leave_balances: body.leave_balances ?? JSON.stringify([]),
-        manager_id: body.manager_id ?? null,
-        site_id: body.site_id ?? null,
-        shift_id: body.shift_id ?? null,
-        employment_type: body.employment_type ?? null,
-        hourly_rate: body.hourly_rate ?? null,
-        mobile_number: body.mobile_number ?? '',
-        tax_number: body.tax_number ?? null,
-        role: body.role ?? null,
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'auth0_user_id' }
     )
-    .select('auth0_user_id, auth0_org_id, email, full_name')
+    .select('auth0_user_id')
     .single()
 
-  if (credErr || !cred) {
-    res.status(500).json({ error: credErr?.message ?? 'Failed to sync user.' })
+  if (identityErr || !identity) {
+    res.status(500).json({ error: identityErr?.message ?? 'Failed to sync user.' })
     return
   }
 
-  let role: AccessRole = 'admin' // default to owner/admin if no org context
-  if (body.auth0_org_id) {
-    let roleHint = body.role
-    // public.users is the invite table. The invite carries the provisioning-
-    // time intent — the org creator is always invited as owner/admin. Let it
-    // win whenever it grants at least as much privilege as the token hint, so a
-    // stale or low app_metadata role can never downgrade the creator (or any
-    // invited admin) below their intended tier.
-    const { data: invite } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('auth0_org_id', body.auth0_org_id)
-      .eq('email', body.email.toLowerCase())
-      .maybeSingle()
-    if (
-      invite?.role &&
-      (!roleHint || hasRequiredRole(jobRoleToTier(invite.role), jobRoleToTier(roleHint)))
-    ) {
-      roleHint = invite.role
-    }
+  // public.invitations is the real pending-invite record (public.users is
+  // identity, not an invite). The invite carries the provisioning-time
+  // intent — the org creator is always invited as owner/admin. Let it win
+  // whenever it grants at least as much privilege as the token hint, so a
+  // stale or low app_metadata role can never downgrade the creator (or any
+  // invited admin) below their intended tier.
+  const { data: invite } = await supabaseAdmin
+    .from('invitations')
+    .select('role')
+    .eq('auth0_org_id', auth0_org_id)
+    .eq('email', email)
+    .is('accepted_at', null)
+    .is('revoked_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-    const existingMember = await findActiveOrgMember(body.auth0_org_id, body.auth0_user_id)
+  let roleHint = body.role
+  if (
+    invite?.role &&
+    (!roleHint || hasRequiredRole(jobRoleToTier(invite.role), jobRoleToTier(roleHint)))
+  ) {
+    roleHint = invite.role
+  }
 
-    if (!invite && !existingMember) {
-      res.json({ ok: true, role: 'admin', permissions: permissionsForRole('admin') })
-      return
-    }
+  const existingMember = await findActiveOrgMember(auth0_org_id, body.auth0_user_id)
 
-    role = jobRoleToTier(roleHint)
-    const { error: memberErr } = await supabaseAdmin.from('org_members').upsert(
+  if (!invite && !existingMember) {
+    res.json({ ok: true, role: 'admin', permissions: permissionsForRole('admin') })
+    return
+  }
+
+  const role: AccessRole = jobRoleToTier(roleHint)
+  // Only identity/role fields are touched here — assignment fields
+  // (department/site/shift/manager/employee_code/etc.) belong to
+  // /api/org-members and are left untouched. joined_at is intentionally
+  // omitted so it keeps its DB default on first insert and is never reset on
+  // subsequent logins (upsert only overwrites columns present in the payload).
+  const { data: member, error: memberErr } = await supabaseAdmin
+    .from('org_members')
+    .upsert(
       {
-        id: existingMember?.id ?? '',
-        auth0_org_id: body.auth0_org_id,
+        auth0_org_id,
         auth0_user_id: body.auth0_user_id,
-        full_name: body.full_name ?? '',
-        first_name: body.first_name ?? '',
-        last_name: body.last_name ?? '',
-        email: body.email,
-        avatar_url: body.avatar_url ?? null,
-        department_id: body.department_id ?? null,
-        job_role_id: body.job_role_id ?? null,
-        joined_at: new Date().toISOString(),
-        employee_code: body.employee_code ?? null,
-        employment_type: body.employment_type,
-        hourly_rate: body.hourly_rate ?? null,
-        mobile_number: body.mobile_number ?? '',
-        tax_number: body.tax_number ?? null,
-        role: body.role ?? 'admin',
+        full_name,
+        role,
         status: 'active',
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'auth0_org_id,auth0_user_id' }
     )
-    if (memberErr) {
-      res.status(500).json({ error: memberErr.message })
-      return
-    }
-
-    // Stamp the invite as accepted now that the membership exists.
-    await supabaseAdmin
-      .from('users')
-      .update({ accepted_at: new Date().toISOString() })
-      .eq('auth0_org_id', body.auth0_org_id)
-      .eq('email', body.email.toLowerCase())
-      .is('accepted_at', null)
+    .select('id')
+    .single()
+  if (memberErr || !member) {
+    res.status(500).json({ error: memberErr?.message ?? 'Failed to sync membership.' })
+    return
   }
+
+  // Stamp the invite as accepted now that the membership exists.
+  await supabaseAdmin
+    .from('invitations')
+    .update({ accepted_at: new Date().toISOString(), accepted_member_id: member.id })
+    .eq('auth0_org_id', auth0_org_id)
+    .eq('email', email)
+    .is('accepted_at', null)
 
   res.json({ ok: true, role, permissions: permissionsForRole(role) })
 })

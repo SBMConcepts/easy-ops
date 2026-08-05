@@ -2,16 +2,17 @@
  * Auth0 Custom Database — DELETE script (delete user)
  * Connection: Username-Password-Authentication (custom database)
  *
- * Removes the credential row from public.user_credentials when a user is deleted
- * in Auth0. Under the current schema, org_members.auth0_user_id has a foreign key
- * to user_credentials.(auth0_user_id, auth0_org_id) with ON DELETE CASCADE, so
- * removing the credential row also removes the caller's org_members membership.
- * The public.users invite row is independent (user_credentials no longer
- * references it) and is managed separately.
+ * public.users is the real identity anchor: user_credentials.auth0_user_id
+ * and org_members.auth0_user_id both FK to users(auth0_user_id) ON DELETE
+ * CASCADE, so deleting the users row removes the credential row AND every
+ * org_members row for that person in one statement. Deleting only
+ * user_credentials would cascade org_members (it has its own composite FK
+ * there too) but would leave an orphaned, credential-less users/PII row
+ * behind — so this always deletes via users, not user_credentials directly.
  *
  * Signature is (id, callback) where `id` is the user_id previously returned by
- * Login / Get User (the user_credentials.id UUID, i.e. the Auth0 sub without the
- * "auth0|" prefix).
+ * Login / Get User / Create (user_credentials.id UUID, i.e. the Auth0 sub
+ * without the "auth0|" prefix).
  *
  * Sandbox globals used: configuration.
  */
@@ -44,7 +45,9 @@ function remove(id, callback) {
       return callback(connErr)
     }
 
-    const sql = 'DELETE FROM public.user_credentials WHERE id = $1'
+    const sql =
+      'DELETE FROM public.users ' +
+      'WHERE auth0_user_id = (SELECT auth0_user_id FROM public.user_credentials WHERE id = $1)'
 
     client.query(sql, [id], function (queryErr) {
       client.end()

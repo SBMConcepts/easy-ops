@@ -20,10 +20,7 @@ router.post(
   async (req: AuthedRequest, res: Response) => {
     const orgId = req.orgId!
     const body = (req.body ?? {}) as {
-      auth0_org_id?: string
-      auth0_user_id?: string
       email?: string
-      full_name?: string
       role?: string
     }
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
@@ -40,22 +37,28 @@ router.post(
     // rejects — silently breaking the invitation email).
     const inviterName = req.auth?.email || 'EasyOps'
 
-    // Persist the invite as a public.users row. public.users IS the invite
-    // table: it holds the minimum identity needed to receive an invite, keyed
-    // by (auth0_org_id, email). The real credentials/membership are created
-    // when the invitee enrols via Auth0's custom-DB create.js, which reads this
-    // row back by email and stamps accepted_at.
+    // public.invitations is the real pending-invite table (no unique
+    // constraint on auth0_org_id+email, so re-inviting the same address
+    // revokes any still-pending invite first rather than relying on upsert).
+    // The real credentials/membership are created when the invitee enrols via
+    // Auth0's custom-DB create.js, which reads this row back by email and
+    // stamps accepted_at.
+    await supabaseAdmin
+      .from('invitations')
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('auth0_org_id', orgId)
+      .eq('email', email)
+      .is('accepted_at', null)
+      .is('revoked_at', null)
+
     const { data: invitation, error } = await supabaseAdmin
-      .from('users')
-      .upsert(
-        {
-          auth0_org_id: orgId,
-          email,
-          full_name: typeof body.full_name === 'string' ? body.full_name.trim() : '',
-          role: tier,
-        },
-        { onConflict: 'auth0_org_id,email' }
-      )
+      .from('invitations')
+      .insert({
+        auth0_org_id: orgId,
+        email,
+        role: tier,
+        invited_by: req.auth?.sub,
+      })
       .select('id, email, role')
       .single()
 

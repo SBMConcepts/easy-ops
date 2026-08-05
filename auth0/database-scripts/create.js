@@ -2,19 +2,19 @@
  * Auth0 Custom Database — CREATE script (sign up)
  * Connection: Username-Password-Authentication (custom database)
  *
- * Signups are invitation-only. POST /api/organizations stamps an 'admin' invite
- * row for the org creator and POST /api/invitations stamps the chosen role for
- * invited members — both as rows in public.users (the invite table), keyed by
- * (auth0_org_id, email) with accepted_at IS NULL until enrolment. This script
- * resolves that pending invite by email, then provisions the identity chain in
- * foreign-key order:
+ * Signups are invitation-only. POST /api/organizations (org creator) and
+ * POST /api/invitations (invited members) each write a row to
+ * public.invitations (auth0_org_id, email, role, expires_at, token). This
+ * script resolves that pending invitation by email, then provisions the
+ * identity chain in foreign-key order:
  *
- *   public.user_credentials  ->  public.org_members
+ *   public.users  ->  public.user_credentials  ->  public.org_members
  *
- * and stamps public.users.accepted_at so the invite cannot be reused. The
- * generated credential id doubles as the Auth0 subject (auth0|<id>), so both
- * rows agree on identity. email_verified is set true because receiving the
- * invitation already proved ownership of the address.
+ * (users is the real identity/profile table; user_credentials is the login
+ * store FK'd to users.auth0_user_id; org_members is FK'd to BOTH users and
+ * user_credentials). The generated auth0_user_id is 'auth0|<user_credentials
+ * .id>' so the Auth0 sub agrees with the id this script returns. Finally the
+ * originating invitation is stamped accepted so it cannot be reused.
  *
  * Sandbox globals used: configuration.
  */
@@ -61,12 +61,13 @@ function create(user, callback) {
       }
 
       // Signups are invitation-only. Resolve the org + assigned role from the
-      // pending invite row in public.users, created by POST /api/organizations
-      // (admin) or POST /api/invitations (member). No pending invite => reject
-      // the signup so orphaned users are never created.
+      // pending row in public.invitations (created by POST /api/organizations
+      // or POST /api/invitations). Must be unexpired, unrevoked and unaccepted.
+      // If more than one invite matches, the most recent one wins.
       const inviteSql =
-        'SELECT auth0_org_id, role FROM public.users ' +
-        'WHERE lower(email) = $1 AND accepted_at IS NULL LIMIT 1'
+        'SELECT auth0_org_id, role FROM public.invitations ' +
+        'WHERE lower(email) = $1 AND accepted_at IS NULL AND revoked_at IS NULL ' +
+        'AND expires_at > now() ORDER BY created_at DESC LIMIT 1'
 
       client.query(inviteSql, [email], function (inviteErr, inviteResult) {
         if (inviteErr) {
@@ -82,28 +83,35 @@ function create(user, callback) {
           )
         }
 
-        // Provision user_credentials -> org_members in one atomic statement so
-        // the FK chain is satisfied and a failure rolls back the whole signup.
-        // gen.id is created once and reused as both the credential id and the
-        // auth0|<id> subject. The originating public.users invite row is stamped
-        // accepted so it cannot be reused.
+        // Provision users -> user_credentials -> org_members in one atomic
+        // statement so the FK chain is satisfied and a failure rolls back the
+        // whole signup. gen.cred_id is created once and reused as both the
+        // credential id and the auth0|<id> subject stamped onto all three
+        // rows. The originating invitation is stamped accepted at the end.
         const provisionSql =
-          'WITH gen AS (SELECT gen_random_uuid() AS id), ' +
+          'WITH gen AS (SELECT gen_random_uuid() AS cred_id), ' +
+          'new_user AS (' +
+          '  INSERT INTO public.users (auth0_user_id, auth0_org_id, email, full_name) ' +
+          "  SELECT 'auth0|' || gen.cred_id::text, $3, $1, $4 FROM gen " +
+          '  RETURNING auth0_user_id' +
+          '), ' +
           'new_cred AS (' +
           '  INSERT INTO public.user_credentials ' +
-          '    (id, auth0_org_id, auth0_user_id, email, full_name, password_hash, email_verified, status) ' +
-          "  SELECT gen.id, $3, 'auth0|' || gen.id::text, $1, $4, $2, true, 'active' FROM gen " +
-          '  RETURNING id' +
+          '    (id, auth0_user_id, auth0_org_id, email, full_name, password_hash, email_verified, status) ' +
+          '  SELECT gen.cred_id, new_user.auth0_user_id, $3, $1, $4, $2, true, ' +
+          "    'active' FROM gen, new_user " +
+          '  RETURNING id, auth0_user_id' +
           '), ' +
           'new_member AS (' +
-          '  INSERT INTO public.org_members (auth0_org_id, auth0_user_id, email, full_name, role, status, joined_at) ' +
-          "  SELECT $3, 'auth0|' || gen.id::text, $1, $4, $5, 'active', now() FROM gen " +
+          '  INSERT INTO public.org_members (auth0_org_id, auth0_user_id, full_name, role, status, joined_at) ' +
+          "  SELECT $3, new_cred.auth0_user_id, $4, $5, 'active', now() FROM new_cred " +
           '  ON CONFLICT (auth0_org_id, auth0_user_id) ' +
-          "  DO UPDATE SET role = EXCLUDED.role, status = 'active', email = EXCLUDED.email, full_name = EXCLUDED.full_name" +
+          "  DO UPDATE SET role = EXCLUDED.role, status = 'active', full_name = EXCLUDED.full_name " +
+          '  RETURNING id' +
           '), ' +
           'accept_invite AS (' +
-          '  UPDATE public.users SET accepted_at = now() ' +
-          '  WHERE auth0_org_id = $3 AND lower(email) = $1' +
+          '  UPDATE public.invitations SET accepted_at = now(), accepted_member_id = (SELECT id FROM new_member) ' +
+          '  WHERE auth0_org_id = $3 AND lower(email) = $1 AND accepted_at IS NULL' +
           ') ' +
           'SELECT id FROM new_cred'
 
