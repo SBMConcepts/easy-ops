@@ -8,8 +8,10 @@ export const AUTH0_CLAIM_NS = 'https://easyops.us.auth0.com/'
 export interface Auth0Claims extends JWTPayload {
   sub: string
   email?: string
-  /** Auth0 organization id (text). Sourced from the org_id custom claim. */
+  /** Auth0 organization id (text). Sourced from the auth0_org_id/org_id custom claim. */
   org_id?: string
+  /** Same value as org_id — the Post-Login Action namespaces it as auth0_org_id. */
+  auth0_org_id?: string
   /** Access-tier role custom claim, if injected by the Post-Login Action. */
   role?: string
 }
@@ -45,8 +47,11 @@ export async function verifyAuth0Token(token: string): Promise<Auth0Claims> {
     audience,
   })
 
+  // The Post-Login Action namespaces the org id as auth0_org_id, not org_id.
   const orgId =
+    (payload[`${AUTH0_CLAIM_NS}auth0_org_id`] as string | undefined) ??
     (payload[`${AUTH0_CLAIM_NS}org_id`] as string | undefined) ??
+    (payload['auth0_org_id'] as string | undefined) ??
     (payload['org_id'] as string | undefined)
 
   const role =
@@ -58,6 +63,7 @@ export async function verifyAuth0Token(token: string): Promise<Auth0Claims> {
     sub: payload.sub as string,
     email: payload['email'] as string | undefined,
     org_id: orgId,
+    auth0_org_id: orgId,
     role,
   }
 }

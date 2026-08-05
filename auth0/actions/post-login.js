@@ -11,6 +11,14 @@
  *     token and access token so the frontend AuthContext and the Express
  *     verifyAuth0Token() gate on identical, login-fresh data.
  *
+ * NOTE: does NOT inject a `permissions` claim. Express re-derives permissions
+ * from org_members.role via the DB on every request (requirePermission), and
+ * the frontend gets its permission list from /api/userinfo — neither reads it
+ * off a token. Adding it back would bloat the ID token past the session
+ * cookie's safe size (express-openid-connect stores the whole ID token in the
+ * session cookie; a large `permissions` array here has previously pushed that
+ * over the ~4KB cookie limit and made otherwise-valid sessions look
+ * unauthenticated).
  */
 
 const jwt = require('jsonwebtoken')
@@ -27,7 +35,6 @@ exports.onExecutePostLogin = async (event, api) => {
 
   let role = fallbackRole
   const orgId = orgIdFromLogin
-  let permissions = []
 
   if (!backendUrl || !syncSecret) {
     console.warn('[post-login] BACKEND_URL or AUTH0_SYNC_SECRET not set — using fallback role/org')
@@ -53,7 +60,6 @@ exports.onExecutePostLogin = async (event, api) => {
           return null
         })
         if (data && data.role) role = data.role
-        if (data && Array.isArray(data.permissions)) permissions = data.permissions
       } else {
         const text = await res.text().catch(function () {
           return ''
@@ -75,9 +81,6 @@ exports.onExecutePostLogin = async (event, api) => {
     api.accessToken.setCustomClaim(CLAIM_NS + 'auth0_org_id', orgId)
   }
 
-  api.idToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
-  api.accessToken.setCustomClaim(CLAIM_NS + 'permissions', permissions)
-
   const supabaseJwtSecret = event.secrets && event.secrets.SUPABASE_JWT_SECRET
   if (!supabaseJwtSecret) {
     console.warn('[post-login] SUPABASE_JWT_SECRET not set — skipping supabase_jwt mint')
@@ -92,7 +95,6 @@ exports.onExecutePostLogin = async (event, api) => {
         auth0_org_id: orgId,
         auth0_user_id: event.user.user_id,
         user_role: role || null,
-        permissions: permissions,
         iat: nowSec,
         exp: nowSec + 60 * 60, // 1 hour
       },

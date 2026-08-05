@@ -8,19 +8,21 @@ import { permissionsForRole } from '../lib/permissions.js'
 const router = Router()
 
 /**
- * True when the login-minted Supabase JWT already carries a `permissions` array.
- * RLS itself only needs `org_id`/`sub` (auth0.current_role() looks the role up
- * from org_members) — this claim is kept for defense-in-depth / future use, not
- * because its absence would break policies. Decode only — we trust our own
- * session claim.
+ * True when the login-minted Supabase JWT carries what RLS actually needs:
+ * `org_id`/`sub` (auth0.current_role() looks the role up from org_members).
+ * The token never carries a `permissions` claim — that was dropped from the
+ * Post-Login Action to keep the ID token (and the session cookie it's stored
+ * in) small; don't reintroduce that check here. Decode only — we trust our
+ * own session claim.
  */
-function claimTokenHasPermissions(token: string): boolean {
+function claimTokenIsUsable(token: string): boolean {
   try {
     const decoded = jwt.decode(token)
     return (
       !!decoded &&
       typeof decoded === 'object' &&
-      Array.isArray((decoded as Record<string, unknown>).permissions)
+      typeof (decoded as Record<string, unknown>).sub === 'string' &&
+      typeof (decoded as Record<string, unknown>).org_id === 'string'
     )
   } catch {
     return false
@@ -31,8 +33,8 @@ router.get('/api/supabase-token', requireAuth, (req: AuthedRequest, res: Respons
   const claims = (req.oidc?.idTokenClaims ?? {}) as Record<string, unknown>
   const claimToken = claims[`${AUTH0_CLAIM_NS}supabase_jwt`] as string | undefined
 
-  // Prefer the login-minted claim, but only once it includes permissions.
-  if (claimToken && claimTokenHasPermissions(claimToken)) {
+  // Prefer the login-minted claim, but only once it carries org_id/sub.
+  if (claimToken && claimTokenIsUsable(claimToken)) {
     res.json({ token: claimToken })
     return
   }
@@ -49,7 +51,6 @@ router.get('/api/supabase-token', requireAuth, (req: AuthedRequest, res: Respons
         sub,
         email: req.auth?.email ?? null,
         aud: 'authenticated',
-        role: 'authenticated',
         org_id: req.auth?.org_id ?? null,
         user_role: req.auth?.role ?? null,
         permissions: permissionsForRole(req.auth?.role),

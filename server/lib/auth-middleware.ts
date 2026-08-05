@@ -38,11 +38,13 @@ export async function requireAuth(
     return
   }
 
-  // The Post-Login Action injects namespaced custom claims (org_id, role) into
-  // the ID token; express-openid-connect persists those in the session.
+  // The Post-Login Action injects namespaced custom claims (auth0_org_id, role)
+  // into the ID token; express-openid-connect persists those in the session.
   const claims = (oidc.idTokenClaims ?? oidc.user ?? {}) as Record<string, unknown>
   const orgId =
+    (claims[`${AUTH0_CLAIM_NS}auth0_org_id`] as string | undefined) ??
     (claims[`${AUTH0_CLAIM_NS}org_id`] as string | undefined) ??
+    (claims['auth0_org_id'] as string | undefined) ??
     (claims['org_id'] as string | undefined)
   const role =
     (claims[`${AUTH0_CLAIM_NS}role`] as string | undefined) ??
@@ -53,6 +55,7 @@ export async function requireAuth(
     sub: (oidc.user?.sub ?? claims['sub']) as string,
     email: (oidc.user?.email ?? claims['email']) as string | undefined,
     org_id: orgId,
+    auth0_org_id: orgId,
     role,
   }
   next()
