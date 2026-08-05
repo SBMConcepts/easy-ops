@@ -51,6 +51,7 @@ router.get('/api/supabase-token', requireAuth, (req: AuthedRequest, res: Respons
         sub,
         email: req.auth?.email ?? null,
         aud: 'authenticated',
+        role: 'authenticated',
         org_id: req.auth?.org_id ?? null,
         user_role: req.auth?.role ?? null,
         permissions: permissionsForRole(req.auth?.role),
