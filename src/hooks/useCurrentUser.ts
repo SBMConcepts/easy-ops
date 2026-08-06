@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
-import { useOrgApi } from './useOrgApi'
+import { useOrgApi, ApiError } from './useOrgApi'
 import type { Permission } from '../lib/permissions'
 import type { Database } from '../integrations/supabase/types'
 
@@ -78,7 +78,10 @@ export function useCurrentUser() {
 
     staleTime: 1000 * 60 * 5,
     retry: (failureCount, error) => {
-      if (error instanceof Error && error.message.startsWith('401')) return false
+      // apiFetch's ApiError.message is the server's JSON `error` string (e.g.
+      // "Not authenticated."), not "401 ...", so a message-based check never
+      // matched — check the real status instead.
+      if (error instanceof ApiError && error.status === 401) return false
       return failureCount < 2
     },
   })

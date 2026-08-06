@@ -201,14 +201,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         await loadProfile()
+        if (!cancelled) setStatus('authed')
       } catch (err) {
         console.error('Failed to load profile context:', err)
         if (!cancelled) {
           setUser(null)
           setOrganization(null)
+          // Profile load failed: stay anon, not "authed" — otherwise LoginPage
+          // and ProtectedRoute disagree on auth state and loop between routes.
+          setStatus('anon')
         }
-      } finally {
-        if (!cancelled) setStatus('authed')
       }
     }
 
