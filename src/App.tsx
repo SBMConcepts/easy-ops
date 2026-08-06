@@ -47,6 +47,7 @@ const queryClient = new QueryClient()
 // Served at the root domain — public pages only, no authenticated routes.
 const MarketingRoutes = () => (
   <Routes>
+    <Route path="/" element={<Index />} />
     <Route path="/home" element={<Index />} />
     <Route path="/get-started" element={<GetStarted />} />
     <Route path="/register" element={<Register />} />

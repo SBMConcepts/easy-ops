@@ -1,4 +1,3 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import TopNavBar from '../components/TopNavBar'
 import Hero from './Hero'
 import Features from './Features'
@@ -11,18 +10,14 @@ import PricingSection from '../components/PricingSection'
 const Index = () => {
   return (
     <>
-      <BrowserRouter>
-        <TopNavBar />
-        <Routes>
-          <Route path="home" element={<Hero />} />
-          <Route path="features" element={<Features />} />
-          <Route path="how-it-works" element={<HowItWorks />} />
-          <Route path="benefits" element={<Benefits />} />
-          <Route path="pricing" element={<PricingSection />} />
-          <Route path="cta" element={<CTASection />} />
-        </Routes>
-        <Footer />
-      </BrowserRouter>
+      <TopNavBar />
+      <Hero />
+      <Features />
+      <HowItWorks />
+      <Benefits />
+      <PricingSection />
+      <CTASection />
+      <Footer />
     </>
   )
 }
