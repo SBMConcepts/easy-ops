@@ -6,6 +6,7 @@ import { QrCode, Fingerprint, MapPin, ShieldCheck } from 'lucide-react'
 import '../../styles/form.css'
 import '../../styles/checkinmethods.css'
 
+/** Onboarding wizard step data: which attendance check-in methods are enabled. */
 export interface CheckInSettings {
   methods: {
     qrEnabled: boolean

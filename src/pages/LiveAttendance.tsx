@@ -11,6 +11,7 @@ import {
 import { MapPin, Loader2, Activity } from 'lucide-react'
 import '../styles/liveattendance.css'
 
+/** Real-time view of the org's daily attendance records, filterable by check-in method. */
 export default function LiveAttendance() {
   const [methodFilter, setMethodFilter] = useState('all')
   const { data: records = [], isLoading } = useAttendanceRecords()

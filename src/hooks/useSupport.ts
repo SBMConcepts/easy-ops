@@ -4,12 +4,18 @@ import { useAuth } from '../contexts/AuthContext'
 import { useOrgApi } from './useOrgApi'
 import type { Database } from '../integrations/supabase/types'
 
+/** A support ticket row. */
 export type SupportTicket = Database['public']['Tables']['support_tickets']['Row']
+/** A message posted to a support ticket thread. */
 export type SupportMessage = Database['public']['Tables']['support_messages']['Row']
+/** The org's assigned Customer Success Manager contact row. */
 export type CsmContact = Database['public']['Tables']['csm_assignments']['Row']
 
+/** Lifecycle status of a support ticket. */
 export type TicketStatus = Database['public']['Enums']['support_ticket_status']
+/** Priority of a support ticket. */
 export type TicketPriority = Database['public']['Enums']['support_ticket_priority']
+/** Category of a support ticket. */
 export type TicketCategory = Database['public']['Enums']['support_ticket_category']
 
 /** A ticket in the list view, enriched with reporter/assignee display names. */
@@ -18,11 +24,13 @@ export interface SupportTicketListItem extends SupportTicket {
   assignee_name: string | null
 }
 
+/** A ticket plus its full message thread. */
 export interface TicketDetail {
   ticket: SupportTicket
   messages: SupportMessage[]
 }
 
+/** Input for opening a new support ticket. */
 export interface CreateTicketInput {
   subject: string
   description?: string
@@ -30,12 +38,14 @@ export interface CreateTicketInput {
   priority?: TicketPriority
 }
 
+/** Input for posting a reply to a ticket thread. */
 export interface PostReplyInput {
   ticketId: string
   body: string
   isInternal?: boolean
 }
 
+/** Partial update for a ticket's status, priority, or assignee. */
 export interface UpdateTicketInput {
   ticketId: string
   status?: TicketStatus
@@ -43,6 +53,7 @@ export interface UpdateTicketInput {
   assignedTo?: string | null
 }
 
+/** Input for creating or updating the org's CSM contact. */
 export interface UpsertCsmInput {
   csm_name: string
   csm_email: string
@@ -60,6 +71,7 @@ export const supportKeys = {
 }
 
 // ── Ticket list ─────────────────────────────────────────────────────────────
+/** Fetch the org's support tickets, optionally filtered by status. */
 export function useSupportTickets(status?: TicketStatus | 'all') {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -78,6 +90,7 @@ export function useSupportTickets(status?: TicketStatus | 'all') {
 }
 
 // ── Ticket detail (thread) ──────────────────────────────────────────────────
+/** Fetch a single ticket with its full message thread. */
 export function useSupportTicket(ticketId: string | null) {
   const { apiFetch } = useOrgApi()
 
@@ -90,6 +103,7 @@ export function useSupportTicket(ticketId: string | null) {
 }
 
 // ── Create a ticket ─────────────────────────────────────────────────────────
+/** Open a new support ticket. */
 export function useCreateTicket() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
@@ -112,6 +126,7 @@ export function useCreateTicket() {
 }
 
 // ── Post a reply ────────────────────────────────────────────────────────────
+/** Post a reply to a ticket thread. */
 export function usePostReply() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
@@ -130,6 +145,7 @@ export function usePostReply() {
 }
 
 // ── Update a ticket (status / priority / assignment) ─────────────────────────
+/** Update a ticket's status, priority, and/or assignee. */
 export function useUpdateTicket() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
@@ -152,6 +168,7 @@ export function useUpdateTicket() {
 }
 
 // ── CSM contact ─────────────────────────────────────────────────────────────
+/** Fetch the org's assigned CSM contact, if any. */
 export function useCsmContact(enabled: boolean) {
   const { apiFetch } = useOrgApi()
 
@@ -166,6 +183,7 @@ export function useCsmContact(enabled: boolean) {
   })
 }
 
+/** Create or update the org's CSM contact. */
 export function useUpsertCsm() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()

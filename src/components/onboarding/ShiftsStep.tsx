@@ -15,6 +15,7 @@ import type { SiteData } from './SitesStep'
 import '../../styles/form.css'
 import '../../styles/shiftsstep.css'
 
+/** Onboarding wizard step data: a shift's hours, grace period, and site index. */
 export interface ShiftData {
   name: string
   start_time: string
@@ -23,6 +24,7 @@ export interface ShiftData {
   site_index: number
 }
 
+/** Onboarding wizard step data: the org's overtime/weekly-hours work rules. */
 export interface WorkRules {
   weeklyHoursLimit: number
   overtimeRate: number

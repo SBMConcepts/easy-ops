@@ -7,13 +7,16 @@ import type { Database } from '../integrations/supabase/types'
 type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 type MembershipStatus = 'active' | 'suspended'
 
-// Matches /api/userinfo's leave_balances shape exactly (org_leave_balances rows
-// stripped down to the two fields the caller needs; no id/org/user columns).
+/**
+ * Matches /api/userinfo's leave_balances shape exactly (org_leave_balances rows
+ * stripped down to the two fields the caller needs; no id/org/user columns).
+ */
 export interface LeaveBalance {
   leave_type: string
   balance_days: number
 }
 
+/** The GET /api/userinfo response: the caller's identity, org membership, role/permissions, and denormalized display fields. */
 export interface CurrentUserProfile {
   profile_id: string
   auth0_user_id: string
@@ -66,6 +69,7 @@ export const currentUserKeys = {
   profile: (sub: string | undefined) => ['current-user', 'profile', sub] as const,
 }
 
+/** Loads and caches the authenticated caller's profile (GET /api/userinfo), gated on Auth0 auth being ready. */
 export function useCurrentUser() {
   const { isAuthenticated, user: authUser, isLoading: isAuthLoading } = useAuth()
   const { apiFetch } = useOrgApi()

@@ -4,9 +4,13 @@ import { useAuth } from '../contexts/AuthContext'
 import { useOrgApi } from './useOrgApi'
 import type { Database } from '../integrations/supabase/types'
 
+/** A labour forecast snapshot row. */
 export type ForecastRow = Database['public']['Tables']['labour_forecasts']['Row']
+/** A labour-forecasting alert row. */
 export type AlertRow = Database['public']['Tables']['labour_alerts']['Row']
+/** Lifecycle status of a {@link AlertRow}. */
 export type AlertStatus = Database['public']['Enums']['forecast_alert_status']
+/** Severity of a {@link AlertRow}. */
 export type AlertSeverity = Database['public']['Enums']['forecast_alert_severity']
 
 export const forecastingKeys = {
@@ -17,6 +21,7 @@ export const forecastingKeys = {
     [...forecastingKeys.all, 'alerts', status ?? 'all'] as const,
 }
 
+/** Optional filters for {@link useForecasts}: site, date range, and result limit. */
 export interface ForecastQuery {
   siteId?: string | null
   site_name?: string | null
@@ -26,6 +31,7 @@ export interface ForecastQuery {
 }
 
 // ── Forecast snapshots ──────────────────────────────────────────────────────
+/** Fetch labour forecast snapshots, optionally filtered by site and date range. */
 export function useForecasts(params?: ForecastQuery) {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -51,6 +57,7 @@ export function useForecasts(params?: ForecastQuery) {
 }
 
 // ── Alerts ──────────────────────────────────────────────────────────────────
+/** Fetch labour-forecasting alerts, optionally filtered by status. */
 export function useAlerts(status?: AlertStatus | 'all') {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -70,6 +77,7 @@ export function useAlerts(status?: AlertStatus | 'all') {
 }
 
 // ── Alert lifecycle (acknowledge / resolve / dismiss / reopen) ──────────────
+/** Update an alert's lifecycle status and invalidate the alerts cache. */
 export function useUpdateAlert() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
@@ -87,17 +95,20 @@ export function useUpdateAlert() {
 }
 
 // ── Generate a new forecast (Express → Edge Function) ───────────────────────
+/** Input for triggering a new forecast generation run. */
 export interface GenerateForecastInput {
   siteId?: string | null
   site_name?: string | null
   horizonDays?: number
 }
 
+/** Result of a forecast generation run: the new snapshot plus any alerts it raised. */
 export interface GenerateForecastResult {
   forecast: ForecastRow
   alerts: AlertRow[]
 }
 
+/** Trigger forecast generation (Express proxies to the forecasting Edge Function) and invalidate cached forecasts/alerts. */
 export function useGenerateForecast() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()

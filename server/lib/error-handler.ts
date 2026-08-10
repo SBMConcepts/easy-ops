@@ -7,13 +7,15 @@
 // never leaks a stack trace to the client or crashes the request.
 import type { Request, Response, NextFunction } from 'express'
 
-// Catch-all for routes that no router matched. Mounted AFTER all routes.
+/** Catch-all for routes that no router matched. Mounted AFTER all routes. */
 export function notFoundHandler(req: Request, res: Response): void {
   res.status(404).json({ error: `Not found: ${req.method} ${req.path}` })
 }
 
-// Express error-handling middleware — MUST keep all four arguments so Express
-// recognises it as an error handler. Mounted LAST.
+/**
+ * Express error-handling middleware — MUST keep all four arguments so Express
+ * recognises it as an error handler. Mounted LAST.
+ */
 export function errorHandler(
   err: unknown,
   _req: Request,

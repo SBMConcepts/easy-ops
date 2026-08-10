@@ -14,6 +14,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import '../../styles/form.css'
 import '../../styles/rolesstep.css'
 
+/** Onboarding wizard step data: a job title mapped to a base access role. */
 export interface RoleData {
   name: string
   base_role: 'owner' | 'admin' | 'manager' | 'member'

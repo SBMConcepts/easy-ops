@@ -59,6 +59,7 @@ interface ShiftRow {
 // Sentinel for the "no access tier" option (Radix Select cannot use an empty value).
 const NO_BASE = '__none__'
 
+/** Admin page for managing the org's sites, departments, job titles, and shifts. */
 export default function SitesAndDepartments() {
   const { hasPermission } = useAuthRole()
   const { apiFetch } = useOrgApi()

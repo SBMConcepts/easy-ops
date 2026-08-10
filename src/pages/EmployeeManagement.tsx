@@ -105,6 +105,7 @@ interface MemberRow {
   status: string
 }
 
+/** Admin page for managing org members: role, department/site/shift assignment, and leave balances. */
 export default function EmployeeManagement() {
   const { apiFetch } = useOrgApi()
   const { profile } = useCurrentUser()

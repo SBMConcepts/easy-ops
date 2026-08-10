@@ -85,6 +85,7 @@ const VERSIONS: PolicyVersion[] = [
   },
 ]
 
+/** Legal page rendering the versioned EasyOps operational disclaimer (loadshedding, CCMA, EE/B-BBEE). */
 export default function Disclaimer() {
   return (
     <LegalPage

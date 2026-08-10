@@ -6,6 +6,7 @@ import Footer from '../Footer'
 import '../../styles/onboarding.css'
 import '../../styles/companypages.css'
 
+/** One list entry in a {@link PolicyBlock} of type `list`, optionally with a nested sub-list. */
 export interface PolicyListItem {
   text: string
   /** Secondary emphasised line rendered beneath the item (e.g. a penalty note). */
@@ -13,18 +14,21 @@ export interface PolicyListItem {
   children?: { ordered?: boolean; items: PolicyListItem[] }
 }
 
+/** A content unit within a policy section: paragraph, list, callout, or table. */
 export type PolicyBlock =
   | { type: 'paragraph'; text: string }
   | { type: 'list'; ordered?: boolean; items: PolicyListItem[] }
   | { type: 'callout'; variant?: 'info' | 'legal'; blocks: PolicyBlock[] }
   | { type: 'table'; columns: string[]; rows: string[][] }
 
+/** A titled section of a legal policy document, made up of one or more content blocks. */
 export interface PolicySection {
   heading: string
   subheading?: string
   blocks: PolicyBlock[]
 }
 
+/** A dated, versioned edition of a legal policy document. */
 export interface PolicyVersion {
   version: string
   label: string
@@ -156,6 +160,7 @@ interface LegalPageProps {
   versions: PolicyVersion[]
 }
 
+/** Renders a legal policy page with a version switcher over the given {@link PolicyVersion} list. */
 export default function LegalPage({ title, subtitle, versions }: LegalPageProps) {
   const [selected, setSelected] = useState(versions[0].version)
   const active = versions.find((v) => v.version === selected) ?? versions[0]

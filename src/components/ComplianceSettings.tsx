@@ -41,6 +41,7 @@ const complianceKeys = {
   config: ['compliance', 'config'] as const,
 }
 
+/** Admin form for editing the org's BCEA compliance thresholds (overtime/ordinary-hours caps, lookback window). */
 export const ComplianceSettings = () => {
   const { hasMinRole } = useAuthRole()
   const { apiFetch } = useOrgApi()

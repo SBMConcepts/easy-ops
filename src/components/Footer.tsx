@@ -57,6 +57,7 @@ function LinkedInIcon() {
   )
 }
 
+/** Marketing-site footer with brand, link columns, and legal links. */
 export default function Footer() {
   return (
     <footer className="footer">

@@ -14,6 +14,7 @@ import type { Database } from '../integrations/supabase/types'
 // (first/last/full name via the users row for that auth0_user_id) and the
 // department/site display names, so the client never renders an Auth0 sub or a
 // UUID.
+/** A daily org_attendance aggregate row, enriched with resolved user/department/site display fields. */
 export type AttendanceRow = Database['public']['Tables']['org_attendance']['Row'] & {
   id: string
   auth0_org_id: string
@@ -46,6 +47,7 @@ export const complianceKeys = {
   summary: () => [...complianceKeys.all, 'summary'] as const,
 }
 
+/** A single BCEA compliance violation for one employee/week. */
 export interface ComplianceViolation {
   employee_id: string
   week_start: string
@@ -54,6 +56,7 @@ export interface ComplianceViolation {
   reasons: string[]
 }
 
+/** GET /api/compliance response: overall score plus the individual violations found. */
 export interface ComplianceSummary {
   compliance_score: number
   pass_count: number
@@ -61,7 +64,8 @@ export interface ComplianceSummary {
   violations: ComplianceViolation[]
 }
 
-// ── 1. Sites Data ───────────────────────────────────────────────────────────
+// ── 1. Sites Data ────────────────────────────────────────────────────────
+/** Fetch the org's sites (org_sites). */
 export function useSites() {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -79,7 +83,8 @@ export function useSites() {
   })
 }
 
-// ── 2. Attendance Records (Direct via RLS) ──────────────────────────────────
+// ── 2. Attendance Records (Direct via RLS) ──────────────────────────────
+/** Fetch the org's daily attendance aggregate rows. */
 export function useAttendanceRecords() {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -97,7 +102,8 @@ export function useAttendanceRecords() {
   })
 }
 
-// ── 3. Compliance Summary (via Express + RLS) ───────────────────────────────
+// ── 3. Compliance Summary (via Express + RLS) ────────────────────────────
+/** Fetch the org's BCEA compliance summary. */
 export function useComplianceCheck() {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -110,7 +116,8 @@ export function useComplianceCheck() {
   })
 }
 
-// ── 4. Sites , Departments & Job Titles (via Express) ───────────────────────────────
+// ── 4. Sites , Departments & Job Titles (via Express) ───────────────────────
+/** An org_sites row (denormalized for display). */
 export interface SiteRow {
   id: string
   auth0_org_id: string
@@ -123,12 +130,14 @@ export interface SiteRow {
   geo_radius_m: number
 }
 
+/** An org_departments row. */
 export interface DepartmentRow {
   id: string
   auth0_org_id: string
   department_name: string
 }
 
+/** A free-form job title (org_roles), optionally mapped to a base access role. */
 export interface JobRoleRow {
   id: string
   auth0_org_id: string
@@ -144,6 +153,7 @@ export const rolesKeys = {
   all: ['org_roles'] as const,
 }
 
+/** Fetch the org's departments. */
 export function useDepartments() {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -156,6 +166,7 @@ export function useDepartments() {
   })
 }
 
+/** Fetch the org's job titles (org_roles). */
 export function useRoles() {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -171,7 +182,8 @@ export function useRoles() {
   })
 }
 
-// ── 5. Shifts (standard working hours / schedules, via Express) ─────────────
+// ── 5. Shifts (standard working hours / schedules, via Express) ───────────
+/** An org_shifts row (a standard working-hours schedule). */
 export interface ShiftRow {
   id: string
   auth0_org_id: string
@@ -186,6 +198,7 @@ export const shiftsKeys = {
   all: ['org_shifts'] as const,
 }
 
+/** Fetch the org's shifts. */
 export function useShifts() {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -204,6 +217,7 @@ export function useShifts() {
 // ── 6. Leave balances (via Express) ─────────────────────────────────────────
 // Matches GET /api/org-leave's response exactly — org_leave_balances rows
 // keyed by (auth0_org_id, auth0_user_id) but returned without those columns.
+/** A member's leave balance for one leave type. */
 export interface LeaveBalanceRow {
   leave_type: string
   balance_days: number
@@ -218,6 +232,7 @@ export const leaveKeys = {
 // Fetch a specific member's leave balances (admin view). Pass the target
 // org_members.auth0_user_id; the caller must hold write:org_leave to read
 // another member's balances.
+/** Fetch a member's leave balances. */
 export function useLeaveBalances(auth0_user_id: string | null | undefined) {
   const { apiFetch } = useOrgApi()
 

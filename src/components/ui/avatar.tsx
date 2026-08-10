@@ -10,6 +10,7 @@ function initialsFromName(name?: string | null): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
+/** Props for {@link Avatar}: an optional image source, display name (for initials fallback), and alt text. */
 export interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
   src?: string | null
   name?: string | null

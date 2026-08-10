@@ -51,6 +51,7 @@ const JOBS: Job[] = [
   },
 ]
 
+/** Marketing page listing open EasyOps job vacancies. */
 export default function Careers() {
   return (
     <div>

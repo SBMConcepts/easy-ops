@@ -14,6 +14,7 @@ export const STATUS_COLORS: Record<AttendanceStatus, string> = {
   holiday: 'bg-muted text-muted-foreground border-muted',
 }
 
+/** Centered spinner shown while a dashboard is loading its data. */
 export const DashboardLoader = () => (
   <div className="flex items-center justify-center min-h-100">
     <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -29,6 +30,7 @@ interface AttendanceItemProps {
   hoursWorked?: string | null
 }
 
+/** A single attendance list row, showing name, meta text, clock in/out times, and status badge. */
 export const AttendanceRow: React.FC<AttendanceItemProps> = ({
   fullName,
   metaText,

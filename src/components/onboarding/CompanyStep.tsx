@@ -11,6 +11,7 @@ import { Card, CardContent } from '../../components/ui/card'
 import '../../styles/form.css'
 import '../../styles/companystep.css'
 
+/** Onboarding wizard step data: company name, industry, and country. */
 export interface CompanyData {
   name: string
   industry: string

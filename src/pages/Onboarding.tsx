@@ -20,6 +20,7 @@ const LAST_STEP = 6
 
 const STEP_LABELS = ['Company', 'Sites', 'Departments', 'Roles', 'Shifts', 'Methods', 'Review']
 
+/** Multi-step org setup wizard: company, sites, departments, roles, shifts, check-in methods, then review. */
 export default function Onboarding() {
   const { organization, user } = useAuth()
   const { apiFetch } = useOrgApi()

@@ -17,6 +17,7 @@ const COMPANY_SIZES = ['1–10', '11–50', '51–200', '201–500', '500+'] as 
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
 
+/** Modal form for requesting a product demo, posting to the demo-request API. */
 export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)

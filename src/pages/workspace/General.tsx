@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { Loader2, Save } from 'lucide-react'
 import '../../styles/settings.css'
 
+/** Workspace settings page for editing the organization's name, industry, and country. */
 export default function WorkspaceGeneral() {
   const { organization } = useAuth()
   const { apiFetch } = useOrgApi()

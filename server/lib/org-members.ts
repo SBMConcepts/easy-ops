@@ -2,6 +2,7 @@
 import { supabaseAdmin } from './supabase-admin.js'
 import type { Database } from '../types/supabase.js'
 
+/** An org_members row for a member whose status is 'active' — the RLS-equivalent membership shape. */
 export interface ActiveOrgMember {
   id: string
   auth0_user_id: string

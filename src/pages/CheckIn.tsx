@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+/** Employee self-service page for logging a daily attendance check-in and viewing recent history. */
 export default function CheckIn() {
   const { apiFetch } = useOrgApi()
   const { profile: currentUser } = useCurrentUser()

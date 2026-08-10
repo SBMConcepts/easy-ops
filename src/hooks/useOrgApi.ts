@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 
+/** An HTTP error surfaced by {@link useOrgApi}'s `apiFetch`, carrying the response status code. */
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -19,6 +20,7 @@ interface ApiFetchOptions extends RequestInit {
   requireAuth?: boolean
 }
 
+/** Fetch wrapper for the Express API: resolves `VITE_API_URL`, sends the session cookie, and throws {@link ApiError} on non-2xx/204 responses. */
 export function useOrgApi() {
   const apiFetch = useCallback(
     async <T = unknown>(path: string, options: ApiFetchOptions = {}): Promise<T> => {

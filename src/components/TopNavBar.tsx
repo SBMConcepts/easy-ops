@@ -18,6 +18,7 @@ const NAV_ITEMS = [
 
 type NavId = (typeof NAV_ITEMS)[number]['id']
 
+/** Marketing-site top navigation bar: scroll-spy section links, mobile drawer, and the demo-request modal trigger. */
 export default function TopNavBar() {
   const [activeItem, setActiveItem] = useState<NavId | null>(null)
   const navigate = useNavigate()

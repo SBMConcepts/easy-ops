@@ -2,6 +2,7 @@
 import { Fingerprint, MessageCircle, Monitor, QrCode } from 'lucide-react'
 import '../styles/howitworks.css'
 
+/** Marketing landing-page section explaining the available attendance check-in methods. */
 export default function HowItWorksSection() {
   return (
     <div className="hiw-section" id="how-it-works">

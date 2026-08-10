@@ -44,6 +44,7 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
+/** Settings tab for editing the current user's profile, contact/identity details, avatar, and viewing leave balances. */
 export default function SettingsProfile() {
   const { user, refreshUser } = useAuth()
   const { profile } = useCurrentUser()

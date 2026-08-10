@@ -15,6 +15,7 @@ import type { SiteData } from './SitesStep'
 import '../../styles/form.css'
 import '../../styles/departmentstep.css'
 
+/** Onboarding wizard step data: a department name and the index of its site in the sites step. */
 export interface DepartmentData {
   name: string
   site_index: number

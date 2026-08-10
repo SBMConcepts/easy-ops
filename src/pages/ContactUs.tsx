@@ -26,6 +26,7 @@ const SECTORS = [
   },
 ]
 
+/** Marketing contact page listing EasyOps enquiry channels by department. */
 export default function ContactUs() {
   return (
     <div>

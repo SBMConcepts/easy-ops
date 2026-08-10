@@ -8,6 +8,7 @@ import '../styles/loginpage.css'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 
+/** Public lead-capture form (name/work email/company) that inserts an `access_requests` row via Supabase. */
 export default function GetStarted() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)

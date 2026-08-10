@@ -23,6 +23,7 @@ const passwordSchema = z
 
 type PasswordFormData = z.infer<typeof passwordSchema>
 
+/** Settings tab for changing the current user's password. */
 export default function SettingsSecurity() {
   const { apiFetch } = useOrgApi()
 

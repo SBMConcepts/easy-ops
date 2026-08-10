@@ -43,6 +43,7 @@ const PACKAGES: { id: BillingPlan; name: string; price: string; features: string
   },
 ]
 
+/** Two-step self-serve signup: company details + plan selection, then admin email to create the org. */
 export default function Register() {
   const navigate = useNavigate()
   const { apiFetch } = useOrgApi()

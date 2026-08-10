@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Loader2, CreditCard, ExternalLink, CheckCircle2 } from 'lucide-react'
 import '../../styles/settings.css'
 
+/** Workspace settings page for viewing the current plan and opening the billing portal. */
 export default function WorkspaceBilling() {
   const { organization } = useAuth()
   const { apiFetch } = useOrgApi()

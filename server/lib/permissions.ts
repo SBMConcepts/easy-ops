@@ -81,6 +81,7 @@ export const ALL_PERMISSIONS = [
   'delete:audit_logs',
 ] as const
 
+/** A single `resource:action` scope drawn from {@link ALL_PERMISSIONS}. */
 export type Permission = (typeof ALL_PERMISSIONS)[number]
 
 // Managers can operate org structure (sites, departments, attendance) and manage

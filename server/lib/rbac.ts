@@ -10,6 +10,7 @@
 // a job role needs to be resolved to an access tier (e.g. accepting an invite,
 // syncing membership), use `jobRoleToTier`.
 
+/** An `org_members.role` access tier, ordered lowest (`member`) to highest (`owner`) privilege. */
 export type AccessRole = 'owner' | 'admin' | 'manager' | 'member'
 
 export const ACCESS_ROLES: readonly AccessRole[] = ['owner', 'admin', 'manager', 'member']

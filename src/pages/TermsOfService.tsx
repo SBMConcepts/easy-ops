@@ -233,6 +233,7 @@ const VERSIONS: PolicyVersion[] = [
   },
 ]
 
+/** Legal page rendering the versioned EasyOps terms of service. */
 export default function TermsOfService() {
   return (
     <LegalPage

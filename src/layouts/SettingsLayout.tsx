@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { User, Activity, Shield } from 'lucide-react'
 import '../styles/settings.css'
 
+/** Settings section shell: tab navigation (profile/security/attendance) over a nested route outlet. */
 export default function SettingsLayout() {
   const navClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${

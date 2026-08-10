@@ -101,6 +101,7 @@ const VERSIONS: PolicyVersion[] = [
   },
 ]
 
+/** Legal page rendering the versioned EasyOps terms of use (end-user access rules). */
 export default function TermsOfUse() {
   return (
     <LegalPage

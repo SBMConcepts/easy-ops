@@ -70,4 +70,5 @@ export const ALL_PERMISSIONS = [
   'delete:audit_logs',
 ] as const
 
+/** A single `resource:action` scope drawn from {@link ALL_PERMISSIONS}. Keep in sync with server/lib/permissions.ts. */
 export type Permission = (typeof ALL_PERMISSIONS)[number]

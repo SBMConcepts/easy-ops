@@ -83,6 +83,7 @@ const featureItems: FeatureItem[] = [
   },
 ]
 
+/** Marketing landing-page section showcasing EasyOps feature highlights. */
 export default function Features() {
   return (
     <section className="features-section" id="features">

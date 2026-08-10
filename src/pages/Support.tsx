@@ -54,6 +54,7 @@ const FAQS: Faq[] = [
   },
 ]
 
+/** Marketing FAQ page for EasyOps support questions. */
 export default function Support() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 

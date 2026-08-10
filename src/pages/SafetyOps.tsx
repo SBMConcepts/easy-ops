@@ -119,6 +119,7 @@ function readItems(template: SafetyTemplate): ChecklistItem[] {
     .filter((x): x is ChecklistItem => x !== null)
 }
 
+/** Safety Ops page: manage checklist templates/responses and file/review incident reports, gated by plan tier. */
 export default function SafetyOps() {
   const { canUseSafetyOps, plan } = useSafetyAccess()
   const { hasMinRole } = useAuthRole()

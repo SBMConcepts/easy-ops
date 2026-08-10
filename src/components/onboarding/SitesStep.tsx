@@ -7,6 +7,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import '../../styles/form.css'
 import '../../styles/sitesstep.css'
 
+/** Onboarding wizard step data: a physical site's location and geofence radius. */
 export interface SiteData {
   name: string
   address: string

@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../integrations/supabase/types'
 import { createSupabaseClient } from '../integrations/supabase/client'
 
+/** A Supabase client typed against the generated {@link Database} schema. */
 export type TypedSupabaseClient = SupabaseClient<Database>
 
 const anonClient = createSupabaseClient() as TypedSupabaseClient
@@ -26,6 +27,10 @@ const fetchSupabaseToken = async (): Promise<string | null> => {
   }
 }
 
+/**
+ * Provides a Supabase client, starting anonymous and upgrading in the
+ * background to a token-authenticated client once a Supabase JWT is available.
+ */
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authenticatedClient, setAuthenticatedClient] = useState<TypedSupabaseClient | null>(null)
 
@@ -50,4 +55,5 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   return <DatabaseContext.Provider value={supabaseClient}>{children}</DatabaseContext.Provider>
 }
 
+/** Access the current (anonymous or authenticated) Supabase client. */
 export const useDB = (): TypedSupabaseClient => useContext(DatabaseContext)

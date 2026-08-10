@@ -67,6 +67,7 @@ function downloadCsv(filename: string, content: string) {
   URL.revokeObjectURL(url)
 }
 
+/** Payroll Export Pro page: generate a payroll register/export for a pay period, gated by plan tier. */
 export default function PayrollExport() {
   const { canUsePayrollExport, plan } = usePayrollAccess()
 

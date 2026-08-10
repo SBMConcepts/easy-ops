@@ -14,8 +14,10 @@ import {
 import { toast } from 'sonner'
 import { UserPlus, Loader2 } from 'lucide-react'
 
+/** An org access tier assignable to an invited employee. */
 export type AppRole = 'owner' | 'admin' | 'manager' | 'member'
 
+/** An employee invited (or being invited) into the organization. */
 export interface NewEmployee {
   id?: string
   full_name: string
@@ -40,6 +42,7 @@ interface Props {
   onInvited?: (employee: NewEmployee) => void
 }
 
+/** Dialog for inviting a new employee by email, role, department, and site. */
 export const InviteEmployeeDialog = ({ onInvited }: Props) => {
   const { apiFetch } = useOrgApi() // Leverage your new secure API bridge
   const queryClient = useQueryClient()

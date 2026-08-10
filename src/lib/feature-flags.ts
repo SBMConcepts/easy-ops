@@ -16,6 +16,7 @@ export const FORECASTING_VIEW_PLANS = new Set(['growth', 'pro', 'enterprise'])
 /** Plans that unlock full forecasting (generate + manage alerts). */
 export const FORECASTING_FULL_PLANS = new Set(['pro', 'enterprise'])
 
+/** Derived Labour Forecasting access flags for the current plan. */
 export interface ForecastingAccess {
   /** Growth+ : the forecasting page and data are visible. */
   canViewForecasting: boolean
@@ -54,6 +55,7 @@ export function useForecastingAccess(): ForecastingAccess {
 /** Plans that unlock Payroll Export Pro. */
 export const PAYROLL_EXPORT_PLANS = new Set(['pro', 'enterprise'])
 
+/** Derived Payroll Export Pro access flag for the current plan. */
 export interface PayrollAccess {
   /** Pro / Enterprise : payroll export generation + download are enabled. */
   canUsePayrollExport: boolean
@@ -85,6 +87,7 @@ export function usePayrollAccess(): PayrollAccess {
 /** Plans that receive a dedicated Customer Success Manager contact. */
 export const CSM_PLANS = new Set(['enterprise'])
 
+/** Support SLA targets for a plan tier. */
 export interface SlaTier {
   /** First-response SLA target, in hours. */
   responseHours: number
@@ -101,6 +104,7 @@ export const SUPPORT_SLA_TIERS: Record<string, SlaTier> = {
   free: { responseHours: 48, resolutionHours: 168 },
 }
 
+/** Derived Support Centre access + SLA tier for the current plan. */
 export interface SupportAccess {
   /** Enterprise : a dedicated CSM contact card is shown. */
   hasCsm: boolean
@@ -134,6 +138,7 @@ export function useSupportAccess(): SupportAccess {
 /** Plans that unlock Safety Ops (checklists + incident reporting). */
 export const SAFETY_OPS_PLANS = new Set(['pro', 'enterprise'])
 
+/** Derived Safety Ops access flag for the current plan. */
 export interface SafetyAccess {
   /** Pro / Enterprise : the Safety Ops page and its APIs are enabled. */
   canUseSafetyOps: boolean

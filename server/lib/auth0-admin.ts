@@ -22,6 +22,7 @@ function mgmt(): ManagementClient {
   return _mgmt
 }
 
+/** Minimal shape returned by the Auth0 Management API after creating an organization. */
 export interface Auth0Org {
   id: string
   name?: string
@@ -34,6 +35,12 @@ function unwrap<T>(res: T | { data: T }): T {
     : (res as T)
 }
 
+/**
+ * Create an Auth0 organization for a new tenant.
+ *
+ * `slug` is used as the Auth0 org `name` (must be URL-safe/unique per Auth0's
+ * rules) while `displayName` is the human-facing label shown in prompts.
+ */
 export async function createAuth0Org(
   displayName: string,
   slug: string,
@@ -77,6 +84,16 @@ async function resolveDbConnectionId(): Promise<string> {
   )
 }
 
+/**
+ * Enable the shared database connection on an organization so its members can
+ * log in and accept invitations.
+ *
+ * Auth0 orgs start with zero enabled connections. Both
+ * `assign_membership_on_login` and `is_signup_enabled` must be true together
+ * (Auth0 rejects `is_signup_enabled` alone) because invitation acceptance is
+ * itself a signup. Idempotent: also repairs orgs enabled by an earlier
+ * version of this function that only set one of the two flags.
+ */
 export async function enableOrgConnection(orgId: string): Promise<void> {
   const connectionId = await resolveDbConnectionId()
 
@@ -103,6 +120,7 @@ export async function enableOrgConnection(orgId: string): Promise<void> {
   })
 }
 
+/** Add a user to an Auth0 organization, optionally assigning organization roles. */
 export async function addOrgMember(
   orgId: string,
   userId: string,
@@ -114,6 +132,7 @@ export async function addOrgMember(
   }
 }
 
+/** Create an Auth0 organization invitation and return its invitation id, if any. */
 export async function createOrgInvitation(params: {
   orgId: string
   inviterName: string

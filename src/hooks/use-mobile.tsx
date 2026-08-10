@@ -2,6 +2,7 @@ import * as React from 'react'
 
 const MOBILE_BREAKPOINT = 640
 
+/** Tracks whether the viewport is narrower than the mobile breakpoint, updating on resize. */
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean>(
     () => typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT

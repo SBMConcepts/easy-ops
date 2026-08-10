@@ -102,6 +102,7 @@ const VERSIONS: PolicyVersion[] = [
   },
 ]
 
+/** Legal page rendering the versioned EasyOps terms & conditions (ECTA/consumer-protection disclosures). */
 export default function TermsAndConditions() {
   return (
     <LegalPage

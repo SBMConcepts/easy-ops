@@ -4,12 +4,18 @@ import { useAuth } from '../contexts/AuthContext'
 import { useOrgApi } from './useOrgApi'
 import type { Database } from '../integrations/supabase/types'
 
+/** A safety checklist template row. */
 export type SafetyTemplate = Database['public']['Tables']['safety_checklist_templates']['Row']
+/** A submitted safety checklist response row. */
 export type SafetyResponse = Database['public']['Tables']['safety_checklist_responses']['Row']
+/** An incident report row. */
 export type IncidentReport = Database['public']['Tables']['incident_reports']['Row']
 
+/** Category of a reported incident. */
 export type IncidentType = Database['public']['Enums']['incident_type']
+/** Severity of a reported incident. */
 export type IncidentSeverity = Database['public']['Enums']['incident_severity']
+/** Review/lifecycle status of a reported incident. */
 export type IncidentStatus = Database['public']['Enums']['incident_status']
 
 /** A single checklist item definition stored in a template's `items` array. */
@@ -38,6 +44,7 @@ export interface IncidentListItem extends IncidentReport {
   manager_name: string | null
 }
 
+/** Input for creating a safety checklist template. */
 export interface CreateTemplateInput {
   name: string
   description?: string | null
@@ -46,6 +53,7 @@ export interface CreateTemplateInput {
   active?: boolean
 }
 
+/** Partial update for an existing safety checklist template. */
 export interface UpdateTemplateInput {
   id: string
   name?: string
@@ -55,6 +63,7 @@ export interface UpdateTemplateInput {
   active?: boolean
 }
 
+/** Input for submitting a completed checklist response. `shift_id`/`site_id` are required by the DB constraint. */
 export interface SubmitResponseInput {
   template_id: string
   responses: ChecklistAnswer[]
@@ -66,6 +75,7 @@ export interface SubmitResponseInput {
   site_id: string
 }
 
+/** Input for filing a new safety incident report. */
 export interface FileIncidentInput {
   incident_type: IncidentType
   severity: IncidentSeverity
@@ -78,6 +88,7 @@ export interface FileIncidentInput {
   department_id?: string | null
 }
 
+/** Input for a manager's review of a filed incident (status/severity/notes). */
 export interface ReviewIncidentInput {
   id: string
   status?: IncidentStatus
@@ -95,7 +106,8 @@ export const safetyKeys = {
   incident: (id: string) => [...safetyKeys.all, 'incident', id] as const,
 }
 
-// ── Checklist templates ───────────────────────────────────────────────────────
+// ── Checklist templates ──────────────────────────────────────────────────────
+/** Fetch the org's safety checklist templates. */
 export function useSafetyTemplates(activeOnly = false) {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -112,6 +124,7 @@ export function useSafetyTemplates(activeOnly = false) {
   })
 }
 
+/** Create a safety checklist template. */
 export function useCreateTemplate() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
@@ -128,6 +141,7 @@ export function useCreateTemplate() {
   })
 }
 
+/** Update a safety checklist template. */
 export function useUpdateTemplate() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
@@ -144,6 +158,7 @@ export function useUpdateTemplate() {
   })
 }
 
+/** Delete a safety checklist template. */
 export function useDeleteTemplate() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
@@ -156,7 +171,8 @@ export function useDeleteTemplate() {
   })
 }
 
-// ── Checklist responses ───────────────────────────────────────────────────────
+// ── Checklist responses ──────────────────────────────────────────────────────
+/** Fetch submitted checklist responses, optionally filtered by template. */
 export function useSafetyResponses(templateId?: string) {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -173,6 +189,7 @@ export function useSafetyResponses(templateId?: string) {
   })
 }
 
+/** Submit a completed checklist response. */
 export function useSubmitResponse() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
@@ -189,7 +206,8 @@ export function useSubmitResponse() {
   })
 }
 
-// ── Incident reports ──────────────────────────────────────────────────────────
+// ── Incident reports ─────────────────────────────────────────────────────────
+/** Fetch incident reports, optionally filtered by status. */
 export function useIncidents(status?: IncidentStatus | 'all') {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
@@ -207,6 +225,7 @@ export function useIncidents(status?: IncidentStatus | 'all') {
   })
 }
 
+/** Fetch a single incident report by id. */
 export function useIncident(id: string | null) {
   const { apiFetch } = useOrgApi()
 
@@ -221,6 +240,7 @@ export function useIncident(id: string | null) {
   })
 }
 
+/** File a new safety incident report. */
 export function useFileIncident() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()
@@ -237,6 +257,7 @@ export function useFileIncident() {
   })
 }
 
+/** Review (and update the status of) a filed incident. */
 export function useReviewIncident() {
   const { apiFetch } = useOrgApi()
   const queryClient = useQueryClient()

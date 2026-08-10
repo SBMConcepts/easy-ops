@@ -26,6 +26,7 @@ interface Member {
   status: 'active' | 'invited'
 }
 
+/** Workspace settings page for inviting and managing org members. */
 export default function WorkspaceMembers() {
   const { apiFetch } = useOrgApi()
   const { hasPermission } = useAuthRole()

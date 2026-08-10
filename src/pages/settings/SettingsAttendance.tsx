@@ -2,6 +2,7 @@ import { useAttendanceRecords } from '../../hooks/useOrgData'
 import { Loader2 } from 'lucide-react'
 import '../../styles/settings.css'
 
+/** Settings tab showing the current user's own attendance history. */
 export default function SettingsAttendance() {
   const { data: myAttendance = [], isLoading: loadingAttendance } = useAttendanceRecords()
 

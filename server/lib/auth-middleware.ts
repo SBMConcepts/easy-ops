@@ -19,6 +19,7 @@ import { hasRequiredRole, type AccessRole } from './rbac.js'
 import { roleHasPermission, type Permission } from './permissions.js'
 import { findActiveOrgMember } from './org-members.js'
 
+/** An Express request augmented with the verified Auth0 claims and resolved org/role context. */
 export interface AuthedRequest extends Request {
   auth?: Auth0Claims
   orgId?: string

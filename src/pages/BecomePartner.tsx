@@ -28,6 +28,7 @@ const PARTNER_TYPES = [
   },
 ]
 
+/** Marketing page listing EasyOps partnership tracks (solution, start-up, affiliate, community). */
 export default function BecomePartner() {
   return (
     <div>

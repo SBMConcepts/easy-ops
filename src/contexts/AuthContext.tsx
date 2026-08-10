@@ -5,8 +5,10 @@ import { useOrgApi } from '../hooks/useOrgApi'
 import type { CurrentUserProfile } from '../hooks/useCurrentUser'
 import type { Permission } from '../lib/permissions'
 
+/** An org_members access tier. */
 export type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
 
+/** The authenticated caller's identity, org membership, and denormalized display fields (mirrors GET /api/userinfo). */
 export interface AuthUser {
   id: AuthUser['auth0_user_id'] // profiles.auth0_user_id (text)
   auth0_org_id: string
@@ -41,6 +43,7 @@ export interface AuthUser {
   permissions: Permission[]
 }
 
+/** The authenticated caller's current organization. */
 export interface AuthOrganization {
   id: AuthOrganization['auth0_org_id'] // organizations.auth0_org_id (text)
   auth0_org_id: string
@@ -116,6 +119,10 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 })
 
+/**
+ * Provides the authenticated user/organization profile (loaded from GET
+ * /api/userinfo) and auth actions to the app.
+ */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { apiFetch } = useOrgApi()
 
@@ -249,6 +256,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   )
 }
 
+/** Access the current auth/organization state and auth actions. */
 export const useAuth = () => useContext(AuthContext)
 
 const ROLE_HIERARCHY: Record<OrgRole, number> = {
@@ -258,6 +266,7 @@ const ROLE_HIERARCHY: Record<OrgRole, number> = {
   owner: 3,
 }
 
+/** Role-tier and permission-scope gates for the current user, matching the server's `requirePermission`/RLS `has_permission` checks. */
 export const useAuthRole = () => {
   const { user } = useAuth()
 

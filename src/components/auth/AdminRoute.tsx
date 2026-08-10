@@ -2,6 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth, useAuthRole } from '../../contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
 
+/** Route guard: redirects unauthenticated users to /login, otherwise renders the nested route. */
 export function AdminRoute() {
   const { user, isLoading } = useAuth()
 

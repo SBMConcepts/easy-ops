@@ -117,6 +117,7 @@ function isResolutionBreached(t: {
   return Date.now() > new Date(t.sla_resolution_due).getTime()
 }
 
+/** In-app Support Centre: browse/create tickets, reply to threads, and manage the org's CSM contact, gated by plan tier. */
 export default function SupportCenter() {
   const { user } = useAuth()
   const { hasPermission, hasMinRole, isAdmin } = useAuthRole()

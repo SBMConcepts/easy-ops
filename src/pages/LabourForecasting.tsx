@@ -64,6 +64,7 @@ function formatNumber(value: number | null, digits = 0): string {
   })
 }
 
+/** Labour Forecasting page: view forecast snapshots and manage alerts, gated by plan tier. */
 export default function LabourForecasting() {
   const { canViewForecasting, canUseFullForecasting, plan } = useForecastingAccess()
   const { hasPermission } = useAuthRole()

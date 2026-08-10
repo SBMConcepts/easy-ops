@@ -194,6 +194,7 @@ const VERSIONS: PolicyVersion[] = [
   },
 ]
 
+/** Legal page rendering the versioned EasyOps privacy policy. */
 export default function PrivacyPolicy() {
   return (
     <LegalPage

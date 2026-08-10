@@ -5,6 +5,7 @@ import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose'
 
 export const AUTH0_CLAIM_NS = 'https://easyops.us.auth0.com/'
 
+/** Claims carried by a verified Auth0 ID/access token, with namespaced custom claims hoisted to top level. */
 export interface Auth0Claims extends JWTPayload {
   sub: string
   email?: string

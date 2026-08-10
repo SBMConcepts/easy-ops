@@ -2,6 +2,7 @@
 import { CheckIcon } from 'lucide-react'
 import '../styles/benefits.css'
 
+/** Marketing landing-page section highlighting EasyOps' core benefits. */
 export default function BenefitsSections() {
   return (
     <div className="benefits-sections" id="benefits">
