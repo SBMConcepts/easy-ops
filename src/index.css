@@ -51,6 +51,9 @@
   --onboarding-radius-lg: 16px;
   --onboarding-radius-xl: 24px;
 
+  /* Layout */
+  --onboarding-max-width: 1440px;
+
   --onboarding-transition: 0.2s ease;
 
   /* Shadows */
@@ -91,7 +94,12 @@
   --sidebar-accent-foreground: var(--onboarding-text-accent);
   --sidebar-border: var(--onboarding-border);
   --sidebar-ring: var(--onboarding-border-focus);
-  --gradient-hero: linear-gradient(180deg, #ffffff 0%, #f8f9fb 50%, #f4fbfa 100%);
+  --gradient-hero: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    var(--onboarding-background) 50%,
+    #f4fbfa 100%
+  );
   --gradient-accent: linear-gradient(135deg, #279e8a 0%, #1a9279 100%);
   --gradient-warm: linear-gradient(135deg, #f5a623 0%, #f07615 100%);
   --shadow-card: var(--onboarding-shadow-md);

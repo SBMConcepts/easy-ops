@@ -106,16 +106,9 @@ const Hero = () => {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="hero-left-content">
-              <div className="hero-heading-badge">
-                <span className="hero-heading-badge__dot" />
-                <span className="hero-heading-badge__text">
-                  Built for for Small, Medium and Large Workforces
-                </span>
-              </div>
-
               <h1 className="hero-heading">
                 Every shift, every site and{' '}
                 <span className="hero-heading__underline">
@@ -162,7 +155,7 @@ const Hero = () => {
                 {stats.map((stat, index) => (
                   <div key={index} className="hero-stat-container">
                     <div className="hero-stat-icon-content">
-                      <stat.icon className="hero-stat-icon" color="#279e8a" />
+                      <stat.icon className="hero-stat-icon" />
                     </div>
                     <div>
                       <div className="hero-stat-value">{stat.value}</div>
@@ -181,65 +174,63 @@ const Hero = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="hero-image-content"
           >
-            <div className="hero-image-content">
-              <div className="hero-image-wrapper">
-                <div className="hero-image-glow" />
-                <AnimatePresence initial={false} custom={direction} mode="popLayout">
-                  <motion.div
-                    key={index}
-                    custom={direction}
-                    variants={variants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
-                    className="hero-image-motion-wrapper"
-                  >
-                    <img className="hero-image" alt={slides[index].alt} src={slides[index].src} />
-                  </motion.div>
-                </AnimatePresence>
+            <div className="hero-image-wrapper">
+              <div className="hero-image-glow" />
+              <AnimatePresence initial={false} custom={direction} mode="popLayout">
+                <motion.div
+                  key={index}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+                  className="hero-image-motion-wrapper"
+                >
+                  <img className="hero-image" alt={slides[index].alt} src={slides[index].src} />
+                </motion.div>
+              </AnimatePresence>
 
-                {/* Caption */}
-                <div className="hero-image-caption">
-                  <motion.p
-                    key={`caption-${index}`}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                    className="hero-image-caption-text"
-                  >
-                    {slides[index].caption}
-                  </motion.p>
-                </div>
-                {/* Navigation arrows */}
-                <div className="hero-image-navigation">
-                  <button
-                    onClick={prev}
-                    aria-label="Previous image"
-                    className="hero-image-navigation-btn"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={next}
-                    aria-label="Next image"
-                    className="hero-image-navigation-btn"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </div>
+              {/* Caption */}
+              <div className="hero-image-caption">
+                <motion.p
+                  key={`caption-${index}`}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="hero-image-caption-text"
+                >
+                  {slides[index].caption}
+                </motion.p>
+              </div>
+              {/* Navigation arrows */}
+              <div className="hero-image-navigation">
+                <button
+                  onClick={prev}
+                  aria-label="Previous image"
+                  className="hero-image-navigation-btn"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={next}
+                  aria-label="Next image"
+                  className="hero-image-navigation-btn"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
 
-                {/* Progress dots */}
-                <div className="hero-image-progress-dots">
-                  {slides.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => goTo(i)}
-                      aria-label={`Go to slide ${i + 1}`}
-                      className={`hero-image-progress-dot ${i === index ? 'active' : ''}`}
-                    />
-                  ))}
-                </div>
+              {/* Progress dots */}
+              <div className="hero-image-progress-dots">
+                {slides.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goTo(i)}
+                    aria-label={`Go to slide ${i + 1}`}
+                    className={`hero-image-progress-dot ${i === index ? 'active' : ''}`}
+                  />
+                ))}
               </div>
             </div>
           </motion.div>
