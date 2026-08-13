@@ -1,11 +1,8 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import '../styles/topnavbar.css'
-import DemoModal from './DemoModal'
 import { useNavigate, useLocation } from 'react-router-dom'
-import BrandFull from '../assets/EasyOps Brand Logo and Name.png'
 import BrandLogo from '../assets/EasyOps Logo.png'
-import BrandName from '../assets/EasyOps Name.png'
 
 const NAV_ITEMS = [
   { label: 'Home', id: 'home' },
@@ -28,7 +25,6 @@ export default function TopNavBar() {
   const drawerRef = useRef<HTMLDivElement>(null)
   const hamburgerRef = useRef<HTMLButtonElement>(null)
   const isClickScrolling = useRef(false)
-  const [modalOpen, setModalOpen] = useState(false)
 
   // Close drawer on resize to desktop
   useEffect(() => {
@@ -220,9 +216,6 @@ export default function TopNavBar() {
           </button>
         </div>
       </div>
-
-      {/* Demo Modal */}
-      {modalOpen && <DemoModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />}
     </>
   )
 }

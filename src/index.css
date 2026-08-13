@@ -19,42 +19,84 @@
 }
 
 :root {
-  --background: #f8f9fb;
-  --foreground: #141e2e;
-  --card: #ffffff;
-  --card-foreground: #141e2e;
-  --popover: #ffffff;
-  --popover-foreground: #141e2e;
-  --primary: #0f2d5c;
-  --primary-foreground: #ffffff;
-  --secondary: #2563eb;
-  --secondary-foreground: #ffffff;
-  --muted: #f8fafc;
-  --muted-foreground: #64748b;
-  --tertiary: #10b981;
-  --tertiary-foreground: #3f3f47;
-  --accent: #f5a623;
-  --accent-foreground: #141e2e;
-  --destructive: #f03d3d;
-  --destructive-foreground: #ffffff;
-  --border: #e1e6ed;
-  --input: #e1e6ed;
-  --ring: #279e8a;
-  --radius: 0.75rem;
-  --sidebar-background: #fafafa;
-  --sidebar-foreground: #3f3f47;
-  --sidebar-primary: #18181b;
-  --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #f1f1f3;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #e2e5eb;
-  --sidebar-ring: #3b82f6;
+  /* ── EasyOps onboarding palette ── */
+
+  /* Backgrounds & Surfaces */
+  --onboarding-background: #f8fafc;
+  --onboarding-surface: #ffffff;
+  --onboarding-surface-raised: 0 4px 24px -4px rgba(15, 45, 92, 0.08);
+
+  /* Borders */
+  --onboarding-border: #e1e6ed;
+  --onboarding-border-focus: #279e8a;
+  --onboarding-border-hover: #1a9279;
+  --onboarding-border-error: #f03d3d;
+
+  /* Accents (from loginpage: #047857) */
+  --onboarding-accent: #047857;
+  --onboarding-accent-dim: rgba(16, 185, 129, 0.1);
+  --onboarding-accent-glow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+
+  /* Typography */
+  --onboarding-text-primary: #0f2d5c;
+  --onboarding-text-secondary: #2563eb;
+  --onboarding-text-accent: #047857;
+  --onboarding-text-placeholder: #94a3b8;
+  --onboarding-text-muted: #64748b;
+  --onboarding-text-error: #f03d3d;
+
+  /* Radii */
+  --onboarding-radius-sm: 8px;
+  --onboarding-radius-md: 12px;
+  --onboarding-radius-lg: 16px;
+  --onboarding-radius-xl: 24px;
+
+  --onboarding-transition: 0.2s ease;
+
+  /* Shadows */
+  --onboarding-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --onboarding-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --onboarding-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+
+  /* Fonts */
+  --onboarding-font-family: 'Schibsted Grotesk', sans-serif;
+
+  /* Original */
+  --background: var(--onboarding-background);
+  --foreground: var(--onboarding-text-primary);
+  --card: var(--onboarding-surface);
+  --card-foreground: var(--onboarding-text-primary);
+  --popover: var(--onboarding-surface);
+  --popover-foreground: var(--onboarding-text-primary);
+  --primary: var(--onboarding-text-primary);
+  --primary-foreground: var(--onboarding-surface);
+  --secondary: var(--onboarding-text-secondary);
+  --secondary-foreground: var(--onboarding-surface);
+  --muted: var(--onboarding-background);
+  --muted-foreground: var(--onboarding-text-muted);
+  --tertiary: var(--onboarding-accent);
+  --tertiary-foreground: var(--onboarding-surface);
+  --accent: var(--onboarding-accent);
+  --accent-foreground: var(--onboarding-text-accent);
+  --destructive: var(--onboarding-surface);
+  --destructive-foreground: var(--onboarding-text-error);
+  --border: var(--onboarding-border);
+  --input: var(--onboarding-border);
+  --ring: var(--onboarding-border-focus);
+  --sidebar-background: var(--onboarding-background);
+  --sidebar-foreground: var(--onboarding-text-primary);
+  --sidebar-primary: var(--onboarding-surface);
+  --sidebar-primary-foreground: var(--onboarding-text-primary);
+  --sidebar-accent: var(--onboarding-surface-raised);
+  --sidebar-accent-foreground: var(--onboarding-text-accent);
+  --sidebar-border: var(--onboarding-border);
+  --sidebar-ring: var(--onboarding-border-focus);
   --gradient-hero: linear-gradient(180deg, #ffffff 0%, #f8f9fb 50%, #f4fbfa 100%);
   --gradient-accent: linear-gradient(135deg, #279e8a 0%, #1a9279 100%);
   --gradient-warm: linear-gradient(135deg, #f5a623 0%, #f07615 100%);
-  --shadow-card: 0 4px 24px -4px rgba(15, 45, 92, 0.08);
-  --shadow-card-hover: 0 12px 40px -8px rgba(15, 45, 92, 0.15);
-  --shadow-hero: 0 20px 60px -15px rgba(15, 45, 92, 0.3);
+  --shadow-card: var(--onboarding-shadow-md);
+  --shadow-card-hover: var(--onboarding-shadow-lg);
+  --shadow-hero: var(--onboarding-shadow-lg);
 
   --gradient-primary: rgba(16, 41, 76, 0.05);
   --gradient-secondary: rgba(41, 174, 160, 0.05);
@@ -63,11 +105,15 @@
   --gradient-muted: rgba(244, 243, 236, 0.5);
   --shadow: rgba(20, 29, 41, 0.1);
 
-  --font-family: 'Space Grotesk';
-
-  --text-primary: #141e2e;
-  --text-secondary: #3f3f47;
-  --text-muted: #6d7f96;
+  --font-family: 'Schibsted Grotesk', sans-serif;
+  --font-heading: 'Schibsted Grotesk', sans-serif;
+  --font-body: 'Schibsted Grotesk', sans-serif;
+  --text-primary: var(--onboarding-text-primary);
+  --text-secondary: var(--onboarding-text-secondary);
+  --text-accent: var(--onboarding-text-accent);
+  --text-placeholder: var(--onboarding-text-placeholder);
+  --text-error: var(--onboarding-text-error);
+  --text-muted: var(--onboarding-text-muted);
 }
 
 @layer base {
@@ -88,7 +134,7 @@
   h4,
   h5,
   h6 {
-    font-family: 'Space Grotesk';
+    font-family: 'Schibsted Grotesk', sans-serif;
   }
 }
 
