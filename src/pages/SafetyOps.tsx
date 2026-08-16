@@ -988,7 +988,7 @@ function IncidentForm() {
                       key={d.id}
                       value={d.id}
                     >
-                      {d.name}
+                      {d.department_name}
                     </SelectItem>
                   ))}
                 </SelectContent>

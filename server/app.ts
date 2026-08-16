@@ -28,12 +28,14 @@ import payrollExportRouter from './routes/payroll-export.js'
 import supportRouter from './routes/support.js'
 import safetyRouter from './routes/safety.js'
 import userCredentialsRouter from './routes/user-credentials.js'
+import billingRouter, { handlePaystackWebhook } from './routes/billing.js'
 
 // 4. Privileged administrative — JWT bearer + admin access tier
 import orgMembersRouter from './routes/org-members.js'
 import invitationsRouter from './routes/invitations.js'
 
 import { notFoundHandler, errorHandler } from './lib/error-handler.js'
+import { requireOperationalAccess } from './lib/auth-middleware.js'
 
 const app = express()
 
@@ -90,6 +92,14 @@ app.use(
   })
 )
 
+// Paystack signs the unmodified request bytes, so its webhook must consume the
+// raw body before the JSON parser. All other API routes use parsed JSON below.
+app.post(
+  '/api/billing/webhooks/paystack',
+  express.raw({ type: 'application/json' }),
+  handlePaystackWebhook
+)
+
 app.use(express.json())
 
 // Liveness/health probe.
@@ -122,13 +132,19 @@ app.use(supabaseTokenRouter)
 app.use(userinfoRouter)
 app.use(sessionRouter)
 app.use(onboardingRouter)
+app.use(subscriptionsRouter)
+app.use(billingRouter)
+
+// Keep recovery routes above this point. Every remaining mounted API is an
+// operational feature and therefore requires a free, active, or live trial
+// entitlement in addition to its own authentication/permission middleware.
+app.use('/api', requireOperationalAccess)
 app.use(orgSitesRouter)
 app.use(orgDepartmentsRouter)
 app.use(orgRolesRouter)
 app.use(orgAttendanceRouter)
 app.use(orgShiftsRouter)
 app.use(orgLeaveRouter)
-app.use(subscriptionsRouter)
 app.use(complianceRouter)
 app.use(labourForecastingRouter)
 app.use(payrollExportRouter)

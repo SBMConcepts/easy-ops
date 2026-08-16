@@ -18,6 +18,7 @@ import { AUTH0_CLAIM_NS, type Auth0Claims } from './auth.js'
 import { hasRequiredRole, type AccessRole } from './rbac.js'
 import { roleHasPermission, type Permission } from './permissions.js'
 import { findActiveOrgMember } from './org-members.js'
+import { supabaseAdmin } from './supabase-admin.js'
 
 /** An Express request augmented with the verified Auth0 claims and resolved org/role context. */
 export interface AuthedRequest extends Request {
@@ -157,5 +158,59 @@ export function requireAllPermissions(...permissions: Permission[]) {
     } catch {
       res.status(500).json({ error: 'Failed to verify permission.' })
     }
+  }
+}
+
+/**
+ * Require a current billing entitlement for operational APIs. Billing, profile,
+ * session, and onboarding endpoints are intentionally mounted before this
+ * middleware so an administrator can recover a restricted organization.
+ */
+export async function requireOperationalAccess(
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    if (!req.oidc?.isAuthenticated()) {
+      res.status(401).json({ error: 'Not authenticated.' })
+      return
+    }
+
+    const claims = (req.oidc.idTokenClaims ?? req.oidc.user ?? {}) as Record<string, unknown>
+    const orgId =
+      (claims[`${AUTH0_CLAIM_NS}auth0_org_id`] as string | undefined) ??
+      (claims[`${AUTH0_CLAIM_NS}org_id`] as string | undefined) ??
+      (claims.auth0_org_id as string | undefined) ??
+      (claims.org_id as string | undefined)
+    if (!orgId) {
+      res.status(403).json({ error: 'No organization context on this session.' })
+      return
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('subscriptions')
+      .select('billing_state, access_ends_at')
+      .eq('auth0_org_id', orgId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (error) throw error
+
+    const hasAccess =
+      data?.billing_state === 'free' ||
+      data?.billing_state === 'active' ||
+      (data?.billing_state === 'trialing' &&
+        (!data.access_ends_at || new Date(data.access_ends_at).getTime() > Date.now()))
+    if (!hasAccess) {
+      res.status(402).json({
+        error: 'An active subscription is required to use operational features.',
+        code: 'billing_required',
+      })
+      return
+    }
+    next()
+  } catch {
+    res.status(500).json({ error: 'Failed to verify subscription access.' })
   }
 }

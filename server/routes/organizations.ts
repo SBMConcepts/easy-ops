@@ -63,12 +63,14 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     })
     if (inviteErr) throw new Error(inviteErr.message)
 
-    await supabaseAdmin.from('subscriptions').insert({
+    const isFreePlan = orgPlan === 'free'
+    const { error: subscriptionErr } = await supabaseAdmin.from('subscriptions').insert({
       auth0_org_id: auth0Org.id,
       plan: orgPlan,
-      status: 'trialing',
-      trial_ends_at: new Date(Date.now() + 14 * 86400000).toISOString(),
+      status: isFreePlan ? 'active' : 'trialing',
+      billing_state: isFreePlan ? 'free' : 'pending_payment_method',
     })
+    if (subscriptionErr) throw new Error(subscriptionErr.message)
 
     const clientId = process.env.AUTH0_CLIENT_ID
     let invitationId: string | null = null

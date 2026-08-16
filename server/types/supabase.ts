@@ -58,6 +58,53 @@ export type Database = {
           },
         ]
       }
+      billing_webhook_events: {
+        Row: {
+          auth0_org_id: string | null
+          event_key: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          provider: string
+          provider_reference: string | null
+          received_at: string
+        }
+        Insert: {
+          auth0_org_id?: string | null
+          event_key: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          provider: string
+          provider_reference?: string | null
+          received_at?: string
+        }
+        Update: {
+          auth0_org_id?: string | null
+          event_key?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          provider?: string
+          provider_reference?: string | null
+          received_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'billing_webhook_events_org_fkey'
+            columns: ['auth0_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['auth0_org_id']
+          },
+        ]
+      }
       csm_assignments: {
         Row: {
           auth0_org_id: string
@@ -1134,32 +1181,65 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          access_ends_at: string | null
           auth0_org_id: string
+          billing_started_at: string | null
+          billing_state: string
+          cancelled_at: string | null
           created_at: string
           current_period_end: string | null
           id: string
+          payment_method_summary: Json
           plan: Database['public']['Enums']['org_plan']
+          provider: string | null
+          provider_customer_code: string | null
+          provider_plan_code: string | null
+          provider_reference: string | null
+          provider_subscription_code: string | null
           status: Database['public']['Enums']['subscription_status']
+          trial_started_at: string | null
           trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
+          access_ends_at?: string | null
           auth0_org_id: string
+          billing_started_at?: string | null
+          billing_state?: string
+          cancelled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           id?: string
+          payment_method_summary?: Json
           plan: Database['public']['Enums']['org_plan']
+          provider?: string | null
+          provider_customer_code?: string | null
+          provider_plan_code?: string | null
+          provider_reference?: string | null
+          provider_subscription_code?: string | null
           status?: Database['public']['Enums']['subscription_status']
+          trial_started_at?: string | null
           trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
+          access_ends_at?: string | null
           auth0_org_id?: string
+          billing_started_at?: string | null
+          billing_state?: string
+          cancelled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           id?: string
+          payment_method_summary?: Json
           plan?: Database['public']['Enums']['org_plan']
+          provider?: string | null
+          provider_customer_code?: string | null
+          provider_plan_code?: string | null
+          provider_reference?: string | null
+          provider_subscription_code?: string | null
           status?: Database['public']['Enums']['subscription_status']
+          trial_started_at?: string | null
           trial_ends_at?: string | null
           updated_at?: string
         }

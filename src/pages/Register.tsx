@@ -15,25 +15,25 @@ const PACKAGES: { id: BillingPlan; name: string; price: string; features: string
     id: 'free',
     name: 'Free',
     price: 'R0/mo',
-    features: ['14 Day Trial', '5 Employees', 'Basic Check-in', 'QR & Manual'],
+    features: ['Always free', '5 Employees', 'Basic Check-in', 'QR & Manual'],
   },
   {
     id: 'starter',
     name: 'Starter',
     price: 'R299/mo',
-    features: ['35 Employees', '', 'Basic Check-in', 'QR & Manual'],
+    features: ['7-day trial after setup', '35 Employees', 'Basic Check-in', 'QR & Manual'],
   },
   {
     id: 'growth',
     name: 'Growth',
     price: 'R799/mo',
-    features: ['70 Employees', 'Geofencing', 'Reports', 'Mobile Check-in'],
+    features: ['7-day trial after setup', '70 Employees', 'Geofencing', 'Reports'],
   },
   {
     id: 'pro',
     name: 'Pro',
     price: 'R799/mo',
-    features: ['100 Employees', 'Geofencing', 'Reports', 'Mobile Check-in'],
+    features: ['7-day trial after setup', '100 Employees', 'Geofencing', 'Reports'],
   },
   {
     id: 'enterprise',
@@ -160,6 +160,7 @@ export default function Register() {
                 <h2 className="register-flow-title">Create your workspace</h2>
                 <p className="register-flow-desc">
                   You will receive an email invitation to set up your workspace and credentials.
+                  Paid plans start their 7-day trial after setup and secure payment authorization.
                 </p>
               </div>
 
