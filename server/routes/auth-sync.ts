@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express'
 
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import { hasRequiredRole, jobRoleToTier, type AccessRole } from '../lib/rbac.js'
+import { jobRoleToTier, type AccessRole } from '../lib/rbac.js'
 import { permissionsForRole } from '../lib/permissions.js'
 import { findActiveOrgMember } from '../lib/org-members.js'
 
@@ -47,6 +47,35 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
   const email = body.email.toLowerCase()
   const full_name = body.full_name ?? ''
 
+  // A pending invitation establishes the role only for first enrollment. Once
+  // signup accepts it, the active membership becomes the sole role source so
+  // Auth0 metadata cannot change or downgrade database-authoritative access.
+  const { data: invite } = await supabaseAdmin
+    .from('invitations')
+    .select('role')
+    .eq('auth0_org_id', auth0_org_id)
+    .eq('email', email)
+    .is('accepted_at', null)
+    .is('revoked_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const existingMember = await findActiveOrgMember(auth0_org_id, body.auth0_user_id)
+
+  if (!invite && !existingMember) {
+    res.status(403).json({ error: 'No active membership or valid invitation was found.' })
+    return
+  }
+
+  // The invitation establishes the role on a user's first enrollment. Once
+  // create.js has accepted that invitation, subsequent Action syncs must use
+  // the existing membership role rather than the optional Auth0 metadata hint.
+  // Otherwise an undefined hint is converted to "member" and demotes the
+  // newly created admin before the browser reaches the onboarding guard.
+  const role: AccessRole = invite ? jobRoleToTier(invite.role) : jobRoleToTier(existingMember!.role)
+
   const { data: identity, error: identityErr } = await supabaseAdmin
     .from('users')
     .upsert(
@@ -69,40 +98,6 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     return
   }
 
-  // public.invitations is the real pending-invite record (public.users is
-  // identity, not an invite). The invite carries the provisioning-time
-  // intent — the org creator is always invited as owner/admin. Let it win
-  // whenever it grants at least as much privilege as the token hint, so a
-  // stale or low app_metadata role can never downgrade the creator (or any
-  // invited admin) below their intended tier.
-  const { data: invite } = await supabaseAdmin
-    .from('invitations')
-    .select('role')
-    .eq('auth0_org_id', auth0_org_id)
-    .eq('email', email)
-    .is('accepted_at', null)
-    .is('revoked_at', null)
-    .gt('expires_at', new Date().toISOString())
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  let roleHint = body.role
-  if (
-    invite?.role &&
-    (!roleHint || hasRequiredRole(jobRoleToTier(invite.role), jobRoleToTier(roleHint)))
-  ) {
-    roleHint = invite.role
-  }
-
-  const existingMember = await findActiveOrgMember(auth0_org_id, body.auth0_user_id)
-
-  if (!invite && !existingMember) {
-    res.json({ ok: true, role: 'admin', permissions: permissionsForRole('admin') })
-    return
-  }
-
-  const role: AccessRole = jobRoleToTier(roleHint)
   // Only identity/role fields are touched here — assignment fields
   // (department/site/shift/manager/employee_code/etc.) belong to
   // /api/org-members and are left untouched. joined_at is intentionally

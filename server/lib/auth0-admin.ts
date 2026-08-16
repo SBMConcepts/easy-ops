@@ -58,6 +58,11 @@ export async function createAuth0Org(
   return { id: data.id, name: data.name, display_name: data.display_name }
 }
 
+/** Delete an Auth0 organization created by a provisioning attempt that later failed. */
+export async function deleteAuth0Org(orgId: string): Promise<void> {
+  await mgmt().organizations.delete(orgId)
+}
+
 async function resolveDbConnectionId(): Promise<string> {
   const explicitId = process.env.AUTH0_DB_CONNECTION_ID
   if (explicitId) return explicitId

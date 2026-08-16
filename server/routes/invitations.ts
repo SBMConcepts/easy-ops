@@ -19,6 +19,25 @@ router.post(
   requirePermission('write:invitations'),
   async (req: AuthedRequest, res: Response) => {
     const orgId = req.orgId!
+
+    const { data: organization, error: organizationErr } = await supabaseAdmin
+      .from('organizations')
+      .select('status')
+      .eq('auth0_org_id', orgId)
+      .maybeSingle()
+    if (organizationErr) {
+      res.status(500).json({ error: organizationErr.message })
+      return
+    }
+    if (!organization) {
+      res.status(404).json({ error: 'Organization not found.' })
+      return
+    }
+    if (organization.status !== 'active') {
+      res.status(409).json({ error: 'Complete organization setup before inviting members.' })
+      return
+    }
+
     const body = (req.body ?? {}) as {
       email?: string
       role?: string

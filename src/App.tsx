@@ -83,7 +83,13 @@ const WorkspaceShell = () => {
 
   return (
     <Routes>
-      <Route element={<AppLayout />}>
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
         {/* Workspace default landing (DashboardRouter dynamically renders based on user.role) */}
         <Route index element={<DashboardRouter />} />
         {/* General Staff & Operator Views */}
@@ -95,7 +101,14 @@ const WorkspaceShell = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="onboarding" element={<Onboarding />} />
+        <Route
+          path="onboarding"
+          element={
+            <ProtectedRoute allowedRoles={['owner', 'admin']}>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
         <Route path="reports" element={<Reports />} />
         {/* Management & Administration Views with RBAC */}
         <Route

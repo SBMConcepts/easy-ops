@@ -1,8 +1,8 @@
 import { Router, type Response } from 'express'
 
 import { requireAuth, requireOrg, requireRole, type AuthedRequest } from '../lib/auth-middleware.js'
-import { supabaseAdmin } from '../lib/supabase-admin.js'
-import type { Database, Json, TablesUpdate } from '../types/supabase.js'
+import { withDatabaseTransaction } from '../lib/database.js'
+import type { Database } from '../types/supabase.js'
 
 const router = Router()
 
@@ -41,135 +41,128 @@ router.post(
     const body = (req.body ?? {}) as OnboardingBody
 
     try {
-      const { data: currentOrg } = await supabaseAdmin
-        .from('organizations')
-        .select('metadata')
-        .eq('auth0_org_id', orgId)
-        .maybeSingle()
+      const completion = await withDatabaseTransaction(async (client) => {
+        const organization = await client.query<{
+          status: string
+          metadata: Record<string, unknown> | null
+        }>('SELECT status, metadata FROM public.organizations WHERE auth0_org_id = $1 FOR UPDATE', [
+          orgId,
+        ])
+        const currentOrg = organization.rows[0]
+        if (!currentOrg) throw new Error('Organization not found.')
+        if (currentOrg.status === 'active') return { alreadyCompleted: true }
 
-      const mergedMetadata = {
-        ...((currentOrg?.metadata as Record<string, unknown> | null) ?? {}),
-        workRules: body.workRules ?? {},
-        checkInMethods: body.checkInMethods ?? {},
-        shifts: body.shifts ?? [],
-      }
+        const mergedMetadata = {
+          ...(currentOrg.metadata ?? {}),
+          workRules: body.workRules ?? {},
+          checkInMethods: body.checkInMethods ?? {},
+          shifts: body.shifts ?? [],
+        }
 
-      const orgUpdate: TablesUpdate<'organizations'> = {
-        status: 'active',
-        metadata: mergedMetadata as Json,
-        updated_at: new Date().toISOString(),
-      }
-      if (body.company?.name) orgUpdate.name = body.company.name
-      if (body.company?.country !== undefined) orgUpdate.country = body.company.country ?? ''
-      if (body.company?.industry !== undefined) orgUpdate.industry = body.company.industry ?? ''
+        const departmentRows = (body.departments ?? [])
+          .map((department) => department.name?.trim() ?? '')
+          .filter(Boolean)
 
-      const { error: orgErr } = await supabaseAdmin
-        .from('organizations')
-        .update(orgUpdate)
-        .eq('auth0_org_id', orgId)
-      if (orgErr) throw new Error(orgErr.message)
+        let firstDepartmentId: string | null = null
+        for (const departmentName of departmentRows) {
+          const department = await client.query<{ id: string }>(
+            'INSERT INTO public.org_departments (auth0_org_id, department_name) VALUES ($1, $2) RETURNING id',
+            [orgId, departmentName]
+          )
+          firstDepartmentId ??= department.rows[0]?.id ?? null
+        }
 
-      const departmentRows = (body.departments ?? [])
-        .filter((d) => d.name?.trim())
-        .map((d) => ({ auth0_org_id: orgId, department_name: d.name!.trim() }))
-
-      let firstDepartmentId: string | null = null
-      if (departmentRows.length > 0) {
-        const { data: depts, error: deptErr } = await supabaseAdmin
-          .from('org_departments')
-          .insert(departmentRows)
-          .select('id')
-        if (deptErr) throw new Error(deptErr.message)
-        firstDepartmentId = depts?.[0]?.id ?? null
-      }
-
-      const siteInputs = (body.sites ?? []).filter((s) => s.name?.trim())
-      if (siteInputs.length > 0) {
-        if (!firstDepartmentId) {
-          const { data: general } = await supabaseAdmin
-            .from('org_departments')
-            .insert({ auth0_org_id: orgId, department_name: 'General' })
-            .select('id')
-            .single()
-          firstDepartmentId = general?.id ?? null
+        const siteInputs = (body.sites ?? []).filter((site) => site.name?.trim())
+        if (siteInputs.length > 0 && !firstDepartmentId) {
+          const department = await client.query<{ id: string }>(
+            "INSERT INTO public.org_departments (auth0_org_id, department_name) VALUES ($1, 'General') RETURNING id",
+            [orgId]
+          )
+          firstDepartmentId = department.rows[0]?.id ?? null
         }
         if (firstDepartmentId) {
-          const siteRows = siteInputs.map((s) => ({
-            auth0_org_id: orgId,
-            site_name: s.name!.trim(),
-            address: s.address ?? '',
-            latitude: s.latitude ?? 0,
-            longitude: s.longitude ?? 0,
-            geo_radius_m: s.geofence_radius_m ?? 0,
-            department_id: firstDepartmentId!,
-          }))
-          const { error: siteErr } = await supabaseAdmin.from('org_sites').insert(siteRows)
-          if (siteErr) throw new Error(siteErr.message)
-        }
-      }
-
-      // org_roles are free-form job titles. `name` is the title (kept as-is);
-      // `base_role` optionally maps the title down to an access tier and must be
-      // one of the known tiers when present.
-      const seen = new Set<string>()
-      const roleRows = (body.roles ?? [])
-        .map((r) => {
-          const name = typeof r.name === 'string' ? r.name.trim() : ''
-          const base = typeof r.base_role === 'string' ? r.base_role.trim().toLowerCase() : ''
-          return {
-            name,
-            base_role: (JOB_ROLES.has(base) ? base : null) as
-              Database['public']['Enums']['org_role'] | null,
+          for (const site of siteInputs) {
+            await client.query(
+              'INSERT INTO public.org_sites (auth0_org_id, site_name, address, latitude, longitude, geo_radius_m, department_id) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+              [
+                orgId,
+                site.name!.trim(),
+                site.address ?? '',
+                site.latitude ?? 0,
+                site.longitude ?? 0,
+                site.geofence_radius_m ?? 0,
+                firstDepartmentId,
+              ]
+            )
           }
-        })
-        .filter((r) => {
-          if (!r.name) return false
-          const key = r.name.toLowerCase()
-          if (seen.has(key)) return false // matches the (auth0_org_id, lower(name)) unique index
-          seen.add(key)
-          return true
-        })
-      if (roleRows.length > 0) {
-        const { error: roleErr } = await supabaseAdmin
-          .from('org_roles')
-          .insert(
-            roleRows.map((r) => ({ auth0_org_id: orgId, name: r.name, base_role: r.base_role }))
-          )
-        if (roleErr) throw new Error(roleErr.message)
-      }
+        }
 
-      // org_shifts hold the standard working-hours / shift schedules members can
-      // be assigned to. Deduped by lower(name) to satisfy the per-org unique
-      // index. Also mirrored in organizations.metadata.shifts above.
-      const seenShifts = new Set<string>()
-      const shiftRows = (body.shifts ?? [])
-        .map((s) => ({
-          name: typeof s.name === 'string' ? s.name.trim() : '',
-          start_time: s.start_time ? String(s.start_time) : '',
-          end_time: s.end_time ? String(s.end_time) : '',
-          grace_period_minutes:
-            typeof s.grace_period_minutes === 'number' ? s.grace_period_minutes : 0,
-          weekly_hours: typeof s.weekly_hours === 'number' ? s.weekly_hours : null,
-        }))
-        .filter((s) => {
-          // start_time and end_time are NOT NULL on org_shifts — drop any
-          // incomplete shift rather than letting the insert fail.
-          if (!s.name || !s.start_time || !s.end_time) return false
-          const key = s.name.toLowerCase()
-          if (seenShifts.has(key)) return false
-          seenShifts.add(key)
-          return true
-        })
-      if (shiftRows.length > 0) {
-        const { error: shiftErr } = await supabaseAdmin
-          .from('org_shifts')
-          .insert(
-            shiftRows.map(({ name, ...s }) => ({ auth0_org_id: orgId, shift_name: name, ...s }))
+        const seenRoles = new Set<string>()
+        const roleRows = (body.roles ?? [])
+          .map((role) => {
+            const name = typeof role.name === 'string' ? role.name.trim() : ''
+            const baseRole =
+              typeof role.base_role === 'string' ? role.base_role.trim().toLowerCase() : ''
+            return {
+              name,
+              baseRole: (JOB_ROLES.has(baseRole) ? baseRole : null) as
+                Database['public']['Enums']['org_role'] | null,
+            }
+          })
+          .filter((role) => {
+            if (!role.name || seenRoles.has(role.name.toLowerCase())) return false
+            seenRoles.add(role.name.toLowerCase())
+            return true
+          })
+        for (const role of roleRows) {
+          await client.query(
+            'INSERT INTO public.org_roles (auth0_org_id, name, base_role) VALUES ($1, $2, $3)',
+            [orgId, role.name, role.baseRole]
           )
-        if (shiftErr) throw new Error(shiftErr.message)
-      }
+        }
 
-      res.json({ ok: true })
+        const seenShifts = new Set<string>()
+        const shiftRows = (body.shifts ?? [])
+          .map((shift) => ({
+            name: typeof shift.name === 'string' ? shift.name.trim() : '',
+            startTime: shift.start_time ? String(shift.start_time) : '',
+            endTime: shift.end_time ? String(shift.end_time) : '',
+            gracePeriodMinutes:
+              typeof shift.grace_period_minutes === 'number' ? shift.grace_period_minutes : 0,
+            weeklyHours: typeof shift.weekly_hours === 'number' ? shift.weekly_hours : null,
+          }))
+          .filter((shift) => {
+            if (!shift.name || !shift.startTime || !shift.endTime) return false
+            if (seenShifts.has(shift.name.toLowerCase())) return false
+            seenShifts.add(shift.name.toLowerCase())
+            return true
+          })
+        for (const shift of shiftRows) {
+          await client.query(
+            'INSERT INTO public.org_shifts (auth0_org_id, shift_name, start_time, end_time, grace_period_minutes, weekly_hours) VALUES ($1, $2, $3, $4, $5, $6)',
+            [
+              orgId,
+              shift.name,
+              shift.startTime,
+              shift.endTime,
+              shift.gracePeriodMinutes,
+              shift.weeklyHours,
+            ]
+          )
+        }
+
+        const companyName = body.company?.name?.trim() || null
+        const country = body.company?.country ?? null
+        const industry = body.company?.industry ?? null
+        await client.query(
+          "UPDATE public.organizations SET status = 'active', metadata = $2::jsonb, updated_at = now(), name = COALESCE($3, name), country = COALESCE($4, country), industry = COALESCE($5, industry) WHERE auth0_org_id = $1",
+          [orgId, JSON.stringify(mergedMetadata), companyName, country, industry]
+        )
+
+        return { alreadyCompleted: false }
+      })
+
+      res.json({ ok: true, ...completion })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Onboarding failed.'
       console.error('onboarding/complete failed:', message)

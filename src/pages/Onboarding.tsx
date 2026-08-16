@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useOrgApi } from '../hooks/useOrgApi'
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
@@ -22,8 +23,9 @@ const STEP_LABELS = ['Company', 'Sites', 'Departments', 'Roles', 'Shifts', 'Meth
 
 /** Multi-step org setup wizard: company, sites, departments, roles, shifts, check-in methods, then review. */
 export default function Onboarding() {
-  const { organization, user } = useAuth()
+  const { organization, user, refreshUser } = useAuth()
   const { apiFetch } = useOrgApi()
+  const navigate = useNavigate()
 
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
@@ -70,7 +72,8 @@ export default function Onboarding() {
       })
 
       toast.success('Workspace successfully provisioned!')
-      window.location.href = '/app'
+      await refreshUser()
+      navigate('/app/workspace/members', { replace: true })
     } catch (err: any) {
       console.error('Provisioning Error:', err)
       toast.error(err.message || 'Failed to complete configuration.')

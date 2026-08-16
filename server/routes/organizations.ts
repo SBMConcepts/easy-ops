@@ -2,7 +2,12 @@ import { Router, type Request, type Response } from 'express'
 
 import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
-import { createAuth0Org, createOrgInvitation, enableOrgConnection } from '../lib/auth0-admin.js'
+import {
+  createAuth0Org,
+  createOrgInvitation,
+  deleteAuth0Org,
+  enableOrgConnection,
+} from '../lib/auth0-admin.js'
 import type { Database } from '../types/supabase.js'
 
 const router = Router()
@@ -34,9 +39,19 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
   const orgPlan: OrgPlan = ORG_PLANS.has(requestedPlan as OrgPlan)
     ? (requestedPlan as OrgPlan)
     : 'free'
+  const clientId = process.env.AUTH0_CLIENT_ID
 
+  if (!clientId) {
+    res.status(503).json({
+      error: 'Auth0 client is not configured; the administrator invitation cannot be sent.',
+    })
+    return
+  }
+
+  let createdOrgId: string | null = null
   try {
     const auth0Org = await createAuth0Org(orgName, slug)
+    createdOrgId = auth0Org.id
 
     await enableOrgConnection(auth0Org.id)
 
@@ -72,20 +87,34 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     })
     if (subscriptionErr) throw new Error(subscriptionErr.message)
 
-    const clientId = process.env.AUTH0_CLIENT_ID
-    let invitationId: string | null = null
-    if (clientId) {
-      invitationId =
-        (await createOrgInvitation({
-          orgId: auth0Org.id,
-          inviterName: orgName,
-          inviteeEmail: adminEmail,
-          clientId,
-        })) ?? null
+    const invitationId = await createOrgInvitation({
+      orgId: auth0Org.id,
+      inviterName: orgName,
+      inviteeEmail: adminEmail,
+      clientId,
+    })
+    if (!invitationId) {
+      throw new Error('Auth0 did not return an administrator invitation id.')
     }
 
     res.status(201).json({ orgId: auth0Org.id, slug, invitationId })
   } catch (err) {
+    if (createdOrgId) {
+      const cleanup = await Promise.allSettled([
+        (async () => {
+          const { error } = await supabaseAdmin
+            .from('organizations')
+            .delete()
+            .eq('auth0_org_id', createdOrgId!)
+          if (error) throw new Error(error.message)
+        })(),
+        deleteAuth0Org(createdOrgId),
+      ])
+      const cleanupFailures = cleanup.filter((result) => result.status === 'rejected')
+      if (cleanupFailures.length > 0) {
+        console.error('organizations/create cleanup failed:', cleanupFailures)
+      }
+    }
     const message = err instanceof Error ? err.message : 'Organization creation failed.'
     console.error('organizations/create failed:', message)
     res.status(500).json({ error: message })
