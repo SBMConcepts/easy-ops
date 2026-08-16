@@ -6,8 +6,11 @@ import Benefits from './Benefits'
 import CTASection from './CTASection'
 import Footer from '../components/Footer'
 import PricingSection from '../components/PricingSection'
+import { useNavigate } from 'react-router-dom'
 
 const Index = () => {
+  const navigate = useNavigate()
+
   return (
     <>
       <TopNavBar />
@@ -15,7 +18,7 @@ const Index = () => {
       <Features />
       <HowItWorks />
       <Benefits />
-      <PricingSection />
+      <PricingSection onConfirmPlan={(plan) => navigate(`/register?plan=${plan}`)} />
       <CTASection />
       <Footer />
     </>

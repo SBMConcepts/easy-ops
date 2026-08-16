@@ -38,7 +38,7 @@ const VERSIONS: PolicyVersion[] = [
               ['**Governing Law**', 'Republic of South Africa'],
               [
                 '**Dispute Resolution**',
-                'Internal escalations to [compliance@easyops.co.za](mailto:compliance@easyops.co.za); failing which, reference to AFSA (Arbitration Foundation of Southern Africa)',
+                'Internal escalations to [admin@easyops.co.za](mailto:admin@easyops.co.za); failing which, reference to AFSA (Arbitration Foundation of Southern Africa)',
               ],
             ],
           },

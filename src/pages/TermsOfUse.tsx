@@ -106,7 +106,7 @@ export default function TermsOfUse() {
   return (
     <LegalPage
       title="Terms of Use"
-      subtitle="The end-user access rules governing administrators, managers, and workforce members using EasyOps."
+      subtitle="The end-user access rules governing owners, administrators, managers, and workforce members using EasyOps."
       versions={VERSIONS}
     />
   )
