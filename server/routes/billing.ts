@@ -57,6 +57,30 @@ async function getSubscription(orgId: string) {
   return data
 }
 
+async function getSubscriptionByProvider(
+  reference: string | null,
+  subscriptionCode: string | null
+) {
+  const lookup = reference
+    ? supabaseAdmin
+        .from('subscriptions')
+        .select('*')
+        .eq('provider_reference', reference)
+        .maybeSingle()
+    : subscriptionCode
+      ? supabaseAdmin
+          .from('subscriptions')
+          .select('*')
+          .eq('provider_subscription_code', subscriptionCode)
+          .maybeSingle()
+      : null
+  if (!lookup) return null
+
+  const { data, error } = await lookup
+  if (error) throw new Error(error.message)
+  return data
+}
+
 function summary(subscription: NonNullable<Awaited<ReturnType<typeof getSubscription>>>) {
   return {
     plan: subscription.plan,
@@ -77,6 +101,9 @@ function summary(subscription: NonNullable<Awaited<ReturnType<typeof getSubscrip
 async function activateTrialFromTransaction(orgId: string, reference: string) {
   const subscription = await getSubscription(orgId)
   if (!subscription) throw new PaystackError('No subscription found for this organization.', 404)
+  if (subscription.provider_reference !== reference) {
+    throw new PaystackError('Checkout reference does not belong to this organization.', 404)
+  }
   if (!PAID_PLANS.has(subscription.plan)) {
     throw new PaystackError('This plan does not require hosted payment setup.', 400)
   }
@@ -247,23 +274,6 @@ export async function handlePaystackWebhook(req: Request, res: Response): Promis
   }
   const data = event.data ?? {}
   const reference = typeof data.reference === 'string' ? data.reference : null
-  const eventKey = `${event.event ?? 'unknown'}:${reference ?? createHash('sha256').update(rawBody).digest('hex')}`
-  const { error: eventError } = await supabaseAdmin.from('billing_webhook_events').insert({
-    provider: 'paystack',
-    event_key: eventKey,
-    event_type: event.event ?? 'unknown',
-    provider_reference: reference,
-    payload: event as Json,
-  })
-  if (eventError?.code === '23505') {
-    res.sendStatus(200)
-    return
-  }
-  if (eventError) {
-    res.status(500).json({ error: 'Could not record webhook event.' })
-    return
-  }
-
   const subscriptionCode =
     typeof data.subscription_code === 'string'
       ? data.subscription_code
@@ -271,39 +281,98 @@ export async function handlePaystackWebhook(req: Request, res: Response): Promis
             ?.subscription_code === 'string'
         ? (data.subscription as { subscription_code: string }).subscription_code
         : null
-  const lookup = reference
-    ? supabaseAdmin
-        .from('subscriptions')
-        .select('*')
-        .eq('provider_reference', reference)
-        .maybeSingle()
-    : subscriptionCode
-      ? supabaseAdmin
-          .from('subscriptions')
-          .select('*')
-          .eq('provider_subscription_code', subscriptionCode)
-          .maybeSingle()
-      : null
-  const { data: subscription } = lookup ? await lookup : { data: null }
+  const eventKey = `${event.event ?? 'unknown'}:${reference ?? createHash('sha256').update(rawBody).digest('hex')}`
 
-  if (subscription) {
-    const update: TablesUpdate<'subscriptions'> = {}
-    if (event.event === 'invoice.payment_failed') {
-      update.status = 'past_due'
-      update.billing_state = 'past_due'
-    } else if (event.event === 'invoice.update' && data.status === 'success') {
-      update.status = 'active'
-      update.billing_state = 'active'
-    } else if (event.event === 'subscription.disable') {
-      update.status = 'cancelled'
-      update.billing_state = 'cancelled'
-      update.cancelled_at = new Date().toISOString()
-    }
-    if (Object.keys(update).length > 0) {
-      await supabaseAdmin.from('subscriptions').update(update).eq('id', subscription.id)
-    }
+  let subscription
+  try {
+    subscription = await getSubscriptionByProvider(reference, subscriptionCode)
+  } catch (error) {
+    console.error('Paystack webhook subscription lookup failed:', error)
+    res.status(500).json({ error: 'Could not resolve webhook subscription.' })
+    return
   }
-  res.sendStatus(200)
+
+  let webhookEventId: string
+  const { data: insertedEvent, error: eventError } = await supabaseAdmin
+    .from('billing_webhook_events')
+    .insert({
+      provider: 'paystack',
+      event_key: eventKey,
+      event_type: event.event ?? 'unknown',
+      auth0_org_id: subscription?.auth0_org_id ?? null,
+      provider_reference: reference,
+      payload: event as Json,
+    })
+    .select('id')
+    .single()
+  if (eventError?.code === '23505') {
+    const { data: existingEvent, error: existingEventError } = await supabaseAdmin
+      .from('billing_webhook_events')
+      .select('id, processed_at')
+      .eq('provider', 'paystack')
+      .eq('event_key', eventKey)
+      .maybeSingle()
+    if (existingEventError || !existingEvent) {
+      res.status(500).json({ error: 'Could not load an existing webhook event.' })
+      return
+    }
+    if (existingEvent.processed_at) {
+      res.sendStatus(200)
+      return
+    }
+    webhookEventId = existingEvent.id
+  } else if (eventError || !insertedEvent) {
+    res.status(500).json({ error: 'Could not record webhook event.' })
+    return
+  } else {
+    webhookEventId = insertedEvent.id
+  }
+
+  try {
+    if (!subscription) {
+      throw new Error('No subscription matches this Paystack webhook.')
+    }
+
+    if (event.event === 'charge.success') {
+      if (!reference) throw new Error('Paystack charge.success did not include a reference.')
+      await activateTrialFromTransaction(subscription.auth0_org_id, reference)
+    } else {
+      const update: TablesUpdate<'subscriptions'> = {}
+      if (event.event === 'invoice.payment_failed') {
+        update.status = 'past_due'
+        update.billing_state = 'past_due'
+      } else if (event.event === 'invoice.update' && data.status === 'success') {
+        update.status = 'active'
+        update.billing_state = 'active'
+      } else if (event.event === 'subscription.disable') {
+        update.status = 'cancelled'
+        update.billing_state = 'cancelled'
+        update.cancelled_at = new Date().toISOString()
+      }
+      if (Object.keys(update).length > 0) {
+        const { error } = await supabaseAdmin
+          .from('subscriptions')
+          .update(update)
+          .eq('id', subscription.id)
+        if (error) throw new Error(error.message)
+      }
+    }
+
+    const { error: processedError } = await supabaseAdmin
+      .from('billing_webhook_events')
+      .update({ processed_at: new Date().toISOString(), processing_error: null })
+      .eq('id', webhookEventId)
+    if (processedError) throw new Error(processedError.message)
+    res.sendStatus(200)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Webhook processing failed.'
+    console.error('Paystack webhook processing failed:', message)
+    await supabaseAdmin
+      .from('billing_webhook_events')
+      .update({ processing_error: message })
+      .eq('id', webhookEventId)
+    res.status(500).json({ error: 'Webhook processing failed.' })
+  }
 }
 
 export default router
