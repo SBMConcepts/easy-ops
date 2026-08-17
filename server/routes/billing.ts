@@ -30,6 +30,9 @@ function getSetupAmount(): number {
 }
 
 function billingCallbackUrl(): string {
+  const configuredCallbackUrl = process.env.PAYSTACK_CALLBACK_URL?.trim()
+  if (configuredCallbackUrl) return configuredCallbackUrl
+
   const appUrl = process.env.APP_URL ?? process.env.OIDC_BASE_URL ?? process.env.VITE_APP_URL
   if (!appUrl) throw new PaystackError('Billing callback URL is not configured.', 503)
   return `${appUrl.replace(/\/$/, '')}/app/workspace/billing?checkout=complete`
