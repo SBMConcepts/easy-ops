@@ -20,6 +20,7 @@ import orgDepartmentsRouter from './routes/org-departments.js'
 import orgRolesRouter from './routes/org-roles.js'
 import orgAttendanceRouter from './routes/org-attendance.js'
 import orgShiftsRouter from './routes/org-shifts.js'
+import orgRosterShiftsRouter from './routes/org-roster-shifts.js'
 import orgLeaveRouter from './routes/org-leave.js'
 import subscriptionsRouter from './routes/subscriptions.js'
 import complianceRouter from './routes/compliance.js'
@@ -149,6 +150,7 @@ app.use(orgDepartmentsRouter)
 app.use(orgRolesRouter)
 app.use(orgAttendanceRouter)
 app.use(orgShiftsRouter)
+app.use(orgRosterShiftsRouter)
 app.use(orgLeaveRouter)
 app.use(complianceRouter)
 app.use(labourForecastingRouter)

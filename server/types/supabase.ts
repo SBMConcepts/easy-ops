@@ -337,16 +337,16 @@ export type Database = {
           acknowledged_by: string | null
           alert_type: Database['public']['Enums']['forecast_alert_type']
           auth0_org_id: string
-          auth0_user_id: string
+          auth0_user_id: string | null
           created_at: string
           detail: string | null
-          forecast_id: string
+          forecast_id: string | null
           id: string
           metrics: Json
           recommended_action: string | null
           resolved_at: string | null
           severity: Database['public']['Enums']['forecast_alert_severity']
-          site_id: string
+          site_id: string | null
           status: Database['public']['Enums']['forecast_alert_status']
           target_date: string | null
           title: string
@@ -357,16 +357,16 @@ export type Database = {
           acknowledged_by?: string | null
           alert_type: Database['public']['Enums']['forecast_alert_type']
           auth0_org_id: string
-          auth0_user_id: string
+          auth0_user_id?: string | null
           created_at?: string
           detail?: string | null
-          forecast_id: string
+          forecast_id?: string | null
           id?: string
           metrics?: Json
           recommended_action?: string | null
           resolved_at?: string | null
           severity?: Database['public']['Enums']['forecast_alert_severity']
-          site_id: string
+          site_id?: string | null
           status?: Database['public']['Enums']['forecast_alert_status']
           target_date?: string | null
           title: string
@@ -452,7 +452,7 @@ export type Database = {
           predicted_hours: number | null
           predicted_required_staff: number | null
           reasoning: string | null
-          site_id: string
+          site_id: string | null
         }
         Insert: {
           auth0_org_id: string
@@ -468,7 +468,7 @@ export type Database = {
           predicted_hours?: number | null
           predicted_required_staff?: number | null
           reasoning?: string | null
-          site_id: string
+          site_id?: string | null
         }
         Update: {
           auth0_org_id?: string
@@ -529,6 +529,7 @@ export type Database = {
           method: Database['public']['Enums']['attendance_method']
           overtime: number
           site_id: string | null
+          status: Database['public']['Enums']['attendance_status']
           updated_at: string
         }
         Insert: {
@@ -542,6 +543,7 @@ export type Database = {
           method: Database['public']['Enums']['attendance_method']
           overtime?: number
           site_id?: string | null
+          status?: Database['public']['Enums']['attendance_status']
           updated_at?: string
         }
         Update: {
@@ -555,6 +557,7 @@ export type Database = {
           method?: Database['public']['Enums']['attendance_method']
           overtime?: number
           site_id?: string | null
+          status?: Database['public']['Enums']['attendance_status']
           updated_at?: string
         }
         Relationships: [
@@ -878,6 +881,57 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'organizations'
             referencedColumns: ['auth0_org_id']
+          },
+        ]
+      }
+      org_roster_shifts: {
+        Row: {
+          auth0_org_id: string
+          auth0_user_id: string
+          created_at: string
+          end_at: string
+          id: string
+          site_id: string | null
+          start_at: string
+          status: Database['public']['Enums']['roster_shift_status']
+          updated_at: string
+        }
+        Insert: {
+          auth0_org_id: string
+          auth0_user_id: string
+          created_at?: string
+          end_at: string
+          id?: string
+          site_id?: string | null
+          start_at: string
+          status?: Database['public']['Enums']['roster_shift_status']
+          updated_at?: string
+        }
+        Update: {
+          auth0_org_id?: string
+          auth0_user_id?: string
+          created_at?: string
+          end_at?: string
+          id?: string
+          site_id?: string | null
+          start_at?: string
+          status?: Database['public']['Enums']['roster_shift_status']
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'org_roster_shifts_member_fkey'
+            columns: ['auth0_org_id', 'auth0_user_id']
+            isOneToOne: false
+            referencedRelation: 'org_members'
+            referencedColumns: ['auth0_org_id', 'auth0_user_id']
+          },
+          {
+            foreignKeyName: 'org_roster_shifts_site_fkey'
+            columns: ['auth0_org_id', 'site_id']
+            isOneToOne: false
+            referencedRelation: 'org_sites'
+            referencedColumns: ['auth0_org_id', 'id']
           },
         ]
       }
@@ -1534,13 +1588,21 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      attendance_status: 'present' | 'absent' | 'leave' | 'sick_leave'
       attendance_method: 'whatsapp' | 'biometric' | 'ussd' | 'qr'
       credential_status: 'active' | 'blocked' | 'deleted'
       employment_type: 'permanent' | 'contract' | 'part_time' | 'temporary' | 'shift_worker'
       forecast_alert_severity: 'low' | 'medium' | 'high' | 'critical'
       forecast_alert_status: 'open' | 'acknowledged' | 'resolved' | 'dismissed'
       forecast_alert_type:
-        'understaffed' | 'overstaffed' | 'overtime_risk' | 'absence_spike' | 'coverage_gap'
+        | 'understaffed'
+        | 'overstaffed'
+        | 'overtime_risk'
+        | 'absence_spike'
+        | 'coverage_gap'
+        | 'staffing_shortage'
+        | 'understaffed_shift'
+        | 'burnout_risk'
       identification_type: 'sa_id' | 'passport'
       incident_severity: 'minor' | 'moderate' | 'serious' | 'fatal'
       incident_status: 'open' | 'under_review' | 'closed'
@@ -1557,6 +1619,7 @@ export type Database = {
       org_plan: 'free' | 'starter' | 'growth' | 'pro' | 'enterprise'
       org_role: 'owner' | 'admin' | 'manager' | 'member'
       org_status: 'provisioning' | 'active' | 'suspended' | 'cancelled'
+      roster_shift_status: 'scheduled' | 'cancelled'
       payroll_export_format: 'csv' | 'xlsx' | 'sage' | 'pastel' | 'xero' | 'custom'
       subscription_status: 'trialing' | 'active' | 'past_due' | 'cancelled'
       support_message_author: 'customer' | 'agent' | 'system'
@@ -1685,6 +1748,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      attendance_status: ['present', 'absent', 'leave', 'sick_leave'],
       attendance_method: ['whatsapp', 'biometric', 'ussd', 'qr'],
       credential_status: ['active', 'blocked', 'deleted'],
       employment_type: ['permanent', 'contract', 'part_time', 'temporary', 'shift_worker'],
@@ -1696,6 +1760,9 @@ export const Constants = {
         'overtime_risk',
         'absence_spike',
         'coverage_gap',
+        'staffing_shortage',
+        'understaffed_shift',
+        'burnout_risk',
       ],
       identification_type: ['sa_id', 'passport'],
       incident_severity: ['minor', 'moderate', 'serious', 'fatal'],
@@ -1714,6 +1781,7 @@ export const Constants = {
       org_plan: ['free', 'starter', 'growth', 'pro', 'enterprise'],
       org_role: ['owner', 'admin', 'manager', 'member'],
       org_status: ['provisioning', 'active', 'suspended', 'cancelled'],
+      roster_shift_status: ['scheduled', 'cancelled'],
       payroll_export_format: ['csv', 'xlsx', 'sage', 'pastel', 'xero', 'custom'],
       subscription_status: ['trialing', 'active', 'past_due', 'cancelled'],
       support_message_author: ['customer', 'agent', 'system'],

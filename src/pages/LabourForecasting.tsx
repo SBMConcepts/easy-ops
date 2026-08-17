@@ -1,390 +1,702 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
-import { Loader2, RefreshCw, TrendingUp, AlertTriangle, Lock, ShieldCheck } from 'lucide-react'
-
-import { Button } from '../components/ui/button'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/contexts/AuthContext'
+import { useOrgApi } from '@/hooks/useOrgApi'
+import { useForecastingAccess } from '@/lib/feature-flags'
+import type { AlertRow, AlertStatus, ForecastRow } from '@/hooks/useForecasting'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
-import { useAuthRole } from '../contexts/AuthContext'
-import { useForecastingAccess } from '../lib/feature-flags'
-import { useSites } from '../hooks/useOrgData'
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { toast } from 'sonner'
+import { format, parseISO } from 'date-fns'
 import {
-  useForecasts,
-  useAlerts,
-  useUpdateAlert,
-  useGenerateForecast,
-  type AlertRow,
-  type AlertSeverity,
-  type AlertStatus,
-} from '../hooks/useForecasting'
+  AlertTriangle,
+  Brain,
+  Gauge,
+  Loader2,
+  RefreshCw,
+  ShieldAlert,
+  TrendingUp,
+  Users,
+} from 'lucide-react'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { SiteRow } from '@/hooks/useOrgData'
 
-import '../styles/forecasting.css'
-
-const ALL_SITES_ID = 'All sites'
-const ALL_SITES_NAME = 'All sites'
-
-const HORIZON_OPTIONS = [
-  { value: 7, label: 'Next 7 days' },
-  { value: 14, label: 'Next 14 days' },
-  { value: 30, label: 'Next 30 days' },
-]
-
-const SEVERITY_LABEL: Record<AlertSeverity, string> = {
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  critical: 'Critical',
+const severityColor: Record<string, string> = {
+  low: 'secondary',
+  medium: 'default',
+  high: 'destructive',
+  critical: 'destructive',
 }
 
-const ALERT_TYPE_LABEL: Record<string, string> = {
-  understaffed: 'Understaffed',
-  overstaffed: 'Overstaffed',
-  overtime_risk: 'Overtime risk',
-  absence_spike: 'Absence spike',
-  coverage_gap: 'Coverage gap',
+const typeIcon: Record<string, React.ElementType> = {
+  overtime_risk: TrendingUp,
+  staffing_shortage: Users,
+  understaffed_shift: ShieldAlert,
+  burnout_risk: AlertTriangle,
 }
 
-function formatDate(value: string | null): string {
-  if (!value) return '—'
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+interface ForecastAccuracy {
+  rolling_14: { sample_days: number; accuracy_pct: number; hours_mae: number }
+  rolling_30: {
+    sample_days: number
+    accuracy_pct: number
+    hours_mae: number
+    staff_mae: number
+  }
 }
 
-function formatNumber(value: number | null, digits = 0): string {
-  if (value === null || value === undefined) return '—'
-  return Number(value).toLocaleString(undefined, {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
+interface GenerateForecastResult {
+  alerts: AlertRow[]
+  ai_error: { status: number; message: string } | null
+  forecast_id: string | null
+  suppressed_duplicates: number
+}
+
+interface UpdateAlertInput {
+  id: string
+  status: 'acknowledged' | 'resolved' | 'dismissed'
+}
+
+interface RosterShiftRow {
+  id: string
+  auth0_user_id: string
+  end_at: string
+  member_name: string | null
+  site_id: string | null
+  site_name: string | null
+  start_at: string
+  status: 'scheduled' | 'cancelled'
+}
+
+interface RosterMember {
+  auth0_user_id: string
+  full_name: string
+  status: string
+}
+
+const Forecasting = () => {
+  const { organization, user } = useAuth()
+  const qc = useQueryClient()
+  const { apiFetch } = useOrgApi()
+  const { canUseFullForecasting: enabled, plan } = useForecastingAccess()
+  const maxHorizon = enabled ? 30 : 7
+  const [horizon, setHorizon] = useState(7)
+  const [siteId, setSiteId] = useState<string | undefined>()
+  const [rosterMemberId, setRosterMemberId] = useState('')
+  const [rosterSiteId, setRosterSiteId] = useState('')
+  const [rosterStart, setRosterStart] = useState('')
+  const [rosterEnd, setRosterEnd] = useState('')
+  const canManageRoster = enabled && user?.permissions.includes('write:org_roster_shifts')
+
+  const { data: sites = [] } = useQuery<SiteRow[]>({
+    queryKey: ['org_sites'],
+    queryFn: () => apiFetch('org-sites'),
   })
-}
 
-/** Labour Forecasting page: view forecast snapshots and manage alerts, gated by plan tier. */
-export default function LabourForecasting() {
-  const { canViewForecasting, canUseFullForecasting, plan } = useForecastingAccess()
-  const { hasPermission } = useAuthRole()
-  const canManageAlerts = canUseFullForecasting && hasPermission('write:labour_alerts')
-
-  const [siteId, setSiteId] = useState<string>(ALL_SITES_ID)
-  const [site_name, setSiteName] = useState<string>(ALL_SITES_NAME)
-  const [horizon, setHorizon] = useState<number>(7)
-  const [statusFilter, setStatusFilter] = useState<AlertStatus | 'all'>('open')
-
-  const { data: sites = [] } = useSites()
-  const forecastQuery = useForecasts({
-    siteId: siteId === ALL_SITES_ID ? null : siteId,
-    site_name: site_name === ALL_SITES_NAME ? null : site_name,
-    limit: 30,
+  const { data: forecasts = [] } = useQuery<ForecastRow[]>({
+    queryKey: ['labour_forecasts', organization?.auth0_org_id, siteId ?? 'all'],
+    queryFn: async () => {
+      const query = siteId ? `?site_id=${encodeURIComponent(siteId)}` : ''
+      const result = await apiFetch<{ forecasts: ForecastRow[] }>(`labour-forecasts${query}`)
+      return result.forecasts ?? []
+    },
+    enabled: enabled && !!organization?.auth0_org_id,
   })
-  const alertsQuery = useAlerts(statusFilter)
-  const updateAlert = useUpdateAlert()
-  const generateForecast = useGenerateForecast()
 
-  const forecasts = useMemo(() => forecastQuery.data ?? [], [forecastQuery.data])
-  const latest = forecasts[0]
+  const { data: alerts = [] } = useQuery<AlertRow[]>({
+    queryKey: ['alerts', organization?.auth0_org_id, siteId ?? 'all'],
+    queryFn: async () => {
+      const query = siteId ? `?site_id=${encodeURIComponent(siteId)}` : ''
+      const result = await apiFetch<{ alerts: AlertRow[] }>(`labour-alerts${query}`)
+      return result.alerts ?? []
+    },
+    enabled: enabled && !!organization?.auth0_org_id,
+  })
 
-  // Demand-score bars, oldest → newest so the timeline reads left to right.
-  const timeline = useMemo(() => {
-    const rows = [...forecasts].reverse()
-    const max = Math.max(1, ...rows.map((f) => Number(f.demand_score ?? 0)))
-    return rows.map((f) => ({
-      id: f.id,
-      date: f.forecast_date,
-      score: Number(f.demand_score ?? 0),
-      height: Math.round((Number(f.demand_score ?? 0) / max) * 100),
-    }))
+  const { data: accuracy } = useQuery<ForecastAccuracy>({
+    queryKey: ['forecast-accuracy', organization?.auth0_org_id, siteId ?? 'all'],
+    queryFn: async () => {
+      const params = new URLSearchParams({ window: '30' })
+      if (siteId) params.set('site_id', siteId)
+      return apiFetch<ForecastAccuracy>(`labour-forecasts/accuracy?${params.toString()}`)
+    },
+    enabled: enabled && !!organization?.auth0_org_id,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+
+  const rosterWindow = useMemo(() => {
+    const from = new Date()
+    const to = new Date(from)
+    to.setDate(to.getDate() + 31)
+    return { from: from.toISOString(), to: to.toISOString() }
+  }, [])
+
+  const { data: rosterShifts = [] } = useQuery<RosterShiftRow[]>({
+    queryKey: ['org_roster_shifts', organization?.auth0_org_id, siteId ?? 'all', rosterWindow],
+    queryFn: async () => {
+      const params = new URLSearchParams(rosterWindow)
+      if (siteId) params.set('site_id', siteId)
+      const result = await apiFetch<{ roster_shifts: RosterShiftRow[] }>(
+        `org-roster-shifts?${params.toString()}`
+      )
+      return result.roster_shifts ?? []
+    },
+    enabled: enabled && !!organization?.auth0_org_id,
+  })
+
+  const { data: rosterMembers = [] } = useQuery<RosterMember[]>({
+    queryKey: ['org-members', 'roster'],
+    queryFn: async () => {
+      const result = await apiFetch<{ members: RosterMember[] }>('org-members')
+      return (result.members ?? []).filter((member) => member.status === 'active')
+    },
+    enabled: !!canManageRoster,
+  })
+
+  const regenerate = useMutation<GenerateForecastResult>({
+    mutationFn: () =>
+      apiFetch<GenerateForecastResult>('labour-forecasts/generate', {
+        method: 'POST',
+        body: JSON.stringify({
+          horizon_days: horizon,
+          site_id: siteId,
+        }),
+      }),
+    onSuccess: (data) => {
+      const suppressed = data.suppressed_duplicates
+      toast.success(
+        `Forecast generated · ${data.alerts.length} new alert(s)` +
+          (suppressed ? ` · ${suppressed} duplicate(s) suppressed` : '')
+      )
+      if (data.ai_error) {
+        const s = data.ai_error.status
+        toast.warning(
+          s === 429
+            ? 'AI refinement rate-limited — showing the statistical baseline forecast.'
+            : s === 402
+              ? 'AI credits exhausted — showing the statistical baseline forecast.'
+              : 'AI refinement unavailable — showing the statistical baseline forecast.'
+        )
+      }
+      qc.invalidateQueries({ queryKey: ['labour_forecasts'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
+      qc.invalidateQueries({ queryKey: ['forecast-accuracy'] })
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : 'Forecast failed'),
+  })
+
+  const updateAlert = useMutation<{ alert: AlertRow }, Error, UpdateAlertInput>({
+    mutationFn: ({ id, status }) =>
+      apiFetch<{ alert: AlertRow }>(`labour-alerts/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: status as AlertStatus }),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['alerts'] }),
+  })
+
+  const createRosterShift = useMutation({
+    mutationFn: async () => {
+      const startAt = new Date(rosterStart)
+      const endAt = new Date(rosterEnd)
+      if (!rosterMemberId || Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
+        throw new Error('Choose an employee, start time, and end time.')
+      }
+      if (endAt <= startAt) throw new Error('End time must be after start time.')
+      return apiFetch<{ roster_shift: RosterShiftRow }>('org-roster-shifts', {
+        method: 'POST',
+        body: JSON.stringify({
+          auth0_user_id: rosterMemberId,
+          site_id: rosterSiteId || null,
+          start_at: startAt.toISOString(),
+          end_at: endAt.toISOString(),
+        }),
+      })
+    },
+    onSuccess: () => {
+      setRosterMemberId('')
+      setRosterSiteId('')
+      setRosterStart('')
+      setRosterEnd('')
+      toast.success('Roster assignment scheduled')
+      qc.invalidateQueries({ queryKey: ['org_roster_shifts'] })
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : 'Could not schedule shift'),
+  })
+
+  const cancelRosterShift = useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ roster_shift: RosterShiftRow }>(`org-roster-shifts/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'cancelled' }),
+      }),
+    onSuccess: () => {
+      toast.success('Roster assignment cancelled')
+      qc.invalidateQueries({ queryKey: ['org_roster_shifts'] })
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : 'Could not cancel shift'),
+  })
+
+  const chartData = useMemo(() => {
+    return (forecasts ?? []).map((f) => {
+      const summary = (f.input_summary ?? {}) as { p10?: number; p90?: number }
+      const hours = Number(f.predicted_hours ?? 0)
+      const p10 = Number(summary.p10 ?? hours)
+      const p90 = Number(summary.p90 ?? hours)
+      return {
+        date: format(parseISO(f.forecast_date), 'd MMM'),
+        staff: f.predicted_required_staff ?? 0,
+        hours,
+        demand: Number(f.demand_score ?? 0),
+        p10,
+        band: Math.max(p90 - p10, 0),
+      }
+    })
   }, [forecasts])
 
-  const handleGenerate = async () => {
-    try {
-      const result = await generateForecast.mutateAsync({
-        siteId: siteId === ALL_SITES_ID ? null : siteId,
-        site_name: site_name === ALL_SITES_NAME ? null : site_name,
-        horizonDays: horizon,
-      })
-      const alertCount = result.alerts?.length ?? 0
-      toast.success(
-        alertCount > 0
-          ? `Forecast generated — ${alertCount} alert${alertCount === 1 ? '' : 's'} raised.`
-          : 'Forecast generated — no new alerts.'
-      )
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to generate forecast.')
-    }
-  }
+  const modelLabel = useMemo(() => {
+    const m = forecasts?.[0]?.model
+    if (!m) return null
+    return m.startsWith('ai-refined') ? 'AI-refined' : 'Statistical baseline'
+  }, [forecasts])
 
-  const handleAlertAction = async (alert: AlertRow, status: AlertStatus) => {
-    try {
-      await updateAlert.mutateAsync({ id: alert.id, status })
-      toast.success(`Alert ${status}.`)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update alert.')
-    }
-  }
-
-  // ── No access ──────────────────────────────────────────────────────────────
-  if (!canViewForecasting) {
-    return (
-      <div className="forecasting-page">
-        <div className="forecasting-locked">
-          <Lock className="forecasting-locked__icon" aria-hidden />
-          <h2>Predictive Labour Forecasting</h2>
-          <p>
-            Forecasting is available on the Growth, Pro and Enterprise plans. Your current plan
-            {plan ? ` (${plan})` : ''} does not include this feature.
-          </p>
-          <p className="forecasting-muted">
-            Upgrade your subscription to unlock demand forecasting and staffing alerts.
-          </p>
-        </div>
-      </div>
-    )
-  }
+  const alertCounts = useMemo(() => {
+    const c = { critical: 0, high: 0, medium: 0, low: 0 }
+    for (const a of alerts ?? [])
+      c[a.severity as keyof typeof c] = (c[a.severity as keyof typeof c] ?? 0) + 1
+    return c
+  }, [alerts])
 
   return (
-    <div className="forecasting-page">
-      {/* Header */}
-      <header className="forecasting-header">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="forecasting-title">
-            <TrendingUp aria-hidden /> Predictive Labour Forecasting
+          <h1 className="font-display text-3xl font-bold flex items-center gap-2">
+            <Brain className="h-7 w-7 text-primary" /> Predictive Forecasting
           </h1>
-          <p className="forecasting-subtitle">
-            Anticipate staffing demand and surface risks before they become problems.
+          <p className="text-sm text-muted-foreground">
+            AI-driven staffing predictions and risk alerts · Plan:{' '}
+            <span className="font-medium capitalize">{plan || 'starter'}</span>
+            {!enabled && ' · Upgrade to Pro for forecasting'}
           </p>
         </div>
-        <div className="forecasting-controls">
-          <Select value={siteId} onValueChange={(v) => setSiteId(v ?? ALL_SITES_ID)}>
-            <SelectTrigger className="forecasting-select" aria-label="Filter by site">
+        <div className="flex items-center gap-2">
+          <Select
+            value={siteId ?? 'all'}
+            onValueChange={(v) => setSiteId(v && v !== 'all' ? v : undefined)}
+          >
+            <SelectTrigger className="w-44">
               <SelectValue placeholder="All sites" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_SITES_ID}>{ALL_SITES_NAME}</SelectItem>
-              {sites.map((s) => (
+              <SelectItem value="all">All sites</SelectItem>
+              {(sites ?? []).map((s) => (
                 <SelectItem key={s.id} value={s.id}>
-                  {s.site_name}
+                  {s.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-
-          {canUseFullForecasting && (
-            <>
-              <Select value={String(horizon)} onValueChange={(v) => setHorizon(Number(v) || 7)}>
-                <SelectTrigger className="forecasting-select" aria-label="Forecast horizon">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {HORIZON_OPTIONS.map((h) => (
-                    <SelectItem key={h.value} value={String(h.value)}>
-                      {h.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleGenerate} disabled={generateForecast.isPending}>
-                {generateForecast.isPending ? (
-                  <Loader2 className="forecasting-spin" aria-hidden />
-                ) : (
-                  <RefreshCw aria-hidden />
-                )}
-                Generate forecast
-              </Button>
-            </>
-          )}
-        </div>
-      </header>
-
-      {!canUseFullForecasting && (
-        <div className="forecasting-banner">
-          <ShieldCheck aria-hidden />
-          <span>
-            You have read-only access on the Growth plan. Upgrade to Pro or Enterprise to generate
-            forecasts and manage alerts.
-          </span>
-        </div>
-      )}
-
-      {/* Latest forecast summary */}
-      <section className="forecasting-summary">
-        {forecastQuery.isLoading ? (
-          <div className="forecasting-empty">
-            <Loader2 className="forecasting-spin" aria-hidden /> Loading forecasts…
-          </div>
-        ) : latest ? (
-          <>
-            <div className="forecasting-card">
-              <span className="forecasting-card__label">Predicted staff needed</span>
-              <span className="forecasting-card__value">
-                {formatNumber(latest.predicted_required_staff)}
-              </span>
-              <span className="forecasting-card__meta">
-                for {formatDate(latest.forecast_date)} · {latest.horizon_days}-day horizon
-              </span>
-            </div>
-            <div className="forecasting-card">
-              <span className="forecasting-card__label">Predicted hours</span>
-              <span className="forecasting-card__value">
-                {formatNumber(latest.predicted_hours, 1)}
-              </span>
-              <span className="forecasting-card__meta">total labour hours</span>
-            </div>
-            <div className="forecasting-card">
-              <span className="forecasting-card__label">Demand score</span>
-              <span className="forecasting-card__value">
-                {formatNumber(latest.demand_score, 1)}
-                <span className="forecasting-card__unit">/10</span>
-              </span>
-              <span className="forecasting-card__meta">
-                {Math.round(Number(latest.confidence ?? 0) * 100)}% confidence
-              </span>
-            </div>
-            <div className="forecasting-card forecasting-card--wide">
-              <span className="forecasting-card__label">Model insight</span>
-              <p className="forecasting-card__reasoning">
-                {latest.reasoning ?? 'No reasoning provided.'}
-              </p>
-              <span className="forecasting-card__meta">
-                {latest.model ?? 'heuristic'} · generated {formatDate(latest.created_at)}
-              </span>
-            </div>
-          </>
-        ) : (
-          <div className="forecasting-empty">
-            No forecasts yet.
-            {canUseFullForecasting
-              ? ' Generate one to get started.'
-              : ' Ask an admin to generate the first forecast.'}
-          </div>
-        )}
-      </section>
-
-      {/* Demand timeline */}
-      {timeline.length > 0 && (
-        <section className="forecasting-chart">
-          <h2 className="forecasting-section-title">Demand trend</h2>
-          <div className="forecasting-bars" role="img" aria-label="Demand score over time">
-            {timeline.map((bar) => (
-              <div key={bar.id} className="forecasting-bar-col">
-                <div
-                  className="forecasting-bar"
-                  style={{ height: `${Math.max(6, bar.height)}%` }}
-                  title={`${formatDate(bar.date)}: ${bar.score.toFixed(1)}/10`}
-                />
-                <span className="forecasting-bar-label">{formatDate(bar.date)}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Alerts */}
-      <section className="forecasting-alerts">
-        <div className="forecasting-alerts__head">
-          <h2 className="forecasting-section-title">
-            <AlertTriangle aria-hidden /> Staffing alerts
-          </h2>
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter((v as AlertStatus | 'all') ?? 'all')}
-          >
-            <SelectTrigger className="forecasting-select" aria-label="Filter alerts by status">
+          <Select value={String(horizon)} onValueChange={(v) => setHorizon(Number(v))}>
+            <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="open">Open</SelectItem>
-              <SelectItem value="acknowledged">Acknowledged</SelectItem>
-              <SelectItem value="resolved">Resolved</SelectItem>
-              <SelectItem value="dismissed">Dismissed</SelectItem>
+              {[3, 7, 14, 21, 30]
+                .filter((n) => n <= maxHorizon)
+                .map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n} days
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
+          <Button onClick={() => regenerate.mutate()} disabled={!enabled || regenerate.isPending}>
+            {regenerate.isPending ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-1" />
+            )}
+            Generate forecast
+          </Button>
         </div>
+      </div>
 
-        {alertsQuery.isLoading ? (
-          <div className="forecasting-empty">
-            <Loader2 className="forecasting-spin" aria-hidden /> Loading alerts…
-          </div>
-        ) : (alertsQuery.data?.length ?? 0) === 0 ? (
-          <div className="forecasting-empty">No alerts for this filter.</div>
-        ) : (
-          <ul className="forecasting-alert-list">
-            {alertsQuery.data!.map((alert) => (
-              <li key={alert.id} className="forecasting-alert">
-                <div className={`forecasting-alert__sev forecasting-alert__sev--${alert.severity}`}>
-                  {SEVERITY_LABEL[alert.severity]}
-                </div>
-                <div className="forecasting-alert__body">
-                  <div className="forecasting-alert__top">
-                    <span className="forecasting-alert__title">{alert.title}</span>
-                    <span className={`forecasting-status forecasting-status--${alert.status}`}>
-                      {alert.status}
-                    </span>
-                  </div>
-                  <span className="forecasting-alert__type">
-                    {ALERT_TYPE_LABEL[alert.alert_type] ?? alert.alert_type}
-                    {alert.target_date ? ` · ${formatDate(alert.target_date)}` : ''}
-                  </span>
-                  {alert.detail && <p className="forecasting-alert__detail">{alert.detail}</p>}
-                  {alert.recommended_action && (
-                    <p className="forecasting-alert__action">
-                      <strong>Recommended:</strong> {alert.recommended_action}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {(['critical', 'high', 'medium', 'low'] as const).map((sev) => (
+          <Card key={sev}>
+            <CardContent className="pt-6">
+              <div className="text-xs uppercase text-muted-foreground">{sev}</div>
+              <div className="text-3xl font-bold mt-1">{alertCounts[sev]}</div>
+              <div className="text-xs text-muted-foreground">alerts open</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Tabs defaultValue="forecast">
+        <TabsList>
+          <TabsTrigger value="forecast">Demand forecast</TabsTrigger>
+          <TabsTrigger value="alerts">Alerts ({alerts?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="roster">Roster ({rosterShifts.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="forecast" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+              <CardTitle>Predicted required staff &amp; hours</CardTitle>
+              <div className="flex items-center gap-2">
+                {modelLabel && <Badge variant="outline">{modelLabel}</Badge>}
+                {accuracy?.rolling_30?.sample_days ? (
+                  <Badge variant="secondary">
+                    {accuracy.rolling_30.accuracy_pct}% accurate (30d)
+                  </Badge>
+                ) : null}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {chartData.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-12 text-center">
+                  No forecast yet. Click <strong>Generate forecast</strong> to run the model against
+                  your last 8 weeks of attendance.
+                </p>
+              ) : (
+                <ResponsiveContainer width="100%" height={320}>
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="staffFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{
+                        background: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                      }}
+                    />
+                    <Legend />
+                    {/* p10–p90 confidence band, drawn as a transparent base + visible band */}
+                    <Area
+                      type="monotone"
+                      dataKey="p10"
+                      stackId="band"
+                      stroke="none"
+                      fill="transparent"
+                      legendType="none"
+                      name="p10"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="band"
+                      stackId="band"
+                      stroke="none"
+                      fill="hsl(var(--muted-foreground))"
+                      fillOpacity={0.15}
+                      name="Confidence band (p10–p90)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="staff"
+                      name="Required staff"
+                      stroke="hsl(var(--primary))"
+                      fill="url(#staffFill)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="hours"
+                      name="Predicted hours"
+                      stroke="hsl(var(--secondary))"
+                      fill="hsl(var(--secondary))"
+                      fillOpacity={0.2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {forecasts && forecasts.length > 0 && forecasts[0].reasoning && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Model reasoning</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">
+                    {forecasts[0].reasoning}
+                  </p>
+                  {forecasts[0].confidence != null && (
+                    <p className="text-xs mt-2">
+                      Confidence:{' '}
+                      <span className="font-medium">
+                        {Math.round(Number(forecasts[0].confidence) * 100)}%
+                      </span>
                     </p>
                   )}
-                </div>
-                {canManageAlerts && (
-                  <div className="forecasting-alert__actions">
-                    {alert.status === 'open' && (
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Gauge className="h-4 w-4" /> Model accuracy (backtest)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!accuracy || accuracy.rolling_30.sample_days === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Not enough history yet — accuracy appears once forecasts have been compared
+                    against at least one day of actual attendance.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-xs uppercase text-muted-foreground">Last 14 days</div>
+                      <div className="text-2xl font-bold">{accuracy.rolling_14.accuracy_pct}%</div>
+                      <div className="text-xs text-muted-foreground">
+                        {accuracy.rolling_14.sample_days} day(s) scored
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs uppercase text-muted-foreground">Last 30 days</div>
+                      <div className="text-2xl font-bold">{accuracy.rolling_30.accuracy_pct}%</div>
+                      <div className="text-xs text-muted-foreground">
+                        MAE {accuracy.rolling_30.hours_mae}h · staff ±
+                        {accuracy.rolling_30.staff_mae}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="alerts" className="mt-4 space-y-3">
+          {(alerts ?? []).length === 0 && (
+            <Card>
+              <CardContent className="py-12 text-center text-sm text-muted-foreground">
+                No open alerts. Generate a forecast to detect risks.
+              </CardContent>
+            </Card>
+          )}
+          {(alerts ?? []).map((a) => {
+            const Icon = typeIcon[a.alert_type] ?? AlertTriangle
+            return (
+              <Card
+                key={a.id}
+                className="border-l-4"
+                style={{
+                  borderLeftColor:
+                    a.severity === 'critical' || a.severity === 'high'
+                      ? 'hsl(var(--destructive))'
+                      : 'hsl(var(--primary))',
+                }}
+              >
+                <CardContent className="pt-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex gap-3 flex-1">
+                      <Icon className="h-5 w-5 mt-0.5 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold">{a.title}</h3>
+                          <Badge variant={severityColor[a.severity] as any}>{a.severity}</Badge>
+                          <Badge variant="outline">{a.alert_type.replace(/_/g, ' ')}</Badge>
+                          {a.status === 'acknowledged' && (
+                            <Badge variant="secondary">acknowledged</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{a.detail}</p>
+                        {a.recommended_action && (
+                          <p className="text-sm mt-2">
+                            <span className="font-medium">Recommended:</span> {a.recommended_action}
+                          </p>
+                        )}
+                        <div className="text-xs text-muted-foreground mt-2 flex gap-3 flex-wrap">
+                          {a.target_date && (
+                            <span>Target: {format(parseISO(a.target_date), 'd MMM yyyy')}</span>
+                          )}
+                          {(a as any).sites?.name && <span>Site: {(a as any).sites.name}</span>}
+                          {(a as any).profiles?.full_name && (
+                            <span>Employee: {(a as any).profiles.full_name}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {a.status === 'open' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateAlert.mutate({ id: a.id, status: 'acknowledged' })}
+                        >
+                          Acknowledge
+                        </Button>
+                      )}
                       <Button
+                        size="sm"
                         variant="outline"
-                        size="sm"
-                        disabled={updateAlert.isPending}
-                        onClick={() => handleAlertAction(alert, 'acknowledged')}
-                      >
-                        Acknowledge
-                      </Button>
-                    )}
-                    {alert.status !== 'resolved' && alert.status !== 'dismissed' && (
-                      <Button
-                        size="sm"
-                        disabled={updateAlert.isPending}
-                        onClick={() => handleAlertAction(alert, 'resolved')}
+                        onClick={() => updateAlert.mutate({ id: a.id, status: 'resolved' })}
                       >
                         Resolve
                       </Button>
-                    )}
-                    {alert.status !== 'dismissed' && alert.status !== 'resolved' && (
                       <Button
-                        variant="ghost"
                         size="sm"
-                        disabled={updateAlert.isPending}
-                        onClick={() => handleAlertAction(alert, 'dismissed')}
+                        variant="ghost"
+                        onClick={() => updateAlert.mutate({ id: a.id, status: 'dismissed' })}
                       >
                         Dismiss
                       </Button>
-                    )}
-                    {(alert.status === 'resolved' || alert.status === 'dismissed') && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={updateAlert.isPending}
-                        onClick={() => handleAlertAction(alert, 'open')}
-                      >
-                        Reopen
-                      </Button>
-                    )}
+                    </div>
                   </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </TabsContent>
+
+        <TabsContent value="roster" className="mt-4 space-y-4">
+          {canManageRoster && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Schedule roster assignment</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <Select
+                    value={rosterMemberId}
+                    onValueChange={(value) => setRosterMemberId(value ?? '')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Employee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rosterMembers.map((member) => (
+                        <SelectItem key={member.auth0_user_id} value={member.auth0_user_id}>
+                          {member.full_name || member.auth0_user_id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={rosterSiteId || 'unassigned'}
+                    onValueChange={(value) =>
+                      setRosterSiteId(value === 'unassigned' || !value ? '' : value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Site" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">No site</SelectItem>
+                      {sites.map((site) => (
+                        <SelectItem key={site.id} value={site.id}>
+                          {site.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    aria-label="Shift start"
+                    type="datetime-local"
+                    value={rosterStart}
+                    onChange={(event) => setRosterStart(event.target.value)}
+                  />
+                  <Input
+                    aria-label="Shift end"
+                    type="datetime-local"
+                    value={rosterEnd}
+                    onChange={(event) => setRosterEnd(event.target.value)}
+                  />
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <Button
+                    onClick={() => createRosterShift.mutate()}
+                    disabled={createRosterShift.isPending}
+                  >
+                    Schedule assignment
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {rosterShifts.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-sm text-muted-foreground">
+                No roster assignments in the next 31 days.
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Upcoming assignments</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {rosterShifts.map((shift) => (
+                  <div
+                    key={shift.id}
+                    className="flex flex-wrap items-center justify-between gap-3 border-b pb-2 last:border-0"
+                  >
+                    <div>
+                      <div className="font-medium">{shift.member_name ?? shift.auth0_user_id}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {format(parseISO(shift.start_at), 'd MMM, HH:mm')} -{' '}
+                        {format(parseISO(shift.end_at), 'HH:mm')}
+                        {shift.site_name ? ` · ${shift.site_name}` : ''}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={shift.status === 'scheduled' ? 'secondary' : 'outline'}>
+                        {shift.status}
+                      </Badge>
+                      {canManageRoster && shift.status === 'scheduled' && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => cancelRosterShift.mutate(shift.id)}
+                          disabled={cancelRosterShift.isPending}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
+
+export default Forecasting

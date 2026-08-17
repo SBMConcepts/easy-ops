@@ -68,6 +68,23 @@ router.get(
 // feature flag). Growth is view-only; free/starter have no forecasting.
 const FULL_FORECAST_PLANS = new Set(['pro', 'enterprise'])
 
+async function requireFullForecastPlan(orgId: string, res: Response): Promise<boolean> {
+  const { data: org, error } = await supabaseAdmin
+    .from('organizations')
+    .select('plan')
+    .eq('auth0_org_id', orgId)
+    .maybeSingle()
+  if (error) {
+    res.status(500).json({ error: error.message })
+    return false
+  }
+  if (!org || !FULL_FORECAST_PLANS.has(String(org.plan))) {
+    res.status(403).json({ error: 'Forecasting requires a Pro or Enterprise plan.' })
+    return false
+  }
+  return true
+}
+
 // POST /api/labour-forecasts/generate — trigger a new AI/heuristic forecast.
 // The heavy lifting (model + writes) runs in the Supabase Edge Function; this
 // route enforces cookie auth + permission + plan, then invokes the function
@@ -82,20 +99,7 @@ router.post(
     const orgId = req.orgId!
     const body = (req.body ?? {}) as { site_id?: string; horizon_days?: number }
 
-    // Plan gate — full forecasting only.
-    const { data: org, error: orgErr } = await supabaseAdmin
-      .from('organizations')
-      .select('plan')
-      .eq('auth0_org_id', orgId)
-      .maybeSingle()
-    if (orgErr) {
-      res.status(500).json({ error: orgErr.message })
-      return
-    }
-    if (!org || !FULL_FORECAST_PLANS.has(String(org.plan))) {
-      res.status(403).json({ error: 'Forecast generation requires a Pro or Enterprise plan.' })
-      return
-    }
+    if (!(await requireFullForecastPlan(orgId, res))) return
 
     const supabaseUrl = process.env.SUPABASE_URL
     const fnSecret = process.env.FORECAST_FN_SECRET
@@ -112,6 +116,7 @@ router.post(
         headers: { 'Content-Type': 'application/json', 'x-forecast-secret': fnSecret },
         body: JSON.stringify({
           org_id: orgId,
+          generated_by: req.auth!.sub,
           site_id: typeof body.site_id === 'string' ? body.site_id : undefined,
           horizon_days: typeof body.horizon_days === 'number' ? body.horizon_days : undefined,
         }),
@@ -130,7 +135,59 @@ router.post(
   }
 )
 
-// GET /api/labour-alerts[?status=&limit=]
+// GET /api/labour-forecasts/accuracy[?site_id=&window=]
+// Accuracy reads historical forecasts through the same server-to-server Edge
+// Function boundary as generation, so the browser never needs Edge credentials.
+router.get(
+  '/api/labour-forecasts/accuracy',
+  requireAuth,
+  requireOrg,
+  requirePermission('read:labour_forecasts'),
+  async (req: AuthedRequest, res: Response) => {
+    const orgId = req.orgId!
+    if (!(await requireFullForecastPlan(orgId, res))) return
+
+    const rawWindow = typeof req.query.window === 'string' ? Number(req.query.window) : 30
+    if (!Number.isFinite(rawWindow)) {
+      res.status(400).json({ error: 'window must be a number.' })
+      return
+    }
+    const window = Math.min(Math.max(Math.round(rawWindow), 7), 90)
+    const siteId =
+      typeof req.query.site_id === 'string' && req.query.site_id ? req.query.site_id : undefined
+    const supabaseUrl = process.env.SUPABASE_URL
+    const fnSecret = process.env.FORECAST_FN_SECRET
+    if (!supabaseUrl || !fnSecret) {
+      res.status(500).json({
+        error: 'Forecast function is not configured (SUPABASE_URL / FORECAST_FN_SECRET).',
+      })
+      return
+    }
+
+    const params = new URLSearchParams({ org_id: orgId, window: String(window) })
+    if (siteId) params.set('site_id', siteId)
+    try {
+      const fnRes = await fetch(
+        `${supabaseUrl.replace(/\/$/, '')}/functions/v1/forecast-accuracy?${params.toString()}`,
+        { headers: { 'x-forecast-secret': fnSecret } }
+      )
+      const payload = (await fnRes.json().catch(() => ({}))) as Record<string, unknown>
+      if (!fnRes.ok) {
+        res.status(fnRes.status).json({
+          error: (payload.error as string) ?? 'Forecast accuracy lookup failed.',
+        })
+        return
+      }
+      res.json(payload)
+    } catch (err) {
+      res
+        .status(502)
+        .json({ error: `Forecast accuracy function unreachable: ${(err as Error).message}` })
+    }
+  }
+)
+
+// GET /api/labour-alerts[?site_id=&status=&limit=]
 // Returns alerts for the org, newest first. Optional status filter.
 router.get(
   '/api/labour-alerts',
@@ -140,6 +197,8 @@ router.get(
   async (req: AuthedRequest, res: Response) => {
     const orgId = req.orgId!
     const status = isAlertStatus(req.query.status) ? req.query.status : null
+    const siteId =
+      typeof req.query.site_id === 'string' && req.query.site_id ? req.query.site_id : null
     const limit = Math.min(Number(req.query.limit) || 100, 500)
 
     let query = supabaseAdmin
@@ -150,6 +209,7 @@ router.get(
       .limit(limit)
 
     if (status) query = query.eq('status', status)
+    if (siteId) query = query.eq('site_id', siteId)
 
     const { data, error } = await query
     if (error) {

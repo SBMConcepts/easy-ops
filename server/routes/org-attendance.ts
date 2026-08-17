@@ -10,11 +10,17 @@ import { supabaseAdmin } from '../lib/supabase-admin.js'
 import type { Database } from '../types/supabase.js'
 
 type CheckInMethod = Database['public']['Enums']['attendance_method']
+type AttendanceStatus = Database['public']['Enums']['attendance_status']
 
 const CHECK_IN_METHODS = new Set<CheckInMethod>(['whatsapp', 'biometric', 'ussd', 'qr'])
+const ATTENDANCE_STATUSES = new Set<AttendanceStatus>(['present', 'absent', 'leave', 'sick_leave'])
 
 function isCheckInMethod(value: unknown): value is CheckInMethod {
   return typeof value === 'string' && CHECK_IN_METHODS.has(value as CheckInMethod)
+}
+
+function isAttendanceStatus(value: unknown): value is AttendanceStatus {
+  return typeof value === 'string' && ATTENDANCE_STATUSES.has(value as AttendanceStatus)
 }
 
 const router = Router()
@@ -28,7 +34,7 @@ router.get(
     const { data, error } = await supabaseAdmin
       .from('org_attendance')
       .select(
-        'id, auth0_org_id, auth0_user_id, date, method, hours_worked, overtime, created_at, department_id, site_id'
+        'id, auth0_org_id, auth0_user_id, date, method, status, hours_worked, overtime, created_at, department_id, site_id'
       )
       .eq('auth0_org_id', req.orgId!)
       .order('date', { ascending: false })
@@ -112,8 +118,10 @@ router.post(
       method?: string
       hours_worked?: number
       overtime?: number
+      status?: string
     }
-    if (!body.date || !isCheckInMethod(body.method)) {
+    const status = body.status ?? 'present'
+    if (!body.date || !isCheckInMethod(body.method) || !isAttendanceStatus(status)) {
       res.status(400).json({ error: 'date and a valid check-in method are required.' })
       return
     }
@@ -144,6 +152,7 @@ router.post(
           auth0_user_id: req.auth?.sub ?? '',
           date: body.date,
           method: body.method,
+          status,
           hours_worked: Number(body.hours_worked ?? 0),
           overtime: Number(body.overtime ?? 0),
           department_id: membership.department_id,
@@ -152,7 +161,7 @@ router.post(
         { onConflict: 'auth0_user_id,auth0_org_id,date' }
       )
       .select(
-        'id, auth0_org_id, auth0_user_id, date, method, hours_worked, overtime, created_at, department_id, site_id'
+        'id, auth0_org_id, auth0_user_id, date, method, status, hours_worked, overtime, created_at, department_id, site_id'
       )
       .single()
     if (error) {

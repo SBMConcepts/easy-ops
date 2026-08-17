@@ -17,8 +17,7 @@ export const forecastingKeys = {
   all: ['labour-forecasting'] as const,
   forecasts: (params?: ForecastQuery) =>
     [...forecastingKeys.all, 'forecasts', params ?? {}] as const,
-  alerts: (status?: AlertStatus | 'all') =>
-    [...forecastingKeys.all, 'alerts', status ?? 'all'] as const,
+  alerts: (params?: AlertQuery) => [...forecastingKeys.all, 'alerts', params ?? {}] as const,
 }
 
 /** Optional filters for {@link useForecasts}: site, date range, and result limit. */
@@ -28,6 +27,12 @@ export interface ForecastQuery {
   from?: string | null
   to?: string | null
   limit?: number
+}
+
+/** Optional filters for {@link useAlerts}. */
+export interface AlertQuery {
+  siteId?: string | null
+  status?: AlertStatus | 'all'
 }
 
 // ── Forecast snapshots ──────────────────────────────────────────────────────
@@ -58,15 +63,16 @@ export function useForecasts(params?: ForecastQuery) {
 
 // ── Alerts ──────────────────────────────────────────────────────────────────
 /** Fetch labour-forecasting alerts, optionally filtered by status. */
-export function useAlerts(status?: AlertStatus | 'all') {
+export function useAlerts(params?: AlertQuery) {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: forecastingKeys.alerts(status),
+    queryKey: forecastingKeys.alerts(params),
     queryFn: async () => {
       const search = new URLSearchParams()
-      if (status && status !== 'all') search.set('status', status)
+      if (params?.siteId) search.set('site_id', params.siteId)
+      if (params?.status && params.status !== 'all') search.set('status', params.status)
       const qs = search.toString()
       const res = await apiFetch<{ alerts: AlertRow[] }>(`labour-alerts${qs ? `?${qs}` : ''}`)
       return res.alerts ?? []
@@ -98,14 +104,20 @@ export function useUpdateAlert() {
 /** Input for triggering a new forecast generation run. */
 export interface GenerateForecastInput {
   siteId?: string | null
-  site_name?: string | null
   horizonDays?: number
 }
 
-/** Result of a forecast generation run: the new snapshot plus any alerts it raised. */
+/** Result returned by the generation Edge Function through Express. */
 export interface GenerateForecastResult {
-  forecast: ForecastRow
-  alerts: AlertRow[]
+  alerts: Array<{
+    alert_type: string
+    severity: AlertSeverity
+    target_date: string | null
+    title: string
+  }>
+  ai_error: { status: number; message: string } | null
+  forecast_id: string | null
+  suppressed_duplicates: number
 }
 
 /** Trigger forecast generation (Express proxies to the forecasting Edge Function) and invalidate cached forecasts/alerts. */
@@ -118,8 +130,7 @@ export function useGenerateForecast() {
       apiFetch<GenerateForecastResult>('labour-forecasts/generate', {
         method: 'POST',
         body: JSON.stringify({
-          siteId: input.siteId ?? '',
-          site_name: input.site_name ?? '',
+          site_id: input.siteId ?? undefined,
           horizon_days: input.horizonDays ?? 7,
         }),
       }),

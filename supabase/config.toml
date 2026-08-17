@@ -377,6 +377,12 @@ allow_dynamic_registration = false
 enabled = true
 verify_jwt = false
 
+# Forecast accuracy uses the same authenticated Express proxy and shared secret
+# as labour-forecast, so Supabase's platform JWT gate remains disabled.
+[functions.forecast-accuracy]
+enabled = true
+verify_jwt = false
+
 # Payroll Export Pro generator. Authenticated by the Express proxy via a shared
 # secret (PAYROLL_FN_SECRET) or an Auth0 Bearer fallback, so the platform JWT
 # gate is off.
