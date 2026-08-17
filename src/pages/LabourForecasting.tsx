@@ -146,6 +146,16 @@ const Forecasting = () => {
     retry: false,
   })
 
+  const selectedSiteName = useMemo(
+    () => sites.find((site) => site.id === siteId)?.name,
+    [sites, siteId]
+  )
+
+  const selectedRosterSiteName = useMemo(
+    () => sites.find((site) => site.id === rosterSiteId)?.name ?? 'No site',
+    [sites, rosterSiteId]
+  )
+
   const rosterWindow = useMemo(() => {
     const from = new Date()
     const to = new Date(from)
@@ -305,15 +315,15 @@ const Forecasting = () => {
         </div>
         <div className="forecasting__controls">
           <Select
-            value={siteId ?? 'all'}
-            onValueChange={(v) => setSiteId(v && v !== 'all' ? v : undefined)}
+            value={siteId ?? 'All Sites'}
+            onValueChange={(v) => setSiteId(v && v !== 'All Sites' ? v : undefined)}
           >
             <SelectTrigger className="forecasting__site-filter w-44">
-              <SelectValue placeholder="All sites" />
+              <SelectValue>{selectedSiteName}</SelectValue>
             </SelectTrigger>
             <SelectContent className="forecasting__site-filter-menu">
-              <SelectItem className="forecasting__site-option" value="all">
-                All sites
+              <SelectItem className="forecasting__site-option" value="All Sites">
+                All Sites
               </SelectItem>
               {(sites ?? []).map((s) => (
                 <SelectItem className="forecasting__site-option" key={s.id} value={s.id}>
@@ -691,32 +701,35 @@ const Forecasting = () => {
                     value={rosterMemberId}
                     onValueChange={(value) => setRosterMemberId(value ?? '')}
                   >
-                    <SelectTrigger className="forecasting__roster-member-select">
+                    <SelectTrigger className="forecasting__roster-member-select  w-44">
                       <SelectValue placeholder="Employee" />
                     </SelectTrigger>
                     <SelectContent className="forecasting__roster-member-menu">
                       {rosterMembers.map((member) => (
                         <SelectItem
                           className="forecasting__roster-member-option"
-                          key={member.auth0_user_id}
-                          value={member.auth0_user_id}
+                          key={member.full_name}
+                          value={member.full_name}
                         >
-                          {member.full_name || member.auth0_user_id}
+                          {member.full_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <Select
-                    value={rosterSiteId || 'unassigned'}
+                    value={rosterSiteId || 'Unassigned'}
                     onValueChange={(value) =>
-                      setRosterSiteId(value === 'unassigned' || !value ? '' : value)
+                      setRosterSiteId(value === 'Unassigned' || !value ? '' : value)
                     }
                   >
-                    <SelectTrigger className="forecasting__roster-site-select">
-                      <SelectValue placeholder="Site" />
+                    <SelectTrigger className="forecasting__roster-site-select w-44">
+                      <SelectValue>{selectedRosterSiteName}</SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="forecasting__roster-site-menu">
-                      <SelectItem className="forecasting__roster-site-option" value="unassigned">
+                    <SelectContent className="forecasting__roster-site-menu ">
+                      <SelectItem
+                        className="forecasting__roster-site-option w-44"
+                        value="Unassigned"
+                      >
                         No site
                       </SelectItem>
                       {sites.map((site) => (

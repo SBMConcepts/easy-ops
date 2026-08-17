@@ -591,9 +591,12 @@
 .forecasting__horizon-filter-menu,
 .forecasting__roster-member-menu,
 .forecasting__roster-site-menu {
-  background: var(--forecasting-surface);
-  border-color: var(--forecasting-border);
-  border-radius: var(--onboarding-radius-sm);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  border-color: var(--border);
+  border-radius: var(--onboarding-radius-md);
   box-shadow: var(--onboarding-shadow-md);
 }
 
@@ -601,8 +604,11 @@
 .forecasting__horizon-option,
 .forecasting__roster-member-option,
 .forecasting__roster-site-option {
-  border-radius: 6px;
-  color: var(--forecasting-heading);
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  color: var(--text-primary);
 }
 
 .forecasting__site-option:hover,
