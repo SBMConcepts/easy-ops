@@ -3,6 +3,7 @@ import { Router, type Request, type Response } from 'express'
 import { requireAuth, requireOrg, type AuthedRequest } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import {
+  auth0RolesForAccessRole,
   createAuth0Org,
   createOrgInvitation,
   deleteAuth0Org,
@@ -40,6 +41,16 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     ? (requestedPlan as OrgPlan)
     : 'free'
   const clientId = process.env.AUTH0_CLIENT_ID
+
+  let adminRoles: string[]
+  try {
+    adminRoles = auth0RolesForAccessRole('admin')
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : 'Auth0 organization admin role is unavailable.'
+    res.status(503).json({ error: message })
+    return
+  }
 
   if (!clientId) {
     res.status(503).json({
@@ -92,6 +103,7 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
       inviterName: orgName,
       inviteeEmail: adminEmail,
       clientId,
+      roles: adminRoles,
     })
     if (!invitationId) {
       throw new Error('Auth0 did not return an administrator invitation id.')

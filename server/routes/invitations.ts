@@ -8,7 +8,7 @@ import {
 } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { jobRoleToTier } from '../lib/rbac.js'
-import { createOrgInvitation } from '../lib/auth0-admin.js'
+import { auth0RolesForAccessRole, createOrgInvitation } from '../lib/auth0-admin.js'
 
 const router = Router()
 
@@ -49,6 +49,15 @@ router.post(
     }
 
     const tier = jobRoleToTier(body.role)
+    let auth0Roles: string[]
+    try {
+      auth0Roles = auth0RolesForAccessRole(tier)
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Auth0 organization admin role is unavailable.'
+      res.status(503).json({ error: message })
+      return
+    }
 
     // Auth0's organization invitation API requires a NON-EMPTY inviter.name.
     // The Team Members page only sends { email, role }, so fall back to the
@@ -106,6 +115,7 @@ router.post(
           inviterName,
           inviteeEmail: email,
           clientId,
+          roles: auth0Roles,
         })) ?? null
     } catch (err) {
       console.error('Auth0 invitation send failed:', err)

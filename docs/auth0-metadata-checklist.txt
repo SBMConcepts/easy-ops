@@ -89,6 +89,30 @@
                      postgresql://postgres.[ref]:[pwd]@aws-[region].pooler.supabase.com:6543/postgres
      Used by       : login.js, get-by-email.js (configuration.DATABASE_URL)
 
+ [ ] AUTH0_DB_CONNECTION_ID
+     Location      : Server/deployment environment (not a Vite variable)
+     Value         : ID of the shared custom database connection to enable for every new organization
+     Behavior      : POST /api/organizations adds this connection with signup and
+                     automatic organization membership enabled. The connection name
+                     displayed in Auth0 comes from the existing connection itself.
+
+ [ ] AUTH0_ORG_ADMIN_ROLE_ID
+     Location      : Server/deployment environment (not a Vite variable)
+     Value         : Auth0 Organization role ID that grants delegated full administration
+     Behavior      : Applied to EasyOps owner/admin invitations and synchronized
+                     after an EasyOps role promotion or demotion. EasyOps itself
+                     still authorizes from public.org_members.role.
+
+ [ ] Management API M2M scopes
+     Required      : read:connections, create:organization_connections,
+                     update:organization_connections, create:organization_invitations,
+                     read:organization_member_roles,
+                     create:organization_member_roles,
+                     delete:organization_member_roles
+     Tenant setup  : Enable and configure Auth0 delegated administration, then
+                     create the Organization role referenced above. This is a
+                     tenant capability, not an enabled-connection setting.
+
 -------------------------------------------------------------------------------
  SECTION 6 — Application / API settings
 -------------------------------------------------------------------------------

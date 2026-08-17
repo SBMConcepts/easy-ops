@@ -1,4 +1,5 @@
 import { ManagementClient } from 'auth0'
+import type { AccessRole } from './rbac.js'
 
 let _mgmt: ManagementClient | undefined
 
@@ -123,6 +124,46 @@ export async function enableOrgConnection(orgId: string): Promise<void> {
     assign_membership_on_login: true,
     is_signup_enabled: true,
   })
+}
+
+/** Return the Auth0 organization role that grants delegated full administration. */
+export function getAuth0OrgAdminRoleId(): string {
+  const roleId = process.env.AUTH0_ORG_ADMIN_ROLE_ID?.trim()
+  if (!roleId) {
+    throw new Error(
+      'AUTH0_ORG_ADMIN_ROLE_ID is required to synchronize delegated organization administration.'
+    )
+  }
+  return roleId
+}
+
+/** Map EasyOps access tiers to the Auth0 organization role used for delegation. */
+export function auth0RolesForAccessRole(role: AccessRole): string[] {
+  return role === 'owner' || role === 'admin' ? [getAuth0OrgAdminRoleId()] : []
+}
+
+/**
+ * Mirror the delegated-admin role only. EasyOps authorization remains based on
+ * public.org_members.role, so an Auth0 outage cannot change application access.
+ */
+export async function syncAuth0OrgAdminRole(
+  orgId: string,
+  userId: string,
+  role: AccessRole
+): Promise<void> {
+  const adminRoleId = getAuth0OrgAdminRoleId()
+  const assignedRoles = await mgmt().organizations.members.roles.list(orgId, userId, {
+    per_page: 100,
+  })
+  const hasAdminRole = (assignedRoles.data ?? []).some((assigned) => assigned.id === adminRoleId)
+  const needsAdminRole = role === 'owner' || role === 'admin'
+
+  if (needsAdminRole && !hasAdminRole) {
+    await mgmt().organizations.members.roles.assign(orgId, userId, { roles: [adminRoleId] })
+  }
+  if (!needsAdminRole && hasAdminRole) {
+    await mgmt().organizations.members.roles.delete(orgId, userId, { roles: [adminRoleId] })
+  }
 }
 
 /** Add a user to an Auth0 organization, optionally assigning organization roles. */

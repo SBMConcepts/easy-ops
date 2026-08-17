@@ -8,6 +8,7 @@ import {
 } from '../lib/auth-middleware.js'
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { isAccessRole } from '../lib/rbac.js'
+import { getAuth0OrgAdminRoleId, syncAuth0OrgAdminRole } from '../lib/auth0-admin.js'
 import type { Database, TablesUpdate } from '../types/supabase.js'
 
 const router = Router()
@@ -155,6 +156,16 @@ router.post(
       res.status(400).json({ error: 'role must be a valid access role.' })
       return
     }
+    if (body.role !== undefined) {
+      try {
+        getAuth0OrgAdminRoleId()
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Auth0 organization admin role is unavailable.'
+        res.status(503).json({ error: message })
+        return
+      }
+    }
 
     const EMPLOYMENT_TYPES = ['permanent', 'contract', 'part_time', 'temporary', 'shift_worker']
     if (
@@ -296,6 +307,18 @@ router.post(
     if (!data) {
       res.status(404).json({ error: 'Membership not found in this organization.' })
       return
+    }
+    if (body.role !== undefined) {
+      try {
+        await syncAuth0OrgAdminRole(req.orgId!, targetSub, data.role)
+      } catch (err) {
+        console.error('Auth0 organization role synchronization failed:', err)
+        res.status(502).json({
+          error:
+            'The EasyOps role was updated, but Auth0 delegated administration could not be synchronized. Retry the update.',
+        })
+        return
+      }
     }
     res.json({
       id: data.id,
