@@ -135,6 +135,11 @@ app.use(onboardingRouter)
 app.use(subscriptionsRouter)
 app.use(billingRouter)
 
+// Let an administrator invite the initial team after completing onboarding,
+// before a paid plan's payment setup activates operational access. The route
+// still verifies the caller's permission and the organization's active status.
+app.use(invitationsRouter)
+
 // Keep recovery routes above this point. Every remaining mounted API is an
 // operational feature and therefore requires a free, active, or live trial
 // entitlement in addition to its own authentication/permission middleware.
@@ -154,7 +159,6 @@ app.use(userCredentialsRouter)
 
 // 4. Privileged administrative (JWT + admin tier)
 app.use(orgMembersRouter)
-app.use(invitationsRouter)
 
 // ── Fallbacks ─────────────────────────────────────────────────────────────────
 // Unmatched routes + centralized error handling. Must be registered last.
