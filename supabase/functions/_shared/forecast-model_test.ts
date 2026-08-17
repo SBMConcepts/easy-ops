@@ -24,7 +24,7 @@ function syntheticAttendance(days: number, staff: number): AttendanceRow[] {
     const count = weekend ? Math.max(1, Math.round(staff / 4)) : staff
     for (let s = 0; s < count; s++) {
       rows.push({
-        employee_id: `emp-${s}`,
+        auth0_user_id: `emp-${s}`,
         date,
         hours_worked: 8,
         overtime: 0,
@@ -55,7 +55,7 @@ Deno.test('buildDailySeries zero-fills missing days', () => {
   const series = buildDailySeries(
     [
       {
-        employee_id: 'a',
+        auth0_user_id: 'a',
         date: TODAY,
         hours_worked: 8,
         overtime: 1,
@@ -75,7 +75,7 @@ Deno.test('buildDailySeries excludes absence and leave statuses from headcount',
   const series = buildDailySeries(
     [
       {
-        employee_id: 'present',
+        auth0_user_id: au,
         date: TODAY,
         hours_worked: 8,
         overtime: 0,

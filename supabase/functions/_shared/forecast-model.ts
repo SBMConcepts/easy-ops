@@ -10,19 +10,24 @@
 //     -> deterministic BCEA-aware alert rules
 
 export interface AttendanceRow {
-  employee_id: string
+  id: string
+  auth0_org_id: string
+  auth0_user_id: string
+  method: string
   date: string // YYYY-MM-DD
   hours_worked: number | null
   overtime: number | null
+  department_id: string | null
   status: string | null
   site_id: string | null
-  full_name?: string | null
 }
 
 export interface PlannedShift {
-  employee_id: string
+  auth0_org_id: string
+  auth0_user_id: string
   start_at: string
   end_at: string
+  department_id: string | null
   site_id: string | null
 }
 
@@ -37,7 +42,7 @@ export interface DraftAlert {
   title: string
   detail: string
   recommended_action: string
-  employee_id: string | null
+  auth0_user_id: string | null
   target_date: string | null
   metrics: Record<string, number | string | null>
 }
@@ -268,7 +273,7 @@ export function runForecast(input: ModelInput): ForecastOutput {
     { name: string; hours: number; overtime: number; days: number; longDayDates: string[] }
   >()
   for (const r of attendance) {
-    const e = perEmployee.get(r.employee_id) ?? {
+    const e = perEmployee.get(r.auth0_user_id) ?? {
       name: r.full_name ?? 'Unknown',
       hours: 0,
       overtime: 0,
@@ -280,7 +285,7 @@ export function runForecast(input: ModelInput): ForecastOutput {
     e.overtime += Number(r.overtime ?? 0)
     if (r.status !== 'absent') e.days += 1
     if (hrs > 9) e.longDayDates.push(r.date)
-    perEmployee.set(r.employee_id, e)
+    perEmployee.set(r.auth0_user_id, e)
   }
 
   // Planned roster hours per upcoming day
@@ -402,7 +407,7 @@ export function runForecast(input: ModelInput): ForecastOutput {
     })
   }
 
-  for (const [employeeId, e] of perEmployee) {
+  for (const [auth0_user_id, e] of perEmployee) {
     const otPerWeek = e.overtime / weeks
     if (otPerWeek >= 10) {
       alerts.push({
@@ -412,7 +417,7 @@ export function runForecast(input: ModelInput): ForecastOutput {
         detail: `${round1(otPerWeek)}h overtime per week averaged over ${lookbackDays} days (statutory maximum is 10h/week).`,
         recommended_action:
           'Stop scheduling overtime for this employee and redistribute the workload immediately.',
-        employee_id: employeeId,
+        employee_id: auth0_user_id,
         target_date: daily[0]?.date ?? null,
         metrics: { overtime_per_week: round1(otPerWeek), total_overtime: round1(e.overtime) },
       })
@@ -424,7 +429,7 @@ export function runForecast(input: ModelInput): ForecastOutput {
         detail: `${round1(otPerWeek)}h overtime per week averaged over ${lookbackDays} days (cap 10h/week).`,
         recommended_action:
           'Cap further overtime for this employee this week and share the load across the team.',
-        employee_id: employeeId,
+        employee_id: auth0_user_id,
         target_date: daily[0]?.date ?? null,
         metrics: { overtime_per_week: round1(otPerWeek) },
       })
@@ -440,7 +445,7 @@ export function runForecast(input: ModelInput): ForecastOutput {
         detail: `${streak} consecutive days above 9 hours worked in the last ${lookbackDays} days.`,
         recommended_action:
           'Schedule a rest day and confirm wellbeing before assigning further shifts.',
-        employee_id: employeeId,
+        employee_id: auth0_user_id,
         target_date: daily[0]?.date ?? null,
         metrics: { consecutive_long_days: streak, total_hours: round1(e.hours) },
       })
