@@ -1,0 +1,1159 @@
+@import '../index.css';
+
+.forecasting {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 1rem;
+}
+
+.forecasting__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.forecasting__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.forecasting__title {
+  font-family: var(--font-heading);
+  font-size: 1.875rem;
+  font-weight: 700;
+  gap: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.forecasting__title-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.forecasting__subtitle {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.forecasting__plan {
+  text-transform: capitalize;
+  font-weight: 500;
+  font-family: var(--font-body);
+}
+
+.forecasting__controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.forecasting__site-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.forecasting__site-filter-menu {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.forecasting__site-option {
+  background: var(--background);
+  border: none;
+}
+
+.forecasting__horizon-filter {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.forecasting__horizon-filter-menu {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.forecasting__horizon-option {
+  background: var(--background);
+  border: none;
+}
+
+.forecasting__generate-button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.forecasting__generate-button:hover {
+  background: var(--text-accent);
+  color: var(--background);
+}
+
+.forecasting__generate-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.forecasting__alert-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+
+.forecasting__alert-count {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+}
+
+.forecasting__alert-count--critical {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.forecasting__alert-count--high {
+  border: 1px solid var(--accent);
+  color: var(--accent-foreground);
+}
+
+.forecasting__alert-count--medium {
+  border: 1px solid #facc15;
+  color: var(--warning-foreground);
+}
+
+.forecasting__alert-count--low {
+  border: 1px solid var(--accent);
+  color: var(--success-foreground);
+}
+
+.forecasting__alert-count-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.forecasting__alert-severity {
+}
+
+.forecasting__alert-total {
+}
+
+.forecasting__alert-label {
+}
+
+.forecasting__tabs {
+}
+
+.forecasting__tab-list {
+}
+
+.forecasting__tab-trigger {
+}
+
+.forecasting__tab-content {
+}
+
+.forecasting__chart-card {
+}
+
+.forecasting__chart-header {
+}
+
+.forecasting__chart-title {
+}
+
+.forecasting__chart-badges {
+}
+
+.forecasting__model-badge {
+}
+
+.forecasting__accuracy-badge {
+}
+
+.forecasting__chart-content {
+}
+
+.forecasting__empty-chart {
+}
+
+.forecasting__empty-chart-action {
+}
+
+.forecasting__chart {
+}
+
+.forecasting__area-chart {
+}
+
+.forecasting__chart-definitions {
+}
+
+.forecasting__staff-gradient {
+}
+
+.forecasting__staff-gradient-start {
+}
+
+.forecasting__staff-gradient-end {
+}
+
+.forecasting__chart-grid {
+}
+
+.forecasting__chart-axis {
+}
+
+.forecasting__chart-axis--x {
+}
+
+.forecasting__chart-axis--y {
+}
+
+.forecasting__chart-legend {
+}
+
+.forecasting__chart-area {
+}
+
+.forecasting__chart-area--lower-bound {
+}
+
+.forecasting__chart-area--confidence-band {
+}
+
+.forecasting__chart-area--staff {
+}
+
+.forecasting__chart-area--hours {
+}
+
+.forecasting__insights {
+}
+
+.forecasting__reasoning-card {
+}
+
+.forecasting__reasoning-header {
+}
+
+.forecasting__reasoning-title {
+}
+
+.forecasting__reasoning-content {
+}
+
+.forecasting__reasoning-text {
+}
+
+.forecasting__confidence {
+}
+
+.forecasting__confidence-value {
+}
+
+.forecasting__accuracy-card {
+}
+
+.forecasting__accuracy-header {
+}
+
+.forecasting__accuracy-title {
+}
+
+.forecasting__accuracy-icon {
+}
+
+.forecasting__accuracy-content {
+}
+
+.forecasting__accuracy-empty {
+}
+
+.forecasting__accuracy-metrics {
+}
+
+.forecasting__accuracy-metric {
+}
+
+.forecasting__accuracy-period {
+}
+
+.forecasting__accuracy-value {
+}
+
+.forecasting__accuracy-detail {
+}
+
+.forecasting__empty-alerts-card {
+}
+
+.forecasting__empty-alerts {
+}
+
+.forecasting__alert {
+}
+
+.forecasting__alert--critical {
+}
+
+.forecasting__alert--high {
+}
+
+.forecasting__alert--medium {
+}
+
+.forecasting__alert--low {
+}
+
+.forecasting__alert-content {
+}
+
+.forecasting__alert-layout {
+}
+
+.forecasting__alert-main {
+}
+
+.forecasting__alert-icon {
+}
+
+.forecasting__alert-details {
+}
+
+.forecasting__alert-heading {
+}
+
+.forecasting__alert-title {
+}
+
+.forecasting__alert-severity-badge {
+}
+
+.forecasting__alert-type {
+}
+
+.forecasting__alert-status {
+}
+
+.forecasting__alert-description {
+}
+
+.forecasting__alert-recommendation {
+}
+
+.forecasting__alert-recommendation-label {
+}
+
+.forecasting__alert-meta {
+}
+
+.forecasting__alert-target {
+}
+
+.forecasting__alert-site {
+}
+
+.forecasting__alert-employee {
+}
+
+.forecasting__alert-actions {
+}
+
+.forecasting__alert-action {
+}
+
+.forecasting__alert-action--acknowledge {
+}
+
+.forecasting__alert-action--resolve {
+}
+
+.forecasting__alert-action--dismiss {
+}
+
+.forecasting__roster-form-card {
+}
+
+.forecasting__roster-form-header {
+}
+
+.forecasting__roster-form-title {
+}
+
+.forecasting__roster-form-content {
+}
+
+.forecasting__roster-fields {
+}
+
+.forecasting__roster-member-select {
+}
+
+.forecasting__roster-member-menu {
+}
+
+.forecasting__roster-member-option {
+}
+
+.forecasting__roster-site-select {
+}
+
+.forecasting__roster-site-menu {
+}
+
+.forecasting__roster-site-option {
+}
+
+.forecasting__roster-start {
+}
+
+.forecasting__roster-end {
+}
+
+.forecasting__roster-submit {
+}
+
+.forecasting__roster-submit-button {
+}
+
+.forecasting__empty-roster-card {
+}
+
+.forecasting__empty-roster {
+}
+
+.forecasting__roster-card {
+}
+
+.forecasting__roster-header {
+}
+
+.forecasting__roster-title {
+}
+
+.forecasting__roster-list {
+}
+
+.forecasting__roster-shift {
+}
+
+.forecasting__roster-shift-details {
+}
+
+.forecasting__roster-member {
+}
+
+.forecasting__roster-schedule {
+}
+
+.forecasting__roster-shift-actions {
+}
+
+.forecasting__roster-status {
+}
+
+.forecasting__roster-status--scheduled {
+}
+
+.forecasting__roster-status--cancelled {
+}
+
+.forecasting__roster-cancel {
+}
+
+.forecasting {
+  --forecasting-surface: var(--onboarding-surface);
+  --forecasting-canvas: var(--onboarding-background);
+  --forecasting-border: var(--onboarding-border);
+  --forecasting-heading: var(--onboarding-text-primary);
+  --forecasting-muted: var(--onboarding-text-muted);
+  --forecasting-accent: var(--onboarding-accent);
+  --forecasting-accent-dim: var(--onboarding-accent-dim);
+  --forecasting-radius: var(--onboarding-radius-md);
+  --forecasting-transition: var(--onboarding-transition);
+  color: var(--forecasting-heading);
+  font-family: var(--onboarding-font-family);
+  gap: 1.5rem;
+}
+
+.forecasting__header {
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.forecasting__heading {
+  gap: 0.375rem;
+}
+
+.forecasting__title {
+  color: var(--forecasting-heading);
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.forecasting__title-icon,
+.forecasting__accuracy-icon {
+  color: var(--forecasting-accent);
+}
+
+.forecasting__subtitle,
+.forecasting__reasoning-text,
+.forecasting__accuracy-empty,
+.forecasting__alert-description,
+.forecasting__roster-schedule {
+  color: var(--forecasting-muted);
+  line-height: 1.55;
+}
+
+.forecasting__plan,
+.forecasting__confidence-value,
+.forecasting__alert-recommendation-label,
+.forecasting__roster-member {
+  color: var(--forecasting-heading);
+}
+
+.forecasting__controls {
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.forecasting__site-filter,
+.forecasting__horizon-filter,
+.forecasting__roster-member-select,
+.forecasting__roster-site-select,
+.forecasting__roster-start,
+.forecasting__roster-end {
+  background: var(--forecasting-surface);
+  border-color: var(--forecasting-border);
+  border-radius: var(--onboarding-radius-sm);
+  color: var(--forecasting-heading);
+  box-shadow: var(--onboarding-shadow-sm);
+  transition:
+    border-color var(--forecasting-transition),
+    box-shadow var(--forecasting-transition);
+}
+
+.forecasting__site-filter:hover,
+.forecasting__horizon-filter:hover,
+.forecasting__roster-member-select:hover,
+.forecasting__roster-site-select:hover,
+.forecasting__roster-start:hover,
+.forecasting__roster-end:hover {
+  border-color: var(--onboarding-border-hover);
+}
+
+.forecasting__site-filter:focus-visible,
+.forecasting__horizon-filter:focus-visible,
+.forecasting__roster-member-select:focus-visible,
+.forecasting__roster-site-select:focus-visible,
+.forecasting__roster-start:focus-visible,
+.forecasting__roster-end:focus-visible,
+.forecasting__generate-button:focus-visible,
+.forecasting__alert-action:focus-visible,
+.forecasting__roster-submit-button:focus-visible,
+.forecasting__roster-cancel:focus-visible {
+  outline: none;
+  box-shadow: var(--onboarding-accent-glow);
+}
+
+.forecasting__site-filter-menu,
+.forecasting__horizon-filter-menu,
+.forecasting__roster-member-menu,
+.forecasting__roster-site-menu {
+  background: var(--forecasting-surface);
+  border-color: var(--forecasting-border);
+  border-radius: var(--onboarding-radius-sm);
+  box-shadow: var(--onboarding-shadow-md);
+}
+
+.forecasting__site-option,
+.forecasting__horizon-option,
+.forecasting__roster-member-option,
+.forecasting__roster-site-option {
+  border-radius: 6px;
+  color: var(--forecasting-heading);
+}
+
+.forecasting__site-option:hover,
+.forecasting__horizon-option:hover,
+.forecasting__roster-member-option:hover,
+.forecasting__roster-site-option:hover {
+  background: var(--forecasting-accent-dim);
+  color: var(--forecasting-heading);
+}
+
+.forecasting__generate-button,
+.forecasting__roster-submit-button {
+  align-items: center;
+  background: var(--forecasting-accent);
+  border-color: var(--forecasting-accent);
+  border-radius: var(--onboarding-radius-sm);
+  box-shadow: var(--onboarding-shadow-sm);
+  color: var(--onboarding-surface);
+  display: inline-flex;
+  font-weight: 600;
+  justify-content: center;
+  min-height: 2.5rem;
+  transition:
+    background var(--forecasting-transition),
+    border-color var(--forecasting-transition),
+    box-shadow var(--forecasting-transition),
+    transform var(--forecasting-transition);
+}
+
+.forecasting__generate-button:hover,
+.forecasting__roster-submit-button:hover {
+  background: var(--onboarding-border-hover);
+  border-color: var(--onboarding-border-hover);
+  box-shadow: var(--onboarding-shadow-md);
+  color: var(--onboarding-surface);
+  transform: translateY(-1px);
+}
+
+.forecasting__generate-button:disabled,
+.forecasting__roster-submit-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.forecasting__generate-icon {
+  flex-shrink: 0;
+}
+
+.forecasting__alert-summary {
+  gap: 0.75rem;
+}
+
+.forecasting__alert-count,
+.forecasting__chart-card,
+.forecasting__reasoning-card,
+.forecasting__accuracy-card,
+.forecasting__empty-alerts-card,
+.forecasting__alert,
+.forecasting__roster-form-card,
+.forecasting__empty-roster-card,
+.forecasting__roster-card {
+  background: var(--forecasting-surface);
+  border-color: var(--forecasting-border);
+  border-radius: var(--forecasting-radius);
+  box-shadow: var(--onboarding-shadow-sm);
+}
+
+.forecasting__alert-count {
+  min-height: 7.75rem;
+  padding: 0;
+  transition:
+    box-shadow var(--forecasting-transition),
+    transform var(--forecasting-transition);
+}
+
+.forecasting__alert-count:hover {
+  box-shadow: var(--onboarding-shadow-md);
+  transform: translateY(-2px);
+}
+
+.forecasting__alert-count--critical {
+  background: #fff5f5;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.forecasting__alert-count--high {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+.forecasting__alert-count--medium {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #a16207;
+}
+
+.forecasting__alert-count--low {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.forecasting__alert-count-content {
+  align-items: flex-start;
+  height: 100%;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.forecasting__alert-severity,
+.forecasting__alert-label,
+.forecasting__accuracy-period,
+.forecasting__accuracy-detail {
+  color: currentcolor;
+  opacity: 0.72;
+}
+
+.forecasting__alert-total {
+  color: currentcolor;
+  line-height: 1;
+}
+
+.forecasting__tabs {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.forecasting__tab-list {
+  align-items: stretch;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--forecasting-border);
+  border-radius: 0;
+  display: flex;
+  gap: 0;
+  height: auto;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 0;
+  width: 100%;
+}
+
+.forecasting__tab-trigger {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--forecasting-muted);
+  flex: 0 0 auto;
+  font-weight: 600;
+  height: 2.875rem;
+  padding: 0 1.125rem;
+  position: relative;
+  transition:
+    border-color var(--forecasting-transition),
+    color var(--forecasting-transition),
+    background var(--forecasting-transition);
+}
+
+.forecasting__tab-trigger:hover {
+  background: var(--forecasting-accent-dim);
+  color: var(--forecasting-heading);
+}
+
+.forecasting__tab-trigger[data-active] {
+  background: transparent;
+  border-bottom-color: var(--forecasting-accent);
+  color: var(--forecasting-heading);
+}
+
+.forecasting__tab-trigger::after {
+  display: none;
+}
+
+.forecasting__tab-content {
+  animation: forecasting-fade-in 180ms ease-out;
+  outline: none;
+  width: 100%;
+}
+
+.forecasting__chart-card,
+.forecasting__reasoning-card,
+.forecasting__accuracy-card,
+.forecasting__roster-form-card,
+.forecasting__roster-card {
+  overflow: hidden;
+}
+
+.forecasting__chart-header,
+.forecasting__reasoning-header,
+.forecasting__accuracy-header,
+.forecasting__roster-form-header,
+.forecasting__roster-header {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid var(--forecasting-border);
+  padding: 1.25rem 1.5rem;
+}
+
+.forecasting__chart-title,
+.forecasting__reasoning-title,
+.forecasting__accuracy-title,
+.forecasting__roster-form-title,
+.forecasting__roster-title {
+  color: var(--forecasting-heading);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.forecasting__chart-badges {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.forecasting__model-badge,
+.forecasting__accuracy-badge,
+.forecasting__alert-type,
+.forecasting__alert-status,
+.forecasting__roster-status {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.forecasting__model-badge {
+  border-color: var(--onboarding-border-focus);
+  color: var(--onboarding-text-secondary);
+}
+
+.forecasting__accuracy-badge,
+.forecasting__roster-status--scheduled {
+  background: var(--forecasting-accent-dim);
+  color: var(--onboarding-text-accent);
+}
+
+.forecasting__chart-content,
+.forecasting__reasoning-content,
+.forecasting__accuracy-content,
+.forecasting__roster-form-content,
+.forecasting__roster-list {
+  padding: 1.5rem;
+}
+
+.forecasting__empty-chart,
+.forecasting__empty-alerts,
+.forecasting__empty-roster {
+  color: var(--forecasting-muted);
+}
+
+.forecasting__empty-chart-action {
+  color: var(--onboarding-text-accent);
+}
+
+.forecasting__chart {
+  min-height: 20rem;
+}
+
+.forecasting__chart-grid line {
+  stroke: var(--forecasting-border);
+}
+
+.forecasting__chart-axis text,
+.forecasting__chart-legend text {
+  fill: var(--forecasting-muted);
+  font-family: var(--onboarding-font-family);
+}
+
+.forecasting__chart-area--confidence-band path {
+  fill-opacity: 0.12;
+}
+
+.forecasting__insights {
+  align-items: stretch;
+}
+
+.forecasting__reasoning-content,
+.forecasting__accuracy-content {
+  min-height: 9.5rem;
+}
+
+.forecasting__confidence {
+  color: var(--forecasting-muted);
+}
+
+.forecasting__accuracy-metrics {
+  gap: 1rem;
+}
+
+.forecasting__accuracy-metric {
+  border-left: 3px solid var(--forecasting-accent);
+  padding-left: 0.875rem;
+}
+
+.forecasting__accuracy-value {
+  color: var(--forecasting-heading);
+  line-height: 1.25;
+  margin: 0.25rem 0;
+}
+
+.forecasting__empty-alerts-card,
+.forecasting__empty-roster-card {
+  border-style: dashed;
+}
+
+.forecasting__alert {
+  border-left-width: 4px;
+  transition:
+    box-shadow var(--forecasting-transition),
+    transform var(--forecasting-transition);
+}
+
+.forecasting__alert:hover {
+  box-shadow: var(--onboarding-shadow-md);
+  transform: translateY(-1px);
+}
+
+.forecasting__alert--critical {
+  background: #fffafa;
+}
+
+.forecasting__alert--high {
+  background: #fffaf5;
+}
+
+.forecasting__alert--medium,
+.forecasting__alert--low {
+  background: var(--forecasting-surface);
+}
+
+.forecasting__alert-content {
+  padding: 1.25rem;
+}
+
+.forecasting__alert-layout {
+  align-items: flex-start;
+}
+
+.forecasting__alert-icon {
+  color: var(--onboarding-text-secondary);
+}
+
+.forecasting__alert-details {
+  min-width: 0;
+}
+
+.forecasting__alert-title {
+  color: var(--forecasting-heading);
+}
+
+.forecasting__alert-severity-badge {
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.forecasting__alert-type {
+  border-color: var(--forecasting-border);
+  color: var(--forecasting-muted);
+  text-transform: capitalize;
+}
+
+.forecasting__alert-meta {
+  color: var(--forecasting-muted);
+}
+
+.forecasting__alert-target,
+.forecasting__alert-site,
+.forecasting__alert-employee {
+  align-items: center;
+  display: inline-flex;
+}
+
+.forecasting__alert-actions {
+  flex-shrink: 0;
+}
+
+.forecasting__alert-action,
+.forecasting__roster-cancel {
+  border-radius: 6px;
+  color: var(--forecasting-heading);
+  font-weight: 600;
+  transition:
+    background var(--forecasting-transition),
+    border-color var(--forecasting-transition),
+    color var(--forecasting-transition);
+}
+
+.forecasting__alert-action--acknowledge:hover {
+  background: var(--forecasting-accent-dim);
+  border-color: var(--forecasting-accent);
+  color: var(--onboarding-text-accent);
+}
+
+.forecasting__alert-action--resolve:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.forecasting__alert-action--dismiss:hover,
+.forecasting__roster-cancel:hover {
+  background: #fff1f2;
+  color: var(--onboarding-text-error);
+}
+
+.forecasting__roster-fields {
+  align-items: end;
+}
+
+.forecasting__roster-member-menu,
+.forecasting__roster-site-menu {
+  max-height: 18rem;
+}
+
+.forecasting__roster-start,
+.forecasting__roster-end {
+  min-height: 2.5rem;
+}
+
+.forecasting__roster-submit {
+  border-top: 1px solid var(--forecasting-border);
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+.forecasting__roster-shift {
+  align-items: center;
+  border-color: var(--forecasting-border);
+  padding: 0.75rem 0;
+}
+
+.forecasting__roster-shift:first-child {
+  padding-top: 0;
+}
+
+.forecasting__roster-shift-details {
+  min-width: 0;
+}
+
+.forecasting__roster-status--cancelled {
+  border-color: #fecaca;
+  color: var(--onboarding-text-error);
+}
+
+@keyframes forecasting-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .forecasting__header {
+    align-items: stretch;
+  }
+
+  .forecasting__controls {
+    justify-content: flex-start;
+  }
+
+  .forecasting__chart-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .forecasting__chart-badges {
+    justify-content: flex-start;
+  }
+
+  .forecasting__alert-layout {
+    flex-direction: column;
+  }
+
+  .forecasting__alert-actions {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .forecasting__alert-action {
+    flex: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .forecasting {
+    gap: 1rem;
+  }
+
+  .forecasting__title {
+    font-size: 1.5rem;
+  }
+
+  .forecasting__controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .forecasting__site-filter,
+  .forecasting__horizon-filter,
+  .forecasting__generate-button {
+    width: 100%;
+  }
+
+  .forecasting__generate-button {
+    grid-column: 1 / -1;
+  }
+
+  .forecasting__tab-list {
+    gap: 0;
+    width: 100%;
+  }
+
+  .forecasting__tab-trigger {
+    font-size: 0.75rem;
+    min-width: max-content;
+    padding: 0 0.875rem;
+  }
+
+  .forecasting__chart-header,
+  .forecasting__reasoning-header,
+  .forecasting__accuracy-header,
+  .forecasting__roster-form-header,
+  .forecasting__roster-header,
+  .forecasting__chart-content,
+  .forecasting__reasoning-content,
+  .forecasting__accuracy-content,
+  .forecasting__roster-form-content,
+  .forecasting__roster-list {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .forecasting__chart {
+    min-height: 17rem;
+  }
+
+  .forecasting__alert-actions {
+    flex-wrap: wrap;
+  }
+
+  .forecasting__alert-action--dismiss {
+    flex-basis: 100%;
+  }
+}

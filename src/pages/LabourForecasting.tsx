@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from 'react'
+import '../styles/labourforecasting.css'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { useOrgApi } from '@/hooks/useOrgApi'
@@ -290,119 +291,175 @@ const Forecasting = () => {
   }, [alerts])
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl font-bold flex items-center gap-2">
-            <Brain className="h-7 w-7 text-primary" /> Predictive Forecasting
+    <div className="forecasting">
+      <div className="forecasting__header ">
+        <div className="forecasting__heading">
+          <h1 className="forecasting__title">
+            <Brain className="forecasting__title-icon " /> Predictive Forecasting
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="forecasting__subtitle">
             AI-driven staffing predictions and risk alerts · Plan:{' '}
-            <span className="font-medium capitalize">{plan || 'starter'}</span>
+            <span className="forecasting__plan font-medium capitalize">{plan || 'starter'}</span>
             {!enabled && ' · Upgrade to Pro for forecasting'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="forecasting__controls">
           <Select
             value={siteId ?? 'all'}
             onValueChange={(v) => setSiteId(v && v !== 'all' ? v : undefined)}
           >
-            <SelectTrigger className="w-44">
+            <SelectTrigger className="forecasting__site-filter w-44">
               <SelectValue placeholder="All sites" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All sites</SelectItem>
+            <SelectContent className="forecasting__site-filter-menu">
+              <SelectItem className="forecasting__site-option" value="all">
+                All sites
+              </SelectItem>
               {(sites ?? []).map((s) => (
-                <SelectItem key={s.id} value={s.id}>
+                <SelectItem className="forecasting__site-option" key={s.id} value={s.id}>
                   {s.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={String(horizon)} onValueChange={(v) => setHorizon(Number(v))}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="forecasting__horizon-filter w-32">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="forecasting__horizon-filter-menu">
               {[3, 7, 14, 21, 30]
                 .filter((n) => n <= maxHorizon)
                 .map((n) => (
-                  <SelectItem key={n} value={String(n)}>
+                  <SelectItem className="forecasting__horizon-option" key={n} value={String(n)}>
                     {n} days
                   </SelectItem>
                 ))}
             </SelectContent>
           </Select>
-          <Button onClick={() => regenerate.mutate()} disabled={!enabled || regenerate.isPending}>
+          <Button
+            className="forecasting__generate-button"
+            onClick={() => regenerate.mutate()}
+            disabled={!enabled || regenerate.isPending}
+          >
             {regenerate.isPending ? (
-              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              <Loader2 className="forecasting__generate-icon h-4 w-4 mr-1 animate-spin" />
             ) : (
-              <RefreshCw className="h-4 w-4 mr-1" />
+              <RefreshCw className="forecasting__generate-icon h-4 w-4 mr-1" />
             )}
             Generate forecast
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="forecasting__alert-summary grid grid-cols-2 md:grid-cols-4 gap-3">
         {(['critical', 'high', 'medium', 'low'] as const).map((sev) => (
-          <Card key={sev}>
-            <CardContent className="pt-6">
-              <div className="text-xs uppercase text-muted-foreground">{sev}</div>
-              <div className="text-3xl font-bold mt-1">{alertCounts[sev]}</div>
-              <div className="text-xs text-muted-foreground">alerts open</div>
+          <Card key={sev} className={`forecasting__alert-count forecasting__alert-count--${sev}`}>
+            <CardContent className="forecasting__alert-count-content pt-6">
+              <div className="forecasting__alert-severity text-xs uppercase text-muted-foreground">
+                {sev}
+              </div>
+              <div className="forecasting__alert-total text-3xl font-bold mt-1">
+                {alertCounts[sev]}
+              </div>
+              <div className="forecasting__alert-label text-xs text-muted-foreground">
+                alerts open
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Tabs defaultValue="forecast">
-        <TabsList>
-          <TabsTrigger value="forecast">Demand forecast</TabsTrigger>
-          <TabsTrigger value="alerts">Alerts ({alerts?.length ?? 0})</TabsTrigger>
-          <TabsTrigger value="roster">Roster ({rosterShifts.length})</TabsTrigger>
+      <Tabs className="forecasting__tabs" defaultValue="forecast">
+        <TabsList className="forecasting__tab-list" variant="line">
+          <TabsTrigger className="forecasting__tab-trigger" value="forecast">
+            Demand forecast
+          </TabsTrigger>
+          <TabsTrigger className="forecasting__tab-trigger" value="alerts">
+            Alerts ({alerts?.length ?? 0})
+          </TabsTrigger>
+          <TabsTrigger className="forecasting__tab-trigger" value="roster">
+            Roster ({rosterShifts.length})
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="forecast" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-              <CardTitle>Predicted required staff &amp; hours</CardTitle>
-              <div className="flex items-center gap-2">
-                {modelLabel && <Badge variant="outline">{modelLabel}</Badge>}
+        <TabsContent value="forecast" className="forecasting__tab-content mt-4 space-y-4">
+          <Card className="forecasting__chart-card">
+            <CardHeader className="forecasting__chart-header flex flex-row items-center justify-between gap-2 space-y-0">
+              <CardTitle className="forecasting__chart-title">
+                Predicted required staff &amp; hours
+              </CardTitle>
+              <div className="forecasting__chart-badges flex items-center gap-2">
+                {modelLabel && (
+                  <Badge className="forecasting__model-badge" variant="outline">
+                    {modelLabel}
+                  </Badge>
+                )}
                 {accuracy?.rolling_30?.sample_days ? (
-                  <Badge variant="secondary">
+                  <Badge className="forecasting__accuracy-badge" variant="secondary">
                     {accuracy.rolling_30.accuracy_pct}% accurate (30d)
                   </Badge>
                 ) : null}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="forecasting__chart-content">
               {chartData.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-12 text-center">
-                  No forecast yet. Click <strong>Generate forecast</strong> to run the model against
-                  your last 8 weeks of attendance.
+                <p className="forecasting__empty-chart text-sm text-muted-foreground py-12 text-center">
+                  No forecast yet. Click{' '}
+                  <strong className="forecasting__empty-chart-action">Generate forecast</strong> to
+                  run the model against your last 8 weeks of attendance.
                 </p>
               ) : (
-                <ResponsiveContainer width="100%" height={320}>
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="staffFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                <ResponsiveContainer className="forecasting__chart" width="100%" height={320}>
+                  <AreaChart className="forecasting__area-chart" data={chartData}>
+                    <defs className="forecasting__chart-definitions">
+                      <linearGradient
+                        className="forecasting__staff-gradient"
+                        id="staffFill"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          className="forecasting__staff-gradient-start"
+                          offset="0%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0.4}
+                        />
+                        <stop
+                          className="forecasting__staff-gradient-end"
+                          offset="100%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0.05}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <CartesianGrid
+                      className="forecasting__chart-grid"
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis
+                      className="forecasting__chart-axis forecasting__chart-axis--x"
+                      dataKey="date"
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                    />
+                    <YAxis
+                      className="forecasting__chart-axis forecasting__chart-axis--y"
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                    />
                     <Tooltip
                       contentStyle={{
                         background: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
                       }}
                     />
-                    <Legend />
+                    <Legend className="forecasting__chart-legend" />
                     {/* p10–p90 confidence band, drawn as a transparent base + visible band */}
                     <Area
+                      className="forecasting__chart-area forecasting__chart-area--lower-bound"
                       type="monotone"
                       dataKey="p10"
                       stackId="band"
@@ -412,6 +469,7 @@ const Forecasting = () => {
                       name="p10"
                     />
                     <Area
+                      className="forecasting__chart-area forecasting__chart-area--confidence-band"
                       type="monotone"
                       dataKey="band"
                       stackId="band"
@@ -421,6 +479,7 @@ const Forecasting = () => {
                       name="Confidence band (p10–p90)"
                     />
                     <Area
+                      className="forecasting__chart-area forecasting__chart-area--staff"
                       type="monotone"
                       dataKey="staff"
                       name="Required staff"
@@ -428,6 +487,7 @@ const Forecasting = () => {
                       fill="url(#staffFill)"
                     />
                     <Area
+                      className="forecasting__chart-area forecasting__chart-area--hours"
                       type="monotone"
                       dataKey="hours"
                       name="Predicted hours"
@@ -441,20 +501,22 @@ const Forecasting = () => {
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="forecasting__insights grid gap-4 md:grid-cols-2">
             {forecasts && forecasts.length > 0 && forecasts[0].reasoning && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Model reasoning</CardTitle>
+              <Card className="forecasting__reasoning-card">
+                <CardHeader className="forecasting__reasoning-header">
+                  <CardTitle className="forecasting__reasoning-title text-base">
+                    Model reasoning
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground whitespace-pre-line">
+                <CardContent className="forecasting__reasoning-content">
+                  <p className="forecasting__reasoning-text text-sm text-muted-foreground whitespace-pre-line">
                     {forecasts[0].reasoning}
                   </p>
                   {forecasts[0].confidence != null && (
-                    <p className="text-xs mt-2">
+                    <p className="forecasting__confidence text-xs mt-2">
                       Confidence:{' '}
-                      <span className="font-medium">
+                      <span className="forecasting__confidence-value font-medium">
                         {Math.round(Number(forecasts[0].confidence) * 100)}%
                       </span>
                     </p>
@@ -463,31 +525,39 @@ const Forecasting = () => {
               </Card>
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Gauge className="h-4 w-4" /> Model accuracy (backtest)
+            <Card className="forecasting__accuracy-card">
+              <CardHeader className="forecasting__accuracy-header">
+                <CardTitle className="forecasting__accuracy-title text-base flex items-center gap-2">
+                  <Gauge className="forecasting__accuracy-icon h-4 w-4" /> Model accuracy (backtest)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="forecasting__accuracy-content">
                 {!accuracy || accuracy.rolling_30.sample_days === 0 ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="forecasting__accuracy-empty text-sm text-muted-foreground">
                     Not enough history yet — accuracy appears once forecasts have been compared
                     against at least one day of actual attendance.
                   </p>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="text-xs uppercase text-muted-foreground">Last 14 days</div>
-                      <div className="text-2xl font-bold">{accuracy.rolling_14.accuracy_pct}%</div>
-                      <div className="text-xs text-muted-foreground">
+                  <div className="forecasting__accuracy-metrics grid grid-cols-2 gap-4 text-sm">
+                    <div className="forecasting__accuracy-metric">
+                      <div className="forecasting__accuracy-period text-xs uppercase text-muted-foreground">
+                        Last 14 days
+                      </div>
+                      <div className="forecasting__accuracy-value text-2xl font-bold">
+                        {accuracy.rolling_14.accuracy_pct}%
+                      </div>
+                      <div className="forecasting__accuracy-detail text-xs text-muted-foreground">
                         {accuracy.rolling_14.sample_days} day(s) scored
                       </div>
                     </div>
-                    <div>
-                      <div className="text-xs uppercase text-muted-foreground">Last 30 days</div>
-                      <div className="text-2xl font-bold">{accuracy.rolling_30.accuracy_pct}%</div>
-                      <div className="text-xs text-muted-foreground">
+                    <div className="forecasting__accuracy-metric">
+                      <div className="forecasting__accuracy-period text-xs uppercase text-muted-foreground">
+                        Last 30 days
+                      </div>
+                      <div className="forecasting__accuracy-value text-2xl font-bold">
+                        {accuracy.rolling_30.accuracy_pct}%
+                      </div>
+                      <div className="forecasting__accuracy-detail text-xs text-muted-foreground">
                         MAE {accuracy.rolling_30.hours_mae}h · staff ±
                         {accuracy.rolling_30.staff_mae}
                       </div>
@@ -499,10 +569,10 @@ const Forecasting = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="alerts" className="mt-4 space-y-3">
+        <TabsContent value="alerts" className="forecasting__tab-content mt-4 space-y-3">
           {(alerts ?? []).length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            <Card className="forecasting__empty-alerts-card">
+              <CardContent className="forecasting__empty-alerts py-12 text-center text-sm text-muted-foreground">
                 No open alerts. Generate a forecast to detect risks.
               </CardContent>
             </Card>
@@ -512,7 +582,7 @@ const Forecasting = () => {
             return (
               <Card
                 key={a.id}
-                className="border-l-4"
+                className={`forecasting__alert forecasting__alert--${a.severity} border-l-4`}
                 style={{
                   borderLeftColor:
                     a.severity === 'critical' || a.severity === 'high'
@@ -520,39 +590,62 @@ const Forecasting = () => {
                       : 'hsl(var(--primary))',
                 }}
               >
-                <CardContent className="pt-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex gap-3 flex-1">
-                      <Icon className="h-5 w-5 mt-0.5 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold">{a.title}</h3>
-                          <Badge variant={severityColor[a.severity] as any}>{a.severity}</Badge>
-                          <Badge variant="outline">{a.alert_type.replace(/_/g, ' ')}</Badge>
+                <CardContent className="forecasting__alert-content pt-4">
+                  <div className="forecasting__alert-layout flex items-start justify-between gap-4">
+                    <div className="forecasting__alert-main flex gap-3 flex-1">
+                      <Icon className="forecasting__alert-icon h-5 w-5 mt-0.5 text-muted-foreground shrink-0" />
+                      <div className="forecasting__alert-details flex-1 min-w-0">
+                        <div className="forecasting__alert-heading flex items-center gap-2 flex-wrap">
+                          <h3 className="forecasting__alert-title font-semibold">{a.title}</h3>
+                          <Badge
+                            className="forecasting__alert-severity-badge"
+                            variant={severityColor[a.severity] as any}
+                          >
+                            {a.severity}
+                          </Badge>
+                          <Badge className="forecasting__alert-type" variant="outline">
+                            {a.alert_type.replace(/_/g, ' ')}
+                          </Badge>
                           {a.status === 'acknowledged' && (
-                            <Badge variant="secondary">acknowledged</Badge>
+                            <Badge className="forecasting__alert-status" variant="secondary">
+                              acknowledged
+                            </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">{a.detail}</p>
+                        <p className="forecasting__alert-description text-sm text-muted-foreground mt-1">
+                          {a.detail}
+                        </p>
                         {a.recommended_action && (
-                          <p className="text-sm mt-2">
-                            <span className="font-medium">Recommended:</span> {a.recommended_action}
+                          <p className="forecasting__alert-recommendation text-sm mt-2">
+                            <span className="forecasting__alert-recommendation-label font-medium">
+                              Recommended:
+                            </span>{' '}
+                            {a.recommended_action}
                           </p>
                         )}
-                        <div className="text-xs text-muted-foreground mt-2 flex gap-3 flex-wrap">
+                        <div className="forecasting__alert-meta text-xs text-muted-foreground mt-2 flex gap-3 flex-wrap">
                           {a.target_date && (
-                            <span>Target: {format(parseISO(a.target_date), 'd MMM yyyy')}</span>
+                            <span className="forecasting__alert-target">
+                              Target: {format(parseISO(a.target_date), 'd MMM yyyy')}
+                            </span>
                           )}
-                          {(a as any).sites?.name && <span>Site: {(a as any).sites.name}</span>}
+                          {(a as any).sites?.name && (
+                            <span className="forecasting__alert-site">
+                              Site: {(a as any).sites.name}
+                            </span>
+                          )}
                           {(a as any).profiles?.full_name && (
-                            <span>Employee: {(a as any).profiles.full_name}</span>
+                            <span className="forecasting__alert-employee">
+                              Employee: {(a as any).profiles.full_name}
+                            </span>
                           )}
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-1">
+                    <div className="forecasting__alert-actions flex flex-col gap-1">
                       {a.status === 'open' && (
                         <Button
+                          className="forecasting__alert-action forecasting__alert-action--acknowledge"
                           size="sm"
                           variant="outline"
                           onClick={() => updateAlert.mutate({ id: a.id, status: 'acknowledged' })}
@@ -561,6 +654,7 @@ const Forecasting = () => {
                         </Button>
                       )}
                       <Button
+                        className="forecasting__alert-action forecasting__alert-action--resolve"
                         size="sm"
                         variant="outline"
                         onClick={() => updateAlert.mutate({ id: a.id, status: 'resolved' })}
@@ -568,6 +662,7 @@ const Forecasting = () => {
                         Resolve
                       </Button>
                       <Button
+                        className="forecasting__alert-action forecasting__alert-action--dismiss"
                         size="sm"
                         variant="ghost"
                         onClick={() => updateAlert.mutate({ id: a.id, status: 'dismissed' })}
@@ -582,24 +677,30 @@ const Forecasting = () => {
           })}
         </TabsContent>
 
-        <TabsContent value="roster" className="mt-4 space-y-4">
+        <TabsContent value="roster" className="forecasting__tab-content mt-4 space-y-4">
           {canManageRoster && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Schedule roster assignment</CardTitle>
+            <Card className="forecasting__roster-form-card">
+              <CardHeader className="forecasting__roster-form-header">
+                <CardTitle className="forecasting__roster-form-title text-base">
+                  Schedule roster assignment
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <CardContent className="forecasting__roster-form-content">
+                <div className="forecasting__roster-fields grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                   <Select
                     value={rosterMemberId}
                     onValueChange={(value) => setRosterMemberId(value ?? '')}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="forecasting__roster-member-select">
                       <SelectValue placeholder="Employee" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="forecasting__roster-member-menu">
                       {rosterMembers.map((member) => (
-                        <SelectItem key={member.auth0_user_id} value={member.auth0_user_id}>
+                        <SelectItem
+                          className="forecasting__roster-member-option"
+                          key={member.auth0_user_id}
+                          value={member.auth0_user_id}
+                        >
                           {member.full_name || member.auth0_user_id}
                         </SelectItem>
                       ))}
@@ -611,13 +712,19 @@ const Forecasting = () => {
                       setRosterSiteId(value === 'unassigned' || !value ? '' : value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="forecasting__roster-site-select">
                       <SelectValue placeholder="Site" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">No site</SelectItem>
+                    <SelectContent className="forecasting__roster-site-menu">
+                      <SelectItem className="forecasting__roster-site-option" value="unassigned">
+                        No site
+                      </SelectItem>
                       {sites.map((site) => (
-                        <SelectItem key={site.id} value={site.id}>
+                        <SelectItem
+                          className="forecasting__roster-site-option"
+                          key={site.id}
+                          value={site.id}
+                        >
                           {site.name}
                         </SelectItem>
                       ))}
@@ -625,19 +732,22 @@ const Forecasting = () => {
                   </Select>
                   <Input
                     aria-label="Shift start"
+                    className="forecasting__roster-start"
                     type="datetime-local"
                     value={rosterStart}
                     onChange={(event) => setRosterStart(event.target.value)}
                   />
                   <Input
                     aria-label="Shift end"
+                    className="forecasting__roster-end"
                     type="datetime-local"
                     value={rosterEnd}
                     onChange={(event) => setRosterEnd(event.target.value)}
                   />
                 </div>
-                <div className="mt-3 flex justify-end">
+                <div className="forecasting__roster-submit mt-3 flex justify-end">
                   <Button
+                    className="forecasting__roster-submit-button"
                     onClick={() => createRosterShift.mutate()}
                     disabled={createRosterShift.isPending}
                   >
@@ -649,36 +759,44 @@ const Forecasting = () => {
           )}
 
           {rosterShifts.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            <Card className="forecasting__empty-roster-card">
+              <CardContent className="forecasting__empty-roster py-12 text-center text-sm text-muted-foreground">
                 No roster assignments in the next 31 days.
               </CardContent>
             </Card>
           ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Upcoming assignments</CardTitle>
+            <Card className="forecasting__roster-card">
+              <CardHeader className="forecasting__roster-header">
+                <CardTitle className="forecasting__roster-title text-base">
+                  Upcoming assignments
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="forecasting__roster-list space-y-2">
                 {rosterShifts.map((shift) => (
                   <div
                     key={shift.id}
-                    className="flex flex-wrap items-center justify-between gap-3 border-b pb-2 last:border-0"
+                    className="forecasting__roster-shift flex flex-wrap items-center justify-between gap-3 border-b pb-2 last:border-0"
                   >
-                    <div>
-                      <div className="font-medium">{shift.member_name ?? shift.auth0_user_id}</div>
-                      <div className="text-sm text-muted-foreground">
+                    <div className="forecasting__roster-shift-details">
+                      <div className="forecasting__roster-member font-medium">
+                        {shift.member_name ?? shift.auth0_user_id}
+                      </div>
+                      <div className="forecasting__roster-schedule text-sm text-muted-foreground">
                         {format(parseISO(shift.start_at), 'd MMM, HH:mm')} -{' '}
                         {format(parseISO(shift.end_at), 'HH:mm')}
                         {shift.site_name ? ` · ${shift.site_name}` : ''}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={shift.status === 'scheduled' ? 'secondary' : 'outline'}>
+                    <div className="forecasting__roster-shift-actions flex items-center gap-2">
+                      <Badge
+                        className={`forecasting__roster-status forecasting__roster-status--${shift.status}`}
+                        variant={shift.status === 'scheduled' ? 'secondary' : 'outline'}
+                      >
                         {shift.status}
                       </Badge>
                       {canManageRoster && shift.status === 'scheduled' && (
                         <Button
+                          className="forecasting__roster-cancel"
                           size="sm"
                           variant="ghost"
                           onClick={() => cancelRosterShift.mutate(shift.id)}
