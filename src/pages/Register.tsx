@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Loader2, ArrowLeft } from 'lucide-react'
+import { Loader2, ArrowLeft, MailCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { useOrgApi } from '../hooks/useOrgApi'
 import '../styles/register.css'
@@ -33,6 +33,7 @@ export default function Register() {
     adminEmail: '',
   })
   const [submitting, setSubmitting] = useState(false)
+  const [invitationSentTo, setInvitationSentTo] = useState<string | null>(null)
 
   const handleBack = () => {
     if (step === 1) {
@@ -59,7 +60,7 @@ export default function Register() {
       })
 
       toast.success('Workspace provisioned! Check your email for the Admin invitation.')
-      navigate('/login')
+      setInvitationSentTo(form.adminEmail.trim().toLowerCase())
     } catch (error: any) {
       toast.error(error.message)
     } finally {
@@ -76,7 +77,29 @@ export default function Register() {
         </button>
       </div>
 
-      {step === 1 ? (
+      {invitationSentTo ? (
+        <div className="register-content-column">
+          <div className="register-card">
+            <div className="register-card-content register-invitation-confirmation">
+              <MailCheck className="register-invitation-confirmation__icon" aria-hidden="true" />
+              <div className="register-flow-header">
+                <h2 className="register-flow-title">Check your email</h2>
+                <p className="register-flow-desc">
+                  We sent the workspace administrator invitation to {invitationSentTo}. Open that
+                  email to create your password and continue with workspace setup.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="register-submit-button"
+                onClick={() => navigate('/')}
+              >
+                Return to home
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : step === 1 ? (
         <PricingSection
           selectedPlan={selectedPlan}
           onSelectPlan={setSelectedPlan}

@@ -198,6 +198,17 @@
   gap: 1.5rem;
 }
 
+.register-invitation-confirmation {
+  align-items: center;
+  text-align: center;
+}
+
+.register-invitation-confirmation__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--onboarding-accent);
+}
+
 .register-flow-header {
   display: flex;
   flex-direction: column;
