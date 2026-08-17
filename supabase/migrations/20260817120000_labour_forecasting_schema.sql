@@ -1,8 +1,7 @@
 -- Complete the data model required by predictive labour forecasting.
 -- Existing auth0_org_id/auth0_user_id names remain the tenant and member keys.
 
-DO $
-$
+DO $$
 BEGIN
     IF NOT EXISTS (
     SELECT 1
