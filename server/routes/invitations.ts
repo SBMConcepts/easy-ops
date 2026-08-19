@@ -10,10 +10,9 @@ import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { jobRoleToTier } from '../lib/rbac.js'
 import { auth0RolesForAccessRole, createOrgInvitation } from '../lib/auth0-admin.js'
 import { sendSms } from '../lib/sns.js'
+import { E164_RE } from '../lib/phone.js'
 
 const router = Router()
-
-const PHONE_RE = /^\+[1-9]\d{7,14}$/
 
 // The frontend origin invite SMS links point to. Mirrors app.ts's oidcBaseURL
 // fallback chain so both stay in sync without a dedicated env var.
@@ -55,15 +54,19 @@ router.post(
     const body = (req.body ?? {}) as {
       email?: string
       phone_number?: string
+      mobile_number?: string
       role?: string
     }
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
-    const phoneNumber = typeof body.phone_number === 'string' ? body.phone_number.trim() : ''
+    // Two frontend invite forms exist (Team Members page sends mobile_number,
+    // the legacy dialog sends phone_number) — accept either.
+    const rawPhone = body.phone_number ?? body.mobile_number
+    const phoneNumber = typeof rawPhone === 'string' ? rawPhone.trim() : ''
     if (!email && !phoneNumber) {
       res.status(400).json({ error: 'email or phone_number is required.' })
       return
     }
-    if (phoneNumber && !PHONE_RE.test(phoneNumber)) {
+    if (phoneNumber && !E164_RE.test(phoneNumber)) {
       res.status(400).json({ error: 'phone_number must be in E.164 format, e.g. +27821234567.' })
       return
     }

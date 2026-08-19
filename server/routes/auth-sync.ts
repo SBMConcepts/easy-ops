@@ -96,11 +96,15 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
         auth0_user_id: body.auth0_user_id,
         auth0_org_id,
         email,
-        mobile_number: body.phone_number ?? null,
         full_name,
         avatar_url: body.avatar_url ?? null,
         last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        // Omit mobile_number entirely when Auth0 didn't report one on this
+        // login (event.user.phone_number is only set for phone-identifier
+        // signups) — including it as null would overwrite the admin-entered
+        // number create.js already wrote at signup on every later login.
+        ...(phoneNumber ? { mobile_number: phoneNumber } : {}),
       },
       { onConflict: 'auth0_user_id' }
     )

@@ -31,6 +31,7 @@ export default function Register() {
   const [form, setForm] = useState({
     companyName: '',
     adminEmail: '',
+    mobileNumber: '',
   })
   const [submitting, setSubmitting] = useState(false)
   const [invitationSentTo, setInvitationSentTo] = useState<string | null>(null)
@@ -55,6 +56,7 @@ export default function Register() {
         body: JSON.stringify({
           orgName: form.companyName,
           adminEmail: form.adminEmail,
+          mobileNumber: form.mobileNumber.trim() || undefined,
           plan: selectedPlan,
         }),
       })
@@ -146,6 +148,18 @@ export default function Register() {
                     style={{ height: '42px' }}
                     value={form.adminEmail}
                     onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
+                  />
+                </div>
+
+                <div className="register-field">
+                  <Label className="register-label">Mobile Number</Label>
+                  <Input
+                    type="tel"
+                    placeholder="+27821234567"
+                    className="register-input"
+                    style={{ height: '42px' }}
+                    value={form.mobileNumber}
+                    onChange={(e) => setForm({ ...form, mobileNumber: e.target.value })}
                   />
                 </div>
 

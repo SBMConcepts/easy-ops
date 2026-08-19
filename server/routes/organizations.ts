@@ -10,6 +10,7 @@ import {
   enableOrgConnection,
 } from '../lib/auth0-admin.js'
 import type { Database } from '../types/supabase.js'
+import { E164_RE } from '../lib/phone.js'
 
 const router = Router()
 
@@ -26,13 +27,23 @@ function slugify(input: string): string {
 }
 
 router.post('/api/organizations', async (req: Request, res: Response) => {
-  const body = (req.body ?? {}) as { orgName?: string; adminEmail?: string; plan?: string }
+  const body = (req.body ?? {}) as {
+    orgName?: string
+    adminEmail?: string
+    plan?: string
+    mobileNumber?: string
+  }
   const orgName = typeof body.orgName === 'string' ? body.orgName.trim() : ''
   const adminEmail = typeof body.adminEmail === 'string' ? body.adminEmail.trim().toLowerCase() : ''
   const requestedPlan = typeof body.plan === 'string' ? body.plan : 'free'
+  const mobileNumber = typeof body.mobileNumber === 'string' ? body.mobileNumber.trim() : ''
 
   if (!orgName || !adminEmail) {
     res.status(400).json({ error: 'orgName and adminEmail are required.' })
+    return
+  }
+  if (mobileNumber && !E164_RE.test(mobileNumber)) {
+    res.status(400).json({ error: 'mobileNumber must be in E.164 format, e.g. +27821234567.' })
     return
   }
 
@@ -85,6 +96,7 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     const { error: inviteErr } = await supabaseAdmin.from('invitations').insert({
       auth0_org_id: auth0Org.id,
       email: adminEmail,
+      phone_number: mobileNumber || null,
       role: 'admin',
     })
     if (inviteErr) throw new Error(inviteErr.message)

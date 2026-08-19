@@ -89,7 +89,7 @@ export default function WorkspaceMembers() {
 
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inviteEmail || !inviteMobileNumber)
+    if (!inviteEmail && !inviteMobileNumber)
       return toast.error('Email or Mobile Number is required')
     inviteMember.mutate()
   }
@@ -159,16 +159,16 @@ export default function WorkspaceMembers() {
                     />
                   </SelectTrigger>
                   <SelectContent className="settings-card-tab__select-content">
-                    <SelectItem className="settings-card-tab__select-item" value="Owner">
+                    <SelectItem className="settings-card-tab__select-item" value="owner">
                       Owner
                     </SelectItem>
-                    <SelectItem className="settings-card-tab__select-item" value="Admin">
+                    <SelectItem className="settings-card-tab__select-item" value="admin">
                       Admin
                     </SelectItem>
-                    <SelectItem className="settings-card-tab__select-item" value="Manager">
+                    <SelectItem className="settings-card-tab__select-item" value="manager">
                       Manager
                     </SelectItem>
-                    <SelectItem className="settings-card-tab__select-item" value="Member">
+                    <SelectItem className="settings-card-tab__select-item" value="member">
                       Member
                     </SelectItem>
                   </SelectContent>

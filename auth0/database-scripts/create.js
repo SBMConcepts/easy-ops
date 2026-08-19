@@ -71,7 +71,7 @@ function create(user, callback) {
       // Must be unexpired, unrevoked and unaccepted. If more than one invite
       // matches, the most recent one wins.
       const inviteSql =
-        'SELECT auth0_org_id, role FROM public.invitations ' +
+        'SELECT auth0_org_id, role, phone_number FROM public.invitations ' +
         'WHERE (($1::text IS NOT NULL AND lower(email) = $1) OR ($2::text IS NOT NULL AND phone_number = $2)) ' +
         'AND accepted_at IS NULL AND revoked_at IS NULL ' +
         'AND expires_at > now() ORDER BY created_at DESC LIMIT 1'
@@ -95,19 +95,31 @@ function create(user, callback) {
         // whole signup. gen.cred_id is created once and reused as both the
         // credential id and the auth0|<id> subject stamped onto all three
         // rows. The originating invitation is stamped accepted at the end.
+        //
+        // dbMobileNumber/dbPhoneVerified are DB-only contact fields: they
+        // prefer the identifier the invitee actually signed up with, else
+        // fall back to the mobile number the admin captured on the
+        // invitation itself. This is intentionally kept separate from the
+        // phone_number/phone_verified reported back to Auth0 below, which
+        // must stay tied to the real signup identifier so an admin-entered,
+        // never-OTP-verified number can't be used to claim a verified Auth0
+        // login identifier.
+        const dbMobileNumber = phoneNumber || invite.phone_number || null
+        const dbPhoneVerified = !!dbMobileNumber
+
         const provisionSql =
           'WITH gen AS (SELECT gen_random_uuid() AS cred_id), ' +
           'new_user AS (' +
           '  INSERT INTO public.users (auth0_user_id, auth0_org_id, email, mobile_number, full_name) ' +
-          "  SELECT 'auth0|' || gen.cred_id::text, $3, $1, $2, $5 FROM gen " +
+          "  SELECT 'auth0|' || gen.cred_id::text, $3, $1, $7, $5 FROM gen " +
           '  RETURNING auth0_user_id' +
           '), ' +
           'new_cred AS (' +
           '  INSERT INTO public.user_credentials ' +
           '    (id, auth0_user_id, auth0_org_id, email, mobile_number, full_name, password_hash, ' +
           '     email_verified, phone_verified, status) ' +
-          '  SELECT gen.cred_id, new_user.auth0_user_id, $3, $1, $2, $5, $4, ' +
-          '    ($1::text IS NOT NULL), ($2::text IS NOT NULL), ' +
+          '  SELECT gen.cred_id, new_user.auth0_user_id, $3, $1, $7, $5, $4, ' +
+          '    ($1::text IS NOT NULL), $8, ' +
           "    'active' FROM gen, new_user " +
           '  RETURNING id, auth0_user_id' +
           '), ' +
@@ -130,7 +142,16 @@ function create(user, callback) {
 
         client.query(
           provisionSql,
-          [email, phoneNumber, invite.auth0_org_id, passwordHash, fullName, invite.role],
+          [
+            email,
+            phoneNumber,
+            invite.auth0_org_id,
+            passwordHash,
+            fullName,
+            invite.role,
+            dbMobileNumber,
+            dbPhoneVerified,
+          ],
           function (queryErr, result) {
             client.end()
             if (queryErr) {
