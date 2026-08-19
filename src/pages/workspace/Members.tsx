@@ -20,8 +20,9 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components
 // Define the shape of a member
 interface Member {
   id: string
-  email: string
+  email?: string
   full_name: string
+  mobile_number?: string
   role: 'owner' | 'admin' | 'manager' | 'member'
   status: 'active' | 'invited'
 }
@@ -36,7 +37,8 @@ export default function WorkspaceMembers() {
 
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
-  const [inviteRole, setInviteRole] = useState<'admin' | 'manager' | 'member'>('member')
+  const [inviteMobileNumber, setInviteMobileNumber] = useState('')
+  const [inviteRole, setInviteRole] = useState<'owner' | 'admin' | 'manager' | 'member'>('member')
 
   // Fetch Team Members from the org-members endpoint and map to the row shape.
   const { data: members = [], isLoading } = useQuery<Member[]>({
@@ -47,7 +49,7 @@ export default function WorkspaceMembers() {
           id: string
           role: Member['role']
           status: string
-          users: { email: string; full_name: string } | null
+          users: { email: string; full_name: string; mobile_number?: string } | null
         }>
       }>('org-members')
       return members.map((m) => ({
@@ -55,6 +57,7 @@ export default function WorkspaceMembers() {
         email: m.users?.email ?? '',
         full_name: m.users?.full_name ?? '',
         role: m.role,
+        mobile_number: m.users?.mobile_number ?? '',
         status: m.status === 'active' ? 'active' : 'invited',
       }))
     },
@@ -65,13 +68,19 @@ export default function WorkspaceMembers() {
     mutationFn: async () => {
       return apiFetch('invitations', {
         method: 'POST',
-        body: JSON.stringify({ email: inviteEmail, full_name: inviteName, role: inviteRole }),
+        body: JSON.stringify({
+          email: inviteEmail,
+          full_name: inviteName,
+          mobile_number: inviteMobileNumber,
+          role: inviteRole,
+        }),
       })
     },
     onSuccess: () => {
       toast.success(`Invitation sent to ${inviteEmail}`)
       setInviteEmail('')
       setInviteName('')
+      setInviteMobileNumber('')
       queryClient.invalidateQueries({ queryKey: ['workspace-members'] })
     },
     onError: (err: any) => toast.error(err.message || 'Failed to send invitation'),
@@ -79,7 +88,8 @@ export default function WorkspaceMembers() {
 
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inviteEmail) return toast.error('Email is required')
+    if (!inviteEmail || !inviteMobileNumber)
+      return toast.error('Email or Mobile Number is required')
     inviteMember.mutate()
   }
 
@@ -123,11 +133,23 @@ export default function WorkspaceMembers() {
                   onChange={(e) => setInviteEmail(e.target.value)}
                 />
               </div>
+              <div className="settings-card-tab__row ">
+                <Label className="settings-card-tab__label">Mobile Number</Label>
+                <Input
+                  type="tel"
+                  placeholder="+27234567890"
+                  className="settings-card-tab__input"
+                  value={inviteMobileNumber}
+                  onChange={(e) => setInviteMobileNumber(e.target.value)}
+                />
+              </div>
               <div className="settings-card-tab__row">
                 <Label className="settings-card-tab__label">Role</Label>
                 <Select
                   value={inviteRole || ''}
-                  onValueChange={(value) => setInviteRole(value as 'admin' | 'manager' | 'member')}
+                  onValueChange={(value) =>
+                    setInviteRole(value as 'owner' | 'admin' | 'manager' | 'member')
+                  }
                 >
                   <SelectTrigger className="settings-card-tab__select-trigger">
                     <SelectValue
@@ -136,13 +158,16 @@ export default function WorkspaceMembers() {
                     />
                   </SelectTrigger>
                   <SelectContent className="settings-card-tab__select-content">
-                    <SelectItem className="settings-card-tab__select-item" value="admin">
+                    <SelectItem className="settings-card-tab__select-item" value="Owner">
+                      Owner
+                    </SelectItem>
+                    <SelectItem className="settings-card-tab__select-item" value="Admin">
                       Admin
                     </SelectItem>
-                    <SelectItem className="settings-card-tab__select-item" value="manager">
+                    <SelectItem className="settings-card-tab__select-item" value="Manager">
                       Manager
                     </SelectItem>
-                    <SelectItem className="settings-card-tab__select-item" value="member">
+                    <SelectItem className="settings-card-tab__select-item" value="Member">
                       Member
                     </SelectItem>
                   </SelectContent>
@@ -203,9 +228,8 @@ export default function WorkspaceMembers() {
                 members.map((member) => (
                   <TableRow key={member.id} className="settings-card-tab__table-row">
                     <TableCell className="settings-card-tab__table-cell">
-                      <div className="font-medium">{member.full_name || 'Pending User'}</div>
                       <div className="settings-card-tab__table-cell text-muted-foreground">
-                        {member.email}
+                        {member.full_name}
                       </div>
                     </TableCell>
                     <TableCell className="settings-card-tab__table-cell">
