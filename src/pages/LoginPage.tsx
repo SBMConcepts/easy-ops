@@ -77,15 +77,17 @@ const LoginPage = () => {
               {/* Option 2: Subscribe & Register */}
               <button onClick={() => navigate('/register')} className="login-mode-btn">
                 <Sparkles className="login-mode-icon" size={24} />
-                <span className="login-mode-label">Subscribe</span>
-                <span className="login-mode-sub">Pick a subscription plan and register</span>
+                <span className="login-mode-label">Sign Up</span>
+                <span className="login-mode-sub">Sign up for a new EasyOps workspace</span>
               </button>
 
               {/* Option 3: Request Access */}
               <button onClick={() => navigate('/get-started')} className="login-mode-btn">
                 <UserPlus className="login-mode-icon" size={24} />
                 <span className="login-mode-label">Request Access</span>
-                <span className="login-mode-sub">Ask your admin for an email invitation</span>
+                <span className="login-mode-sub">
+                  Ask your admin for an email or phone invitation
+                </span>
               </button>
             </div>
           </CardContent>
