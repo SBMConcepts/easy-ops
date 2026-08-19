@@ -7,10 +7,6 @@
  * Configured Delivery Method: Text (SMS only). Sends the rendered
  * notification text to the recipient via Amazon SNS.
  *
- * Required npm dependency (add via the Phone Provider code editor's own
- * dependency panel, NOT this repo's package.json — this runs in Auth0's Node
- * sandbox, isolated from the app build):
- *   @aws-sdk/client-sns  (latest 3.x)
  *
  * Required secrets (add via the Phone Provider code editor's Secrets panel):
  *   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION

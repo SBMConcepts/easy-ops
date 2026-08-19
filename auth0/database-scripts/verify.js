@@ -3,7 +3,9 @@
  * Connection: Username-Password-Authentication (custom database)
  *
  * Marks a user's email as verified in public.user_credentials. Auth0 invokes
- * this when the user completes the verification email link.
+ * this when the user completes the verification email link. Phone-verified
+ * users never reach this script — Auth0's own OTP flow verifies phone_number
+ * before create.js runs, so phone_verified is stamped directly at signup.
  *
  * Signature is (email, callback). Return callback(null, true) on success.
  *

@@ -235,10 +235,11 @@ export type Database = {
           accepted_member_id: string | null
           auth0_org_id: string
           created_at: string
-          email: string
+          email: string | null
           expires_at: string
           id: string
           invited_by: string | null
+          phone_number: string | null
           revoked_at: string | null
           role: Database['public']['Enums']['org_role']
           token: string
@@ -248,10 +249,11 @@ export type Database = {
           accepted_member_id?: string | null
           auth0_org_id: string
           created_at?: string
-          email: string
+          email?: string | null
           expires_at?: string
           id?: string
           invited_by?: string | null
+          phone_number?: string | null
           revoked_at?: string | null
           role?: Database['public']['Enums']['org_role']
           token?: string
@@ -261,10 +263,11 @@ export type Database = {
           accepted_member_id?: string | null
           auth0_org_id?: string
           created_at?: string
-          email?: string
+          email?: string | null
           expires_at?: string
           id?: string
           invited_by?: string | null
+          phone_number?: string | null
           revoked_at?: string | null
           role?: Database['public']['Enums']['org_role']
           token?: string
@@ -1398,7 +1401,7 @@ export type Database = {
           auth0_org_id: string
           auth0_user_id: string
           created_at: string
-          email: string
+          email: string | null
           email_verified: boolean
           first_name: string | null
           full_name: string | null
@@ -1409,6 +1412,7 @@ export type Database = {
           mobile_number: string | null
           national_id: string | null
           password_hash: string | null
+          phone_verified: boolean
           status: Database['public']['Enums']['credential_status']
           updated_at: string
         }
@@ -1417,7 +1421,7 @@ export type Database = {
           auth0_org_id: string
           auth0_user_id?: string
           created_at?: string
-          email: string
+          email?: string | null
           email_verified?: boolean
           first_name?: string | null
           full_name?: string | null
@@ -1428,6 +1432,7 @@ export type Database = {
           mobile_number?: string | null
           national_id?: string | null
           password_hash?: string | null
+          phone_verified?: boolean
           status?: Database['public']['Enums']['credential_status']
           updated_at?: string
         }
@@ -1436,7 +1441,7 @@ export type Database = {
           auth0_org_id?: string
           auth0_user_id?: string
           created_at?: string
-          email?: string
+          email?: string | null
           email_verified?: boolean
           first_name?: string | null
           full_name?: string | null
@@ -1447,6 +1452,7 @@ export type Database = {
           mobile_number?: string | null
           national_id?: string | null
           password_hash?: string | null
+          phone_verified?: boolean
           status?: Database['public']['Enums']['credential_status']
           updated_at?: string
         }
@@ -1474,7 +1480,7 @@ export type Database = {
           auth0_user_id: string
           avatar_url: string | null
           created_at: string
-          email: string
+          email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           first_name: string | null
@@ -1493,7 +1499,7 @@ export type Database = {
           auth0_user_id: string
           avatar_url?: string | null
           created_at?: string
-          email: string
+          email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           first_name?: string | null
@@ -1512,7 +1518,7 @@ export type Database = {
           auth0_user_id?: string
           avatar_url?: string | null
           created_at?: string
-          email?: string
+          email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           first_name?: string | null

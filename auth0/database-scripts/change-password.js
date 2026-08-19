@@ -10,7 +10,7 @@
  *
  * Sandbox globals used: configuration.
  */
-function changePassword(email, newPassword, callback) {
+function changePassword(identifier, newPassword, callback) {
   const bcrypt = require('bcrypt')
   const { Client } = require('pg')
 
@@ -49,15 +49,13 @@ function changePassword(email, newPassword, callback) {
         return callback(connErr)
       }
 
-      const normalizedEmail = String(email || '')
-        .trim()
-        .toLowerCase()
+      const normalized = String(identifier || '').trim()
       const sql =
         'UPDATE public.user_credentials ' +
         'SET password_hash = $2, updated_at = now() ' +
-        'WHERE lower(email) = $1 AND status <> $3'
+        'WHERE (lower(email) = lower($1) OR mobile_number = $1) AND status <> $3'
 
-      client.query(sql, [normalizedEmail, passwordHash, 'deleted'], function (queryErr, result) {
+      client.query(sql, [normalized, passwordHash, 'deleted'], function (queryErr, result) {
         client.end()
         if (queryErr) {
           return callback(queryErr)

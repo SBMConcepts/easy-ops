@@ -160,3 +160,43 @@
      end user for tenant-level providers -> check tenant logs for
      gd_send_sms / gd_send_sms_failure events.
 -------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+ SECTION 9 — Flexible Identifiers (phone number sign up / login)
+-------------------------------------------------------------------------------
+ Dashboard: Authentication -> Database -> Username-Password-Authentication ->
+ Attributes tab -> Activate. Configure:
+   Email     : Use as Identifier = true (unchanged)
+   Phone     : Use as Identifier = true; Allow Signup = Optional/Required per
+               your invite policy; Verify phone on signup = true (uses the
+               custom phone provider from SECTION 8 to deliver the OTP)
+ [ ] Universal Login (not Classic) — required for the phone attribute.
+ [ ] Configure Identifier First (Authentication -> Universal Login) — required
+     for phone verification on signup.
+ [ ] scope 'phone' added to the SPA's authorization request if the ID token
+     phone_number claim is ever needed client-side (not currently read).
+
+ Server env (.env.local / deployment — separate from the Action's own AWS
+ secrets in SECTION 8, since Express cannot read Auth0 Action secrets):
+ [ ] AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY : used by
+     server/lib/sns.ts to send phone-invitation SMS (POST /api/invitations)
+ [ ] AWS_SNS_SENDER_ID : optional alphanumeric sender id
+
+ Migration: supabase/migrations/20260819120000_phone_identifier_support.sql
+   invitations.email -> nullable, + phone_number column
+   user_credentials.email -> nullable, + phone_verified boolean
+   users.email -> nullable (users.mobile_number already existed)
+ Custom DB scripts updated: create.js, login.js, get-user.js,
+ change-password.js all match by email OR mobile_number now. verify.js is
+ unaffected — phone verification never reaches it (Auth0's own OTP flow runs
+ before create.js).
+ Auth0 Actions updated: post-login.js / post-user-registration.js forward
+ event.user.phone_number to /api/auth/sync alongside email.
+
+ [ ] KNOWN LIMITATION: Auth0's native Organization Invitation API is
+     email-only. Phone invites (POST /api/invitations with phone_number) do
+     NOT use that API — they insert into public.invitations directly and
+     send their own link via Amazon SNS (server/lib/sns.ts) to
+     {APP_URL}/invite/{token}, landing on src/pages/InviteAccept.tsx which
+     hands off to /api/login?organization=... for Universal Login signup.
+-------------------------------------------------------------------------------

@@ -21,6 +21,7 @@ import NotFound from './pages/NotFound'
 import Onboarding from './pages/Onboarding'
 import Reports from './pages/Reports'
 import ResetPassword from './pages/ResetPassword'
+import InviteAccept from './pages/InviteAccept'
 import ContactUs from './pages/ContactUs'
 import Careers from './pages/Careers'
 import PrivacyPolicy from './pages/PrivacyPolicy'
@@ -53,6 +54,7 @@ const MarketingRoutes = () => (
     <Route path="/register" element={<Register />} />
     <Route path="/login" element={<Login />} />
     <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/invite/:token" element={<InviteAccept />} />
     <Route path="/contact" element={<ContactUs />} />
     <Route path="/careers" element={<Careers />} />
     <Route path="/privacy" element={<PrivacyPolicy />} />

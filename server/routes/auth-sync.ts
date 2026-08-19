@@ -26,13 +26,14 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     auth0_user_id?: string
     auth0_org_id?: string
     email?: string
+    phone_number?: string
     full_name?: string
     avatar_url?: string | null
     role?: string | null
   }
 
-  if (!body.auth0_user_id || !body.email) {
-    res.status(400).json({ error: 'auth0_user_id and email are required.' })
+  if (!body.auth0_user_id || (!body.email && !body.phone_number)) {
+    res.status(400).json({ error: 'auth0_user_id and (email or phone_number) are required.' })
     return
   }
 
@@ -44,8 +45,18 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     return
   }
 
-  const email = body.email.toLowerCase()
+  const email = body.email ? body.email.toLowerCase() : null
+  const phoneNumber = body.phone_number ?? null
   const full_name = body.full_name ?? ''
+
+  // At least one identifier is guaranteed above; build the matching OR filter
+  // for whichever one(s) are present.
+  const identifierFilter = [
+    email ? `email.eq.${email}` : null,
+    phoneNumber ? `phone_number.eq.${phoneNumber}` : null,
+  ]
+    .filter(Boolean)
+    .join(',')
 
   // A pending invitation establishes the role only for first enrollment. Once
   // signup accepts it, the active membership becomes the sole role source so
@@ -54,7 +65,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     .from('invitations')
     .select('role')
     .eq('auth0_org_id', auth0_org_id)
-    .eq('email', email)
+    .or(identifierFilter)
     .is('accepted_at', null)
     .is('revoked_at', null)
     .gt('expires_at', new Date().toISOString())
@@ -83,6 +94,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
         auth0_user_id: body.auth0_user_id,
         auth0_org_id,
         email,
+        mobile_number: phoneNumber,
         full_name,
         avatar_url: body.avatar_url ?? null,
         last_seen_at: new Date().toISOString(),
@@ -128,7 +140,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     .from('invitations')
     .update({ accepted_at: new Date().toISOString(), accepted_member_id: member.id })
     .eq('auth0_org_id', auth0_org_id)
-    .eq('email', email)
+    .or(identifierFilter)
     .is('accepted_at', null)
 
   res.json({ ok: true, role, permissions: permissionsForRole(role) })

@@ -1,4 +1,4 @@
-import { Router, type Response } from 'express'
+import { Router, type Request, type Response } from 'express'
 
 import {
   requireAuth,
@@ -9,8 +9,22 @@ import {
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { jobRoleToTier } from '../lib/rbac.js'
 import { auth0RolesForAccessRole, createOrgInvitation } from '../lib/auth0-admin.js'
+import { sendSms } from '../lib/sns.js'
 
 const router = Router()
+
+const PHONE_RE = /^\+[1-9]\d{7,14}$/
+
+// The frontend origin invite SMS links point to. Mirrors app.ts's oidcBaseURL
+// fallback chain so both stay in sync without a dedicated env var.
+function appBaseUrl(): string {
+  return (
+    process.env.OIDC_BASE_URL ??
+    process.env.BASE_URL ??
+    process.env.APP_URL ??
+    'http://localhost:5173'
+  )
+}
 
 router.post(
   '/api/invitations',
@@ -22,7 +36,7 @@ router.post(
 
     const { data: organization, error: organizationErr } = await supabaseAdmin
       .from('organizations')
-      .select('status')
+      .select('name, status')
       .eq('auth0_org_id', orgId)
       .maybeSingle()
     if (organizationErr) {
@@ -40,54 +54,49 @@ router.post(
 
     const body = (req.body ?? {}) as {
       email?: string
+      phone_number?: string
       role?: string
     }
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
-    if (!email) {
-      res.status(400).json({ error: 'email is required.' })
+    const phoneNumber = typeof body.phone_number === 'string' ? body.phone_number.trim() : ''
+    if (!email && !phoneNumber) {
+      res.status(400).json({ error: 'email or phone_number is required.' })
+      return
+    }
+    if (phoneNumber && !PHONE_RE.test(phoneNumber)) {
+      res.status(400).json({ error: 'phone_number must be in E.164 format, e.g. +27821234567.' })
       return
     }
 
     const tier = jobRoleToTier(body.role)
-    let auth0Roles: string[]
-    try {
-      auth0Roles = auth0RolesForAccessRole(tier)
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Auth0 organization admin role is unavailable.'
-      res.status(503).json({ error: message })
-      return
-    }
-
-    // Auth0's organization invitation API requires a NON-EMPTY inviter.name.
-    // The Team Members page only sends { email, role }, so fall back to the
-    // authenticated caller's identity (never an empty string, which Auth0
-    // rejects — silently breaking the invitation email).
-    const inviterName = req.auth?.email || 'EasyOps'
 
     // public.invitations is the real pending-invite table (no unique
-    // constraint on auth0_org_id+email, so re-inviting the same address
-    // revokes any still-pending invite first rather than relying on upsert).
-    // The real credentials/membership are created when the invitee enrols via
-    // Auth0's custom-DB create.js, which reads this row back by email and
-    // stamps accepted_at.
-    await supabaseAdmin
+    // constraint on auth0_org_id+email/phone_number, so re-inviting the same
+    // address/number revokes any still-pending invite first rather than
+    // relying on upsert). The real credentials/membership are created when
+    // the invitee enrols via Auth0's custom-DB create.js, which reads this
+    // row back by email OR phone_number and stamps accepted_at.
+    let revokeQuery = supabaseAdmin
       .from('invitations')
       .update({ revoked_at: new Date().toISOString() })
       .eq('auth0_org_id', orgId)
-      .eq('email', email)
       .is('accepted_at', null)
       .is('revoked_at', null)
+    revokeQuery = email
+      ? revokeQuery.eq('email', email)
+      : revokeQuery.eq('phone_number', phoneNumber)
+    await revokeQuery
 
     const { data: invitation, error } = await supabaseAdmin
       .from('invitations')
       .insert({
         auth0_org_id: orgId,
-        email,
+        email: email || null,
+        phone_number: phoneNumber || null,
         role: tier,
         invited_by: req.auth?.sub,
       })
-      .select('id, email, role')
+      .select('id, email, phone_number, role, token')
       .single()
 
     if (error) {
@@ -95,43 +104,116 @@ router.post(
       return
     }
 
-    // The whole point of an invitation is the Auth0 email; without a client id
-    // it cannot be sent, so treat a missing config as a hard error rather than
-    // silently creating a Supabase row that never triggers an email.
-    const clientId = process.env.AUTH0_CLIENT_ID
-    if (!clientId) {
-      res.status(500).json({
-        error:
-          'Auth0 client is not configured (AUTH0_CLIENT_ID); the invitation email cannot be sent.',
-      })
+    // Email invites go out via Auth0's native Organization Invitation API
+    // (Universal Login email). Auth0 has no SMS-based org invitation, so
+    // phone invites send our own link via Amazon SNS instead.
+    if (email) {
+      let auth0Roles: string[]
+      try {
+        auth0Roles = auth0RolesForAccessRole(tier)
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Auth0 organization admin role is unavailable.'
+        res.status(503).json({ error: message })
+        return
+      }
+
+      // Auth0's organization invitation API requires a NON-EMPTY inviter.name.
+      // The Team Members page only sends { email, role }, so fall back to the
+      // authenticated caller's identity (never an empty string, which Auth0
+      // rejects — silently breaking the invitation email).
+      const inviterName = req.auth?.email || 'EasyOps'
+
+      const clientId = process.env.AUTH0_CLIENT_ID
+      if (!clientId) {
+        res.status(500).json({
+          error:
+            'Auth0 client is not configured (AUTH0_CLIENT_ID); the invitation email cannot be sent.',
+        })
+        return
+      }
+
+      let auth0InvitationId: string | null
+      try {
+        auth0InvitationId =
+          (await createOrgInvitation({
+            orgId,
+            inviterName,
+            inviteeEmail: email,
+            clientId,
+            roles: auth0Roles,
+          })) ?? null
+      } catch (err) {
+        console.error('Auth0 invitation send failed:', err)
+        const message = err instanceof Error ? err.message : 'Unknown Auth0 error.'
+        res.status(502).json({
+          error: `The invitation was saved but the email could not be sent: ${message}`,
+        })
+        return
+      }
+
+      res.status(201).json({ success: true, invitationId: invitation.id, auth0InvitationId })
       return
     }
 
-    let auth0InvitationId: string | null
+    const inviteUrl = `${appBaseUrl()}/invite/${invitation.token}`
+    const message = `You've been invited to join ${organization.name} on EasyOps. Tap to sign up: ${inviteUrl}`
+
     try {
-      auth0InvitationId =
-        (await createOrgInvitation({
-          orgId,
-          inviterName,
-          inviteeEmail: email,
-          clientId,
-          roles: auth0Roles,
-        })) ?? null
+      await sendSms(phoneNumber, message)
     } catch (err) {
-      console.error('Auth0 invitation send failed:', err)
-      const message = err instanceof Error ? err.message : 'Unknown Auth0 error.'
+      console.error('Invitation SMS send failed:', err)
+      const message = err instanceof Error ? err.message : 'Unknown SMS error.'
       res.status(502).json({
-        error: `The invitation was saved but the email could not be sent: ${message}`,
+        error: `The invitation was saved but the SMS could not be sent: ${message}`,
       })
       return
     }
 
-    res.status(201).json({
-      success: true,
-      invitationId: invitation.id,
-      auth0InvitationId,
-    })
+    res.status(201).json({ success: true, invitationId: invitation.id })
   }
 )
+
+// Public lookup for the /invite/:token landing page (invitee isn't logged in
+// yet, so this route is intentionally unauthenticated).
+router.get('/api/invitations/token/:token', async (req: Request, res: Response) => {
+  const token = String(req.params.token || '').trim()
+  if (!token) {
+    res.status(400).json({ error: 'token is required.' })
+    return
+  }
+
+  const { data: invitation, error } = await supabaseAdmin
+    .from('invitations')
+    .select('auth0_org_id, email, phone_number, accepted_at, revoked_at, expires_at')
+    .eq('token', token)
+    .maybeSingle()
+  if (error) {
+    res.status(500).json({ error: error.message })
+    return
+  }
+  if (
+    !invitation ||
+    invitation.accepted_at ||
+    invitation.revoked_at ||
+    new Date(invitation.expires_at) <= new Date()
+  ) {
+    res.status(404).json({ error: 'This invitation link is invalid or has expired.' })
+    return
+  }
+
+  const { data: organization } = await supabaseAdmin
+    .from('organizations')
+    .select('name, slug')
+    .eq('auth0_org_id', invitation.auth0_org_id)
+    .maybeSingle()
+
+  res.json({
+    auth0_org_id: invitation.auth0_org_id,
+    org_name: organization?.name ?? '',
+    email: invitation.email,
+    phone_number: invitation.phone_number,
+  })
+})
 
 export default router

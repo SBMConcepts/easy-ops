@@ -7,9 +7,10 @@ const router = Router()
 router.get('/api/org-lookup', async (req: Request, res: Response) => {
   const slug = typeof req.query.slug === 'string' ? req.query.slug.trim() : ''
   const email = typeof req.query.email === 'string' ? req.query.email.trim().toLowerCase() : ''
+  const phone = typeof req.query.phone === 'string' ? req.query.phone.trim() : ''
 
-  if (!slug && !email) {
-    res.status(400).json({ error: 'Provide a slug or email query parameter.' })
+  if (!slug && !email && !phone) {
+    res.status(400).json({ error: 'Provide a slug, email, or phone query parameter.' })
     return
   }
 
@@ -25,16 +26,18 @@ router.get('/api/org-lookup', async (req: Request, res: Response) => {
     }
   }
 
-  if (email) {
-    // public.users is keyed by (auth0_org_id, email), NOT globally unique on
-    // email — the same address can hold invites across multiple orgs. Take the
-    // most recent invite rather than .maybeSingle(), which errors on >1 row.
-    const { data: invites } = await supabaseAdmin
+  if (email || phone) {
+    // public.users is keyed by (auth0_org_id, email/mobile_number), NOT
+    // globally unique on either — the same identifier can hold invites across
+    // multiple orgs. Take the most recent invite rather than .maybeSingle(),
+    // which errors on >1 row.
+    let query = supabaseAdmin
       .from('users')
       .select('auth0_org_id')
-      .eq('email', email)
       .order('created_at', { ascending: false })
       .limit(1)
+    query = email ? query.eq('email', email) : query.eq('mobile_number', phone)
+    const { data: invites } = await query
     const orgId = invites?.[0]?.auth0_org_id
     if (orgId) {
       const { data: org } = await supabaseAdmin

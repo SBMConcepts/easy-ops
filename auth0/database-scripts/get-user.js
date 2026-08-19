@@ -2,16 +2,17 @@
  * Auth0 Custom Database — GET USER script
  * Connection: Username-Password-Authentication (custom database)
  *
- * Looks a user up by email WITHOUT verifying a password. Auth0 calls this for
- * password-reset and email-verification flows (and to detect duplicate signups).
+ * Looks a user up by email OR phone number WITHOUT verifying a password.
+ * Auth0 calls this for password-reset/verification flows and to detect
+ * duplicate signups against either identifier.
  *
  * Return the profile if found, or callback(null) (no error, no user) if not —
  * never surface a database miss as an error, and never reveal account status, so
- * the connection does not leak whether an email is registered.
+ * the connection does not leak whether an identifier is registered.
  *
  * Sandbox globals used: configuration.
  */
-function getByEmail(email, callback) {
+function getByEmail(identifier, callback) {
   const { Client } = require('pg')
 
   const connectionString = configuration.DATABASE_URL
@@ -40,14 +41,13 @@ function getByEmail(email, callback) {
       return callback(connErr)
     }
 
-    const normalizedEmail = String(email || '')
-      .trim()
-      .toLowerCase()
+    const normalized = String(identifier || '').trim()
     const sql =
-      'SELECT id, auth0_org_id, auth0_user_id, email, email_verified, status ' +
-      'FROM public.user_credentials WHERE lower(email) = $1 LIMIT 1'
+      'SELECT id, auth0_org_id, auth0_user_id, email, mobile_number, email_verified, ' +
+      'phone_verified, status ' +
+      'FROM public.user_credentials WHERE lower(email) = lower($1) OR mobile_number = $1 LIMIT 1'
 
-    client.query(sql, [normalizedEmail], function (queryErr, result) {
+    client.query(sql, [normalized], function (queryErr, result) {
       client.end()
       if (queryErr) {
         return callback(queryErr)
@@ -63,8 +63,10 @@ function getByEmail(email, callback) {
         user_id: row.id,
         auth0_org_id: row.auth0_org_id,
         auth0_user_id: row.auth0_user_id,
-        email: row.email,
+        email: row.email || undefined,
         email_verified: row.email_verified === true,
+        phone_number: row.mobile_number || undefined,
+        phone_verified: row.phone_verified === true,
       })
     })
   })

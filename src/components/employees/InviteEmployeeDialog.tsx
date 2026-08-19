@@ -52,7 +52,9 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
 
   // Form State
   const [fullName, setFullName] = useState('')
+  const [inviteVia, setInviteVia] = useState<'email' | 'phone'>('email')
   const [email, setEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [role, setRole] = useState<AppRole>('member')
   const [departmentId, setDepartmentId] = useState('')
   const [siteId, setSiteId] = useState('')
@@ -72,7 +74,9 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
 
   const resetForm = () => {
     setFullName('')
+    setInviteVia('email')
     setEmail('')
+    setPhoneNumber('')
     setRole('member')
     setDepartmentId('')
     setSiteId('')
@@ -80,8 +84,14 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || !fullName.trim()) {
-      return toast.error('Email and Full Name are required.')
+    if (!fullName.trim()) {
+      return toast.error('Full Name is required.')
+    }
+    if (inviteVia === 'email' && !email.trim()) {
+      return toast.error('Email is required.')
+    }
+    if (inviteVia === 'phone' && !phoneNumber.trim()) {
+      return toast.error('Phone number is required.')
     }
 
     setLoading(true)
@@ -89,7 +99,8 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
       const result = await apiFetch<InviteResponse>('invitations', {
         method: 'POST',
         body: JSON.stringify({
-          email: email.trim(),
+          email: inviteVia === 'email' ? email.trim() : undefined,
+          phone_number: inviteVia === 'phone' ? phoneNumber.trim() : undefined,
           full_name: fullName.trim(),
           role,
           departmentId: departmentId || null,
@@ -97,7 +108,8 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
         }),
       })
 
-      toast.success(`Invitation successfully dispatched to ${email}`)
+      const destination = inviteVia === 'email' ? email : phoneNumber
+      toast.success(`Invitation successfully dispatched to ${destination}`)
 
       queryClient.invalidateQueries({ queryKey: ['workspace-employees'] })
 
@@ -136,7 +148,7 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
             Invite Team Member
           </DialogTitle>
           <DialogDescription className="text-zinc-400 text-sm">
-            Send an email invitation allowing a new member to join this company workspace.
+            Send an invitation allowing a new member to join this company workspace.
           </DialogDescription>
         </DialogHeader>
 
@@ -150,15 +162,52 @@ export const InviteEmployeeDialog = ({ onInvited }: Props) => {
             />
           </ModalField>
 
-          <ModalField label="Email Address *">
-            <ModalInput
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="jane@example.com"
-            />
-          </ModalField>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setInviteVia('email')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                inviteVia === 'email'
+                  ? 'bg-secondary text-secondary-foreground border-secondary'
+                  : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'
+              }`}
+            >
+              Invite by Email
+            </button>
+            <button
+              type="button"
+              onClick={() => setInviteVia('phone')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                inviteVia === 'phone'
+                  ? 'bg-secondary text-secondary-foreground border-secondary'
+                  : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'
+              }`}
+            >
+              Invite by Phone
+            </button>
+          </div>
+
+          {inviteVia === 'email' ? (
+            <ModalField label="Email Address *">
+              <ModalInput
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="jane@example.com"
+              />
+            </ModalField>
+          ) : (
+            <ModalField label="Phone Number *">
+              <ModalInput
+                required
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+27821234567"
+              />
+            </ModalField>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <ModalField label="System Role *">
