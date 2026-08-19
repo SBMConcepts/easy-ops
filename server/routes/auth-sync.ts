@@ -32,8 +32,10 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     role?: string | null
   }
 
-  if (!body.auth0_user_id || (!body.email && !body.phone_number)) {
-    res.status(400).json({ error: 'auth0_user_id and (email or phone_number) are required.' })
+  if (!body.auth0_user_id || (!body.email && !body.phone_number) || !body.role) {
+    res
+      .status(400)
+      .json({ error: 'auth0_user_id and (email or phone_number) and role are required.' })
     return
   }
 
@@ -94,7 +96,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
         auth0_user_id: body.auth0_user_id,
         auth0_org_id,
         email,
-        mobile_number: phoneNumber,
+        mobile_number: body.phone_number ?? null,
         full_name,
         avatar_url: body.avatar_url ?? null,
         last_seen_at: new Date().toISOString(),

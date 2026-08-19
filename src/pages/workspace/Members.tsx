@@ -38,7 +38,7 @@ export default function WorkspaceMembers() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
   const [inviteMobileNumber, setInviteMobileNumber] = useState('')
-  const [inviteRole, setInviteRole] = useState<'owner' | 'admin' | 'manager' | 'member'>('member')
+  const [inviteRole, setInviteRole] = useState<Member['role'] | ''>('')
 
   // Fetch Team Members from the org-members endpoint and map to the row shape.
   const { data: members = [], isLoading } = useQuery<Member[]>({
@@ -81,6 +81,7 @@ export default function WorkspaceMembers() {
       setInviteEmail('')
       setInviteName('')
       setInviteMobileNumber('')
+      setInviteRole('')
       queryClient.invalidateQueries({ queryKey: ['workspace-members'] })
     },
     onError: (err: any) => toast.error(err.message || 'Failed to send invitation'),

@@ -51,5 +51,5 @@ export function jobRoleToTier(jobRole: string | null | undefined): AccessRole {
   // privileged tier instead; 'owner' is only ever granted by an explicit role.
   if (!jobRole) return 'member'
   if (isAccessRole(jobRole)) return jobRole
-  return JOB_ROLE_TO_TIER[jobRole] ?? 'member'
+  return JOB_ROLE_TO_TIER[jobRole]
 }
