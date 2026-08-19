@@ -50,7 +50,7 @@ exports.onExecutePostLogin = async (event, api) => {
           auth0_user_id: event.user.user_id,
           email: event.user.email,
           phone_number: event.user.phone_number,
-          full_name: event.user.name || event.user.email || event.user.phone_number,
+          full_name: event.user.name || event.user.email,
           avatar_url: event.user.picture || null,
           auth0_org_id: orgIdFromLogin,
           role: fallbackRole,
