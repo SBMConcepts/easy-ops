@@ -14,27 +14,39 @@ import type { Database } from '../integrations/supabase/types'
 // (first/last/full name via the users row for that auth0_user_id) and the
 // department/site display names, so the client never renders an Auth0 sub or a
 // UUID.
-/** A daily org_attendance aggregate row, enriched with resolved user/department/site display fields. */
+/** A daily org_attendance row enriched with resolved user, department, and site display fields. */
 export type AttendanceRow = Database['public']['Tables']['org_attendance']['Row'] & {
-  id: string
-  auth0_org_id: string
-  auth0_user_id: string
-  date: string
-  method: string
-  hours_worked: number
-  overtime: number
-  first_name: string
-  last_name: string
-  full_name: string
-  department_id: string
-  department_name: string
-  site_id: string
-  site_name: string
+  first_name: string | null
+  last_name: string | null
+  full_name: string | null
+  department_name: string | null
+  site_name: string | null
+}
+
+/** Aggregate attendance figures for an organization over a requested date range. */
+export interface AttendanceStats {
+  total_employees: number
+  present: number
+  absent: number
+  leave: number
+  sick_leave: number
+  total_hours: number
+  total_overtime: number
+  total: number
+}
+
+/** GET /api/org-attendance response for a date range. */
+export interface AttendanceReport {
+  attendance: AttendanceRow[]
+  stats: AttendanceStats
 }
 
 export const attendanceKeys = {
   all: ['attendance'] as const,
-  lists: () => [...attendanceKeys.all, 'list'] as const,
+  lists: (dateFrom?: string, dateTo?: string) =>
+    [...attendanceKeys.all, 'list', dateFrom ?? 'today', dateTo ?? 'today'] as const,
+  report: (dateFrom?: string, dateTo?: string) =>
+    [...attendanceKeys.all, 'report', dateFrom ?? 'today', dateTo ?? 'today'] as const,
 }
 
 export const sitesKeys = {
@@ -83,21 +95,41 @@ export function useSites() {
   })
 }
 
-// ── 2. Attendance Records (Direct via RLS) ──────────────────────────────
+function attendanceQueryString(dateFrom?: string, dateTo?: string) {
+  const today = new Date().toISOString().slice(0, 10)
+  return new URLSearchParams({
+    date_from: dateFrom ?? today,
+    date_to: dateTo ?? today,
+  }).toString()
+}
+
+// ── 2. Attendance Records (via Express) ─────────────────────────────────
 /** Fetch the org's daily attendance aggregate rows. */
-export function useAttendanceRecords() {
+export function useAttendanceRecords(dateFrom?: string, dateTo?: string) {
   const { apiFetch } = useOrgApi()
   const { user } = useAuth()
 
-  return useQuery({
-    queryKey: attendanceKeys.lists(),
+  return useQuery<AttendanceRow[]>({
+    queryKey: attendanceKeys.lists(dateFrom, dateTo),
     queryFn: async () => {
-      // org_attendance has RLS enabled with no policies, so the authenticated
-      // client sees nothing. Read the org's daily aggregate via the service-role
-      // Express endpoint instead.
-      const res = await apiFetch<{ attendance: AttendanceRow[] }>('org-attendance')
+      const res = await apiFetch<AttendanceReport>(
+        `org-attendance?${attendanceQueryString(dateFrom, dateTo)}`
+      )
       return res.attendance ?? []
     },
+    enabled: !!user,
+  })
+}
+
+/** Fetch attendance rows and server-authoritative aggregates for dashboard reporting. */
+export function useAttendanceReport(dateFrom?: string, dateTo?: string) {
+  const { apiFetch } = useOrgApi()
+  const { user } = useAuth()
+
+  return useQuery<AttendanceReport>({
+    queryKey: attendanceKeys.report(dateFrom, dateTo),
+    queryFn: () =>
+      apiFetch<AttendanceReport>(`org-attendance?${attendanceQueryString(dateFrom, dateTo)}`),
     enabled: !!user,
   })
 }

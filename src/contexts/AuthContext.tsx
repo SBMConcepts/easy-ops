@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useOrgApi } from '../hooks/useOrgApi'
 import type { CurrentUserProfile } from '../hooks/useCurrentUser'
 import type { Permission } from '../lib/permissions'
+import type { User as SupaUser, Session } from '@supabase/supabase-js'
+import { set } from 'date-fns'
 
 /** An org_members access tier. */
 export type OrgRole = 'owner' | 'admin' | 'manager' | 'member'
@@ -59,6 +61,7 @@ export interface AuthOrganization {
 
 interface AuthContextType {
   user: AuthUser
+  session: Session | null
   organization: AuthOrganization
   isAuthenticated: boolean
   isLoading: boolean
@@ -113,6 +116,7 @@ const AuthContext = createContext<AuthContextType>({
     metadata: {},
   } as AuthOrganization,
   isAuthenticated: false,
+  session: null,
   isLoading: true,
   login: async () => {},
   logout: () => {},
@@ -126,9 +130,10 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { apiFetch } = useOrgApi()
 
+  const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<AuthUser | null>(null)
   const [organization, setOrganization] = useState<AuthOrganization | null>(null)
-
+  const [isLoading, setIsLoading] = useState(true)
   const [status, setStatus] = useState<'loading' | 'authed' | 'anon'>('loading')
 
   // Fetch the current profile from the backend and map it into auth/org state.
@@ -202,6 +207,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null)
           setOrganization(null)
           setStatus('anon')
+          setIsLoading(false)
+          setSession(null)
         }
         return
       }
@@ -214,6 +221,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!cancelled) {
           setUser(null)
           setOrganization(null)
+          setStatus('anon')
           // Profile load failed: stay anon, not "authed" — otherwise LoginPage
           // and ProtectedRoute disagree on auth state and loop between routes.
           setStatus('anon')
@@ -237,12 +245,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(() => {
     window.location.href = '/api/logout'
+    setUser(null)
+    setOrganization(null)
+    setSession(null)
+    setIsLoading(false)
   }, [])
 
   return (
     <AuthContext.Provider
       value={{
         user: user || ({} as AuthUser),
+        session: session,
         organization: organization || ({} as AuthOrganization),
         isAuthenticated: status === 'authed',
         isLoading: status === 'loading',

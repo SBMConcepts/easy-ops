@@ -1,31 +1,55 @@
-import { useAttendanceRecords } from '../../hooks/useOrgData'
-import { Users, UserCheck, Clock, ListOrdered } from 'lucide-react'
+import { useAttendanceReport } from '../../hooks/useOrgData'
+import { Users, UserPlus, UserMinus, UserX, ClockCheck, Clock, ListOrdered } from 'lucide-react'
 import { DashboardLoader, AttendanceRow } from './DashboardLoader'
 import '../../styles/dashboard.css'
 
 const AdminDashboard = () => {
-  const { data: records = [], isLoading: loadingReport } = useAttendanceRecords()
+  const { data: report, isLoading: loadingReport } = useAttendanceReport()
+  const records = report?.attendance ?? []
+  const stats = report?.stats
 
   if (loadingReport) return <DashboardLoader />
 
-  const uniqueEmployees = new Set(
-    records.map((r) => [r.first_name, r.last_name].filter(Boolean).join(' ') || r.full_name)
-  ).size
-  const totalHours = records.reduce((sum, r) => sum + Number(r.hours_worked), 0)
-  const totalOvertime = records.reduce((sum, r) => sum + Number(r.overtime), 0)
-
   const statCards = [
-    { label: 'Active Today', value: uniqueEmployees, icon: Users, modifier: 'primary' },
-    { label: 'Total Hours', value: totalHours, icon: UserCheck, modifier: 'secondary' },
-    { label: 'Overtime Hours', value: totalOvertime, icon: Clock, modifier: 'accent' },
+    {
+      label: 'Total Employees',
+      value: stats?.total_employees ?? 0,
+      icon: Users,
+      modifier: 'primary',
+    },
+    {
+      label: 'Present Today',
+      value: stats?.present ?? 0,
+      icon: UserPlus,
+      modifier: 'secondary',
+    },
+    { label: 'Absent Today', value: stats?.absent ?? 0, icon: UserMinus, modifier: 'accent' },
+    {
+      label: 'On Leave Today',
+      value: (stats?.leave ?? 0) + (stats?.sick_leave ?? 0),
+      icon: UserX,
+      modifier: 'error',
+    },
+    {
+      label: 'Total Hours',
+      value: stats?.total_hours ?? 0,
+      icon: ClockCheck,
+      modifier: 'primary',
+    },
+    {
+      label: 'Overtime Hours',
+      value: stats?.total_overtime ?? 0,
+      icon: Clock,
+      modifier: 'secondary',
+    },
   ]
 
   return (
     <div className="dashboard-page">
       <header className="dashboard-header">
-        <h1 className="dashboard-header__title">Executive Overview</h1>
+        <h1 className="dashboard-header__title">Admin Dashboard</h1>
         <p className="dashboard-header__subtitle">
-          Organisation-wide workforce analytics and status.
+          A quick overview of your organization's attendance data for today.
         </p>
       </header>
 
@@ -50,15 +74,14 @@ const AdminDashboard = () => {
         })}
       </div>
 
-      <div className="dashboard-card mt-6">
-        <div className="dashboard-card__header">
-          <h2 className="dashboard-card__title">
-            <ListOrdered className="dashboard-card__icon text-dashboard-primary" /> Recent
-            Attendance
+      <div className="dashboard-recent-attendance-card">
+        <div className="dashboard-recent-attendance-card__header">
+          <h2 className="dashboard-recent-attendance-card__title">
+            <ListOrdered className="dashboard-recent-attendance-card__icon " /> Recent Attendance
           </h2>
         </div>
-        <div className="dashboard-card__content">
-          <div className="dashboard-list">
+        <div className="dashboard-recent-attendance-card__content">
+          <div className="dashboard-recent-attendance-card__list">
             {records.map((rec) => (
               <AttendanceRow
                 key={rec.id}
@@ -75,7 +98,9 @@ const AdminDashboard = () => {
               />
             ))}
             {records.length === 0 && (
-              <p className="dashboard-list__empty">No attendance records logged today.</p>
+              <p className="dashboard-recent-attendance-card__empty">
+                No attendance records logged today.
+              </p>
             )}
           </div>
         </div>

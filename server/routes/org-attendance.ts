@@ -14,6 +14,7 @@ type AttendanceStatus = Database['public']['Enums']['attendance_status']
 
 const CHECK_IN_METHODS = new Set<CheckInMethod>(['whatsapp', 'biometric', 'ussd', 'qr'])
 const ATTENDANCE_STATUSES = new Set<AttendanceStatus>(['present', 'absent', 'leave', 'sick_leave'])
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 function isCheckInMethod(value: unknown): value is CheckInMethod {
   return typeof value === 'string' && CHECK_IN_METHODS.has(value as CheckInMethod)
@@ -21,6 +22,14 @@ function isCheckInMethod(value: unknown): value is CheckInMethod {
 
 function isAttendanceStatus(value: unknown): value is AttendanceStatus {
   return typeof value === 'string' && ATTENDANCE_STATUSES.has(value as AttendanceStatus)
+}
+
+function readDateParam(value: unknown): string | null | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'string' || !DATE_PATTERN.test(value)) return null
+
+  const parsed = new Date(`${value}T00:00:00.000Z`)
+  return parsed.toISOString().slice(0, 10) === value ? value : null
 }
 
 const router = Router()
@@ -31,15 +40,36 @@ router.get(
   requireOrg,
   requirePermission('read:org_attendance'),
   async (req: AuthedRequest, res: Response) => {
-    const { data, error } = await supabaseAdmin
+    const dateFrom = readDateParam(req.query.date_from)
+    const dateTo = readDateParam(req.query.date_to)
+    if (dateFrom === null || dateTo === null || (dateFrom && dateTo && dateFrom > dateTo)) {
+      res.status(400).json({ error: 'date_from and date_to must be valid ISO dates.' })
+      return
+    }
+
+    let attendanceQuery = supabaseAdmin
       .from('org_attendance')
       .select(
         'id, auth0_org_id, auth0_user_id, date, method, status, hours_worked, overtime, created_at, department_id, site_id'
       )
       .eq('auth0_org_id', req.orgId!)
-      .order('date', { ascending: false })
+    if (dateFrom) attendanceQuery = attendanceQuery.gte('date', dateFrom)
+    if (dateTo) attendanceQuery = attendanceQuery.lte('date', dateTo)
+
+    const [{ data, error }, { count: totalEmployees, error: membersError }] = await Promise.all([
+      attendanceQuery.order('date', { ascending: false }),
+      supabaseAdmin
+        .from('org_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('auth0_org_id', req.orgId!)
+        .eq('status', 'active'),
+    ])
     if (error) {
       res.status(500).json({ error: error.message })
+      return
+    }
+    if (membersError) {
+      res.status(500).json({ error: membersError.message })
       return
     }
 
@@ -101,7 +131,23 @@ router.get(
       }
     })
 
-    res.json({ attendance })
+    const stats = {
+      total_employees: totalEmployees ?? 0,
+      present: 0,
+      absent: 0,
+      leave: 0,
+      sick_leave: 0,
+      total_hours: 0,
+      total_overtime: 0,
+      total: rows.length,
+    }
+    for (const row of rows) {
+      stats[row.status] += 1
+      stats.total_hours += Number(row.hours_worked ?? 0)
+      stats.total_overtime += Number(row.overtime ?? 0)
+    }
+
+    res.json({ attendance, stats })
   }
 )
 
