@@ -371,9 +371,14 @@ export default function EmployeeManagement() {
               </div>
               {member.email && <div className="employee-management-email">{member.email}</div>}
               <div className="employee-management-meta">
-                {[member.job_role_name, member.department_name, member.site_name]
-                  .filter(Boolean)
-                  .join(' · ') || 'No department / site / title assigned'}
+                <div className="employee-management-department">{member.department_name}</div>
+                <div className="employee-management-site">{member.site_name}</div>
+                <div className="employee-management-job-role">{member.job_role_name}</div>
+                {!member.department_name && !member.site_name && !member.job_role_name && (
+                  <div className="employee-management-no-assignment">
+                    No department / site / title assigned
+                  </div>
+                )}
               </div>
             </div>
 

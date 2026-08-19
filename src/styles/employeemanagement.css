@@ -1,4 +1,4 @@
-@import './onboarding.css';
+@import '../index.css';
 
 .employee-management-page {
   display: flex;
@@ -9,42 +9,42 @@
 .employee-management-header {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .employee-management-header__title {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: var(--onboarding-text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .employee-management-header__subtitle {
   font-size: 0.875rem;
-  color: var(--onboarding-text-muted);
+  color: var(--text-muted);
+  font-weight: 400;
   margin: 0;
 }
 
 .employee-management-header__description {
   font-size: 0.725rem;
-  color: var(--onboarding-text-muted);
-  max-width: 42rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin: 0;
 }
 
 .employee-management-row {
+  width: 100%;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.5rem 1rem;
-  background: var(--onboarding-surface, #ffffff);
-  border-radius: var(--onboarding-radius-md);
-  border: 1px solid var(--onboarding-border);
-  box-shadow: var(--onboarding-shadow-md);
-
+  background: var(--background);
+  border-radius: var(--onboarding-radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
   transition:
     background var(--onboarding-transition),
     box-shadow var(--onboarding-transition);
@@ -52,23 +52,55 @@
 
 .employee-management-info {
   display: flex;
+  align-items: flex-start;
   flex-direction: column;
   gap: 0.25rem;
 }
 
 .employee-management-name {
-  font-size: 0.875rem;
-  color: var(--onboarding-text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .employee-management-you {
   font-size: 0.75rem;
-  color: var(--onboarding-text-muted);
+  color: var(--text-accent);
 }
 
 .employee-management-email {
   font-size: 0.75rem;
-  color: var(--onboarding-text-muted);
+  color: var(--text-muted);
+}
+
+.employee-management-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.employee-management-department {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.employee-management-site {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.employee-management-job-role {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.employee-management-no-assignment {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .employee-management-actions {
