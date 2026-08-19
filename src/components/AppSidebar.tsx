@@ -89,14 +89,14 @@ const navItems: NavItem[] = [
     title: 'Forecasting',
     url: '/app/forecasting',
     icon: TrendingUp,
-    roles: ['owner', 'admin', 'manager', 'member'],
+    roles: ['owner', 'admin', 'manager'],
     tooltip: 'Predictive labour forecasting and staffing alerts',
   },
   {
     title: 'Payroll Export',
     url: '/app/payroll',
     icon: FileSpreadsheet,
-    roles: ['owner', 'admin', 'manager', 'member'],
+    roles: ['owner', 'admin', 'manager'],
     tooltip: 'Generate and export BCEA-aligned payroll registers',
   },
   {
@@ -135,7 +135,7 @@ const workspaceItems: NavItem[] = [
     title: 'Team Members',
     url: '/app/workspace/members',
     icon: Users,
-    roles: ['owner', 'admin'],
+    roles: ['owner', 'admin', 'manager'], // Managers can view and manage their team members
     tooltip: 'Manage users, invites, and roles',
   },
   {

@@ -124,7 +124,7 @@ const WorkspaceShell = () => {
         <Route
           path="live-attendance"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager']}>
               <LiveAttendance />
             </ProtectedRoute>
           }
@@ -132,7 +132,7 @@ const WorkspaceShell = () => {
         <Route
           path="compliance"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager']}>
               <Compliance />
             </ProtectedRoute>
           }
@@ -140,7 +140,7 @@ const WorkspaceShell = () => {
         <Route
           path="forecasting"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager']}>
               <LabourForecasting />
             </ProtectedRoute>
           }
@@ -156,7 +156,7 @@ const WorkspaceShell = () => {
         <Route
           path="payroll"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager', 'member']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager']}>
               <PayrollExport />
             </ProtectedRoute>
           }
@@ -201,7 +201,7 @@ const WorkspaceShell = () => {
         <Route
           path="workspace/members"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager']}>
               <WorkspaceMembers />
             </ProtectedRoute>
           }

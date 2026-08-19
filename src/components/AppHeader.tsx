@@ -11,8 +11,7 @@ const roleBadgeColors: Record<string, string> = {
   owner: '!bg-emerald-500 text-emerald-50 border-emerald-500',
   admin: '!bg-destructive text-destructive border-destructive',
   manager: '!bg-secondary text-secondary border-secondary',
-  supervisor: '!bg-accent text-accent-foreground border-accent',
-  employee: '!bg-primary text-primary border-primary',
+  member: '!bg-accent text-accent-foreground border-accent',
 }
 
 const AppHeader = () => {
