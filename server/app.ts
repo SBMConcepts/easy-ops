@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import { auth } from 'express-openid-connect'
 
@@ -45,6 +45,14 @@ const app = express()
 // would be treated as an error by the client's apiFetch (non-2xx). Always
 // return a fresh 200 with the payload instead.
 app.disable('etag')
+
+// Belt-and-braces alongside disabling etag: explicitly tell every client/proxy
+// never to cache or conditionally revalidate an API response (some CDNs/
+// intermediaries can still cache a 200 GET absent an explicit header).
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  res.set('Cache-Control', 'no-store')
+  next()
+})
 
 // Trust the reverse proxy (Vercel / Render) for correct client IP + protocol.
 app.set('trust proxy', 1)
