@@ -130,4 +130,33 @@
  [ ] Confirm aud = https://api.easyops.co.za and iss = https://easy-ops.us.auth0.com/
  [ ] /api/userinfo returns profile (no 401/404) -> header + sidebar populated
  [ ] Role reflects DB memberships.role, NOT a defaulted 'employee'
+
+-------------------------------------------------------------------------------
+ SECTION 8 — Custom Phone Provider (MFA SMS via Amazon SNS)
+-------------------------------------------------------------------------------
+ Dashboard: Branding -> Phone Provider -> Custom -> Delivery Method: Text.
+ Action source: auth0/actions/custom-phone-provider.js (paste into Provider
+ Configuration; trigger is Dashboard-only, not listed in the Actions Library).
+
+ [ ] npm dependency (added in the Provider Configuration editor, not
+     package.json): @aws-sdk/client-sns (latest 3.x)
+
+ [ ] Action Secrets (Phone Provider editor -> Secrets panel)
+     AWS_ACCESS_KEY_ID      : IAM access key, scoped to sns:Publish only
+     AWS_SECRET_ACCESS_KEY  : IAM secret key
+     AWS_REGION             : SNS region, e.g. eu-west-1
+     AWS_SNS_SENDER_ID      : optional alphanumeric sender id
+
+ [ ] AWS IAM prerequisite: dedicated user/role with an sns:Publish-only policy
+     (least privilege) backing the access key pair above.
+
+ [ ] Delivery Method: Text checked; Save (auto-deploys the Action); then
+     Send Test Message before relying on it in production.
+
+ [ ] Security -> Multi-factor Auth -> Phone Message: "Use Tenant-level
+     Messaging Provider" enabled (if present) and the SMS phone factor enabled.
+
+ [ ] Troubleshooting: Auth0 does not surface delivery success/failure to the
+     end user for tenant-level providers -> check tenant logs for
+     gd_send_sms / gd_send_sms_failure events.
 -------------------------------------------------------------------------------
