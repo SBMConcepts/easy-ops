@@ -31,7 +31,7 @@ const InviteAccept = () => {
       return
     }
 
-    fetch(`/invitations/token/${token}`)
+    fetch(`/accept-invite/${token}`)
       .then(async (res) => {
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as {

@@ -54,7 +54,7 @@ const MarketingRoutes = () => (
     <Route path="/register" element={<Register />} />
     <Route path="/login" element={<Login />} />
     <Route path="/reset-password" element={<ResetPassword />} />
-    <Route path="/invite/:token" element={<InviteAccept />} />
+    <Route path="/accept-invite/:token" element={<InviteAccept />} />
     <Route path="/contact" element={<ContactUs />} />
     <Route path="/careers" element={<Careers />} />
     <Route path="/privacy" element={<PrivacyPolicy />} />
