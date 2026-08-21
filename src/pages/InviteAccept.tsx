@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useOrgApi } from '../hooks/useOrgApi'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Loader2, LogIn } from 'lucide-react'
-import '../styles/resetpassword.css'
+import '../styles/inviteaccept.css'
 
 interface InvitationLookup {
   auth0_org_id: string
@@ -17,6 +18,7 @@ interface InvitationLookup {
 const InviteAccept = () => {
   const { token } = useParams<{ token: string }>()
   const { login } = useAuth()
+  const { apiFetch } = useOrgApi()
   const [invitation, setInvitation] = useState<InvitationLookup | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -29,14 +31,9 @@ const InviteAccept = () => {
       return
     }
 
-    fetch(`/api/invitations/token/${token}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as { error?: string } | null
-          throw new Error(body?.error || 'This invitation link is invalid or has expired.')
-        }
-        return res.json() as Promise<InvitationLookup>
-      })
+    apiFetch<InvitationLookup>(`invitations/token/${encodeURIComponent(token)}`, {
+      requireAuth: false,
+    })
       .then(setInvitation)
       .catch((err: unknown) => {
         setError(
@@ -44,7 +41,7 @@ const InviteAccept = () => {
         )
       })
       .finally(() => setLoading(false))
-  }, [token])
+  }, [apiFetch, token])
 
   return (
     <div className="reset-page">

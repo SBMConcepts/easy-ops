@@ -9,21 +9,11 @@ import {
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { jobRoleToTier } from '../lib/rbac.js'
 import { auth0RolesForAccessRole, createOrgInvitation } from '../lib/auth0-admin.js'
+import { appBaseUrl } from '../lib/app-url.js'
 import { sendSms } from '../lib/sns.js'
 import { E164_RE } from '../lib/phone.js'
 
 const router = Router()
-
-// The frontend origin invite SMS links point to. Mirrors app.ts's oidcBaseURL
-// fallback chain so both stay in sync without a dedicated env var.
-function appBaseUrl(): string {
-  return (
-    process.env.OIDC_BASE_URL ??
-    process.env.BASE_URL ??
-    process.env.APP_URL ??
-    'http://localhost:5173'
-  )
-}
 
 router.post(
   '/api/invitations',

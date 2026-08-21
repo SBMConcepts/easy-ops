@@ -163,15 +163,23 @@ identifier-agnostic.
 
 1. In the Auth0 Dashboard, use **Phone Provider** → **Send Test Message** to
    validate Part A.
-2. Invite a real user by phone from the Members or Team Members page and
-   confirm that the SMS arrives with a working `/invite/:token` link.
-3. Complete a phone-only signup after enabling Flexible Identifiers and
+2. In production, set `OIDC_BASE_URL` to the canonical HTTPS app origin (not
+   localhost). `BASE_URL` and `APP_URL`, when present, must name that same
+   origin because they are fallbacks for public invitation links and OIDC
+   callbacks. Set `VITE_APP_URL` to the browser app origin for cross-origin
+   API deployments; leave `VITE_API_URL` unset for Vercel's same-origin `/api`
+   deployment, or set it to the public API base for a split deployment.
+3. Invite a real user by phone from the Members or Team Members page and
+   confirm that the SMS arrives with a working `/invite/:token` link. Open it
+   in a fresh browser session and verify its assets load from `/assets/*`, not
+   `/invite/assets/*`.
+4. Complete a phone-only signup after enabling Flexible Identifiers and
    Identifier First. Decode the resulting token and confirm `phone_number` and
    `phone_verified` behave as expected.
-4. If a message does not arrive, check AWS SNS delivery status and CloudWatch
+5. If a message does not arrive, check AWS SNS delivery status and CloudWatch
    logs. Auth0 does not surface tenant-level provider delivery failures to the
    end user.
-5. Ensure `npm run build`, `npm run build:server`, and ESLint remain green
+6. Ensure `npm run build`, `npm run build:server`, and ESLint remain green
    after further changes in this area.
 
 ## 8. Known limitations / explicit follow-ups (not in scope)

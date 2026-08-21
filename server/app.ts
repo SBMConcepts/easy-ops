@@ -35,6 +35,7 @@ import billingRouter, { handlePaystackWebhook } from './routes/billing.js'
 import orgMembersRouter from './routes/org-members.js'
 import invitationsRouter from './routes/invitations.js'
 
+import { appBaseUrl } from './lib/app-url.js'
 import { notFoundHandler, errorHandler } from './lib/error-handler.js'
 import { requireOperationalAccess } from './lib/auth-middleware.js'
 
@@ -65,11 +66,7 @@ app.use(
   })
 )
 
-const oidcBaseURL =
-  process.env.OIDC_BASE_URL ??
-  process.env.BASE_URL ??
-  process.env.APP_URL ??
-  'http://localhost:5173'
+const oidcBaseURL = appBaseUrl()
 const auth0Issuer = `https://${(process.env.AUTH0_DOMAIN ?? '')
   .replace(/^https?:\/\//, '')
   .replace(/\/$/, '')}`
