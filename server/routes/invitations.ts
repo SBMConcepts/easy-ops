@@ -14,13 +14,19 @@ import { E164_RE } from '../lib/phone.js'
 
 const router = Router()
 
-function appBaseUrl() {
-  return (
-    process.env.BASE_URL ??
+function appBaseUrl(): string {
+  const configuredUrl =
     process.env.OIDC_BASE_URL ??
+    process.env.BASE_URL ??
     process.env.APP_URL ??
     'http://localhost:5173'
-  )
+  const url = new URL(configuredUrl)
+
+  if (url.protocol === 'https:' && url.port === '80') {
+    url.port = ''
+  }
+
+  return url.toString().replace(/\/$/, '')
 }
 
 router.post(
@@ -157,7 +163,7 @@ router.post(
       return
     }
 
-    const inviteUrl = `${appBaseUrl().replace(/\/$/, '')}/accept-invite/${encodeURIComponent(invitation.token)}`
+    const inviteUrl = `${appBaseUrl()}/accept-invite/${encodeURIComponent(invitation.token)}`
     const message = `You've been invited to join ${organization.name} on EasyOps. Tap to sign up: ${inviteUrl}`
 
     try {
