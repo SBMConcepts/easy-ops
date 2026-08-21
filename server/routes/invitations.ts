@@ -19,7 +19,7 @@ function appBaseUrl() {
     process.env.BASE_URL ??
     process.env.OIDC_BASE_URL ??
     process.env.APP_URL ??
-    'http://localhost:3000'
+    'http://localhost:5173'
   )
 }
 

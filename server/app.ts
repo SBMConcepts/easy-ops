@@ -69,7 +69,7 @@ const oidcBaseURL =
   process.env.OIDC_BASE_URL ??
   process.env.BASE_URL ??
   process.env.APP_URL ??
-  'http://localhost:3000'
+  'http://localhost:5173'
 const auth0Issuer = `https://${(process.env.AUTH0_DOMAIN ?? '')
   .replace(/^https?:\/\//, '')
   .replace(/\/$/, '')}`
