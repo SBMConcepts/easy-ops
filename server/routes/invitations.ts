@@ -157,7 +157,7 @@ router.post(
       return
     }
 
-    const inviteUrl = `${appBaseUrl()}/invite/${invitation.token}`
+    const inviteUrl = `/accept-invite/${invitation.token}`
     const message = `You've been invited to join ${organization.name} on EasyOps. Tap to sign up: ${inviteUrl}`
 
     try {
@@ -177,7 +177,7 @@ router.post(
 
 // Public lookup for the /invite/:token landing page (invitee isn't logged in
 // yet, so this route is intentionally unauthenticated).
-router.get('/api/invitations/token/:token', async (req: Request, res: Response) => {
+router.get('/api/accept-invite/:token', async (req: Request, res: Response) => {
   const token = String(req.params.token || '').trim()
   if (!token) {
     res.status(400).json({ error: 'token is required.' })

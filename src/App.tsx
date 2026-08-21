@@ -116,7 +116,7 @@ const WorkspaceShell = () => {
         <Route
           path="employees-management"
           element={
-            <ProtectedRoute allowedRoles={['owner', 'admin']}>
+            <ProtectedRoute allowedRoles={['owner', 'admin', 'manager']}>
               <EmployeeManagement />
             </ProtectedRoute>
           }
