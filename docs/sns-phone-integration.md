@@ -84,10 +84,11 @@ and 9 (flexible identifiers).
     Invitation API.
   - Phone invitations bypass that API because Auth0 has no SMS organization
     invitation. They insert into `public.invitations` using `phone_number`,
-    build `{appBaseUrl}/invite/{token}`, and send the link with `sendSms`.
+    build `{appBaseUrl}/accept-invite/{token}`, and send the link with
+    `sendSms`.
   - `GET /api/invitations/token/:token` is public because the invitee is not
     yet authenticated.
-- `src/pages/InviteAccept.tsx`: Handles `/invite/:token`, resolves the token,
+- `src/pages/InviteAccept.tsx`: Handles `/accept-invite/:token`, resolves the token,
   and calls `login({ auth0OrgId })` → `/api/login?organization=...` for
   Universal Login signup. The route is added in `src/App.tsx`.
 - `src/pages/workspace/Members.tsx` and
@@ -170,9 +171,9 @@ identifier-agnostic.
    API deployments; leave `VITE_API_URL` unset for Vercel's same-origin `/api`
    deployment, or set it to the public API base for a split deployment.
 3. Invite a real user by phone from the Members or Team Members page and
-   confirm that the SMS arrives with a working `/invite/:token` link. Open it
+   confirm that the SMS arrives with a working `/accept-invite/:token` link. Open it
    in a fresh browser session and verify its assets load from `/assets/*`, not
-   `/invite/assets/*`.
+   `/accept-invite/assets/*`.
 4. Complete a phone-only signup after enabling Flexible Identifiers and
    Identifier First. Decode the resulting token and confirm `phone_number` and
    `phone_verified` behave as expected.
@@ -202,5 +203,5 @@ identifier-agnostic.
 | **Send Test Message** fails in Dashboard                   | Incorrect or missing `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, or `AWS_REGION` Action Secrets, or an IAM policy missing `sns:Publish`.           |
 | Invitation SMS never arrives and the app shows no error    | SNS SMS sandbox mode; the recipient number is unverified. Check **Console** → **SNS** → **Text messaging (SMS)**.                                    |
 | Phone signup fails at Universal Login                      | Flexible Identifiers or Identifier First is not configured on the connection.                                                                        |
-| `/invite/:token` shows “invalid or expired”                | The invitation was accepted, revoked, or has passed `expires_at`; re-invite the user.                                                                |
+| `/accept-invite/:token` shows “invalid or expired”         | The invitation was accepted, revoked, or has passed `expires_at`; re-invite the user.                                                                |
 | `POST /api/invitations` returns 500 for a phone invitation | Server-side `AWS_REGION`, `AWS_ACCESS_KEY_ID`, or `AWS_SECRET_ACCESS_KEY` environment variables are missing. These are separate from Action Secrets. |
