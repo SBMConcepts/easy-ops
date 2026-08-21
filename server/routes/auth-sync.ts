@@ -32,10 +32,8 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     role?: string | null
   }
 
-  if (!body.auth0_user_id || (!body.email && !body.phone_number) || !body.role) {
-    res
-      .status(400)
-      .json({ error: 'auth0_user_id and (email or phone_number) and role are required.' })
+  if (!body.auth0_user_id || (!body.email && !body.phone_number)) {
+    res.status(400).json({ error: 'auth0_user_id and (email or phone_number) are required.' })
     return
   }
 
