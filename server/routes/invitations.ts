@@ -157,7 +157,7 @@ router.post(
       return
     }
 
-    const inviteUrl = `/accept-invite/${invitation.token}`
+    const inviteUrl = `${appBaseUrl().replace(/\/$/, '')}/accept-invite/${encodeURIComponent(invitation.token)}`
     const message = `You've been invited to join ${organization.name} on EasyOps. Tap to sign up: ${inviteUrl}`
 
     try {
@@ -175,7 +175,7 @@ router.post(
   }
 )
 
-// Public lookup for the /invite/:token landing page (invitee isn't logged in
+// Public lookup for the /accept-invite/:token landing page (invitee isn't logged in
 // yet, so this route is intentionally unauthenticated).
 router.get('/api/accept-invite/:token', async (req: Request, res: Response) => {
   const token = String(req.params.token || '').trim()
