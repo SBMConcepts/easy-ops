@@ -9,11 +9,19 @@ import {
 import { supabaseAdmin } from '../lib/supabase-admin.js'
 import { jobRoleToTier } from '../lib/rbac.js'
 import { auth0RolesForAccessRole, createOrgInvitation } from '../lib/auth0-admin.js'
-import { appBaseUrl } from '../lib/app-url.js'
 import { sendSms } from '../lib/sns.js'
 import { E164_RE } from '../lib/phone.js'
 
 const router = Router()
+
+function appBaseUrl() {
+  return (
+    process.env.BASE_URL ??
+    process.env.OIDC_BASE_URL ??
+    process.env.APP_URL ??
+    'http://localhost:3000'
+  )
+}
 
 router.post(
   '/api/invitations',

@@ -31,9 +31,17 @@ const InviteAccept = () => {
       return
     }
 
-    apiFetch<InvitationLookup>(`invitations/token/${encodeURIComponent(token)}`, {
-      requireAuth: false,
-    })
+    fetch(`/invitations/token/${token}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = (await res.json().catch(() => null)) as {
+            error?: string
+            requireAuth?: boolean
+          } | null
+          throw new Error(body?.error || 'This invitation link is invalid or has expired.')
+        }
+        return res.json() as Promise<InvitationLookup>
+      })
       .then(setInvitation)
       .catch((err: unknown) => {
         setError(
@@ -41,7 +49,7 @@ const InviteAccept = () => {
         )
       })
       .finally(() => setLoading(false))
-  }, [apiFetch, token])
+  }, [token])
 
   return (
     <div className="reset-page">
