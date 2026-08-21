@@ -29,10 +29,10 @@ const VERSIONS: PolicyVersion[] = [
               ['**Directors / Office Bearers**', '_[As per CIPC Registration]_'],
               ['**Physical Address**', '_[Provided on request/invoice]_'],
               ['**Telephone Number**', '_[Provided on request]_'],
-              ['**Email Address**', '[legal@easyops.co.za](mailto:legal@easyops.co.za)'],
+              ['**Email Address**', '[admin@easyops.co.za](mailto:admin@easyops.co.za)'],
               [
                 '**Official Website URL**',
-                '[https://easy-ops-com.vercel.app](https://easy-ops-com.vercel.app)',
+                '[https://www.easyops.co.za](https://www.easyops.co.za)',
               ],
               ['**Physical Address for Legal Service**', '_[Provided on request]_'],
               ['**Governing Law**', 'Republic of South Africa'],
