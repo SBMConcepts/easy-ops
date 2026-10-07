@@ -19,7 +19,7 @@ BEGIN
   FOR i IN 1..20 LOOP
     -- map i -> type + labels
     CASE i
-      WHEN 1 THEN v_type := 'org_plan';                 v_enum_sql := ARRAY['free','starter','growth','pro','enterprise'];
+      WHEN 1 THEN v_type := 'org_plan';                 v_enum_sql := ARRAY['trial','starter','growth','pro','enterprise'];
       WHEN 2 THEN v_type := 'org_status';               v_enum_sql := ARRAY['provisioning','active','suspended','cancelled'];
       WHEN 3 THEN v_type := 'org_role';                 v_enum_sql := ARRAY['owner','admin','manager','member'];
       WHEN 4 THEN v_type := 'member_status';            v_enum_sql := ARRAY['active','suspended'];
@@ -27,7 +27,7 @@ BEGIN
       WHEN 5 THEN v_type := 'employment_type';          v_enum_sql := ARRAY['permanent','contract','part_time','temporary','shift_worker'];
       WHEN 6 THEN v_type := 'identification_type';      v_enum_sql := ARRAY['sa_id','passport'];
       WHEN 7 THEN v_type := 'credential_status';        v_enum_sql := ARRAY['active','blocked','deleted'];
-      WHEN 8 THEN v_type := 'subscription_status';      v_enum_sql := ARRAY['trialing','active','past_due','cancelled'];
+      WHEN 8 THEN v_type := 'subscription_status';      v_enum_sql := ARRAY['trial','active','past_due','cancelled'];
 
       WHEN 9 THEN v_type := 'leave_type';               v_enum_sql := ARRAY['annual','sick','family_responsibility'];
       WHEN 10 THEN v_type := 'attendance_method';      v_enum_sql := ARRAY['whatsapp','biometric','ussd','qr'];

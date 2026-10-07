@@ -12,7 +12,7 @@
 // SLA tiers (first-response / resolution, in hours) mirror
 // src/lib/feature-flags.ts SUPPORT_SLA_TIERS:
 //   enterprise 2/24 · pro (Business) 4/48 · growth 8/72 · starter 24/120 ·
-//   free 48/168 (default for unknown plans).
+//   trial 48/168 (default for unknown plans).
 
 import { createClient } from '@supabase/supabase-js'
 import { corsHeaders } from '../_shared/cors.ts'
@@ -28,9 +28,9 @@ const SLA_TIERS: Record<string, SlaTier> = {
   pro: { responseHours: 4, resolutionHours: 48 },
   growth: { responseHours: 8, resolutionHours: 72 },
   starter: { responseHours: 24, resolutionHours: 120 },
-  free: { responseHours: 48, resolutionHours: 168 },
+  trial: { responseHours: 48, resolutionHours: 168 },
 }
-const DEFAULT_TIER: SlaTier = SLA_TIERS.free
+const DEFAULT_TIER: SlaTier = SLA_TIERS.trial
 
 type Category = 'general' | 'billing' | 'technical' | 'onboarding' | 'feature_request' | 'bug'
 const CATEGORIES: Category[] = [

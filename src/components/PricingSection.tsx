@@ -5,7 +5,7 @@ import { Check } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
-export type PricingPlan = 'starter' | 'growth' | 'pro' | 'enterprise'
+export type PricingPlan = 'trial' | 'starter' | 'growth' | 'pro' | 'enterprise'
 
 interface PricingSectionProps {
   onSelectPlan?: (plan: PricingPlan) => void

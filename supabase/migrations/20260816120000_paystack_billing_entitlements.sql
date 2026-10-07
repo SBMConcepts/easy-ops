@@ -1,16 +1,15 @@
 -- Keep provider billing state separate from the legacy subscription_status enum.
 -- This lets paid organizations remain pending until a hosted payment method is
--- authorized without weakening the existing trialing/active constraints.
+-- authorized without weakening the existing trial/active constraints.
 ALTER TABLE public.subscriptions
   ADD COLUMN
-IF NOT EXISTS billing_state text NOT NULL DEFAULT 'free'
+IF NOT EXISTS billing_state text NOT NULL DEFAULT 'trial'
     CONSTRAINT subscriptions_billing_state_chk CHECK
 (
       billing_state IN
 (
-        'free',
+        'trial',
         'pending_payment_method',
-        'trialing',
         'active',
         'past_due',
         'cancelled'
@@ -39,14 +38,14 @@ IF NOT EXISTS payment_method_summary jsonb NOT NULL DEFAULT '{}'::jsonb;
 
 UPDATE public.subscriptions
 SET billing_state = CASE
-  WHEN plan = 'free' THEN 'free'
-  WHEN status = 'trialing' THEN 'trialing'
+  WHEN plan = 'trial' THEN 'trial'
+  WHEN status = 'trial' THEN 'trial'
   WHEN status = 'active' THEN 'active'
   WHEN status = 'past_due' THEN 'past_due'
   WHEN status = 'cancelled' THEN 'cancelled'
   ELSE 'pending_payment_method'
 END
-WHERE billing_state = 'free' AND plan <> 'free';
+WHERE billing_state = 'trial' AND plan <> 'trial';
 
 CREATE UNIQUE INDEX
 IF NOT EXISTS subscriptions_provider_subscription_code_key

@@ -44,8 +44,8 @@ function publicError(error: unknown): { status: number; message: string } {
 }
 
 function isOperational(state: string, accessEndsAt: string | null): boolean {
-  if (state === 'free' || state === 'active') return true
-  return state === 'trialing' && (!accessEndsAt || new Date(accessEndsAt).getTime() > Date.now())
+  if (state === 'trial' || state === 'active') return true
+  return state === 'trial' && (!accessEndsAt || new Date(accessEndsAt).getTime() > Date.now())
 }
 
 async function getSubscription(orgId: string) {
@@ -129,8 +129,8 @@ async function activateTrialFromTransaction(orgId: string, reference: string) {
     startDate: trialEndsAt,
   })
   const update: TablesUpdate<'subscriptions'> = {
-    status: 'trialing',
-    billing_state: 'trialing',
+    status: 'trial',
+    billing_state: 'trial',
     provider: 'paystack',
     provider_customer_code: transaction.customer.customer_code,
     provider_subscription_code: providerSubscription.subscription_code,

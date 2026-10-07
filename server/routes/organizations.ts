@@ -15,7 +15,7 @@ import { E164_RE } from '../lib/phone.js'
 const router = Router()
 
 type OrgPlan = Database['public']['Enums']['org_plan']
-const ORG_PLANS = new Set<OrgPlan>(['free', 'starter', 'growth', 'pro', 'enterprise'])
+const ORG_PLANS = new Set<OrgPlan>(['trial', 'starter', 'growth', 'pro', 'enterprise'])
 
 function slugify(input: string): string {
   return input
@@ -35,7 +35,7 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
   }
   const orgName = typeof body.orgName === 'string' ? body.orgName.trim() : ''
   const adminEmail = typeof body.adminEmail === 'string' ? body.adminEmail.trim().toLowerCase() : ''
-  const requestedPlan = typeof body.plan === 'string' ? body.plan : 'free'
+  const requestedPlan = typeof body.plan === 'string' ? body.plan : 'trial'
   const mobileNumber = typeof body.mobileNumber === 'string' ? body.mobileNumber.trim() : ''
 
   if (!orgName || !adminEmail) {
@@ -50,7 +50,7 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
   const slug = slugify(orgName) || `org-${Date.now()}`
   const orgPlan: OrgPlan = ORG_PLANS.has(requestedPlan as OrgPlan)
     ? (requestedPlan as OrgPlan)
-    : 'free'
+    : 'trial'
   const clientId = process.env.AUTH0_CLIENT_ID
 
   let adminRoles: string[]
@@ -101,12 +101,12 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     })
     if (inviteErr) throw new Error(inviteErr.message)
 
-    const isFreePlan = orgPlan === 'free'
+    const isTrialPlan = orgPlan === 'trial'
     const { error: subscriptionErr } = await supabaseAdmin.from('subscriptions').insert({
       auth0_org_id: auth0Org.id,
       plan: orgPlan,
-      status: isFreePlan ? 'active' : 'trialing',
-      billing_state: isFreePlan ? 'free' : 'pending_payment_method',
+      status: isTrialPlan ? 'active' : 'trial',
+      billing_state: isTrialPlan ? 'trial' : 'pending_payment_method',
     })
     if (subscriptionErr) throw new Error(subscriptionErr.message)
 

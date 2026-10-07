@@ -93,13 +93,13 @@ export interface SlaTier {
   resolutionHours: number
 }
 
-/** Plan → SLA targets. Unknown plans fall back to the 'free' tier. */
+/** Plan → SLA targets. Unknown plans fall back to the 'trial' tier. */
 export const SUPPORT_SLA_TIERS: Record<string, SlaTier> = {
   enterprise: { responseHours: 2, resolutionHours: 24 },
   pro: { responseHours: 4, resolutionHours: 48 },
   growth: { responseHours: 8, resolutionHours: 72 },
   starter: { responseHours: 24, resolutionHours: 120 },
-  free: { responseHours: 48, resolutionHours: 168 },
+  trial: { responseHours: 48, resolutionHours: 168 },
 }
 
 /** Derived Support Centre access + SLA tier for the current plan. */
@@ -118,7 +118,7 @@ export function getSupportAccess(plan: string | null | undefined): SupportAccess
   return {
     plan: normalized,
     hasCsm: CSM_PLANS.has(normalized),
-    sla: SUPPORT_SLA_TIERS[normalized] ?? SUPPORT_SLA_TIERS.free,
+    sla: SUPPORT_SLA_TIERS[normalized] ?? SUPPORT_SLA_TIERS.trial,
   }
 }
 

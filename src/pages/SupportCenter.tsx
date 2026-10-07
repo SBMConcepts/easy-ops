@@ -229,7 +229,7 @@ export default function SupportCenter() {
         <div className="support-sla-badge" title="Service-level targets for your plan">
           <ShieldCheck aria-hidden />
           <div>
-            <span className="support-sla-plan">{plan || 'free'} plan SLA</span>
+            <span className="support-sla-plan">{plan || 'trial'} plan SLA</span>
             <span className="support-sla-values">
               First response ≤ {sla.responseHours}h · Resolution ≤ {sla.resolutionHours}h
             </span>

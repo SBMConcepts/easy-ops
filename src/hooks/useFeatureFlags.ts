@@ -11,7 +11,7 @@ export type FeatureKey =
   | 'premium_support'
   | 'safety_ops'
 
-export type SubscriptionPlan = 'starter' | 'growth' | 'pro' | 'enterprise'
+export type SubscriptionPlan = 'trial' | 'starter' | 'growth' | 'pro' | 'enterprise'
 
 interface SubscriptionInfo {
   plan: SubscriptionPlan
@@ -24,7 +24,7 @@ export function useSubscription() {
   return useQuery({
     queryKey: ['subscription', organization?.auth0_org_id],
     queryFn: async (): Promise<SubscriptionInfo> => {
-      if (!organization?.auth0_org_id) return { plan: 'starter', status: 'trialing' }
+      if (!organization?.auth0_org_id) return { plan: 'trial', status: 'trial' }
       const { data: sub } = await supabasePublic
         .from('subscriptions')
         .select('plan, status')
@@ -37,7 +37,7 @@ export function useSubscription() {
         .eq('plan', plan)
       return {
         plan,
-        status: sub?.status ?? 'trialing',
+        status: sub?.status ?? 'trial',
         //features: new Set((features ?? []).map((f) => f.feature_key as FeatureKey)),
       }
     },

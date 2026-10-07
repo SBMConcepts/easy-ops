@@ -70,7 +70,6 @@ export function getPaystackPlanCode(plan: string): string {
     starter: process.env.PAYSTACK_PLAN_STARTER,
     growth: process.env.PAYSTACK_PLAN_GROWTH,
     pro: process.env.PAYSTACK_PLAN_PRO,
-    enterprise: process.env.PAYSTACK_PLAN_ENTERPRISE,
   }
   const planCode = planCodes[plan]
   if (!planCode) {

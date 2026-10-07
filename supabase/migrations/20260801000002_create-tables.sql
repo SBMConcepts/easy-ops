@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS public.organizations (
   auth0_org_id text PRIMARY KEY CONSTRAINT organizations_org_id_chk CHECK (length(auth0_org_id) > 0),
   name text NOT NULL CONSTRAINT organizations_name_chk CHECK (length(name) > 0),
   slug text NOT NULL,
-  plan public.org_plan NOT NULL DEFAULT 'free',
+  plan public.org_plan NOT NULL DEFAULT 'trial',
   status public.org_status NOT NULL DEFAULT 'active',
   industry text NOT NULL DEFAULT '',
   country text NOT NULL DEFAULT '',
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT subscriptions_org_id_chk CHECK (length(auth0_org_id) > 0),
   plan public.org_plan NOT NULL,
-  status public.subscription_status NOT NULL DEFAULT 'trialing',
+  status public.subscription_status NOT NULL DEFAULT 'trial',
   trial_ends_at timestamptz,
   current_period_end timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
   CONSTRAINT subscriptions_org_fkey foreign key (auth0_org_id) REFERENCES public.organizations (auth0_org_id) ON DELETE CASCADE
 );
 CREATE unique index IF NOT EXISTS subscriptions_one_live_per_org ON public.subscriptions (auth0_org_id)
-WHERE status in ('trialing', 'active', 'past_due');
+WHERE status in ('trial', 'active', 'past_due');
 CREATE TABLE IF NOT EXISTS public.audit_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auth0_org_id text NOT NULL CONSTRAINT audit_logs_org_id_chk CHECK (length(auth0_org_id) > 0),

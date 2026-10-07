@@ -72,7 +72,7 @@ export default function WorkspaceBilling() {
   // Format plan name gracefully
   const planName = organization.plan
     ? organization.plan.charAt(0).toUpperCase() + organization.plan.slice(1)
-    : 'Free'
+    : 'Trial'
   const state = billing.data?.billingState ?? 'Loading'
 
   return (

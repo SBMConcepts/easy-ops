@@ -198,10 +198,11 @@ export async function requireOperationalAccess(
     if (error) throw error
 
     const hasAccess =
-      data?.billing_state === 'free' ||
+      data?.billing_state === 'trial' ||
       data?.billing_state === 'active' ||
-      (data?.billing_state === 'trialing' &&
-        (!data.access_ends_at || new Date(data.access_ends_at).getTime() > Date.now()))
+      data?.billing_state === 'past_due' ||
+      data?.billing_state === 'cancelled' ||
+      new Date(data?.access_ends_at ?? '').getTime() > Date.now()
     if (!hasAccess) {
       res.status(402).json({
         error: 'An active subscription is required to use operational features.',
