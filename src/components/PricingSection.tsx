@@ -1,5 +1,6 @@
 import '../styles/pricingsection.css'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 import { Card } from '@/components/ui/card'
@@ -192,9 +193,9 @@ const PricingSection = ({ onConfirmPlan, onSelectPlan, selectedPlan }: PricingSe
           <p className="text-sm text-muted-foreground mb-3">
             Not ready to buy? Try every Growth & Pro feature free for 14 days — no card required.
           </p>
-          <button type="button" className="rounded-full" onClick={() => onConfirmPlan?.('trial')}>
+          <Link to="/get-started?plan=trial" className="rounded-full">
             Start free trial or book a demo
-          </button>
+          </Link>
         </div>
       </div>
     </section>

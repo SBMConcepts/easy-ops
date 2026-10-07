@@ -19,6 +19,9 @@ router.post('/api/demo-request', async (req: Request, res: Response) => {
     email?: string
     company?: string
     size?: string
+    plan?: string
+    country?: string
+    phone?: string
     message?: string
   }
 
@@ -26,6 +29,9 @@ router.post('/api/demo-request', async (req: Request, res: Response) => {
   const email = typeof body.email === 'string' ? body.email.trim() : ''
   const company = typeof body.company === 'string' ? body.company.trim() : ''
   const size = typeof body.size === 'string' ? body.size.trim() : ''
+  const plan = typeof body.plan === 'string' ? body.plan.trim() : ''
+  const country = typeof body.country === 'string' ? body.country.trim() : ''
+  const phone = typeof body.phone === 'string' ? body.phone.trim() : ''
   const message = typeof body.message === 'string' ? body.message.trim() : ''
 
   if (!name || !email || !company || !size) {
@@ -51,6 +57,9 @@ router.post('/api/demo-request', async (req: Request, res: Response) => {
       <tr><td><strong>Work email</strong></td><td>${escapeHtml(email)}</td></tr>
       <tr><td><strong>Company</strong></td><td>${escapeHtml(company)}</td></tr>
       <tr><td><strong>Company size</strong></td><td>${escapeHtml(size)}</td></tr>
+      <tr><td><strong>Plan of interest</strong></td><td>${escapeHtml(plan) || 'Not specified'}</td></tr>
+      <tr><td><strong>Country</strong></td><td>${escapeHtml(country) || 'Not specified'}</td></tr>
+      <tr><td><strong>Phone</strong></td><td>${escapeHtml(phone) || 'Not specified'}</td></tr>
       <tr><td valign="top"><strong>Message</strong></td><td>${escapeHtml(message) || '—'}</td></tr>
     </table>
   `
