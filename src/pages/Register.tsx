@@ -7,17 +7,18 @@ import { useOrgApi } from '../hooks/useOrgApi'
 import '../styles/register.css'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import PricingSection, { type PricingPlan } from '@/components/PricingSection'
+import PricingSection, { type PlanId } from '@/components/PricingSection'
 
-const PLAN_NAMES: Record<PricingPlan, string> = {
+const PLAN_NAMES: Record<PlanId, string> = {
+  trial: '7-day trial',
   starter: 'Starter',
   growth: 'Growth',
   pro: 'Pro',
   enterprise: 'Enterprise',
 }
 
-function planFromSearch(value: string | null): PricingPlan | null {
-  return value && value in PLAN_NAMES ? (value as PricingPlan) : null
+function planFromSearch(value: string | null): PlanId | null {
+  return value && value in PLAN_NAMES ? (value as PlanId) : null
 }
 
 /** Two-step self-serve signup: company details + plan selection, then admin email to create the org. */
@@ -27,7 +28,7 @@ export default function Register() {
   const { apiFetch } = useOrgApi()
   const requestedPlan = planFromSearch(searchParams.get('plan'))
   const [step, setStep] = useState<1 | 2>(() => (requestedPlan ? 2 : 1))
-  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(requestedPlan)
+  const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(requestedPlan)
   const [form, setForm] = useState({
     companyName: '',
     adminEmail: '',
@@ -106,7 +107,6 @@ export default function Register() {
           selectedPlan={selectedPlan}
           onSelectPlan={setSelectedPlan}
           onConfirmPlan={() => setStep(2)}
-          showCtaForSelectedPlan
         />
       ) : (
         <div className="register-content-column">

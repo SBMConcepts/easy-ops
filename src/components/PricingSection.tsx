@@ -2,152 +2,110 @@ import '../styles/pricingsection.css'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
-export type PricingPlan = 'trial' | 'starter' | 'growth' | 'pro' | 'enterprise'
+export type PlanId = 'trial' | 'starter' | 'growth' | 'pro' | 'enterprise'
 
-interface PricingSectionProps {
-  onSelectPlan?: (plan: PricingPlan) => void
-  onConfirmPlan?: (plan: PricingPlan) => void
-  selectedPlan?: PricingPlan | null
-  showCtaForSelectedPlan?: boolean
+interface Plan {
+  id: PlanId
+  name: string
+  monthly: string
+  yearly: string
+  formula: string
+  description: string
+  features: string[]
+  cta: string
+  highlighted: boolean
 }
 
-const plans = [
+interface PricingSectionProps {
+  selectedPlan?: PlanId | null
+  onSelectPlan?: (plan: PlanId) => void
+  onConfirmPlan?: (plan: PlanId) => void
+}
+
+const plans: Plan[] = [
   {
-    id: 'starter' as const,
+    id: 'starter',
     name: 'Starter',
-    baseFee: 80,
-    perMemberFee: 16,
-    minMembers: 5,
-    maxMembers: 25,
+    monthly: 'R249',
+    yearly: 'R2,490',
+    formula: '(25 × R8) + R49',
     description: 'Single-site businesses getting started with digital workforce management.',
     features: [
       'Up to 25 employees',
       'Single site, 3 departments',
       'Attendance tracking (clock-in / out)',
-      'Basic payroll & payslip generation',
-      'Simple reporting',
+      'QR, manual & WhatsApp check-in (500/mo)',
+      'Basic reports & payslips',
+      '12-month data retention · 24h support',
     ],
     cta: 'Start with Starter',
+    highlighted: false,
   },
   {
-    id: 'growth' as const,
+    id: 'growth',
     name: 'Growth',
-    baseFee: 150,
-    perMemberFee: 12,
-    minMembers: 26,
-    maxMembers: 50,
+    monthly: 'R699',
+    yearly: 'R6,990',
+    formula: '(50 × R13) + R49',
     description: 'Scaling teams that need multi-site visibility and compliance.',
     features: [
       'Up to 50 employees',
       'Multi-site (up to 3), 6 departments',
       'Custom roles & permissions',
-      'Payroll exports & real-time dashboards',
-      'Performance tracker & compliance audits',
+      'Smart Shift Scheduling & biometric check-in',
+      '7-day labour forecasting & BCEA audits',
+      'Payroll CSV export · 12h support',
     ],
     cta: 'Choose Growth',
+    highlighted: true,
   },
   {
-    id: 'pro' as const,
+    id: 'pro',
     name: 'Pro',
-    baseFee: 300,
-    perMemberFee: 10,
-    minMembers: 51,
-    maxMembers: 100,
+    monthly: 'R1,849',
+    yearly: 'R18,490',
+    formula: '(100 × R18) + R49',
     description: 'Established operations running full automation across branches.',
     features: [
       'Up to 100 employees',
-      'Full automation workflows',
-      'Advanced analytics',
-      'Cost leak detection',
-      'Multi-branch / site management',
+      'Up to 10 sites, 25 departments',
+      '30-day AI forecasting & accuracy tracking',
+      'Payroll Export Pro (Sage, Xero, PaySpace, EMP201)',
+      'Safety Ops, automation & advanced analytics',
+      'Premium support (4h response)',
     ],
     cta: 'Go Pro',
+    highlighted: false,
   },
   {
-    id: 'enterprise' as const,
+    id: 'enterprise',
     name: 'Enterprise',
-    baseFee: 450,
-    perMemberFee: null,
-    minMembers: 101,
-    maxMembers: Infinity,
+    monthly: 'POA',
+    yearly: 'POA',
+    formula: 'Tailored to your workforce',
     description: 'Custom deployments for large, complex, multi-region workforces.',
     features: [
       'Unlimited employees & sites',
       'Dedicated success manager',
-      'Custom integrations & SSO',
-      'SLA-backed support',
+      '90-day forecasting, SSO & custom integrations',
+      '2h SLA, 24/7 for urgent issues',
       'On-premise / private cloud options',
     ],
     cta: 'Contact Sales',
+    highlighted: false,
   },
 ]
 
-const PricingSection = ({
-  onSelectPlan,
-  onConfirmPlan,
-  selectedPlan,
-  showCtaForSelectedPlan = false,
-}: PricingSectionProps) => {
-  const [employees, setEmployees] = useState(30)
-  const [isYearly, setIsYearly] = useState(false)
+const PricingSection = ({ onConfirmPlan, onSelectPlan, selectedPlan }: PricingSectionProps) => {
+  const [locallySelectedPlan, setLocallySelectedPlan] = useState<PlanId | null>(null)
+  const activePlan = selectedPlan ?? locallySelectedPlan
 
-  // Calculate pricing dynamics based on slider and toggle
-  const getPlanPricing = (
-    plan:
-      | {
-          name: string
-          baseFee: number
-          perMemberFee: number
-          minMembers: number
-          maxMembers: number
-          description: string
-          features: string[]
-          cta: string
-        }
-      | {
-          name: string
-          baseFee: number
-          perMemberFee: null
-          minMembers: number
-          maxMembers: number
-          description: string
-          features: string[]
-          cta: string
-        }
-  ) => {
-    if (plan.name === 'Enterprise') {
-      const isMatch = employees >= plan.minMembers
-      return {
-        monthly: 'POA',
-        yearly: 'Custom quote',
-        formula: 'Base R450 + custom tiering',
-        isMatch,
-      }
-    }
-
-    // Check if current headcount matches this plan range
-    const isMatch = employees >= plan.minMembers && employees <= plan.maxMembers
-
-    // Clamp employee count within plan capacity boundaries for previewing price
-    const count = Math.min(Math.max(employees, plan.minMembers), plan.maxMembers)
-    let monthlyTotal = plan.baseFee + (plan.perMemberFee ?? 0) * count
-
-    // Apply 15% discount when billed yearly
-    if (isYearly) {
-      monthlyTotal = Math.round(monthlyTotal * 0.85)
-    }
-
-    const yearlyTotal = monthlyTotal * 12
-
-    return {
-      monthly: `R${monthlyTotal.toLocaleString()}`,
-      yearly: `R${yearlyTotal.toLocaleString()} billed yearly`,
-      formula: `R${plan.baseFee} base + R${plan.perMemberFee ?? 0}/member`,
-      isMatch,
-    }
+  const handleSelectPlan = (plan: PlanId) => {
+    setLocallySelectedPlan(plan)
+    onSelectPlan?.(plan)
   }
 
   return (
@@ -164,70 +122,17 @@ const PricingSection = ({
             Select a plan that will empower your organization's growth
           </h2>
           <p className="pricing-description">
-            Each plan is designed to provide the right level of support and features for your
-            business, ensuring you can manage your workforce effectively and efficiently.
+            Price = (Employees × Cost per Employee) + Package Base Price. No hidden fees, cancel
+            anytime.
           </p>
-
-          {/* Headcount Slider & Toggle Controls */}
-          <div className="pricing-controls">
-            <div className="pricing-slider-wrapper">
-              <label htmlFor="employee-slider" className="pricing-slider-label">
-                How many employees do you have?{' '}
-                <span className="pricing-slider-value">
-                  {employees >= 101 ? '101+ (Enterprise)' : `${employees} Members`}
-                </span>
-              </label>
-              <input
-                id="employee-slider"
-                type="range"
-                min={5}
-                max={101}
-                step={1}
-                value={employees}
-                onChange={(e) => setEmployees(Number(e.target.value))}
-                className="pricing-slider"
-              />
-              <div className="pricing-slider-ticks">
-                <span className="pricing-slider-tick">5 Members</span>
-                <span className="pricing-slider-tick">50 Members</span>
-                <span className="pricing-slider-tick">100+ Members</span>
-              </div>
-            </div>
-
-            {/* Billing Cycle Toggle */}
-            <div className="pricing-toggle-wrapper ">
-              <span className={!isYearly ? 'text-foreground font-bold' : 'text-muted-foreground'}>
-                Monthly Billing
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsYearly(!isYearly)}
-                className={cn(
-                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none',
-                  isYearly ? 'bg-primary' : 'bg-muted'
-                )}
-              >
-                <span
-                  className={cn(
-                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    isYearly ? 'translate-x-6' : 'translate-x-1'
-                  )}
-                />
-              </button>
-              <span className={isYearly ? 'text-foreground font-bold' : 'text-muted-foreground'}>
-                Yearly Billing <span className="text-xs text-green-600 font-bold">(Save 15%)</span>
-              </span>
-            </div>
-          </div>
         </motion.div>
 
         {/* Pricing Cards Grid */}
         <div className="pricing-grid">
           {plans.map((plan, i) => {
-            const pricing = getPlanPricing(plan)
-            const isHighlighted = pricing.isMatch
-            const isSelected = selectedPlan === plan.id
-            const showCta = !showCtaForSelectedPlan || isSelected
+            const isHighlighted = plan.highlighted
+            const isSelected = activePlan === plan.id
+            const showCta = isSelected
 
             return (
               <motion.div
@@ -239,20 +144,14 @@ const PricingSection = ({
                 className="pricing-card-wrapper"
               >
                 <Card
-                  onClick={() => onSelectPlan?.(plan.id)}
+                  onClick={() => handleSelectPlan(plan.id)}
                   className={cn(
                     'pricing-card',
-                    onSelectPlan && 'cursor-pointer',
-                    isSelected || isHighlighted
-                      ? 'pricing-card-highlighted '
-                      : 'pricing-card-standard'
+                    'cursor-pointer',
+                    isHighlighted ? 'pricing-card-highlighted ' : 'pricing-card-standard'
                   )}
                 >
-                  {(isSelected || isHighlighted) && (
-                    <span className="pricing-badge">
-                      {isSelected ? 'Selected' : employees >= 101 ? 'Recommended' : 'Best Match'}
-                    </span>
-                  )}
+                  {isHighlighted && <span className="pricing-badge">{'Most Popular'}</span>}
 
                   <div className="pricing-card-header">
                     <h3 className="pricing-card-title">{plan.name}</h3>
@@ -261,13 +160,9 @@ const PricingSection = ({
 
                   <div className="pricing-card-pricing">
                     <div className="pricing-card-price-container">
-                      <span className="pricing-card-price">{pricing.monthly}</span>
-                      {pricing.monthly !== 'POA' && (
-                        <span className="pricing-card-period">/mo</span>
-                      )}
+                      <span className="pricing-card-price">{plan.monthly}</span>
+                      {plan.monthly !== 'POA' && <span className="pricing-card-period">/mo</span>}
                     </div>
-                    <p className="pricing-card-yearly">{pricing.yearly}</p>
-                    <p className="pricing-card-formula">{pricing.formula}</p>
                   </div>
 
                   <ul className="pricing-card-features">
@@ -282,10 +177,7 @@ const PricingSection = ({
                   {showCta && (
                     <button
                       type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onConfirmPlan?.(plan.id)
-                      }}
+                      onClick={() => onConfirmPlan?.(plan.id)}
                       className="pricing-card-cta-btn"
                     >
                       {plan.cta}
@@ -295,6 +187,14 @@ const PricingSection = ({
               </motion.div>
             )
           })}
+        </div>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-muted-foreground mb-3">
+            Not ready to buy? Try every Growth & Pro feature free for 14 days — no card required.
+          </p>
+          <button type="button" className="rounded-full" onClick={() => onConfirmPlan?.('trial')}>
+            Start free trial or book a demo
+          </button>
         </div>
       </div>
     </section>
