@@ -16,7 +16,7 @@ credentials and run in different environments.
 |                       | Trigger                                                                         | Runs in                     | Credentials                                               |
 | --------------------- | ------------------------------------------------------------------------------- | --------------------------- | --------------------------------------------------------- |
 | **A. OTP delivery**   | Auth0 Phone Provider (MFA challenges + phone-number verification during signup) | Auth0's own Actions sandbox | Auth0 Action Secrets (Dashboard-only, never in this repo) |
-| **B. Invitation SMS** | `POST /api/invitations` when an admin invites someone by phone                  | Express server (this repo)  | `.env.local` / deployment env vars                        |
+| **B. Invitation SMS** | `POST /api/invitations` when an admin invites someone by phone                  | Express server (this repo)  | `.env` / deployment env vars                              |
 
 Both call Amazon SNS `PublishCommand` directly with a bare `PhoneNumber` (no
 SNS Topics or Subscriptions are used anywhere in this integration).

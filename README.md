@@ -22,12 +22,16 @@
   - [Project Structure](#project-structure)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
-    - [Environment Configuration](#environment-configuration)
     - [Installation](#installation)
     - [Development](#development)
     - [Building for Production](#building-for-production)
     - [Docker Development](#docker-development)
   - [API Route Tiers](#api-route-tiers)
+    - [1. Public Endpoints (Pre-Auth / Intake)](#1-public-endpoints-pre-auth--intake)
+    - [2. Identity Provider Webhook](#2-identity-provider-webhook)
+    - [3. Authenticated Session Tier](#3-authenticated-session-tier)
+    - [4. Operational Feature Routes](#4-operational-feature-routes)
+    - [5. Privileged Administrative Routes](#5-privileged-administrative-routes)
   - [Multi-Tenant Data \& Security](#multi-tenant-data--security)
   - [Billing \& Plans](#billing--plans)
   - [South African Regulatory Compliance](#south-african-regulatory-compliance)
@@ -234,58 +238,12 @@ easy-ops/
 - **Paystack** test credentials (for billing workflows)
 - **Amazon Web Services (AWS)** account with SNS access (for SMS verification and invites)
 
-### Environment Configuration
-
-Create a `.env` file in the root directory (based on `.env.example` if present, or configure the variables below):
-
-```ini
-# Application URLs
-PORT=3000
-APP_URL=http://localhost:5173
-VITE_APP_URL=http://localhost:5173
-VITE_API_URL=http://localhost:3000/api
-OIDC_BASE_URL=http://localhost:5173
-
-# Auth0 Configuration
-AUTH0_SECRET=your-32-character-secret
-AUTH0_BASE_URL=http://localhost:5173
-AUTH0_CLIENT_ID=your-auth0-client-id
-AUTH0_CLIENT_SECRET=your-auth0-client-secret
-AUTH0_DOMAIN=your-tenant.auth0.com
-AUTH0_AUDIENCE=https://your-tenant.auth0.com/api/v2/
-AUTH0_ORG_ADMIN_ROLE_ID=rol_xxxxxxxxxxxx
-
-# Supabase Database & Service Role
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-SUPABASE_JWT_SECRET=your-supabase-jwt-secret
-
-# Paystack Billing (ZAR)
-PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxx
-PAYSTACK_PUBLIC_KEY=pk_test_xxxxxxxxxxxxxxxx
-PAYSTACK_SETUP_AMOUNT_CENTS=100
-PAYSTACK_PLAN_CODE_STARTER_MONTHLY=PLN_starter_m
-PAYSTACK_PLAN_CODE_GROWTH_MONTHLY=PLN_growth_m
-PAYSTACK_PLAN_CODE_PRO_MONTHLY=PLN_pro_m
-BILLING_TRIAL_DAYS=7
-
-# Amazon SNS (Transactional SMS)
-AWS_REGION=af-south-1
-AWS_ACCESS_KEY_ID=AKIAxxxxxxxxxxxxxxxx
-AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-AWS_SNS_SENDER_ID=EasyOps
-
-# Email (Resend)
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
-DEMO_REQUEST_FROM=EasyOps <sales@easyops.co.za>
-```
-
 ### Installation
 
 Clone the repository and install all dependencies:
 
 ```bash
-git clone https://github.com/Sihle-Thwa/easy-ops.git
+git clone https://github.com/SBMConcepts/easy-ops.git
 cd easy-ops
 npm install
 ```
