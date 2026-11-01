@@ -80,6 +80,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
         auth0_org_id: orgId,
         email: event.user.email,
         phone_number: event.user.phone_number,
+        email_verified: event.user.email_verified === true,
         full_name: event.user.name,
         avatar_url: event.user.picture || null,
         org_id: orgId,

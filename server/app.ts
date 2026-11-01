@@ -117,12 +117,13 @@ app.get('/api/health', (_req: Request, res: Response) => {
 })
 
 app.get('/api/login', (req: Request, res: Response) => {
-  const { organization, invitation, returnTo } = req.query
+  const { organization, invitation, returnTo, connection } = req.query
   void res.oidc.login({
     returnTo: typeof returnTo === 'string' && returnTo.startsWith('/') ? returnTo : '/app',
     authorizationParams: {
       ...(typeof organization === 'string' ? { organization } : {}),
       ...(typeof invitation === 'string' ? { invitation } : {}),
+      ...(connection === 'google-oauth2' || connection === 'sms' ? { connection } : {}),
     },
   })
 })

@@ -1452,6 +1452,7 @@ export type Database = {
           full_name: string | null
           id: string
           id_type: Database['public']['Enums']['identification_type'] | null
+          identity_provider: string
           last_name: string | null
           last_synced_at: string
           mobile_number: string | null
@@ -1472,6 +1473,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           id_type?: Database['public']['Enums']['identification_type'] | null
+          identity_provider?: string
           last_name?: string | null
           last_synced_at?: string
           mobile_number?: string | null
@@ -1492,6 +1494,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           id_type?: Database['public']['Enums']['identification_type'] | null
+          identity_provider?: string
           last_name?: string | null
           last_synced_at?: string
           mobile_number?: string | null

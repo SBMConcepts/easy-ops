@@ -116,9 +116,10 @@
 -------------------------------------------------------------------------------
  SECTION 6 — Application / API settings
 -------------------------------------------------------------------------------
- [ ] SPA Allowed Callback URLs   : http://localhost:5173/app, https://easy-ops-com.vercel.app/app
- [ ] SPA Allowed Logout URLs     : http://localhost:5173, https://easy-ops-com.vercel.app
- [ ] SPA Allowed Web Origins     : http://localhost:5173, https://easy-ops-com.vercel.app
+ [ ] Application type           : Regular Web App (Express is the OIDC client)
+ [ ] Allowed Callback URLs       : http://localhost:5173/api/callback, https://www.easyops.co.za/api/callback
+ [ ] Allowed Logout URLs         : http://localhost:5173, https://www.easyops.co.za
+ [ ] Allowed Web Origins         : http://localhost:5173, https://www.easyops.co.za
  [ ] API Identifier (audience)   : https://api.easyops.co.za   (matches VITE_AUTH0_AUDIENCE / AUTH0_AUDIENCE)
  [ ] API RBAC                    : Enable RBAC + Add Permissions in Access Token
  [ ] post-login Action           : Deployed and bound to the Login flow
@@ -160,6 +161,28 @@
      end user for tenant-level providers -> check tenant logs for
      gd_send_sms / gd_send_sms_failure events.
 -------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+ SECTION 10 — Google, passwordless SMS and account linking
+-------------------------------------------------------------------------------
+ [ ] Google: Authentication -> Social -> Google. Use your OWN Google Cloud
+     OAuth client (not Auth0 dev keys). Redirect URI:
+     https://<auth0-domain>/login/callback. Scopes: email, profile only.
+ [ ] SMS: Authentication -> Passwordless -> SMS, connection name "sms"
+     (api/login passes connection=sms). Delivery uses SECTION 8 provider.
+ [ ] Enable google-oauth2 + sms on the application AND on every organization
+     (new orgs get them via enableOrgConnection). Existing orgs: re-run
+     enableOrgConnection for each org id.
+ [ ] Server env: AUTH0_GOOGLE_CONNECTION_ID, AUTH0_SMS_CONNECTION_ID
+     (con_... ids; AUTH0_DB_CONNECTION_ID unchanged).
+ [ ] Actions: deploy auth0/actions/account-linking.js and bind it BEFORE
+     post-login.js. Secrets: AUTH0_DOMAIN, AUTH0_M2M_CLIENT_ID,
+     AUTH0_M2M_CLIENT_SECRET (read:users, update:users).
+ [ ] Migration: supabase/migrations/20261102120000_identity_provider.sql
+ [ ] Federated users are admitted only if /api/auth/sync finds a matching
+     active membership or a pending invitation by VERIFIED email/phone.
+ [ ] Supabase: Auth signups disabled (supabase/config.toml); also disable
+     Email/Phone/external providers in the hosted dashboard.
 
 -------------------------------------------------------------------------------
  SECTION 9 — Flexible Identifiers (phone number sign up / login)

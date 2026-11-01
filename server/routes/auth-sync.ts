@@ -27,6 +27,7 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     auth0_org_id?: string
     email?: string
     phone_number?: string
+    email_verified?: boolean
     full_name?: string
     avatar_url?: string | null
     role?: string | null
@@ -45,9 +46,21 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
     return
   }
 
-  const email = body.email ? body.email.toLowerCase() : null
-  const phoneNumber = body.phone_number ?? null
+  // Custom-database users (`auth0|…`) were vetted by create.js. Federated users
+  // (`google-oauth2|…`, `sms|…`) only count an identifier once the provider has
+  // verified it, since it is later matched against invitations.
+  const provider = body.auth0_user_id.split('|')[0]
+  const isDatabaseUser = provider === 'auth0'
+  const email =
+    body.email && (isDatabaseUser || body.email_verified === true) ? body.email.toLowerCase() : null
+  const phoneNumber =
+    body.phone_number && (isDatabaseUser || provider === 'sms') ? body.phone_number : null
   const full_name = body.full_name ?? ''
+
+  if (!email && !phoneNumber) {
+    res.status(403).json({ error: 'A verified email or phone number is required.' })
+    return
+  }
 
   // At least one identifier is guaranteed above; build the matching OR filter
   // for whichever one(s) are present.
@@ -112,6 +125,30 @@ router.post('/api/auth/sync', async (req: Request, res: Response) => {
   if (identityErr || !identity) {
     res.status(500).json({ error: identityErr?.message ?? 'Failed to sync user.' })
     return
+  }
+
+  // org_members references user_credentials; database users already have a row
+  // from create.js, federated users get theirs here (no password).
+  if (!isDatabaseUser) {
+    const { error: credentialsErr } = await supabaseAdmin.from('user_credentials').upsert(
+      {
+        auth0_user_id: body.auth0_user_id,
+        auth0_org_id,
+        email,
+        full_name,
+        email_verified: email !== null,
+        phone_verified: phoneNumber !== null,
+        identity_provider: provider,
+        last_synced_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(phoneNumber ? { mobile_number: phoneNumber } : {}),
+      },
+      { onConflict: 'auth0_user_id' }
+    )
+    if (credentialsErr) {
+      res.status(500).json({ error: credentialsErr.message })
+      return
+    }
   }
 
   // Only identity/role fields are touched here — assignment fields

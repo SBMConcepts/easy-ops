@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { LogIn, Loader2, Sparkles, UserPlus } from 'lucide-react'
+import { LogIn, Loader2, Mail, Smartphone, Sparkles, UserPlus } from 'lucide-react'
 import BrandFull from '../assets/EasyOps Brand Logo and Name.png'
 import '../styles/loginpage.css'
 
@@ -60,6 +60,26 @@ const LoginPage = () => {
                 <LogIn className="login-mode-icon" size={24} />
                 <span className="login-mode-label">Sign In</span>
                 <span className="login-mode-sub">Access your existing EasyOps workspace</span>
+              </button>
+
+              <button
+                onClick={() =>
+                  login({ auth0OrgId: orgId ?? undefined, connection: 'google-oauth2' })
+                }
+                className="login-mode-btn"
+              >
+                <Mail className="login-mode-icon" size={24} />
+                <span className="login-mode-label">Continue with Google</span>
+                <span className="login-mode-sub">Use the Google account on your invitation</span>
+              </button>
+
+              <button
+                onClick={() => login({ auth0OrgId: orgId ?? undefined, connection: 'sms' })}
+                className="login-mode-btn"
+              >
+                <Smartphone className="login-mode-icon" size={24} />
+                <span className="login-mode-label">Continue with phone</span>
+                <span className="login-mode-sub">Get a one-time code by SMS</span>
               </button>
 
               {/* Divider */}

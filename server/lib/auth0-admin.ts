@@ -90,9 +90,19 @@ async function resolveDbConnectionId(): Promise<string> {
   )
 }
 
+/** Database connection plus the optional Google and passwordless-SMS connections. */
+async function resolveOrgConnectionIds(): Promise<string[]> {
+  const ids = [
+    await resolveDbConnectionId(),
+    process.env.AUTH0_GOOGLE_CONNECTION_ID?.trim(),
+    process.env.AUTH0_SMS_CONNECTION_ID?.trim(),
+  ]
+  return [...new Set(ids.filter((id): id is string => Boolean(id)))]
+}
+
 /**
- * Enable the shared database connection on an organization so its members can
- * log in and accept invitations.
+ * Enable every configured login connection (database, Google, SMS) on an
+ * organization so its members can log in and accept invitations.
  *
  * Auth0 orgs start with zero enabled connections. Both
  * `assign_membership_on_login` and `is_signup_enabled` must be true together
@@ -101,10 +111,24 @@ async function resolveDbConnectionId(): Promise<string> {
  * version of this function that only set one of the two flags.
  */
 export async function enableOrgConnection(orgId: string): Promise<void> {
-  const connectionId = await resolveDbConnectionId()
-
+  const connectionIds = await resolveOrgConnectionIds()
   const existing = await mgmt().organizations.enabledConnections.list(orgId)
-  const current = (existing.data ?? []).find((c) => c.connection_id === connectionId)
+
+  for (const connectionId of connectionIds) {
+    await enableOneOrgConnection(orgId, connectionId, existing.data ?? [])
+  }
+}
+
+async function enableOneOrgConnection(
+  orgId: string,
+  connectionId: string,
+  existing: {
+    connection_id?: string
+    assign_membership_on_login?: boolean
+    is_signup_enabled?: boolean
+  }[]
+): Promise<void> {
+  const current = existing.find((c) => c.connection_id === connectionId)
 
   if (current) {
     // Already enabled — ensure the signup/membership flags are correct (an org

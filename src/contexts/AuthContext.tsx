@@ -65,7 +65,11 @@ interface AuthContextType {
   organization: AuthOrganization
   isAuthenticated: boolean
   isLoading: boolean
-  login: (options?: { auth0OrgId?: string; invitation?: string }) => Promise<void>
+  login: (options?: {
+    auth0OrgId?: string
+    invitation?: string
+    connection?: 'google-oauth2' | 'sms'
+  }) => Promise<void>
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -235,13 +239,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [apiFetch, loadProfile])
 
-  const login = useCallback(async (options?: { auth0OrgId?: string; invitation?: string }) => {
-    const params = new URLSearchParams()
-    if (options?.auth0OrgId) params.set('organization', options.auth0OrgId)
-    if (options?.invitation) params.set('invitation', options.invitation)
-    const qs = params.toString()
-    window.location.href = `/api/login${qs ? `?${qs}` : ''}`
-  }, [])
+  const login = useCallback(
+    async (options?: {
+      auth0OrgId?: string
+      invitation?: string
+      connection?: 'google-oauth2' | 'sms'
+    }) => {
+      const params = new URLSearchParams()
+      if (options?.auth0OrgId) params.set('organization', options.auth0OrgId)
+      if (options?.invitation) params.set('invitation', options.invitation)
+      if (options?.connection) params.set('connection', options.connection)
+      const qs = params.toString()
+      window.location.href = `/api/login${qs ? `?${qs}` : ''}`
+    },
+    []
+  )
 
   const logout = useCallback(() => {
     window.location.href = '/api/logout'
