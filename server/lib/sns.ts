@@ -1,7 +1,7 @@
 // Amazon SNS client for server-initiated SMS (invitation links, alerts).
 // Separate credentials from auth0/actions/custom-phone-provider.js — that
 // Action's secrets live only in the Auth0 Dashboard and are not reachable
-// from Express, so this module needs its own AWS_* env vars in .env.local.
+// from Express, so this module needs its own AWS_* env vars in .env
 
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 

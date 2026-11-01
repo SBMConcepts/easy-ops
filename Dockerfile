@@ -1,5 +1,5 @@
 # Build stage - Frontend
-FROM node:22-alpine AS frontend-build
+FROM node:26 AS frontend-build
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build 2>&1 | grep -v "error TS" || npx vite build
 
 # Build stage - Backend
-FROM node:22-alpine AS backend-build
+FROM node:26 AS backend-build
 
 WORKDIR /app
 
@@ -25,12 +25,12 @@ COPY server ./server
 RUN npm run build:server
 
 # Final stage - Production runtime
-FROM node:22-alpine
+FROM node:26
 
 WORKDIR /app
 
 # Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+RUN apt-get update && apt-get install -y dumb-init && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001

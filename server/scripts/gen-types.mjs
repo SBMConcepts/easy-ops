@@ -2,7 +2,7 @@ import { config } from 'dotenv'
 import { execSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 
-config({ path: '.env.local', override: true })
+config({ path: '.env', override: true })
 
 const url = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL
 if (!url) {

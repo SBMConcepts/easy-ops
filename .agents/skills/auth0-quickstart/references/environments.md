@@ -16,12 +16,14 @@ VITE_AUTH0_CLIENT_ID=<your-client-id>
 ```
 
 **Usage in code:**
+
 ```javascript
-const domain = import.meta.env.VITE_AUTH0_DOMAIN;
-const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
+const domain = import.meta.env.VITE_AUTH0_DOMAIN
+const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID
 ```
 
 **Important:**
+
 - Vite requires `VITE_` prefix
 - Use `import.meta.env`, NOT `process.env`
 - Restart dev server after changing `.env`
@@ -38,12 +40,14 @@ REACT_APP_AUTH0_CLIENT_ID=<your-client-id>
 ```
 
 **Usage in code:**
+
 ```javascript
-const domain = process.env.REACT_APP_AUTH0_DOMAIN;
-const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID;
+const domain = process.env.REACT_APP_AUTH0_DOMAIN
+const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID
 ```
 
 **Important:**
+
 - Create React App requires `REACT_APP_` prefix
 - Use `process.env`
 - Restart dev server after changing `.env`
@@ -61,10 +65,10 @@ export const environment = {
     domain: '<your-tenant>.auth0.com',
     clientId: '<your-client-id>',
     authorizationParams: {
-      redirect_uri: window.location.origin
-    }
-  }
-};
+      redirect_uri: window.location.origin,
+    },
+  },
+}
 ```
 
 Update `src/environments/environment.prod.ts`:
@@ -76,17 +80,18 @@ export const environment = {
     domain: '<your-tenant>.auth0.com',
     clientId: '<your-client-id>',
     authorizationParams: {
-      redirect_uri: 'https://myapp.com'
-    }
-  }
-};
+      redirect_uri: 'https://myapp.com',
+    },
+  },
+}
 ```
 
 **Usage in code:**
-```typescript
-import { environment } from '../environments/environment';
 
-const domain = environment.auth0.domain;
+```typescript
+import { environment } from '../environments/environment'
+
+const domain = environment.auth0.domain
 ```
 
 ---
@@ -94,8 +99,6 @@ const domain = environment.auth0.domain;
 ## Server-Side Applications
 
 ### Next.js
-
-Create `.env.local`:
 
 ```bash
 AUTH0_SECRET='<use-openssl-rand-hex-32-to-generate>'
@@ -106,23 +109,27 @@ AUTH0_CLIENT_SECRET='<your-client-secret>'
 ```
 
 **Generate AUTH0_SECRET:**
+
 ```bash
 openssl rand -hex 32
 ```
 
 **Usage in code:**
+
 ```javascript
 // Automatic via @auth0/nextjs-auth0
 // No manual import needed
 ```
 
 **Important:**
+
 - File must be named `.env.local` (not `.env`)
 - Add `.env.local` to `.gitignore`
 - `AUTH0_SECRET` must be 32+ characters
 - In production, set these as environment variables in your hosting platform
 
 **Production (.env.production):**
+
 ```bash
 AUTH0_SECRET='<different-secret-from-dev>'
 AUTH0_BASE_URL='https://myapp.com'
@@ -146,21 +153,25 @@ AUTH0_CLIENT_SECRET='<your-client-secret>'
 ```
 
 **Usage in code:**
+
 ```javascript
-require('dotenv').config();
+require('dotenv').config()
 
-const { auth } = require('express-openid-connect');
+const { auth } = require('express-openid-connect')
 
-app.use(auth({
-  secret: process.env.AUTH0_SECRET,
-  baseURL: process.env.AUTH0_BASE_URL,
-  clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-  clientSecret: process.env.AUTH0_CLIENT_SECRET
-}));
+app.use(
+  auth({
+    secret: process.env.AUTH0_SECRET,
+    baseURL: process.env.AUTH0_BASE_URL,
+    clientID: process.env.AUTH0_CLIENT_ID,
+    issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
+    clientSecret: process.env.AUTH0_CLIENT_SECRET,
+  })
+)
 ```
 
 **Important:**
+
 - Install `dotenv`: `npm install dotenv`
 - Add `.env` to `.gitignore`
 - Load dotenv at app entry point: `require('dotenv').config()`
@@ -187,11 +198,12 @@ Update `app.json`:
 ```
 
 **Usage in code:**
-```javascript
-import Constants from 'expo-constants';
 
-const domain = Constants.expoConfig.extra.auth0Domain;
-const clientId = Constants.expoConfig.extra.auth0ClientId;
+```javascript
+import Constants from 'expo-constants'
+
+const domain = Constants.expoConfig.extra.auth0Domain
+const clientId = Constants.expoConfig.extra.auth0ClientId
 ```
 
 ---
@@ -212,11 +224,12 @@ npm install react-native-config
 ```
 
 **Usage in code:**
-```javascript
-import Config from 'react-native-config';
 
-const domain = Config.AUTH0_DOMAIN;
-const clientId = Config.AUTH0_CLIENT_ID;
+```javascript
+import Config from 'react-native-config'
+
+const domain = Config.AUTH0_DOMAIN
+const clientId = Config.AUTH0_CLIENT_ID
 ```
 
 ---
@@ -228,16 +241,18 @@ Create `auth0.config.js`:
 ```javascript
 export default {
   domain: '<your-tenant>.auth0.com',
-  clientId: '<your-client-id>'
-};
+  clientId: '<your-client-id>',
+}
 ```
 
 **Usage:**
+
 ```javascript
-import auth0Config from './auth0.config';
+import auth0Config from './auth0.config'
 ```
 
 **Important:**
+
 - Add `auth0.config.js` to `.gitignore`
 - Create `auth0.config.example.js` as template
 
@@ -255,17 +270,18 @@ AUTH0_ISSUER_BASE_URL='https://<your-tenant>.auth0.com'
 ```
 
 **Usage:**
+
 ```javascript
-const { auth } = require('express-oauth2-jwt-bearer');
+const { auth } = require('express-oauth2-jwt-bearer')
 
 const checkJwt = auth({
   audience: process.env.AUTH0_AUDIENCE,
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL
-});
+  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
+})
 
 app.get('/api/protected', checkJwt, (req, res) => {
-  res.json({ message: 'Protected endpoint' });
-});
+  res.json({ message: 'Protected endpoint' })
+})
 ```
 
 ---
@@ -280,6 +296,7 @@ AUTH0_AUDIENCE=https://api.myapp.com
 ```
 
 **Usage:**
+
 ```python
 import os
 from dotenv import load_dotenv
@@ -338,6 +355,7 @@ AUTH0_AUDIENCE='https://api.myapp.com'
 ### Variables Not Loading
 
 **Symptoms:**
+
 - `undefined` when accessing environment variables
 - Auth fails with "domain is required" errors
 
@@ -352,6 +370,7 @@ AUTH0_AUDIENCE='https://api.myapp.com'
 ### Wrong Import Method
 
 **Vite:**
+
 ```javascript
 // ❌ Wrong
 process.env.VITE_AUTH0_DOMAIN
@@ -361,6 +380,7 @@ import.meta.env.VITE_AUTH0_DOMAIN
 ```
 
 **Create React App:**
+
 ```javascript
 // ❌ Wrong
 import.meta.env.REACT_APP_AUTH0_DOMAIN

@@ -5,7 +5,7 @@ import pg from 'pg'
 import { readFileSync } from 'node:fs'
 import { config as loadEnv } from 'dotenv'
 
-loadEnv({ path: '.env.local' })
+loadEnv({ path: '.env' })
 
 const file = process.argv[2]
 if (!file) {
