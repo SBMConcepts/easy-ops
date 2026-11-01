@@ -138,7 +138,7 @@ export const ComplianceSettings = () => {
               <Input
                 id="max_ordinary_hours_per_week"
                 type="number"
-                {...register('max_ordinary_hours_per_week')}
+                {...register('max_ordinary_hours_per_week', { valueAsNumber: true })}
                 placeholder="45"
               />
               {errors.max_ordinary_hours_per_week && (
@@ -156,7 +156,7 @@ export const ComplianceSettings = () => {
               <Input
                 id="max_overtime_hours_per_week"
                 type="number"
-                {...register('max_overtime_hours_per_week')}
+                {...register('max_overtime_hours_per_week', { valueAsNumber: true })}
                 placeholder="10"
               />
               {errors.max_overtime_hours_per_week && (
@@ -174,7 +174,7 @@ export const ComplianceSettings = () => {
               <Input
                 id="lookback_weeks"
                 type="number"
-                {...register('lookback_weeks')}
+                {...register('lookback_weeks', { valueAsNumber: true })}
                 placeholder="12"
               />
               {errors.lookback_weeks && (
