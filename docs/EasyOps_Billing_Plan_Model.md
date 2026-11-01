@@ -17,7 +17,7 @@ Currency: ZAR (VAT-inclusive display, 15% VAT). Billing provider: Paystack.
 | Pro          | 100                | R18               | R49    | **R1,849**             | R18,490                          | R20 / employee           |
 | Enterprise   | 250+ (contracted)  | from R16 (volume) | Custom | **POA** (from ~R4,500) | Annual contract                  | Negotiated               |
 
-> The current website shows annual as 12 × monthly (e.g. R2,988). Pick one: keep "12 × monthly", or switch to the "2 months free" values above and update the pricing section to match.
+> **Implemented in codebase:** Annual billing incorporates 2 months free (~17% discount) across all paid tiers: Starter R2,490/yr, Growth R6,990/yr, Pro R18,490/yr. This is active in `src/components/PricingSection.tsx` and throughout billing routes.
 
 ---
 
@@ -70,28 +70,31 @@ Currency: ZAR (VAT-inclusive display, 15% VAT). Billing provider: Paystack.
 
 **Support SLA (first response):** Trial 48h (email) · Starter 24h · Growth 12h · Pro 4h · Enterprise 2h (24/7 for urgent).
 
-> Note: the app currently uses the plan name `business` for the tier above Growth. Rename `business` → `pro` so the app, website and Paystack use the same name (see section 8).
+> **Implemented:** Plan tiers have been normalized to `'trial' | 'starter' | 'growth' | 'pro' | 'enterprise'` in the PostgreSQL `org_plan` enum, Supabase types, and frontend interfaces.
 
 ---
 
-## 4. Trial and Demo — one mechanism, two entry points
+## 4. Trial and Demo — One Mechanism, Flexible Entry Points
 
-Trial and Demo are **the same thing in the system**: an organisation on plan `trial` with status `trialing` and an end date. Only the entry point and the starting data differ.
+EasyOps supports two distinct trial onboarding paths:
 
-|               | Self-serve Trial                           | Sales Demo                                                               |
-| ------------- | ------------------------------------------ | ------------------------------------------------------------------------ |
-| Started by    | Prospect via "Start free trial" on pricing | Sales team via Get Started lead                                          |
-| Length        | 14 days                                    | 14 days (sales can extend to 30)                                         |
-| Data          | Empty org → onboarding wizard              | Pre-loaded sample data (sites, 20 employees, 4 weeks attendance, roster) |
-| Card required | No                                         | No                                                                       |
-| Features      | Growth + Pro preview (see matrix)          | Same                                                                     |
-| Flag          | `settings.trial_source = 'self_serve'`     | `settings.trial_source = 'demo'`, `settings.demo_data = true`            |
+1. **Self-Serve Free Trial (Un-carded, 14 days):** Organizations registered directly on the `trial` plan (`org_plan = 'trial'`). Grants 14 days of platform evaluation for up to 25 staff with no credit card required.
+2. **Paid Plan Hosted Trial (Card-authorized, 7 days):** When a user selects a paid tier (`starter`, `growth`, or `pro`) during registration or checkout (`POST /api/billing/checkout`), Paystack initializes a card authorization (`PAYSTACK_SETUP_AMOUNT_CENTS`). Once verified, a subscription is created with a 7-day card-authorized trial window (`trial_ends_at = now() + 7 days`, configurable via `BILLING_TRIAL_DAYS` between 5–7 days, default 7) before recurring subscription charges begin.
+
+| Metric / Dimension | Self-Serve Free Trial             | Sales Demo Org                                    | Paid Tier Checkout Trial                      |
+| ------------------ | --------------------------------- | ------------------------------------------------- | --------------------------------------------- |
+| **Triggered by**   | Prospect via registration         | Sales team via demo request lead                  | Prospect selecting Starter, Growth, or Pro    |
+| **Duration**       | 14 days                           | 14 days (sales extensible to 30)                  | 7 days (configurable 5–7 days)                |
+| **Starting data**  | Empty org → onboarding wizard     | Pre-loaded sample data (sites, 20 staff, 4w logs) | Empty org → onboarding wizard                 |
+| **Card required**  | No                                | No                                                | Yes (Paystack card authorization)             |
+| **Features**       | Growth + Pro preview (see matrix) | Same                                              | Selected plan features                        |
+| **Billing state**  | `trial`                           | `trial` (`demo_data = true`)                      | `pending_payment_method` → `trial` → `active` |
 
 Rules:
 
 - Switching demo ↔ trial just changes `trial_source`; on conversion, demo sample data is cleared (with a "keep my data" choice for trial users).
 - Reminders: day 7, day 11, day 13, and on expiry (email + in-app banner).
-- On expiry with no payment: status → `suspended` (read-only for 30 days, then data archived). The user can still log in, see data, and upgrade.
+- On expiry with no payment: status → `suspended` / `past_due` (read-only for 30 days, then data archived). The user can still log in, see data, and upgrade.
 - One trial per organisation / company registration number / admin email.
 
 ---
@@ -313,39 +316,52 @@ The pricing section, the upgrade prompts, feature gating and Paystack checkout s
 
 ---
 
-## 8. Database changes needed to adopt this model
+## 8. Database schema & entitlement architecture (Implemented)
+
+The Paystack billing model is implemented in PostgreSQL via migration `supabase/migrations/20260816120000_paystack_billing_entitlements.sql` and `server/routes/billing.ts`:
 
 ```sql
--- 1. Plan names: add trial + pro, retire business
-ALTER TYPE subscription_plan ADD VALUE IF NOT EXISTS 'trial';
-ALTER TYPE subscription_plan ADD VALUE IF NOT EXISTS 'pro';
--- (separate migration) UPDATE subscriptions SET plan='pro' WHERE plan='business';
---                      UPDATE plan_features SET plan='pro' WHERE plan='business';
+-- 1. Subscriptions table enhancement for Paystack billing states & credentials
+ALTER TABLE public.subscriptions
+  ADD COLUMN IF NOT EXISTS billing_state text NOT NULL DEFAULT 'trial'
+    CONSTRAINT subscriptions_billing_state_chk CHECK (
+      billing_state IN ('trial', 'pending_payment_method', 'active', 'past_due', 'cancelled')
+    ),
+  ADD COLUMN IF NOT EXISTS provider text,
+  ADD COLUMN IF NOT EXISTS provider_customer_code text,
+  ADD COLUMN IF NOT EXISTS provider_subscription_code text,
+  ADD COLUMN IF NOT EXISTS provider_plan_code text,
+  ADD COLUMN IF NOT EXISTS provider_reference text,
+  ADD COLUMN IF NOT EXISTS trial_started_at timestamptz,
+  ADD COLUMN IF NOT EXISTS billing_started_at timestamptz,
+  ADD COLUMN IF NOT EXISTS access_ends_at timestamptz,
+  ADD COLUMN IF NOT EXISTS cancelled_at timestamptz,
+  ADD COLUMN IF NOT EXISTS payment_method_summary jsonb NOT NULL DEFAULT '{}'::jsonb;
 
--- 2. Billing columns on subscriptions
-ALTER TABLE subscriptions
-  ADD COLUMN billing_interval text DEFAULT 'monthly',      -- monthly | annual
-  ADD COLUMN trial_ends_at timestamptz,
-  ADD COLUMN trial_source text,                            -- self_serve | demo
-  ADD COLUMN cancel_at_period_end boolean DEFAULT false,
-  ADD COLUMN paystack_customer_code text,
-  ADD COLUMN paystack_subscription_code text,
-  ADD COLUMN paystack_email_token text,
-  ADD COLUMN paystack_authorization_code text;
-
--- 3. Limits table (numbers live in data, not code)
-CREATE TABLE plan_limits (plan subscription_plan, limit_key text, value integer, PRIMARY KEY (plan, limit_key));
-
--- 4. Invoices
-CREATE TABLE billing_invoices (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organisation_id uuid REFERENCES organisations(id),
-  paystack_reference text UNIQUE, amount_cents integer, currency text DEFAULT 'ZAR',
-  kind text,               -- subscription | overage | proration
-  status text,             -- pending | paid | failed | refunded
-  period_start date, period_end date, created_at timestamptz DEFAULT now());
+-- 2. Webhook idempotency and audit ledger
+CREATE TABLE IF NOT EXISTS public.billing_webhook_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider text NOT NULL CONSTRAINT billing_webhook_events_provider_chk CHECK (provider = 'paystack'),
+  event_key text NOT NULL,
+  event_type text NOT NULL,
+  auth0_org_id text REFERENCES public.organizations(auth0_org_id) ON DELETE SET NULL,
+  provider_reference text,
+  payload jsonb NOT NULL,
+  received_at timestamptz NOT NULL DEFAULT now(),
+  processed_at timestamptz,
+  processing_error text,
+  CONSTRAINT billing_webhook_events_event_key_key UNIQUE (provider, event_key)
+);
 ```
 
-Plus: `has_feature()` should also allow `trialing` only while `trial_ends_at > now()`.
+### Entitlement Enforcement
+
+1. **`requireOperationalAccess` Middleware:** In `server/lib/auth-middleware.ts`, all operational API routes (`/api/org-*`, `/api/compliance`, `/api/labour-*`, `/api/payroll-export`, `/api/safety/*`, `/api/support/*`) are guarded. An organization has operational access if:
+   - Its plan is `trial` and `access_ends_at` (or `trial_ends_at`) is in the future (or not set), OR
+   - Its `billing_state` is `active`, OR
+   - Its `billing_state` is `trial` with unexpired `access_ends_at`.
+2. **Onboarding & Invitations Grace:** Team invitations (`/api/invitations`) and initial onboarding setup (`/api/onboarding`) are intentionally exempted from the hard payment gate so organization admins can invite members during initial setup before billing is finalized.
+3. **Webhook Verification:** Paystack webhooks (`POST /api/billing/webhooks/paystack`) verify the raw request bytes against `process.env.PAYSTACK_SECRET_KEY` using HMAC-SHA512 (`x-paystack-signature` header) before processing subscription activations, cancellations, and renewals.
 
 ---
 

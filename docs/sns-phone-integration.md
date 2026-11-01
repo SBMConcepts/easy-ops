@@ -90,7 +90,8 @@ and 9 (flexible identifiers).
     yet authenticated.
 - `src/pages/InviteAccept.tsx`: Handles `/accept-invite/:token`, resolves the token,
   and calls `login({ auth0OrgId })` → `/api/login?organization=...` for
-  Universal Login signup. The route is added in `src/App.tsx`.
+  Universal Login signup. The route is added in `src/App.tsx` alongside a backward-compatible
+  redirect from `/invite/:token` to `/accept-invite/:token`.
 - `src/pages/workspace/Members.tsx` and
   `src/components/employees/InviteEmployeeDialog.tsx`: Both invitation entry
   points include an Email/Phone toggle.
@@ -167,9 +168,10 @@ identifier-agnostic.
 2. In production, set `OIDC_BASE_URL` to the canonical HTTPS app origin (not
    localhost). `BASE_URL` and `APP_URL`, when present, must name that same
    origin because they are fallbacks for public invitation links and OIDC
-   callbacks. Set `VITE_APP_URL` to the browser app origin for cross-origin
-   API deployments; leave `VITE_API_URL` unset for Vercel's same-origin `/api`
-   deployment, or set it to the public API base for a split deployment.
+   callbacks (defaulting to `http://localhost:5173` in local development).
+   Set `VITE_APP_URL` to the browser app origin for cross-origin API deployments;
+   leave `VITE_API_URL` unset for Vercel's same-origin `/api` deployment, or set
+   it to `http://localhost:3000/api` for a split local setup.
 3. Invite a real user by phone from the Members or Team Members page and
    confirm that the SMS arrives with a working `/accept-invite/:token` link. Open it
    in a fresh browser session and verify its assets load from `/assets/*`, not

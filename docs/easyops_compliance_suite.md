@@ -94,18 +94,18 @@ In compliance with Section 43 of the **Electronic Communications and Transaction
 
 ### 2.1 ECTA Section 43 Statutory Disclosure Table
 
-| ECTA Disclosure Metric                 | Statutory Particulars of Provider                                                                                                |
-| :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
-| **Registered Legal Name**              | EasyOps (Pty) Ltd                                                                                                                |
-| **Registration Number**                | 2026/117190/07                                                                                                                   |
-| **Directors / Office Bearers**         | _[As per CIPC Registration]_                                                                                                     |
-| **Physical Address**                   | _[Provided on request/invoice]_                                                                                                  |
-| **Telephone Number**                   | _[Provided on request]_                                                                                                          |
-| **Email Address**                      | <legal@easyops.co.za>                                                                                                            |
-| **Official Website URL**               | [https://easy-ops-com.vercel.app](https://easy-ops-com.vercel.app)                                                               |
-| **Physical Address for Legal Service** | _[Provided on request]_                                                                                                          |
-| **Governing Law**                      | Republic of South Africa                                                                                                         |
-| **Dispute Resolution**                 | Internal escalations to <compliance@easyops.co.za>; failing which, reference to AFSA (Arbitration Foundation of Southern Africa) |
+| ECTA Disclosure Metric                 | Statutory Particulars of Provider                                                                                           |
+| :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------- |
+| **Registered Legal Name**              | EasyOps (Pty) Ltd                                                                                                           |
+| **Registration Number**                | 2026/117190/07                                                                                                              |
+| **Directors / Office Bearers**         | _[As per CIPC Registration]_                                                                                                |
+| **Physical Address**                   | _[Provided on request/invoice]_                                                                                             |
+| **Telephone Number**                   | _[Provided on request]_                                                                                                     |
+| **Email Address**                      | <admin@easyops.co.za>                                                                                                       |
+| **Official Website URL**               | [https://www.easyops.co.za](https://www.easyops.co.za)                                                                      |
+| **Physical Address for Legal Service** | _[Provided on request]_                                                                                                     |
+| **Governing Law**                      | Republic of South Africa                                                                                                    |
+| **Dispute Resolution**                 | Internal escalations to <admin@easyops.co.za>; failing which, reference to AFSA (Arbitration Foundation of Southern Africa) |
 
 ### 2.2 Product Pricing and VAT Policy
 
