@@ -14,15 +14,15 @@ import { Loader2, Save, ShieldAlert } from 'lucide-react'
 
 // Define the validation rules mirroring backend restrictions (e.g., South African BCEA benchmarks)
 const complianceSchema = z.object({
-  max_ordinary_hours_per_week: z.coerce
+  max_ordinary_hours_per_week: z
     .number()
     .min(1, 'Must be at least 1 hour')
     .max(60, 'Exceeds maximum logical regular work week parameters'),
-  max_overtime_hours_per_week: z.coerce
+  max_overtime_hours_per_week: z
     .number()
     .min(0, 'Overtime cannot be negative')
     .max(30, 'Exceeds standard safe legal limits'),
-  lookback_weeks: z.coerce
+  lookback_weeks: z
     .number()
     .min(1, 'Lookback window must be at least 1 week')
     .max(52, 'Lookback history cannot exceed a full calendar year'),
