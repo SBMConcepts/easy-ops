@@ -1,26 +1,9 @@
-import { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 
 const NotFound = () => {
   const location = useLocation()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    const previousTitle = document.title
-    document.title = 'Page not found | EasyOps'
-
-    // The SPA serves unknown routes with a 200, so tell crawlers not to index them.
-    const meta = document.createElement('meta')
-    meta.name = 'robots'
-    meta.content = 'noindex'
-    document.head.appendChild(meta)
-
-    return () => {
-      document.title = previousTitle
-      meta.remove()
-    }
-  }, [])
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted px-6">

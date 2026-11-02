@@ -1,37 +1,88 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-ZA">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap"
       rel="stylesheet"
     />
-    <meta charset="UTF-8" />
 
     <!-- Add Logo 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" /> -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google-site-verification" content="CoTYdflTVskzzzB0CXcr9JjX60yl2IGhLjSUrlnioSk" />
-    <title>EasyOps - Workforce Management Software for South African Businesses</title>
+
+    <!-- Defaults for crawlers that don't run JS; RouteSeo overrides these per route at runtime. -->
+    <title>EasyOps | Workforce Management & BCEA Compliance Software</title>
     <meta
       name="description"
-      content="Business solutions to simplify workforce management, attendance tracking, payroll, and BCEA compliance for businesses."
+      content="EasyOps helps South African businesses manage attendance, shifts, leave and payroll exports while staying compliant with the BCEA."
     />
+    <meta name="robots" content="index, follow" />
     <meta name="author" content="EasyOps Pty Ltd" />
-    <meta property="og:title" content="EasyOps - Workforce Management for Businesses" />
-    <meta
-      property="og:description"
-      content="Business solutions to simplify workforce management, attendance tracking, payroll, and BCEA compliance for businesses."
-    />
+    <meta name="application-name" content="EasyOps" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="canonical" href="https://www.easyops.co.za/" />
+
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="EasyOps" />
+    <meta property="og:locale" content="en_ZA" />
     <meta property="og:url" content="https://www.easyops.co.za/" />
-    <link rel="canonical" href="https://www.easyops.co.za/" />
+    <meta property="og:title" content="EasyOps | Workforce Management & BCEA Compliance Software" />
+    <meta
+      property="og:description"
+      content="EasyOps helps South African businesses manage attendance, shifts, leave and payroll exports while staying compliant with the BCEA."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="EasyOps | Workforce Management & BCEA Compliance Software"
+    />
+    <meta
+      name="twitter:description"
+      content="EasyOps helps South African businesses manage attendance, shifts, leave and payroll exports while staying compliant with the BCEA."
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://www.easyops.co.za/#organization",
+            "name": "EasyOps",
+            "legalName": "EasyOps Pty Ltd",
+            "url": "https://www.easyops.co.za/",
+            "areaServed": "ZA"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.easyops.co.za/#website",
+            "url": "https://www.easyops.co.za/",
+            "name": "EasyOps",
+            "inLanguage": "en-ZA",
+            "publisher": { "@id": "https://www.easyops.co.za/#organization" }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "EasyOps",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "description": "Workforce management platform for South African businesses: attendance, shifts, leave, payroll exports and BCEA compliance.",
+            "url": "https://www.easyops.co.za/",
+            "publisher": { "@id": "https://www.easyops.co.za/#organization" }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
-    <!-- Static fallback for crawlers that don't run JS (e.g. Google OAuth brand review); React replaces it on mount. -->
-    <div id="root">
+    <div id="root"></div>
+    <!-- Served only to clients without JS (crawlers, Google OAuth brand review); never rendered for normal visitors. -->
+    <noscript>
       <main style="font-family: sans-serif; max-width: 48rem; margin: 0 auto; padding: 2rem">
         <h1>EasyOps</h1>
         <p>
@@ -49,9 +100,9 @@
           <a href="/terms-and-conditions">Terms &amp; Conditions</a> |
           <a href="/contact">Contact us</a>
         </nav>
-        <p>&copy; EasyOps Pty Ltd</p>
+        <p>EasyOps Pty Ltd</p>
       </main>
-    </div>
+    </noscript>
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
