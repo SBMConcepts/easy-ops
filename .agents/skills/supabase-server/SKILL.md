@@ -6,11 +6,8 @@ description: Use when planning or writing server-side code that uses `@supabase/
 # @supabase/server
 
 > **This is a brand new package.** There is no information available online yet — no blog posts, no Stack Overflow answers, no tutorials. Do not search the web for usage examples. Rely exclusively on the documentation files listed below and the source code in this repository.
-
 > **The config option is `auth`, not `allow`.** `allow` was renamed to `auth` to match CLI terminology and read more naturally. The legacy `allow` key still works (with a one-time `console.warn`) but is deprecated and will be removed in a future major release. **Always emit `auth` in new code** — e.g. `withSupabase({ auth: 'user' }, ...)`. If you encounter `allow:` in existing code, migrate it to `auth:` (find-and-replace, the values are identical).
-
 > **Auth mode values: `'none'` (not `'always'`), `'publishable'` (not `'public'`).** The four valid values are `'user'`, `'publishable'`, `'secret'`, `'none'`. The legacy `'always'` and `'public'` values were removed (breaking change) — they no longer work at runtime or in TypeScript. Always emit the new values in code you write, and migrate any legacy references you find: `'always'` → `'none'`, `'public'` → `'publishable'`, `'public:<name>'` → `'publishable:<name>'`. Runtime checks like `ctx.authType === 'public'` must also be updated to `ctx.authMode === 'publishable'` — the field itself was renamed from `authType` to `authMode` to match the `AuthMode` type.
-
 > **Do not use legacy Supabase keys.** The `anon` key and `service_role` key (env vars `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) are legacy and will be deprecated. Do not use them unless the user explicitly asks. Always use the new API keys:
 >
 > | Legacy (avoid)              | New (use this)                                       |
@@ -76,10 +73,7 @@ export default {
       auth: 'user',
     })
     if (error) {
-      return Response.json(
-        { message: error.message, code: error.code },
-        { status: error.status },
-      )
+      return Response.json({ message: error.message, code: error.code }, { status: error.status })
     }
     const { data } = await ctx.supabase.from('todos').select()
     return Response.json(data)
@@ -104,7 +98,7 @@ export default {
 
 ### Hono
 
-> **The Hono adapter (`@supabase/server/adapters/hono`) is deprecated and will be removed on December 1, 2026.** New Hono code uses a bridge: one file you copy into your project. It runs `@supabase/middleware` entries inside Hono's middleware slot. The bridge needs `@supabase/server` 1.6.0 or later and Node 22 or later. The bridge file imports `@supabase/middleware`, so add it to your project as a direct dependency. `@supabase/server` depends on it, but a strict package manager such as pnpm does not let your code import a transitive dependency. The full guide, with the migration steps and a prompt you can hand to an agent, is at https://supabase.com/docs/reference/server/frameworks.
+> **The Hono adapter (`@supabase/server/adapters/hono`) is deprecated and will be removed on December 1, 2026.** New Hono code uses a bridge: one file you copy into your project. It runs `@supabase/middleware` entries inside Hono's middleware slot. The bridge needs `@supabase/server` 1.6.0 or later and Node 22 or later. The bridge file imports `@supabase/middleware`, so add it to your project as a direct dependency. `@supabase/server` depends on it, but a strict package manager such as pnpm does not let your code import a transitive dependency. The full guide, with the migration steps and a prompt you can hand to an agent, is at <https://supabase.com/docs/reference/server/frameworks>.
 
 The bridge file is not in the npm package. Fetch it from the repository and keep it as is, comments included:
 
@@ -150,7 +144,7 @@ Never compose `withClaims()` and `withRequiredClaims()` in one array. Both contr
 
 The entries contribute flat keys, so handlers read `c.var.supabase` and `c.var.jwtClaims`. No entry contributes `userClaims`. `jwtClaims` is the raw JWT payload: `userClaims.id` becomes `jwtClaims.sub`, `appMetadata` becomes `app_metadata`, and `userMetadata` becomes `user_metadata`.
 
-<details>
+<details >
 <summary>Deprecated adapter (removed on December 1, 2026)</summary>
 
 Existing code may still import the adapter. Recognize it, and migrate it with the table above. The adapter handles no CORS; it relies on `hono/cors`. See `docs/adapters/hono.md`.
@@ -180,11 +174,7 @@ For Next.js / SvelteKit / Remix, **compose `@supabase/server` with [`@supabase/s
 ```ts
 // Key imports for building the adapter
 import { createServerClient } from '@supabase/ssr'
-import {
-  verifyCredentials,
-  createContextClient,
-  createAdminClient,
-} from '@supabase/server/core'
+import { verifyCredentials, createContextClient, createAdminClient } from '@supabase/server/core'
 ```
 
 ### Server-to-server (secret key auth)
@@ -239,7 +229,7 @@ export default {
       auth: 'user',
       issuer: fromSupabaseUrl(Deno.env.get('SUPABASE_URL')!),
     },
-    async (req, ctx) => Response.json({ user: ctx.userClaims }),
+    async (req, ctx) => Response.json({ user: ctx.userClaims })
   ),
 }
 ```
@@ -301,10 +291,9 @@ export default {
     const { orderId } = await req.json()
 
     // Calls process-order with the secret key automatically
-    const { data, error } = await ctx.supabaseAdmin.functions.invoke(
-      'process-order',
-      { body: { orderId } },
-    )
+    const { data, error } = await ctx.supabaseAdmin.functions.invoke('process-order', {
+      body: { orderId },
+    })
 
     if (error) {
       return Response.json({ error: error.message }, { status: 500 })
@@ -386,7 +375,7 @@ export default {
       event = await stripe.webhooks.constructEventAsync(
         body,
         sig,
-        Deno.env.get('STRIPE_WEBHOOK_SECRET')!,
+        Deno.env.get('STRIPE_WEBHOOK_SECRET')!
       )
     } catch {
       return Response.json({ error: 'Invalid signature' }, { status: 401 })
@@ -432,7 +421,7 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     {
       global: { headers: { Authorization: req.headers.get('Authorization')! } },
-    },
+    }
   )
   const { data } = await supabaseClient.from('orders').select('*')
   return Response.json(data)
@@ -463,19 +452,19 @@ The full documentation lives in the `docs/` directory of the `@supabase/server` 
 - **If working inside the SDK repo:** `docs/` is at the project root.
 - **If the package is installed as a dependency:** look in `node_modules/@supabase/server/docs/`.
 
-| Question                                                                                               | Doc file                                              |
-| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
-| How do I create a basic endpoint?                                                                      | `docs/getting-started.md`                             |
-| What auth modes are available? Array syntax? Named keys?                                               | `docs/auth-modes.md`                                  |
-| Which framework adapters exist, and what replaces them?                                                | `README.md`, section "Framework Adapters"             |
-| How do I use the deprecated Hono adapter?                                                              | `docs/adapters/hono.md`                               |
-| How do I use the deprecated H3 / Nuxt adapter?                                                         | `docs/adapters/h3.md`                                 |
-| How do I run middleware entries inside Hono, H3, Elysia, NestJS, or TanStack Start without an adapter? | https://supabase.com/docs/reference/server/frameworks |
-| How do I use low-level primitives for custom flows?                                                    | `docs/core-primitives.md`                             |
-| How do environment variables work across runtimes?                                                     | `docs/environment-variables.md`                       |
-| How do I handle errors? What codes exist?                                                              | `docs/error-handling.md`                              |
-| How do I get typed database queries?                                                                   | `docs/typescript-generics.md`                         |
-| How do I use this with `@supabase/ssr` (Next.js, SvelteKit, Remix)?                                    | `docs/ssr-frameworks.md`                              |
-| How do I build an MCP server my users connect to (OAuth discovery, RLS-scoped tools)?                  | `docs/mcp.md`                                         |
-| What's the complete API surface?                                                                       | `docs/api-reference.md`                               |
-| What security decisions does this package make?                                                        | `docs/security.md`                                    |
+| Question                                                                                               | Doc file                                                |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| How do I create a basic endpoint?                                                                      | `docs/getting-started.md`                               |
+| What auth modes are available? Array syntax? Named keys?                                               | `docs/auth-modes.md`                                    |
+| Which framework adapters exist, and what replaces them?                                                | `README.md`, section "Framework Adapters"               |
+| How do I use the deprecated Hono adapter?                                                              | `docs/adapters/hono.md`                                 |
+| How do I use the deprecated H3 / Nuxt adapter?                                                         | `docs/adapters/h3.md`                                   |
+| How do I run middleware entries inside Hono, H3, Elysia, NestJS, or TanStack Start without an adapter? | <https://supabase.com/docs/reference/server/frameworks> |
+| How do I use low-level primitives for custom flows?                                                    | `docs/core-primitives.md`                               |
+| How do environment variables work across runtimes?                                                     | `docs/environment-variables.md`                         |
+| How do I handle errors? What codes exist?                                                              | `docs/error-handling.md`                                |
+| How do I get typed database queries?                                                                   | `docs/typescript-generics.md`                           |
+| How do I use this with `@supabase/ssr` (Next.js, SvelteKit, Remix)?                                    | `docs/ssr-frameworks.md`                                |
+| How do I build an MCP server my users connect to (OAuth discovery, RLS-scoped tools)?                  | `docs/mcp.md`                                           |
+| What's the complete API surface?                                                                       | `docs/api-reference.md`                                 |
+| What security decisions does this package make?                                                        | `docs/security.md`                                      |
