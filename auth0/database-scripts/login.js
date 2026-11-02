@@ -4,7 +4,8 @@
  *
  * `identifier` is whatever the user typed on the identifier-first screen —
  * with Flexible Identifiers enabled it may be an email OR a phone number, so
- * this matches user_credentials on either column.
+ * this matches user_credentials on either column. Only password credentials
+ * (identity_provider = 'auth0') are considered; Google/SMS rows have no hash.
  */
 function login(identifier, password, callback) {
   const bcrypt = require('bcrypt')
@@ -42,7 +43,8 @@ function login(identifier, password, callback) {
     const sql =
       'SELECT id, auth0_org_id, auth0_user_id, email, mobile_number, password_hash, ' +
       'email_verified, phone_verified, status ' +
-      'FROM public.user_credentials WHERE lower(email) = lower($1) OR mobile_number = $1 LIMIT 1'
+      'FROM public.user_credentials WHERE (lower(email) = lower($1) OR mobile_number = $1) ' +
+      "AND identity_provider = 'auth0' AND password_hash IS NOT NULL LIMIT 1"
 
     client.query(sql, [normalized], function (queryErr, result) {
       if (queryErr) {

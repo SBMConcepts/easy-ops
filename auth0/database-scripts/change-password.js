@@ -53,7 +53,8 @@ function changePassword(identifier, newPassword, callback) {
       const sql =
         'UPDATE public.user_credentials ' +
         'SET password_hash = $2, updated_at = now() ' +
-        'WHERE (lower(email) = lower($1) OR mobile_number = $1) AND status <> $3'
+        'WHERE (lower(email) = lower($1) OR mobile_number = $1) AND status <> $3 ' +
+        "AND identity_provider = 'auth0'"
 
       client.query(sql, [normalized, passwordHash, 'deleted'], function (queryErr, result) {
         client.end()

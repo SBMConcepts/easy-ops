@@ -46,7 +46,7 @@ function verify(email, callback) {
     const sql =
       'UPDATE public.user_credentials ' +
       'SET email_verified = true, auth0_org_id = auth0_org_id, updated_at = now() ' +
-      'WHERE lower(email) = $1 AND status <> $2'
+      "WHERE lower(email) = $1 AND status <> $2 AND identity_provider = 'auth0'"
 
     client.query(sql, [normalizedEmail, 'deleted'], function (queryErr, result) {
       client.end()

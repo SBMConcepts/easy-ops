@@ -117,10 +117,10 @@ function create(user, callback) {
           'new_cred AS (' +
           '  INSERT INTO public.user_credentials ' +
           '    (id, auth0_user_id, auth0_org_id, email, mobile_number, full_name, password_hash, ' +
-          '     email_verified, phone_verified, status) ' +
+          '     email_verified, phone_verified, status, identity_provider) ' +
           '  SELECT gen.cred_id, new_user.auth0_user_id, $3, $1, $7, $5, $4, ' +
           '    ($1::text IS NOT NULL), $8, ' +
-          "    'active' FROM gen, new_user " +
+          "    'active', 'auth0' FROM gen, new_user " +
           '  RETURNING id, auth0_user_id' +
           '), ' +
           'new_member AS (' +

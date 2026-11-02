@@ -8,7 +8,9 @@
  *
  * Return the profile if found, or callback(null) (no error, no user) if not —
  * never surface a database miss as an error, and never reveal account status, so
- * the connection does not leak whether an identifier is registered.
+ * the connection does not leak whether an identifier is registered. Federated
+ * (google-oauth2 / sms) credentials are ignored: only identity_provider =
+ * 'auth0' rows belong to this connection.
  *
  * Sandbox globals used: configuration.
  */
@@ -45,7 +47,8 @@ function getByEmail(identifier, callback) {
     const sql =
       'SELECT id, auth0_org_id, auth0_user_id, email, mobile_number, email_verified, ' +
       'phone_verified, status ' +
-      'FROM public.user_credentials WHERE lower(email) = lower($1) OR mobile_number = $1 LIMIT 1'
+      'FROM public.user_credentials WHERE (lower(email) = lower($1) OR mobile_number = $1) ' +
+      "AND identity_provider = 'auth0' LIMIT 1"
 
     client.query(sql, [normalized], function (queryErr, result) {
       client.end()
