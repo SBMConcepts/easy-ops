@@ -1,4 +1,6 @@
-const PAYSTACK_API_BASE_URL = 'https://api.paystack.co'
+const PAYSTACK_API_BASE_URL = process.env.PAYSTACK_API_BASE_URL || 'https://api.paystack.co'
+
+const PAYSTACK_CALLBACK_URL = process.env.PAYSTACK_CALLBACK_URL
 
 interface PaystackApiResponse<T> {
   status: boolean
@@ -70,6 +72,9 @@ export function getPaystackPlanCode(plan: string): string {
     starter: process.env.PAYSTACK_PLAN_STARTER,
     growth: process.env.PAYSTACK_PLAN_GROWTH,
     pro: process.env.PAYSTACK_PLAN_PRO,
+    starter_annual: process.env.PAYSTACK_PLAN_STARTER_ANNUAL,
+    growth_annual: process.env.PAYSTACK_PLAN_GROWTH_ANNUAL,
+    pro_annual: process.env.PAYSTACK_PLAN_PRO_ANNUAL,
   }
   const planCode = planCodes[plan]
   if (!planCode) {

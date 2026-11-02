@@ -45,7 +45,7 @@ export async function verifyAuth0Token(token: string): Promise<Auth0Claims> {
 
   const { payload } = await jwtVerify(token, getJwks(), {
     issuer: getIssuer(),
-    audience,
+    audience: process.env.AUTH0_AUDIENCE,
   })
 
   // The Post-Login Action namespaces the org id as auth0_org_id, not org_id.
