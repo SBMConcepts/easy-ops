@@ -79,7 +79,7 @@
 -------------------------------------------------------------------------------
  SECTION 4 — Action Secrets (Dashboard -> Actions -> post-login -> Secrets)
 -------------------------------------------------------------------------------
- [ ] BACKEND_URL        : https://easy-ops-com.vercel.app   (Express API origin)
+ [ ] BACKEND_URL        : https://api.easyops.com/api   (live Express API base)
  [ ] AUTH0_SYNC_SECRET  : must equal server env AUTH0_SYNC_SECRET (x-api-key)
 
 -------------------------------------------------------------------------------
