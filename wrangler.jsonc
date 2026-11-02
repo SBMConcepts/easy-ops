@@ -45,7 +45,7 @@
         "BASE_URL": "https://www.easyops.co.za",
         "BILLING_TRIAL_DAYS": "14",
         "AUTH0_DB_CONNECTION_NAME": "Username-Password-Authentication",
-        "DATABASE_URL": "postgresql://postgres.mmpllukhcjwlwqgshudt:2hQunbia8sF8jSuO@aws-0-eu-west-1.pooler.supabase.com:5432/postgres",
+        "DATABASE_URL": "https://mmpllukhcjwlwqgshudt.supabase.co",
         "OIDC_BASE_URL": "http://localhost:5173",
         "PAYSTACK_CALLBACK_URL": "https://www.easyops.co.za/app/workspace/billing?checkout=complete",
         "PAYSTACK_PLAN_GROWTH": "PLN_ks82jmc0mvl305b",
