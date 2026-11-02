@@ -1,5 +1,6 @@
 services:
   dev:
+    profiles: ['dev']
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -12,32 +13,41 @@ services:
       - ./server:/app/server
       - ./public:/app/public
       - node_modules:/app/node_modules
+    env_file:
+      - path: .env
+        required: false
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:3000
+      # Bind mounts on Windows/macOS don't emit file events
+      - CHOKIDAR_USEPOLLING=true
     develop:
       watch:
-        - action: sync
-          path: ./src
-          target: /app/src
-        - action: sync
-          path: ./server
-          target: /app/server
         - action: rebuild
           path: package.json
 
   prod:
+    profiles: ['prod']
     build:
       context: .
       dockerfile: Dockerfile
     container_name: easyops-prod
     ports:
       - '3000:3000'
+    env_file:
+      - path: .env
+        required: false
     environment:
       - NODE_ENV=production
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3000/health']
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

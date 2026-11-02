@@ -3,50 +3,44 @@ FROM node:26 AS frontend-build
 
 WORKDIR /app
 
-# Install dependencies
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
-# Build frontend (skip TS type checking due to existing type errors)
+# vite build only; type checking is separate (tsc -b is part of `npm run build`)
 COPY . .
-RUN npm run build 2>&1 | grep -v "error TS" || npx vite build
+RUN npx vite build
 
 # Build stage - Backend
 FROM node:26 AS backend-build
 
 WORKDIR /app
 
-# Install dependencies
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
-# Build backend TypeScript
 COPY server ./server
 RUN npm run build:server
 
 # Final stage - Production runtime
-FROM node:26
+FROM node:26-slim
 
 WORKDIR /app
+ENV NODE_ENV=production
 
-# Install dumb-init for proper signal handling
-RUN apt-get update && apt-get install -y dumb-init && rm -rf /var/lib/apt/lists/*
+# dumb-init for proper signal handling
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends dumb-init \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+# Production dependencies first for better layer caching
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
 
-# Copy built backend from backend-build stage
-COPY --from=backend-build /app/dist/server ./server
+COPY --from=backend-build --chown=node:node /app/dist/server ./server
+COPY --from=frontend-build --chown=node:node /app/dist ./public
 
-# Copy built frontend from frontend-build stage
-COPY --from=frontend-build /app/dist ./public
-
-# Copy production dependencies
-COPY --chown=nodejs:nodejs package.json package-lock.json ./
-RUN npm install --omit=dev
-
-# Switch to non-root user
-USER nodejs
+# Built-in non-root user from the official node image
+USER node
 
 # Expose port for API
 EXPOSE 3000
