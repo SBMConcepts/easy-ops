@@ -173,8 +173,7 @@ enable_refresh_token_rotation = true
 # Requires enable_refresh_token_rotation = true.
 refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
-# Off: Auth0 is the only identity provider; Supabase just verifies the Auth0-minted JWT.
-enable_signup = false
+enable_signup = true
 # Allow/disallow anonymous sign-ins to your project.
 enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
@@ -219,7 +218,7 @@ web3 = 30
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.
-enable_signup = false
+enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
@@ -371,32 +370,6 @@ enabled = false
 authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
-
-# Predictive Labour Forecasting generator. It verifies the Auth0 access token
-# itself (supabase/functions/_shared/auth0.ts), so the platform JWT gate is off.
-[functions.labour-forecast]
-enabled = true
-verify_jwt = false
-
-# Forecast accuracy uses the same authenticated Express proxy and shared secret
-# as labour-forecast, so Supabase's platform JWT gate remains disabled.
-[functions.forecast-accuracy]
-enabled = true
-verify_jwt = false
-
-# Payroll Export Pro generator. Authenticated by the Express proxy via a shared
-# secret (PAYROLL_FN_SECRET) or an Auth0 Bearer fallback, so the platform JWT
-# gate is off.
-[functions.payroll-export]
-enabled = true
-verify_jwt = false
-
-# Premium Support ticket creator (stamps plan-based SLA deadlines). Authenticated
-# by the Express proxy via a shared secret (SUPPORT_FN_SECRET) or an Auth0 Bearer
-# fallback, so the platform JWT gate is off.
-[functions.support-ticket]
-enabled = true
-verify_jwt = false
 
 [edge_runtime]
 enabled = true
