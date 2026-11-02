@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /app
+Disallow: /accept-invite/
+Disallow: /invite/
+Disallow: /reset-password
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://www.easyops.co.za/sitemap.xml
