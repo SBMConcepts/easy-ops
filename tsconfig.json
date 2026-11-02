@@ -25,6 +25,7 @@
     "api",
     "vite.config.ts,",
     "server",
+    "worker",
     ".agents/skills/auth0-saas-builder/scripts/audit-security.ts"
   ],
   "exclude": ["supabase", "node_modules", "dist"]
