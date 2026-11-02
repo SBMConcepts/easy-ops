@@ -30,7 +30,6 @@
         "AUTH0_MANAGEMENT_API": "https://easyops.us.auth0.com/api/v2/",
         "AUTH0_MANAGEMENT_ID": "6a345483996c4d02ca8e61cd",
         "AUTH0_ORG_ADMIN_ROLE_ID": "rol_Fr1xsvzfJDspJe0I",
-        "AUTH0_SMS_CONNECTION_ID": "730527787519-uv13r4uumvrdsc98dm4dljeec0vn6cdq.apps.googleusercontent.com",
         "AWS_ACCESS_KEY_ID": "AKIA57WDOY534C3XKYFN",
         "AWS_REGION": "us-east-1",
         "AWS_SNS_SENDER_ID": "27EASYOPS",
