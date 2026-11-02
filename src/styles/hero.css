@@ -151,6 +151,16 @@
   height: 1.5rem;
 }
 
+.hero-legal-links {
+  font-size: 0.875rem;
+  color: var(--onboarding-text-secondary);
+}
+
+.hero-legal-links a {
+  text-decoration: underline;
+  color: inherit;
+}
+
 /* ── Stats ── */
 .hero-stats-section {
   display: flex;

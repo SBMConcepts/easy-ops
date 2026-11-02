@@ -151,6 +151,12 @@ const Hero = () => {
                 </button>
               </div>
 
+              <p className="hero-legal-links">
+                EasyOps supports sign-in with email, phone or Google. See our{' '}
+                <a href="/privacy">Privacy Policy</a> and{' '}
+                <a href="/terms-and-conditions">Terms &amp; Conditions</a>.
+              </p>
+
               <div className="hero-stats-section">
                 {stats.map((stat, index) => (
                   <div key={index} className="hero-stat-container">
