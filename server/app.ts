@@ -111,8 +111,8 @@ app.post(
 
 app.use(express.json())
 
-// Liveness/health probe.
-app.get('/api/health', (_req: Request, res: Response) => {
+// Liveness/health probe; `/api` itself answers too so the bare API URL isn't a 404.
+app.get(['/api', '/api/health'], (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
