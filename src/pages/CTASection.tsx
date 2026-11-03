@@ -8,7 +8,7 @@ const CTASection = () => {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
-    <div className="cta-section" id="contact">
+    <div className="cta-section" id="cta">
       <div className="cta-container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -90,18 +90,20 @@ async function resolveDbConnectionId(): Promise<string> {
   )
 }
 
-/** Database connection plus the optional Google and passwordless-SMS connections. */
+/** Connections enabled on every org; Google/SMS are disabled until supported. */
 async function resolveOrgConnectionIds(): Promise<string[]> {
   const ids = [
     await resolveDbConnectionId(),
-    process.env.AUTH0_GOOGLE_CONNECTION_ID?.trim(),
-    process.env.AUTH0_SMS_CONNECTION_ID?.trim(),
+    // Future: Auth0 rejects is_signup_enabled on non-database connections, so
+    // enableOneOrgConnection must stop sending it for these before re-enabling.
+    // process.env.AUTH0_GOOGLE_CONNECTION_ID?.trim(),
+    // process.env.AUTH0_SMS_CONNECTION_ID?.trim(),
   ]
   return [...new Set(ids.filter((id): id is string => Boolean(id)))]
 }
 
 /**
- * Enable every configured login connection (database, Google, SMS) on an
+ * Enable the configured login connection (database only for now) on an
  * organization so its members can log in and accept invitations.
  *
  * Auth0 orgs start with zero enabled connections. Both

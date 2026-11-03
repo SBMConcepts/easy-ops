@@ -10,10 +10,10 @@ const NAV_ITEMS = [
   { label: 'How It Works', id: 'how-it-works' },
   { label: 'Benefits', id: 'benefits' },
   { label: 'Pricing', id: 'pricing' },
-  { label: 'Contact', id: 'cta' },
+  { label: 'Demo', id: 'cta' },
 ] as const
 
-type NavId = (typeof NAV_ITEMS)[number]['id']
+type NavId = ['id'] | ['to']
 
 /** Marketing-site top navigation bar: scroll-spy section links, mobile drawer, and the demo-request modal trigger. */
 export default function TopNavBar() {
@@ -57,7 +57,7 @@ export default function TopNavBar() {
         if (isClickScrolling.current) return
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setActiveItem(entry.target.id as NavId)
+            setActiveItem(['id'])
           }
         })
       },
@@ -76,7 +76,7 @@ export default function TopNavBar() {
   }, [])
 
   const scrollToSection = (id: NavId) => {
-    const section = document.getElementById(id)
+    const section = document.getElementById(id?.toString() ?? '')
     if (!section) return
 
     const navbarHeight = navRef.current?.offsetHeight ?? 0
@@ -118,7 +118,12 @@ export default function TopNavBar() {
         <div className="top-navbar-container">
           {/* ── Logo ── */}
           <div className="top-navbar-logo">
-            <button className="top-navbar-logo-wrap" onClick={() => handleNavClick('home')}>
+            <button
+              type="button"
+              className="top-navbar-logo-wrap"
+              onClick={() => handleNavClick('home' as unknown as NavId)}
+              aria-label="Home"
+            >
               <img className="top-navbar-logo-image" src={BrandLogo} alt="EasyOps" />
             </button>
           </div>
@@ -132,12 +137,12 @@ export default function TopNavBar() {
                     type="button"
                     className={[
                       'top-navbar-text',
-                      activeItem === id ? 'top-navbar-text--active' : '',
+                      activeItem === (id as unknown as NavId) ? 'top-navbar-text--active' : '',
                     ]
                       .filter(Boolean)
                       .join(' ')}
-                    aria-current={activeItem === id ? 'page' : undefined}
-                    onClick={() => handleNavClick(id)}
+                    aria-current={activeItem === (id as unknown as NavId) ? 'page' : undefined}
+                    onClick={() => handleNavClick(id as unknown as NavId)}
                   >
                     {label}
                   </button>
@@ -189,12 +194,12 @@ export default function TopNavBar() {
                 type="button"
                 className={[
                   'top-navbar-drawer-text',
-                  activeItem === id ? 'top-navbar-drawer-text--active' : '',
+                  activeItem === (id as unknown as NavId) ? 'top-navbar-drawer-text--active' : '',
                 ]
                   .filter(Boolean)
                   .join(' ')}
-                aria-current={activeItem === id ? 'page' : undefined}
-                onClick={() => handleNavClick(id, true)}
+                aria-current={activeItem === (id as unknown as NavId) ? 'page' : undefined}
+                onClick={() => handleNavClick(id as unknown as NavId, true)}
               >
                 {label}
               </button>

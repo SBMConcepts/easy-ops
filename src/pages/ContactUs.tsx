@@ -29,7 +29,7 @@ const SECTORS = [
 /** Marketing contact page listing EasyOps enquiry channels by department. */
 export default function ContactUs() {
   return (
-    <div>
+    <div id="contact">
       <TopNavBar />
       <main className="company-page">
         <div className="company-container">
