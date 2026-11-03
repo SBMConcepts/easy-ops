@@ -1,154 +1,125 @@
-@import './onboarding.css';
+/* ─── Page shell (TopNavBar + hero-style section + Footer, as on marketing pages) ── */
 
-/* ─── Tokens ── */
-
-.notfound-section {
-  --notfound-bg-start: #2563eb;
-  --notfound-bg-end: #10b981;
-  --notfound-text: #ffffff;
-  --notfound-text-muted: var(--onboarding-text-muted);
-  --notfound-text-subtle: var(--onboarding-text-subtle);
-  --notfound-surface: var(--onboarding-surface);
-  --notfound-border: var(--onboarding-border);
-  --notfound-accent: var(--onboarding-accent);
-  --notfound-danger: var(--onboarding-border-error);
-  --notfound-radius-pill: 999px;
-  --notfound-radius-card: var(--onboarding-radius-lg);
-  --notfound-radius-row: var(--onboarding-radius-lg);
-  --notfound-gutter: 1.5rem;
-
-  position: relative;
+.notfound-page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  overflow: hidden;
-  font-family: var(--onboarding-font-family);
-  color: var(--notfound-text);
-  background: linear-gradient(230deg, var(--notfound-bg-start), var(--notfound-bg-end));
+  background: var(--onboarding-background);
+  font-family: var(--font-family);
 }
 
-/* ─── Background layers ── */
+/* ─── Tokens (global values from index.css) ── */
+
+.notfound-section {
+  --notfound-text: var(--onboarding-text-primary);
+  --notfound-text-muted: var(--onboarding-text-muted);
+  --notfound-surface: var(--onboarding-surface);
+  --notfound-surface-muted: var(--onboarding-background);
+  --notfound-border: var(--onboarding-border);
+  --notfound-accent: var(--onboarding-text-accent);
+  --notfound-link: var(--onboarding-text-secondary);
+  --notfound-danger: var(--onboarding-text-error);
+  --notfound-radius-pill: 999px;
+  --notfound-radius-card: var(--onboarding-radius-lg);
+  --notfound-radius-row: var(--onboarding-radius-md);
+
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 48px 16px 40px;
+  color: var(--notfound-text);
+}
+
+/* ─── Background layers (same gradient and glow as the hero) ── */
 
 .notfound-overlay {
   position: absolute;
   inset: 0;
+  z-index: 0;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 72px 72px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--onboarding-background) 100%),
+    var(--gradient-hero);
 }
 
 .notfound-ambient-1,
 .notfound-ambient-2 {
   position: absolute;
+  z-index: 0;
   border-radius: 50%;
-  filter: blur(64px);
+  filter: blur(100px);
   pointer-events: none;
 }
 
 .notfound-ambient-1 {
-  top: -8rem;
-  left: -6rem;
-  width: 48rem;
-  height: 48rem;
-  background: rgba(37, 99, 235, 0.15);
+  top: -12rem;
+  left: -10rem;
+  width: 32rem;
+  height: 32rem;
+  background: radial-gradient(circle, rgba(39, 158, 138, 0.3) 0%, rgba(39, 158, 138, 0) 80%);
 }
 
 .notfound-ambient-2 {
-  bottom: -10rem;
-  right: -4rem;
-  width: 52rem;
-  height: 52rem;
-  background: rgba(16, 185, 129, 0.15);
+  right: -10rem;
+  bottom: -12rem;
+  width: 32rem;
+  height: 32rem;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0) 80%);
 }
 
-/* ─── Header ── */
+/* ─── Eyebrow (live clock pill, same as .company-eyebrow) ── */
 
-.notfound-header {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem var(--notfound-gutter);
-}
-
-.notfound-header-brand {
+.notfound-eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: inherit;
-  text-decoration: none;
-}
-
-.notfound-header-brand__image {
-  width: 3rem;
-  height: 3rem;
-}
-
-.notfound-header-brand__name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.notfound-header-brand__name-accent {
-  color: var(--notfound-accent);
-}
-
-.notfound-header-widget {
-  display: none;
-}
-
-.notfound-header-clock {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  width: fit-content;
+  padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
-  color: var(--notfound-text-muted);
-  background: var(--notfound-surface);
-  border: 1px solid var(--notfound-border);
-  border-radius: var(--notfound-radius-pill);
-  backdrop-filter: blur(8px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--notfound-accent);
+  background: var(--onboarding-accent-dim);
+  border-radius: var(--notfound-radius-row);
 }
 
-.notfound-header-clock__icon {
+.notfound-eyebrow__icon {
   width: 1rem;
   height: 1rem;
-  color: var(--notfound-accent);
 }
 
-.notfound-header-clock__time {
-  font-weight: 600;
-  letter-spacing: 0.1em;
+.notfound-eyebrow__time {
   font-variant-numeric: tabular-nums;
 }
 
-.notfound-header-clock__zone {
-  color: var(--notfound-text-subtle);
+.notfound-eyebrow__zone {
+  color: var(--notfound-text-muted);
 }
 
 /* ─── Main layout ── */
 
 .notfound-main {
   position: relative;
-  z-index: 1;
-  flex: 1;
+  z-index: 2;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem var(--notfound-gutter);
+  flex-direction: column;
+  gap: 2.5rem;
+  width: 100%;
+  max-width: var(--onboarding-max-width);
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
 .notfound-main__grid {
   display: grid;
   grid-template-columns: 1fr;
   align-items: center;
-  gap: 2.5rem;
-  width: 100%;
-  max-width: 64rem;
+  gap: 2rem;
 }
 
 /* ─── Message column ── */
@@ -157,14 +128,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 1.5rem;
   text-align: center;
 }
 
 .notfound-main-grid-content__code {
   margin: 0;
   font-size: 4.5rem;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
+  color: var(--notfound-text);
 }
 
 .notfound-main-grid-content__code-accent {
@@ -172,15 +145,18 @@
 }
 
 .notfound-main-grid-content__title {
-  margin: 1rem 0 0;
+  margin: 0;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--notfound-text);
 }
 
 .notfound-main-grid-content__text {
   max-width: 28rem;
-  margin: 1rem 0 0;
-  font-size: 1rem;
+  margin: 0;
+  font-size: 1.125rem;
+  letter-spacing: 0.25px;
   color: var(--notfound-text-muted);
 }
 
@@ -189,7 +165,6 @@
   align-items: center;
   gap: 0.5rem;
   max-width: 100%;
-  margin-top: 1rem;
   padding: 0.5rem 1rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.875rem;
@@ -197,6 +172,7 @@
   background: var(--notfound-surface);
   border: 1px solid var(--notfound-border);
   border-radius: var(--onboarding-radius-sm);
+  box-shadow: var(--onboarding-shadow-sm);
 }
 
 .notfound-path__label {
@@ -215,29 +191,31 @@
 .notfound-actions {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 1rem;
   width: 100%;
-  margin-top: 2rem;
 }
 
 .notfound-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 2rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: 8px;
+  width: 100%;
+  max-width: 260px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.25px;
   color: var(--notfound-text);
   text-decoration: none;
   border: 1px solid transparent;
-  border-radius: var(--notfound-radius-pill);
+  border-radius: var(--notfound-radius-row);
   cursor: pointer;
   transition:
-    background var(--onboarding-transition),
-    border-color var(--onboarding-transition),
-    color var(--onboarding-transition);
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
 }
 
 .notfound-btn:focus-visible {
@@ -246,8 +224,8 @@
 }
 
 .notfound-btn__icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .notfound-btn__icon--flip {
@@ -255,30 +233,31 @@
 }
 
 .notfound-btn--primary {
-  background: var(--notfound-accent);
-  color: #ffffff;
+  background: var(--notfound-link);
+  color: var(--onboarding-surface);
 }
 
 .notfound-btn--primary:hover {
-  background: var(--onboarding-border-hover);
+  opacity: 0.9;
 }
 
 .notfound-btn--outline {
-  background: var(--notfound-surface);
-  border-color: var(--notfound-border);
+  background: transparent;
+  border-color: var(--notfound-text);
 }
 
 .notfound-btn--outline:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--notfound-link);
+  border-color: var(--notfound-link);
+  color: var(--onboarding-background);
 }
 
 .notfound-btn--ghost {
-  color: var(--notfound-text-muted);
+  color: var(--notfound-link);
 }
 
 .notfound-btn--ghost:hover {
-  color: var(--notfound-text);
-  background: var(--notfound-surface);
+  text-decoration: underline;
 }
 
 /* ─── Status card column ── */
@@ -292,10 +271,9 @@
 .notfound-card {
   padding: 1.5rem;
   background: var(--notfound-surface);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--notfound-border);
   border-radius: var(--notfound-radius-card);
-  box-shadow: var(--onboarding-shadow-lg);
-  backdrop-filter: blur(24px);
+  box-shadow: var(--onboarding-surface-raised);
 }
 
 .notfound-main-grid-sidebar__header {
@@ -311,7 +289,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--notfound-text-subtle);
+  color: var(--notfound-text-muted);
 }
 
 .notfound-badge {
@@ -322,14 +300,14 @@
 }
 
 .notfound-badge--danger {
-  color: #ffffff;
-  background: rgba(240, 61, 61, 0.3);
+  color: var(--notfound-danger);
+  background: rgba(240, 61, 61, 0.1);
 }
 
 .notfound-main-grid-sidebar__subheading {
   margin: 1.25rem 0 0;
   font-size: 0.75rem;
-  color: var(--notfound-text-subtle);
+  color: var(--notfound-text-muted);
 }
 
 .notfound-record-list {
@@ -347,20 +325,21 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  background: var(--notfound-surface);
+  background: var(--notfound-surface-muted);
+  border: 1px solid var(--notfound-border);
   border-radius: var(--notfound-radius-row);
 }
 
 .notfound-record-row__label {
   font-size: 0.875rem;
-  color: var(--notfound-text-subtle);
+  color: var(--notfound-text-muted);
 }
 
 .notfound-record-row__value {
   font-size: 0.875rem;
   font-weight: 500;
   text-align: right;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--notfound-text);
 }
 
 /* ─── QR scanner illustration ── */
@@ -370,8 +349,8 @@
   margin-top: 1.25rem;
   padding: 1rem;
   overflow: hidden;
-  background: var(--notfound-surface);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--notfound-surface-muted);
+  border: 1px solid var(--notfound-border);
   border-radius: var(--onboarding-radius-lg);
 }
 
@@ -387,7 +366,7 @@
 }
 
 .notfound-scanner__cell--filled {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(15, 45, 92, 0.2);
 }
 
 .notfound-scanner__line {
@@ -402,81 +381,88 @@
   margin: 1rem 0 0;
   font-size: 0.875rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--notfound-text-muted);
 }
 
-/* ─── Footer quick links ── */
+/* ─── Quick links (chips, same as .company-tag) ── */
 
-.notfound-footer {
-  position: relative;
-  z-index: 1;
-  padding: 1.5rem var(--notfound-gutter);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+.notfound-quicklinks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--notfound-border);
 }
 
-.notfound-footer__inner {
+.notfound-quicklinks__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--notfound-text-muted);
+}
+
+.notfound-quicklinks__list {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: center;
-  gap: 0.75rem 1.5rem;
-  max-width: 64rem;
-  margin: 0 auto;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.notfound-footer__label {
-  font-size: 0.875rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.notfound-footer__link {
+.notfound-quicklinks__link {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--notfound-text-muted);
   text-decoration: none;
-  transition: color var(--onboarding-transition);
+  background: var(--notfound-surface);
+  border: 1px solid var(--notfound-border);
+  border-radius: var(--notfound-radius-pill);
+  transition:
+    border-color var(--onboarding-transition),
+    color var(--onboarding-transition);
 }
 
-.notfound-footer__link:hover,
-.notfound-footer__link:focus-visible {
+.notfound-quicklinks__link:hover,
+.notfound-quicklinks__link:focus-visible {
   color: var(--notfound-accent);
+  border-color: var(--onboarding-border-focus);
   outline: none;
 }
 
-.notfound-footer__link-icon {
+.notfound-quicklinks__link-icon {
   width: 1rem;
   height: 1rem;
-  opacity: 0.6;
+  color: var(--notfound-accent);
 }
 
-/* ─── Responsive (mobile-first) ── */
+/* ─── Responsive (mobile-first, same breakpoints as marketing pages) ── */
 
-@media (min-width: 640px) {
+@media (min-width: 641px) {
+  .notfound-section {
+    padding: 48px 32px 40px;
+  }
+
+  .notfound-main {
+    padding: 0 32px;
+  }
+
   .notfound-actions {
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: center;
     justify-content: center;
+  }
+
+  .notfound-btn {
     width: auto;
-  }
-
-  .notfound-main-grid-content__title {
-    font-size: 1.75rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .notfound-section {
-    --notfound-gutter: 2.5rem;
-  }
-
-  .notfound-header-widget {
-    display: block;
+    max-width: none;
   }
 
   .notfound-main-grid-content__code {
@@ -484,15 +470,11 @@
   }
 
   .notfound-main-grid-content__title {
-    font-size: 1.875rem;
-  }
-
-  .notfound-main-grid-content__text {
-    font-size: 1.125rem;
+    font-size: 1.75rem;
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1007px) {
   .notfound-main__grid {
     grid-template-columns: 1.1fr 1fr;
     gap: 3rem;
@@ -509,6 +491,10 @@
 
   .notfound-main-grid-content__code {
     font-size: 8rem;
+  }
+
+  .notfound-main-grid-content__title {
+    font-size: 2rem;
   }
 }
 
