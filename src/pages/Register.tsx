@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import PricingSection, { type PlanId } from '@/components/PricingSection'
 
 const PLAN_NAMES: Record<PlanId, string> = {
-  trial: '7-day trial',
+  trial: 'Trial',
   starter: 'Starter',
   growth: 'Growth',
   pro: 'Pro',
