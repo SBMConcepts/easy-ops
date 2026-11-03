@@ -66,7 +66,7 @@ const MarketingRoutes = () => (
     <Route path="/disclaimer" element={<Disclaimer />} />
     <Route path="/support" element={<Support />} />
     <Route path="/partner" element={<BecomePartner />} />
-    <Route path="*" element={<NotFound />} />
+    <Route path="/error" element={<NotFound />} />
   </Routes>
 )
 
