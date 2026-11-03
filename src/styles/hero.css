@@ -1,4 +1,5 @@
 @import '../index.css';
+@import '../styles/onboarding.css';
 
 .hero-section {
   position: relative;
@@ -19,6 +20,7 @@
 }
 
 .hero-bg-fade {
+  position: absolute;
   inset: 0;
   z-index: 1;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--onboarding-background) 100%);
