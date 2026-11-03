@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Your one-time code</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #f4f5f7;
+      font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      color: #111827;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background: #f4f5f7"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table
+            role="presentation"
+            width="560"
+            cellpadding="0"
+            cellspacing="0"
+            style="max-width: 560px; width: 100%; background: #ffffff; border-radius: 8px"
+          >
+            <tr>
+              <td
+                style="
+                  padding: 24px 32px;
+                  border-bottom: 1px solid #e5e7eb;
+                  font-size: 20px;
+                  font-weight: 700;
+                  color: #1d4ed8;
+                "
+              >
+                EasyOps
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 32px; font-size: 15px; line-height: 1.6">
+                <h1 style="margin: 0 0 16px; font-size: 20px">Your one-time sign-in code</h1>
+                <p style="margin: 0 0 24px">
+                  Use this code to sign in to {{ application.name }}{% if
+                  user.user_metadata.company_name %} ({{ user.user_metadata.company_name }}){% endif
+                  %} as {{ user.email }}.
+                </p>
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    text-align: center;
+                    font-size: 32px;
+                    font-weight: 700;
+                    letter-spacing: 8px;
+                    background: #f9fafb;
+                    border-radius: 6px;
+                    padding: 16px;
+                  "
+                >
+                  {{ code }}
+                </p>
+                <p style="margin: 0 0 16px">
+                  The code expires shortly and can be used once. If you didn't request it, you can
+                  safely ignore this email.
+                </p>
+                <p style="margin: 0">
+                  Need help?
+                  <a
+                    href="mailto:{{ user.app_metadata.support_email | default: 'support@easyops.co.za' }}"
+                    style="color: #1d4ed8"
+                    >{{ user.app_metadata.support_email | default: 'support@easyops.co.za' }}</a
+                  >
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 20px 32px;
+                  border-top: 1px solid #e5e7eb;
+                  font-size: 12px;
+                  color: #6b7280;
+                "
+              >
+                Security notification from EasyOps. Never share this code with anyone.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

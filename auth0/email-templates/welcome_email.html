@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome to EasyOps</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #f4f5f7;
+      font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      color: #111827;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background: #f4f5f7"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table
+            role="presentation"
+            width="560"
+            cellpadding="0"
+            cellspacing="0"
+            style="max-width: 560px; width: 100%; background: #ffffff; border-radius: 8px"
+          >
+            <tr>
+              <td
+                style="
+                  padding: 24px 32px;
+                  border-bottom: 1px solid #e5e7eb;
+                  font-size: 20px;
+                  font-weight: 700;
+                  color: #1d4ed8;
+                "
+              >
+                EasyOps
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 32px; font-size: 15px; line-height: 1.6">
+                <h1 style="margin: 0 0 16px; font-size: 20px">
+                  Welcome to {{ application.name | default: 'EasyOps' }}
+                </h1>
+                <p style="margin: 0 0 16px">
+                  Hi {{ user.user_metadata.first_name | default: user.name | default: user.email }},
+                </p>
+                <p style="margin: 0 0 16px">
+                  Your account is ready{% if user.user_metadata.company_name %}, and {{
+                  user.user_metadata.company_name }} is set up{% endif %}. {% if
+                  user.app_metadata.plan %}You're on the
+                  <strong>{{ user.app_metadata.plan }}</strong> plan.{% endif %}
+                </p>
+                <p style="margin: 0 0 24px">
+                  <a
+                    href="{{ user.app_metadata.app_url | default: 'https://www.easyops.co.za' }}"
+                    style="
+                      display: inline-block;
+                      background: #1d4ed8;
+                      color: #ffffff;
+                      padding: 12px 24px;
+                      border-radius: 6px;
+                      text-decoration: none;
+                      font-weight: 600;
+                    "
+                    >Open EasyOps</a
+                  >
+                </p>
+                <p style="margin: 0">
+                  Questions? Reach us at
+                  <a
+                    href="mailto:{{ user.app_metadata.support_email | default: 'support@easyops.co.za' }}"
+                    style="color: #1d4ed8"
+                    >{{ user.app_metadata.support_email | default: 'support@easyops.co.za' }}</a
+                  >.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 20px 32px;
+                  border-top: 1px solid #e5e7eb;
+                  font-size: 12px;
+                  color: #6b7280;
+                "
+              >
+                Sent by EasyOps to {{ user.email }}.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

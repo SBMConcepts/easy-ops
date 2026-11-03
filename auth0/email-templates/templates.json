@@ -1,0 +1,198 @@
+{
+  "$comment": "Source of truth for Auth0 email templates. Apply with: node auth0/email-templates/apply.mjs",
+  "defaults": {
+    "syntax": "liquid",
+    "enabled": true
+  },
+  "templates": [
+    {
+      "title": "Blocked account email",
+      "template": "blocked_account",
+      "file": "blocked_account.html",
+      "from": "EasyOps Security <security@easyops.co.za>",
+      "subject": "Your EasyOps account has been blocked",
+      "variables": {
+        "context": [
+          "user.email",
+          "user.name",
+          "user.source_ip",
+          "user.city",
+          "user.country",
+          "application.name",
+          "url"
+        ],
+        "custom": [
+          "user.user_metadata.first_name",
+          "user.user_metadata.company_name",
+          "user.app_metadata.support_email"
+        ]
+      }
+    },
+    {
+      "title": "Change password code email",
+      "template": "reset_email_by_code",
+      "file": "reset_email_by_code.html",
+      "from": "EasyOps Security <no-reply@easyops.co.za>",
+      "subject": "Your EasyOps password reset code",
+      "variables": {
+        "context": ["code", "user.email", "user.name", "application.name"],
+        "custom": [
+          "user.user_metadata.first_name",
+          "user.user_metadata.company_name",
+          "user.app_metadata.support_email"
+        ]
+      }
+    },
+    {
+      "title": "Change password link email",
+      "template": "reset_email",
+      "file": "reset_email.html",
+      "from": "EasyOps Security <no-reply@easyops.co.za>",
+      "subject": "Reset your EasyOps password",
+      "urlLifetimeInSeconds": 3600,
+      "resultUrl": "https://www.easyops.co.za/login",
+      "variables": {
+        "context": ["url", "user.email", "user.name", "application.name"],
+        "custom": [
+          "user.user_metadata.first_name",
+          "user.user_metadata.company_name",
+          "user.app_metadata.support_email"
+        ]
+      }
+    },
+    {
+      "title": "MFA enrollment email",
+      "template": "enrollment_email",
+      "file": "enrollment_email.html",
+      "from": "EasyOps Security <security@easyops.co.za>",
+      "subject": "Set up multi-factor authentication for EasyOps",
+      "urlLifetimeInSeconds": 432000,
+      "variables": {
+        "context": ["url", "user.email", "user.name", "application.name"],
+        "custom": [
+          "user.user_metadata.first_name",
+          "user.user_metadata.company_name",
+          "user.app_metadata.mfa_required",
+          "user.app_metadata.support_email"
+        ]
+      }
+    },
+    {
+      "title": "MFA verification code email",
+      "template": "mfa_oob_code",
+      "file": "mfa_oob_code.html",
+      "from": "EasyOps Security <no-reply@easyops.co.za>",
+      "subject": "Your EasyOps verification code",
+      "variables": {
+        "context": ["code", "user.email", "user.name", "application.name"],
+        "custom": [
+          "user.user_metadata.first_name",
+          "user.user_metadata.company_name",
+          "user.app_metadata.security_email"
+        ]
+      }
+    },
+    {
+      "title": "Password breach alert email",
+      "template": "stolen_credentials",
+      "file": "stolen_credentials.html",
+      "from": "EasyOps Security <security@easyops.co.za>",
+      "subject": "Security alert: reset your EasyOps password",
+      "variables": {
+        "context": [
+          "url",
+          "user.email",
+          "user.name",
+          "user.source_ip",
+          "user.city",
+          "user.country",
+          "application.name"
+        ],
+        "custom": [
+          "user.user_metadata.first_name",
+          "user.user_metadata.company_name",
+          "user.app_metadata.security_email"
+        ]
+      }
+    },
+    {
+      "title": "Passwordless OTP email",
+      "template": "otp_verify",
+      "file": "otp_verify.html",
+      "from": "EasyOps <no-reply@easyops.co.za>",
+      "subject": "Your EasyOps one-time code",
+      "variables": {
+        "context": ["code", "user.email", "application.name"],
+        "custom": ["user.user_metadata.company_name", "user.app_metadata.support_email"]
+      }
+    },
+    {
+      "title": "User invitation email",
+      "template": "user_invitation",
+      "file": "user_invitation.html",
+      "from": "EasyOps <invites@easyops.co.za>",
+      "subject": "{{ inviter.name | default: 'A colleague' }} invited you to join {{ organization.display_name | default: organization.name }} on EasyOps",
+      "urlLifetimeInSeconds": 604800,
+      "variables": {
+        "context": [
+          "url",
+          "inviter.name",
+          "invitee.email",
+          "organization.name",
+          "organization.display_name",
+          "application.name"
+        ],
+        "custom": ["organization.metadata.role_name", "organization.metadata.support_email"]
+      }
+    },
+    {
+      "title": "Verification code email",
+      "template": "verify_email_by_code",
+      "file": "verify_email_by_code.html",
+      "from": "EasyOps <no-reply@easyops.co.za>",
+      "subject": "Your EasyOps email verification code",
+      "variables": {
+        "context": ["code", "user.email", "user.name", "application.name"],
+        "custom": [
+          "user.user_metadata.first_name",
+          "user.user_metadata.company_name",
+          "user.app_metadata.support_email"
+        ]
+      }
+    },
+    {
+      "title": "Verification link email",
+      "template": "verify_email",
+      "file": "verify_email.html",
+      "from": "EasyOps <no-reply@easyops.co.za>",
+      "subject": "Verify your EasyOps email address",
+      "urlLifetimeInSeconds": 432000,
+      "resultUrl": "https://www.easyops.co.za/login",
+      "variables": {
+        "context": ["url", "user.email", "user.name", "application.name"],
+        "custom": [
+          "user.user_metadata.first_name",
+          "user.user_metadata.company_name",
+          "user.app_metadata.support_email"
+        ]
+      }
+    },
+    {
+      "title": "Welcome email",
+      "template": "welcome_email",
+      "file": "welcome_email.html",
+      "from": "EasyOps <welcome@easyops.co.za>",
+      "subject": "Welcome to EasyOps",
+      "variables": {
+        "context": ["user.email", "user.name", "application.name"],
+        "custom": [
+          "user.user_metadata.first_name",
+          "user.user_metadata.company_name",
+          "user.app_metadata.plan",
+          "user.app_metadata.app_url",
+          "user.app_metadata.support_email"
+        ]
+      }
+    }
+  ]
+}
