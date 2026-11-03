@@ -586,7 +586,7 @@ export default function SitesAndDepartments() {
               <Label className="sad-modal-label">Site Name</Label>
               <Input
                 className="sad-modal-input"
-                value={siteForm.name || ''}
+                value={siteForm.name ?? ''}
                 onChange={(e) => setSiteForm({ ...siteForm, name: e.target.value })}
                 placeholder="e.g. Headquarters"
               />
@@ -595,7 +595,7 @@ export default function SitesAndDepartments() {
               <Label className="sad-modal-label">Address</Label>
               <Input
                 className="sad-modal-input"
-                value={siteForm.address || ''}
+                value={siteForm.address ?? ''}
                 onChange={(e) => setSiteForm({ ...siteForm, address: e.target.value })}
                 placeholder="123 Main St..."
               />
@@ -607,7 +607,7 @@ export default function SitesAndDepartments() {
                   className="sad-modal-input"
                   type="number"
                   step="any"
-                  value={siteForm.latitude || ''}
+                  value={siteForm.latitude ?? ''}
                   onChange={(e) =>
                     setSiteForm({ ...siteForm, latitude: parseFloat(e.target.value) })
                   }
@@ -619,7 +619,7 @@ export default function SitesAndDepartments() {
                   className="sad-modal-input"
                   type="number"
                   step="any"
-                  value={siteForm.longitude || ''}
+                  value={siteForm.longitude ?? ''}
                   onChange={(e) =>
                     setSiteForm({
                       ...siteForm,
@@ -728,7 +728,7 @@ export default function SitesAndDepartments() {
               <Label className="sad-modal-label">Title</Label>
               <Input
                 className="sad-modal-input"
-                value={roleForm.name || ''}
+                value={roleForm.name ?? ''}
                 onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })}
                 placeholder="e.g. Site Supervisor"
               />
@@ -785,7 +785,7 @@ export default function SitesAndDepartments() {
               <Label className="sad-modal-label">Shift Name</Label>
               <Input
                 className="sad-modal-input"
-                value={shiftForm.name || ''}
+                value={shiftForm.name ?? ''}
                 onChange={(e) => setShiftForm({ ...shiftForm, name: e.target.value })}
                 placeholder="e.g. Morning Shift"
               />
@@ -796,7 +796,7 @@ export default function SitesAndDepartments() {
                 <Input
                   className="sad-modal-input"
                   type="time"
-                  value={shiftForm.start_time || ''}
+                  value={shiftForm.start_time ?? ''}
                   onChange={(e) => setShiftForm({ ...shiftForm, start_time: e.target.value })}
                 />
               </div>
@@ -805,7 +805,7 @@ export default function SitesAndDepartments() {
                 <Input
                   className="sad-modal-input"
                   type="time"
-                  value={shiftForm.end_time || ''}
+                  value={shiftForm.end_time ?? ''}
                   onChange={(e) => setShiftForm({ ...shiftForm, end_time: e.target.value })}
                 />
               </div>
