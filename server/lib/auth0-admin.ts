@@ -204,19 +204,29 @@ export async function addOrgMember(
   }
 }
 
-/** Create an Auth0 organization invitation and return its invitation id, if any. */
-export async function createOrgInvitation(params: {
+/** Create an Auth0 organization invitation; `sendEmail: false` skips delivery and relies on the returned URL. */
+export async function createOrgInvitationDetails(params: {
   orgId: string
   inviterName: string
   inviteeEmail: string
   clientId: string
   roles?: string[]
-}): Promise<string | undefined> {
+  sendEmail?: boolean
+}): Promise<{ id?: string; url?: string }> {
   const invitation = await mgmt().organizations.invitations.create(params.orgId, {
     inviter: { name: params.inviterName },
     invitee: { email: params.inviteeEmail },
     client_id: params.clientId,
     ...(params.roles && params.roles.length > 0 ? { roles: params.roles } : {}),
+    ...(params.sendEmail === false ? { send_invitation_email: false } : {}),
   })
-  return unwrap(invitation)?.id
+  const data = unwrap(invitation)
+  return { id: data?.id, url: data?.invitation_url }
+}
+
+/** Create an Auth0 organization invitation and return its invitation id, if any. */
+export async function createOrgInvitation(
+  params: Omit<Parameters<typeof createOrgInvitationDetails>[0], 'sendEmail'>
+): Promise<string | undefined> {
+  return (await createOrgInvitationDetails(params)).id
 }

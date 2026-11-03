@@ -5,7 +5,7 @@ import { supabaseAdmin } from '../lib/supabase-admin.js'
 import {
   auth0RolesForAccessRole,
   createAuth0Org,
-  createOrgInvitation,
+  createOrgInvitationDetails,
   deleteAuth0Org,
   enableOrgConnection,
 } from '../lib/auth0-admin.js'
@@ -110,18 +110,20 @@ router.post('/api/organizations', async (req: Request, res: Response) => {
     })
     if (subscriptionErr) throw new Error(subscriptionErr.message)
 
-    const invitationId = await createOrgInvitation({
+    // No email provider: the registrant is sent straight to the invitation URL.
+    const { id: invitationId, url: invitationUrl } = await createOrgInvitationDetails({
       orgId: auth0Org.id,
       inviterName: orgName,
       inviteeEmail: adminEmail,
       clientId,
       roles: adminRoles,
+      sendEmail: false,
     })
-    if (!invitationId) {
-      throw new Error('Auth0 did not return an administrator invitation id.')
+    if (!invitationId || !invitationUrl) {
+      throw new Error('Auth0 did not return an administrator invitation.')
     }
 
-    res.status(201).json({ orgId: auth0Org.id, slug, invitationId })
+    res.status(201).json({ orgId: auth0Org.id, slug, invitationId, invitationUrl })
   } catch (err) {
     if (createdOrgId) {
       const cleanup = await Promise.allSettled([

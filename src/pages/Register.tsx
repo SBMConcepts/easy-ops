@@ -51,7 +51,7 @@ export default function Register() {
     setSubmitting(true)
 
     try {
-      await apiFetch('organizations', {
+      const result = await apiFetch<{ invitationUrl?: string }>('organizations', {
         method: 'POST',
         requireAuth: false,
         body: JSON.stringify({
@@ -61,6 +61,12 @@ export default function Register() {
           plan: selectedPlan,
         }),
       })
+
+      if (result?.invitationUrl) {
+        toast.success('Workspace provisioned! Redirecting to create your password...')
+        window.location.href = result.invitationUrl
+        return
+      }
 
       toast.success('Workspace provisioned! Check your email for the Admin invitation.')
       setInvitationSentTo(form.adminEmail.trim().toLowerCase())
