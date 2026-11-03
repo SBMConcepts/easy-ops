@@ -15,7 +15,7 @@ import { E164_RE } from '../lib/phone.js'
 const router = Router()
 
 type OrgPlan = Database['public']['Enums']['org_plan']
-const ORG_PLANS = new Set<OrgPlan>(['trial', 'starter', 'growth', 'pro', 'enterprise'])
+const ORG_PLANS = new Set<OrgPlan>(['starter', 'growth', 'pro'])
 
 function slugify(input: string): string {
   return input
