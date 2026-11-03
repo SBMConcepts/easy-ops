@@ -32,6 +32,7 @@ async function ensureDefaultDepartment(orgId: string): Promise<string | null> {
 interface SiteBody {
   auth0_org_id?: string
   site_name?: string
+  name?: string
   address?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -90,7 +91,8 @@ router.post(
   requirePermission('write:org_sites'),
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as SiteBody
-    if (!body.site_name?.trim()) {
+    const siteName = (body.site_name ?? body.name)?.trim()
+    if (!siteName) {
       res.status(400).json({ error: 'site name is required.' })
       return
     }
@@ -103,7 +105,7 @@ router.post(
       .from('org_sites')
       .insert({
         auth0_org_id: req.orgId!,
-        site_name: body.site_name.trim(),
+        site_name: siteName,
         address: body.address ?? '',
         latitude: body.latitude ?? 0,
         longitude: body.longitude ?? 0,
@@ -130,7 +132,8 @@ router.patch(
   async (req: AuthedRequest, res: Response) => {
     const body = (req.body ?? {}) as SiteBody
     const update: TablesUpdate<'org_sites'> = {}
-    if (typeof body.site_name === 'string') update.site_name = body.site_name.trim()
+    const patchName = body.site_name ?? body.name
+    if (typeof patchName === 'string') update.site_name = patchName.trim()
     if (body.address !== undefined) update.address = body.address ?? ''
     if (body.latitude !== undefined) update.latitude = body.latitude ?? 0
     if (body.longitude !== undefined) update.longitude = body.longitude ?? 0
