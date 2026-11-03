@@ -23,6 +23,8 @@ export default function WorkspaceBilling() {
         plan: string
         billingState: string
         trialEndsAt: string | null
+        accessEndsAt: string | null
+        operationalAccess: boolean
         canStartCheckout: boolean
         canManagePayment: boolean
       }>('billing/summary'),
@@ -96,6 +98,13 @@ export default function WorkspaceBilling() {
                   {state.replaceAll('_', ' ')}
                 </span>
               </h2>
+              {billing.data?.accessEndsAt && !billing.data.canManagePayment && (
+                <p className="settings-header__subtitle">
+                  {billing.data.operationalAccess
+                    ? `Your free trial ends on ${new Date(billing.data.accessEndsAt).toLocaleDateString()}. Confirm a payment method before then to keep access.`
+                    : 'Your free trial has ended. Confirm a payment method to restore access.'}
+                </p>
+              )}
               <div className="settings-card-tab__footer">
                 <button
                   onClick={() => {

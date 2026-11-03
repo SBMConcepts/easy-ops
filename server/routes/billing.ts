@@ -44,8 +44,9 @@ function publicError(error: unknown): { status: number; message: string } {
 }
 
 function isOperational(state: string, accessEndsAt: string | null): boolean {
-  if (state === 'trial' || state === 'active') return true
-  return state === 'trial' && (!accessEndsAt || new Date(accessEndsAt).getTime() > Date.now())
+  if (state === 'active' || state === 'past_due') return true
+  if (state === 'trial' && !accessEndsAt) return true
+  return Boolean(accessEndsAt) && new Date(accessEndsAt!).getTime() > Date.now()
 }
 
 async function getSubscription(orgId: string) {
@@ -96,7 +97,10 @@ function summary(subscription: NonNullable<Awaited<ReturnType<typeof getSubscrip
     paymentMethod: subscription.payment_method_summary,
     canStartCheckout:
       PAID_PLANS.has(subscription.plan) &&
-      ['pending_payment_method', 'past_due', 'cancelled'].includes(subscription.billing_state),
+      !subscription.provider_subscription_code &&
+      ['trial', 'pending_payment_method', 'past_due', 'cancelled'].includes(
+        subscription.billing_state
+      ),
     canManagePayment: Boolean(subscription.provider_subscription_code),
   }
 }
@@ -121,7 +125,13 @@ async function activateTrialFromTransaction(orgId: string, reference: string) {
   }
 
   const now = new Date()
-  const trialEndsAt = new Date(now.getTime() + getTrialDays() * 86400000).toISOString()
+  // Confirming a card mid-trial must not extend or restart it; the first charge lands when it ends.
+  const existingTrialEnd = subscription.trial_ends_at ? new Date(subscription.trial_ends_at) : null
+  const trialEnd =
+    existingTrialEnd && existingTrialEnd.getTime() > now.getTime() + 60_000
+      ? existingTrialEnd
+      : new Date(now.getTime() + (existingTrialEnd ? 60_000 : getTrialDays() * 86400000))
+  const trialEndsAt = trialEnd.toISOString()
   const providerSubscription = await createSubscription({
     customerCode: transaction.customer.customer_code,
     planCode: getPaystackPlanCode(subscription.plan),
@@ -137,8 +147,8 @@ async function activateTrialFromTransaction(orgId: string, reference: string) {
     provider_plan_code: getPaystackPlanCode(subscription.plan),
     provider_reference: reference,
     billing_started_at: now.toISOString(),
-    trial_started_at: now.toISOString(),
-    trial_ends_at: trialEndsAt,
+    trial_started_at: subscription.trial_started_at ?? now.toISOString(),
+    trial_ends_at: existingTrialEnd ? existingTrialEnd.toISOString() : trialEndsAt,
     access_ends_at: trialEndsAt,
     current_period_end: providerSubscription.next_payment_date,
     payment_method_summary: {

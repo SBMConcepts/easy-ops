@@ -46,6 +46,14 @@ export function useOrgApi() {
         try {
           const body = await response.json()
           message = (body?.error ?? body?.message ?? message) as string
+          // Trial lapsed without a confirmed payment method: only billing stays reachable.
+          if (
+            response.status === 402 &&
+            body?.code === 'billing_required' &&
+            !window.location.pathname.startsWith('/app/workspace/billing')
+          ) {
+            window.location.assign('/app/workspace/billing')
+          }
         } catch {
           /* Ignore JSON parsing errors */
         }

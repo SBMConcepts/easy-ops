@@ -1594,7 +1594,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      complete_onboarding: {
+        Args: { p_org_id: string; p_payload: Json; p_trial_days?: number }
+        Returns: Json
+      }
     }
     Enums: {
       attendance_method: 'whatsapp' | 'biometric' | 'ussd' | 'qr'

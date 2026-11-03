@@ -197,12 +197,13 @@ export async function requireOperationalAccess(
       .maybeSingle()
     if (error) throw error
 
+    // Trials and unpaid states lapse at access_ends_at; only a paid (or in-grace) subscription is open-ended.
+    const accessEndsAt = data?.access_ends_at ? new Date(data.access_ends_at).getTime() : null
     const hasAccess =
-      data?.billing_state === 'trial' ||
       data?.billing_state === 'active' ||
       data?.billing_state === 'past_due' ||
-      data?.billing_state === 'cancelled' ||
-      new Date(data?.access_ends_at ?? '').getTime() > Date.now()
+      (data?.billing_state === 'trial' && accessEndsAt === null) ||
+      (accessEndsAt !== null && accessEndsAt > Date.now())
     if (!hasAccess) {
       res.status(402).json({
         error: 'An active subscription is required to use operational features.',
