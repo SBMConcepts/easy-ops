@@ -16,7 +16,9 @@
   "env": {
     "production": {
       "name": "easy-ops",
-      "routes": [{ "pattern": "www.easyops.co.za", "custom_domain": true }],
+      "routes": [
+        { "pattern": "www.easyops.co.za", "custom_domain": true, "zone_name": "easyops.co.za" },
+      ],
       "vars": {
         "API_BASE_URL": "https://api.easyops.com",
         "APP_BASE_URL": "https://easy-ops-com.vercel.app",
