@@ -20,6 +20,16 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 2000,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[\\/](react|react-dom|react-router-dom)[\\/]/ },
+            { name: 'vendor', test: /node_modules/ },
+          ],
+        },
+      },
+    },
   },
 })
