@@ -1,6 +1,5 @@
 'use client'
 import { Link } from 'react-router-dom'
-import { Handshake } from 'lucide-react'
 import '../styles/footer.css'
 import BrandLogo from '../assets/EasyOps Logo.png'
 import BrandName from '../assets/EasyOps Name.png'
@@ -18,44 +17,6 @@ const LEGAL_LINKS = [
   { label: 'Terms of Use', to: '/terms-of-use' },
   { label: 'Disclaimer', to: '/disclaimer' },
 ] as const
-
-function InstagramIcon() {
-  return (
-    <svg
-      className="footer__nav-link-icon"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-    </svg>
-  )
-}
-
-function LinkedInIcon() {
-  return (
-    <svg
-      className="footer__nav-link-icon"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-      <rect width="4" height="12" x="2" y="9" />
-      <circle cx="4" cy="4" r="2" />
-    </svg>
-  )
-}
 
 /** Marketing-site footer with brand, link columns, and legal links. */
 export default function Footer() {
@@ -105,31 +66,28 @@ export default function Footer() {
             <ul className="footer__nav-list">
               <li>
                 <a
-                  href="#"
+                  href="https://www.instagram.com/easyopssa"
                   className="footer__nav-link"
                   aria-label="EasyOps on Instagram"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <InstagramIcon />
                   Instagram
                 </a>
               </li>
               <li>
                 <a
-                  href="#"
+                  href="https://www.linkedin.com/company/easyopssa"
                   className="footer__nav-link"
                   aria-label="EasyOps on LinkedIn"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <LinkedInIcon />
                   LinkedIn
                 </a>
               </li>
               <li>
                 <Link to="/partner" className="footer__nav-link">
-                  <Handshake className="footer__nav-link-icon" aria-hidden="true" />
                   Become a Partner
                 </Link>
               </li>

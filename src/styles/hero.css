@@ -6,6 +6,7 @@
   display: flex;
   box-sizing: border-box;
   padding: 24px 16px 16px;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 .hero-bg {
@@ -304,7 +305,7 @@
   }
 }
 
-/* ── ≥ 640px: large phones / small tablets ── */
+/* ── ≥ 320px:  phones / small devices ── */
 @media (min-width: 320px) and (max-width: 640px) {
   .hero-section {
     padding: 24px 16px;
